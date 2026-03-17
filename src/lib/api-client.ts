@@ -34,11 +34,16 @@ function buildHeaders(): Record<string, string> {
  * When USE_MOCK=true, returns hardcoded realistic Spanish weather data instead.
  */
 export async function fetchWeather(disaster?: boolean): Promise<ParsedWeather> {
-  if (isMock()) {
+  if (isMock() || !getBaseUrl()) {
     return parseWeatherData({ ...MOCK_WEATHER });
   }
 
-  const url = new URL('/weather', getBaseUrl());
+  let url: URL;
+  try {
+    url = new URL('/weather', getBaseUrl());
+  } catch {
+    return parseWeatherData({ ...MOCK_WEATHER });
+  }
   if (disaster !== undefined) {
     url.searchParams.set('disaster', String(disaster));
   }
@@ -65,8 +70,8 @@ export async function sendPrompt(
   systemPrompt: string,
   userPrompt: string,
 ): Promise<string> {
-  if (isMock()) {
-    return 'Mock AI response: Based on current weather conditions, no immediate risks detected.';
+  if (isMock() || !getBaseUrl()) {
+    throw new Error('Hackathon API not configured');
   }
 
   const response = await fetch(`${getBaseUrl()}/prompt`, {
