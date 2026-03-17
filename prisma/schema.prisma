@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  nickName      String         @unique
+  password      String
+  role          String         @default("citizen")
+  province      String
+  residenceType String
+  specialNeeds  String         @default("[]")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  consultations Consultation[]
+}
+
+model WeatherRecord {
+  id            Int      @id @default(autoincrement())
+  rawData       String
+  temperature   Float
+  humidity      Float
+  precipitation Float
+  windSpeed     Float?
+  pressure      Float?
+  riskScore     Float?
+  analysis      String?
+  isDisaster    Boolean  @default(false)
+  recordedAt    DateTime
+  createdAt     DateTime @default(now())
+}
+
+model Alert {
+  id           Int      @id @default(autoincrement())
+  severity     Int
+  type         String
+  province     String?
+  title        String
+  description  String
+  weatherData  String?
+  isActive     Boolean  @default(true)
+  autoDetected Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Consultation {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  systemPrompt    String
+  userPrompt      String
+  llmResponse     String
+  weatherSnapshot String?
+  riskScore       Float?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+}

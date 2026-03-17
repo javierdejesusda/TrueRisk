@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0a0f0d;
+  --color-bg-secondary: #111a14;
+  --color-bg-card: #162118;
+  --color-bg-card-hover: #1a2b1e;
+  --color-border: #2a3f2e;
+  --color-border-hover: #3a5f3e;
+
+  --color-text-primary: #e8f0ea;
+  --color-text-secondary: #9fb8a4;
+  --color-text-muted: #6b8a70;
+
+  --color-accent-green: #34d399;
+  --color-accent-yellow: #fbbf24;
+  --color-accent-orange: #f97316;
+  --color-accent-red: #ef4444;
+  --color-accent-purple: #a78bfa;
+  --color-accent-blue: #60a5fa;
+
+  --color-severity-1: #34d399;
+  --color-severity-2: #fbbf24;
+  --color-severity-3: #f97316;
+  --color-severity-4: #ef4444;
+  --color-severity-5: #dc2626;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ── Base styles ───────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-bg-secondary);
+}
+
+/* ── Selection ─────────────────────────────────────────────────── */
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-accent-green) 30%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* ── Focus ring ────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+/* ── Animation keyframes ───────────────────────────────────────── */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 4px 0 color-mix(in srgb, var(--color-accent-green) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 16px 4px color-mix(in srgb, var(--color-accent-green) 60%, transparent);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
