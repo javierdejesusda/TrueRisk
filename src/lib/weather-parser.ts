@@ -26,43 +26,35 @@ export function parseSpanishDecimal(value: string | null | undefined): number | 
 }
 
 /**
- * Maps raw hackathon API field names to ParsedWeather property names.
- */
-const FIELD_MAP: Record<string, keyof Omit<ParsedWeather, 'timestamp' | 'raw'>> = {
-  temperatura: 'temperature',
-  humedad: 'humidity',
-  precipitacion: 'precipitation',
-  velocidad_viento: 'windSpeed',
-  presion: 'pressure',
-  nubosidad: 'cloudCover',
-  visibilidad: 'visibility',
-  punto_rocio: 'dewPoint',
-  indice_uv: 'uvIndex',
-};
-
-/**
  * Takes a raw API response and returns a typed ParsedWeather object
  * with all numeric fields properly parsed from Spanish decimal format.
+ * Handles both original field names (temperatura, humedad) and the
+ * actual hackathon API format (tmed/tmax/tmin, hrMedia, prec, etc.).
  */
 export function parseWeatherData(raw: Record<string, unknown>): ParsedWeather {
   const rawData = raw as RawWeatherData;
 
-  const getField = (spanishKey: string): number | null => {
-    const value = rawData[spanishKey];
-    if (typeof value === 'number') return isNaN(value) ? null : value;
-    return parseSpanishDecimal(value as string | null | undefined);
+  const get = (...keys: string[]): number | null => {
+    for (const key of keys) {
+      const value = rawData[key];
+      if (value === undefined || value === null) continue;
+      if (typeof value === 'number') return isNaN(value) ? null : value;
+      const parsed = parseSpanishDecimal(value as string);
+      if (parsed !== null) return parsed;
+    }
+    return null;
   };
 
   return {
-    temperature: getField('temperatura') ?? 0,
-    humidity: getField('humedad') ?? 0,
-    precipitation: getField('precipitacion') ?? 0,
-    windSpeed: getField('velocidad_viento'),
-    pressure: getField('presion'),
-    cloudCover: getField('nubosidad'),
-    visibility: getField('visibilidad'),
-    dewPoint: getField('punto_rocio'),
-    uvIndex: getField('indice_uv'),
+    temperature: get('temperatura', 'tmed', 'tmax', 'temp_actual') ?? 0,
+    humidity: get('humedad', 'hrMedia', 'hrMax', 'hr') ?? 0,
+    precipitation: get('precipitacion', 'prec', 'precipitación') ?? 0,
+    windSpeed: get('velocidad_viento', 'velmedia', 'vv', 'racha'),
+    pressure: get('presion', 'presMax', 'presMin', 'pres'),
+    cloudCover: get('nubosidad'),
+    visibility: get('visibilidad', 'vis'),
+    dewPoint: get('punto_rocio', 'tpr'),
+    uvIndex: get('indice_uv', 'uvMax'),
     timestamp: new Date(),
     raw: rawData,
   };
