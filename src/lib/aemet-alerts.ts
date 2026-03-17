@@ -160,7 +160,7 @@ export async function fetchAemetAlerts(area: string = 'esp'): Promise<AemetCapAl
     // Step 1: Get datos URL
     const metaRes = await fetch(
       `https://opendata.aemet.es/opendata/api/avisos_cap/ultimoelaborado/area/${area}`,
-      { headers: { 'api_key': apiKey }, next: { revalidate: 300 } }
+      { headers: { 'api_key': apiKey }, signal: AbortSignal.timeout(8_000) }
     );
 
     if (!metaRes.ok) {
@@ -175,7 +175,7 @@ export async function fetchAemetAlerts(area: string = 'esp'): Promise<AemetCapAl
     }
 
     // Step 2: Fetch actual CAP data (TAR archive)
-    const dataRes = await fetch(meta.datos);
+    const dataRes = await fetch(meta.datos, { signal: AbortSignal.timeout(8_000) });
     if (!dataRes.ok) {
       console.error('AEMET data request failed:', dataRes.status);
       return [];

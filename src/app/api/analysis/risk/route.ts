@@ -57,10 +57,15 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── Fetch current weather ───────────────────────────────────────
+    // ── Fetch current weather (with timeout) ────────────────────────
     let current: ParsedWeather;
     try {
-      current = await fetchWeather();
+      current = await Promise.race([
+        fetchWeather(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Weather fetch timed out')), 8_000)
+        ),
+      ]);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch weather data';
       return NextResponse.json(
@@ -98,8 +103,8 @@ export async function GET(request: Request) {
       specialNeeds,
     });
 
-    // ── Store weather record in DB ──────────────────────────────────
-    await prisma.weatherRecord.create({
+    // ── Store weather record in DB (non-blocking) ──────────────────
+    prisma.weatherRecord.create({
       data: {
         rawData: JSON.stringify(current.raw),
         temperature: current.temperature,
@@ -116,7 +121,7 @@ export async function GET(request: Request) {
         isDisaster: riskScore.severity === 'critical' || riskScore.severity === 'very_high',
         recordedAt: current.timestamp,
       },
-    });
+    }).catch((err) => console.error('Risk record write failed:', err));
 
     // ── Return result ───────────────────────────────────────────────
     return NextResponse.json({ success: true, data: riskScore });

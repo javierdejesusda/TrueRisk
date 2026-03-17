@@ -124,6 +124,7 @@ const citizenLinks: NavItem[] = [
 
 const backofficeLinks: NavItem[] = [
   { label: 'Dashboard', href: '/backoffice', icon: <DashboardIcon /> },
+  { label: 'Map', href: '/map', icon: <MapIcon /> },
   { label: 'Alerts', href: '/backoffice/alerts', icon: <AlertIcon /> },
   { label: 'Records', href: '/backoffice/records', icon: <RecordsIcon /> },
   { label: 'Citizens', href: '/backoffice/citizens', icon: <PeopleIcon /> },

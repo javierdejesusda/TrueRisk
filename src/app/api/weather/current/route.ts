@@ -142,7 +142,8 @@ export async function GET(request: Request) {
       weather = await fetchWeather(disaster);
     }
 
-    await prisma.weatherRecord.create({
+    // Non-blocking DB write — don't delay the response
+    prisma.weatherRecord.create({
       data: {
         rawData: JSON.stringify(weather.raw),
         temperature: weather.temperature,
@@ -153,7 +154,7 @@ export async function GET(request: Request) {
         isDisaster: disaster === true,
         recordedAt: new Date(),
       },
-    });
+    }).catch((err) => console.error('Weather record write failed:', err));
 
     return NextResponse.json({ success: true, data: weather });
   } catch (err) {

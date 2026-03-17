@@ -34,11 +34,16 @@ export interface MunicipalityForecast {
 }
 
 async function fetchAemetData(url: string, apiKey: string): Promise<unknown> {
-  const metaRes = await fetch(url, { headers: { 'api_key': apiKey } });
+  const metaRes = await fetch(url, {
+    headers: { 'api_key': apiKey },
+    signal: AbortSignal.timeout(6_000),
+  });
   if (!metaRes.ok) throw new Error(`AEMET meta failed: ${metaRes.status}`);
   const meta = await metaRes.json();
   if (!meta.datos) throw new Error('No datos URL');
-  const dataRes = await fetch(meta.datos);
+  const dataRes = await fetch(meta.datos, {
+    signal: AbortSignal.timeout(6_000),
+  });
   if (!dataRes.ok) throw new Error(`AEMET data failed: ${dataRes.status}`);
   return dataRes.json();
 }
@@ -149,9 +154,12 @@ export async function fetchMunicipalityForecast(municipioCode: string): Promise<
   try {
     const base = 'https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio';
 
-    // Fetch sequentially to avoid AEMET rate limiting (429)
-    const hourlyData = await fetchAemetData(`${base}/horaria/${municipioCode}`, apiKey).catch(() => null);
-    const dailyData = await fetchAemetData(`${base}/diaria/${municipioCode}`, apiKey).catch(() => null);
+    const [hourlyResult, dailyResult] = await Promise.allSettled([
+      fetchAemetData(`${base}/horaria/${municipioCode}`, apiKey),
+      fetchAemetData(`${base}/diaria/${municipioCode}`, apiKey),
+    ]);
+    const hourlyData = hourlyResult.status === 'fulfilled' ? hourlyResult.value : null;
+    const dailyData = dailyResult.status === 'fulfilled' ? dailyResult.value : null;
 
     const name = (hourlyData as any)?.[0]?.nombre ?? (dailyData as any)?.[0]?.nombre ?? '';
     const province = (hourlyData as any)?.[0]?.provincia ?? (dailyData as any)?.[0]?.provincia ?? '';

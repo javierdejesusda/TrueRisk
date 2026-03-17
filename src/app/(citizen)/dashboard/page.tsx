@@ -10,8 +10,8 @@ import { AlertBanner } from '@/components/alerts/alert-banner';
 import { RecommendationCard } from '@/components/recommendations/recommendation-card';
 import { useWeather } from '@/hooks/use-weather';
 import { useRiskScore } from '@/hooks/use-risk-score';
-import { useAlerts } from '@/hooks/use-alerts';
 import { useAppStore } from '@/store/app-store';
+import type { Alert } from '@/types/alert';
 import type { ApiResponse } from '@/types/api';
 
 const staggerItem = {
@@ -29,9 +29,10 @@ const staggerItem = {
 
 export default function DashboardPage() {
   const user = useAppStore((s) => s.user);
+  const alerts = useAppStore((s) => s.alerts) as Alert[];
   const { weather, isLoading: weatherLoading } = useWeather();
   const { risk, isLoading: riskLoading } = useRiskScore();
-  const { alerts, isLoading: alertsLoading } = useAlerts();
+  const alertsLoading = false; // alerts come from layout's useAlerts via store
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [recLoading, setRecLoading] = useState(false);
   const [dismissedAlertId, setDismissedAlertId] = useState<number | null>(null);

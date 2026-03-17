@@ -36,16 +36,11 @@ export async function POST(request: Request) {
     const { nickName, teamName, password, province, residenceType, specialNeeds, role } =
       parsed.data;
 
-    // Register with hackathon API
+    // Register with hackathon API (non-blocking — local user is created regardless)
     try {
       await registerTeam(nickName, teamName, password);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to register with external API';
-      return NextResponse.json(
-        { success: false, error: message },
-        { status: 502 },
-      );
+      console.warn('Hackathon API registration failed (continuing with local user):', err instanceof Error ? err.message : err);
     }
 
     // Hash password for local storage

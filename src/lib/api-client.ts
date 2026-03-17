@@ -46,6 +46,7 @@ export async function fetchWeather(disaster?: boolean): Promise<ParsedWeather> {
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: buildHeaders(),
+    signal: AbortSignal.timeout(8_000),
   });
 
   if (!response.ok) {
@@ -101,6 +102,7 @@ export async function registerTeam(
       teamName,
       password,
     }),
+    signal: AbortSignal.timeout(8_000),
   });
 
   if (!response.ok) {

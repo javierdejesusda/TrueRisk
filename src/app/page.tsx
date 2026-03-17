@@ -1,11 +1,24 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
+
+const RotatingEarth = dynamic(
+  () => import('@/components/globe/rotating-earth').then((m) => ({ default: m.RotatingEarth })),
+  { ssr: false },
+);
 
 export default function Home() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg-primary px-4">
+      {/* Globe background */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="h-[600px] w-[600px] sm:h-[700px] sm:w-[700px] lg:h-[800px] lg:w-[800px]">
+          <RotatingEarth className="h-full w-full" />
+        </div>
+      </div>
+
       {/* Animated background glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full bg-accent-green/8 blur-[120px]" />

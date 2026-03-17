@@ -3,6 +3,18 @@ import type { UserProfile } from '@/types/user';
 import type { ParsedWeather } from '@/types/weather';
 import type { Alert } from '@/types/alert';
 
+export interface GeoLocation {
+  latitude: number;
+  longitude: number;
+  province: string | null;
+  provinceName: string | null;
+  municipality: string | null;
+  accuracy: number;
+  timestamp: number;
+}
+
+export type GeoStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'error';
+
 interface AppState {
   user: UserProfile | null;
   setUser: (user: UserProfile | null) => void;

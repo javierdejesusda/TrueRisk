@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import * as topojson from 'topojson-client';
 import type { GeoPermissibleObjects } from 'd3';
 
 interface RotatingEarthProps {
@@ -9,19 +10,38 @@ interface RotatingEarthProps {
 }
 
 export function RotatingEarth({ className }: RotatingEarthProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+        }
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg || !dimensions) return;
 
-    const width = svg.clientWidth || 800;
-    const height = svg.clientHeight || 800;
+    const { width, height } = dimensions;
     const sensitivity = 75;
 
     const projection = d3.geoOrthographic()
-      .scale(width / 2.2)
+      .scale(Math.min(width, height) / 2.2)
       .center([0, 0])
       .rotate([-10, -30])
       .translate([width / 2, height / 2]);
@@ -29,6 +49,8 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
     const path = d3.geoPath().projection(projection);
     const svgSel = d3.select(svg);
     svgSel.selectAll('*').remove();
+
+    svgSel.attr('viewBox', `0 0 ${width} ${height}`);
 
     const globe = svgSel.append('circle')
       .attr('fill', '#000000')
@@ -42,7 +64,7 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
       .datum(d3.geoGraticule10())
       .attr('d', path as any)
       .style('fill', 'none')
-      .style('stroke', 'rgba(255, 255, 255, 0.06)')
+      .style('stroke', 'rgba(255, 255, 255, 0.08)')
       .style('stroke-width', '0.5')
       .attr('class', 'graticule');
 
@@ -56,43 +78,51 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
       .attr('cx', 2)
       .attr('cy', 2)
       .attr('r', 0.7)
-      .attr('fill', '#48484A');
+      .attr('fill', '#636366');
+
+    let landGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
 
     d3.json<any>('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then((data) => {
       if (!data) return;
 
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3';
-      script.onload = () => {
-        const topo = (window as any).topojson;
-        if (!topo) return;
-        const land = topo.feature(data, data.objects.countries);
+      const land = topojson.feature(data, data.objects.countries) as any;
 
-        svgSel.append('g')
-          .selectAll('path')
-          .data(land.features as GeoPermissibleObjects[])
-          .enter().append('path')
-          .attr('d', path as any)
-          .style('fill', 'url(#halftone)')
-          .style('stroke', 'rgba(255, 255, 255, 0.25)')
-          .style('stroke-width', '0.5');
+      landGroup = svgSel.append('g')
+        .selectAll('path')
+        .data(land.features as GeoPermissibleObjects[])
+        .enter().append('path')
+        .attr('d', path as any)
+        .style('fill', 'url(#halftone)')
+        .style('stroke', 'rgba(255, 255, 255, 0.3)')
+        .style('stroke-width', '0.5')
+        .selection().node()?.parentElement
+        ? svgSel.select('g:last-of-type') as any
+        : null;
 
-        setLoaded(true);
-      };
-      document.head.appendChild(script);
+      setLoaded(true);
     });
 
+    const updatePaths = () => {
+      svgSel.selectAll('path').attr('d', path as any);
+      globe
+        .attr('cx', width / 2)
+        .attr('cy', height / 2)
+        .attr('r', projection.scale());
+    };
+
     const dragBehavior = d3.drag<SVGSVGElement, unknown>()
+      .on('start', () => {
+        rotationTimer?.stop();
+        rotationTimer = null;
+      })
       .on('drag', (event) => {
         const rotate = projection.rotate();
         const k = sensitivity / projection.scale();
         projection.rotate([rotate[0] + event.dx * k, rotate[1] - event.dy * k]);
-
-        svgSel.selectAll('path').attr('d', path as any);
-        globe
-          .attr('cx', width / 2)
-          .attr('cy', height / 2)
-          .attr('r', projection.scale());
+        updatePaths();
+      })
+      .on('end', () => {
+        startAutoRotation();
       });
 
     svgSel.call(dragBehavior);
@@ -101,42 +131,42 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
       event.preventDefault();
       const currentScale = projection.scale();
       const newScale = currentScale * (1 - event.deltaY * 0.001);
-      const clampedScale = Math.max(width / 6, Math.min(width, newScale));
+      const minScale = Math.min(width, height) / 6;
+      const maxScale = Math.min(width, height);
+      const clampedScale = Math.max(minScale, Math.min(maxScale, newScale));
       projection.scale(clampedScale);
-
-      svgSel.selectAll('path').attr('d', path as any);
-      globe
-        .attr('cx', width / 2)
-        .attr('cy', height / 2)
-        .attr('r', clampedScale);
+      updatePaths();
     }, { passive: false });
 
     let rotationTimer: ReturnType<typeof d3.timer> | null = null;
-    rotationTimer = d3.timer(() => {
-      const rotate = projection.rotate();
-      projection.rotate([rotate[0] + 0.15, rotate[1]]);
-      svgSel.selectAll('path').attr('d', path as any);
-    });
 
-    svgSel.on('mousedown', () => { rotationTimer?.stop(); });
-    svgSel.on('mouseup', () => {
+    const startAutoRotation = () => {
+      rotationTimer?.stop();
       rotationTimer = d3.timer(() => {
         const rotate = projection.rotate();
         projection.rotate([rotate[0] + 0.15, rotate[1]]);
-        svgSel.selectAll('path').attr('d', path as any);
+        updatePaths();
       });
-    });
+    };
+
+    startAutoRotation();
 
     return () => {
       rotationTimer?.stop();
     };
-  }, []);
+  }, [dimensions]);
 
   return (
-    <svg
-      ref={svgRef}
-      className={className}
-      style={{ width: '100%', height: '100%', opacity: loaded ? 1 : 0, transition: 'opacity 0.8s ease' }}
-    />
+    <div ref={containerRef} className={className} style={{ position: 'relative' }}>
+      <svg
+        ref={svgRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.8s ease',
+        }}
+      />
+    </div>
   );
 }
