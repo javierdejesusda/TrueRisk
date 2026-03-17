@@ -98,7 +98,8 @@ function buildLowPrompt(province: string, residenceLabel: string): string {
     `El usuario vive en una vivienda tipo ${residenceLabel}. ` +
     `Las condiciones meteorologicas son actualmente suaves y no hay alertas significativas. ` +
     `Ofrece consejos practicos para el dia a dia y preparacion general ante posibles cambios del tiempo. ` +
-    `Mantiene un tono relajado e informativo.`
+    `Mantiene un tono relajado e informativo. ` +
+    `Responde de forma breve y concisa, en un maximo de 3-4 frases cortas.`
   );
 }
 
@@ -116,7 +117,8 @@ function buildModeratePrompt(
     `El usuario en ${province}, que vive en una vivienda tipo ${residenceLabel}, ` +
     `debe estar atento a condiciones de tipo ${translateEmergencyType(emergencyType)}. ` +
     `Proporciona precauciones especificas y medidas preventivas. ` +
-    `Usa un tono de aviso moderado pero claro.`
+    `Usa un tono de aviso moderado pero claro. ` +
+    `Responde de forma breve y concisa, en un maximo de 3-4 frases cortas.`
   );
 }
 
@@ -139,9 +141,9 @@ function buildHighPrompt(
     `Datos actuales: temperatura ${weather.temperature}°C, precipitacion ${weather.precipitation}mm, ` +
     `viento ${weather.windSpeed ?? 'N/D'} km/h. ` +
     `El usuario vive en una vivienda tipo ${residenceLabel}.${needsClause} ` +
-    `Proporciona instrucciones de seguridad detalladas. ` +
-    `Piensa paso a paso sobre la situacion exacta de esta persona. ` +
-    `Usa un tono urgente pero controlado.`
+    `Proporciona instrucciones de seguridad concretas. ` +
+    `Usa un tono urgente pero controlado. ` +
+    `Responde de forma breve, en un maximo de 4-5 frases directas.`
   );
 }
 
@@ -173,8 +175,9 @@ function buildVeryHighPrompt(
     `El usuario vive en ${residenceLabel}.${needsClause}\n\n` +
     `Instrucciones especificas para este tipo de vivienda:\n${residenceGuidance}\n\n` +
     `${needsGuidance ? `Consideraciones especiales:\n${needsGuidance}\n\n` : ''}` +
-    `Proporciona instrucciones de evacuacion o refugio paso a paso, ` +
-    `adaptadas a la situacion exacta del usuario. Se muy especifico y directo.`
+    `Proporciona instrucciones de evacuacion o refugio concretas, ` +
+    `adaptadas a la situacion del usuario. Se directo. ` +
+    `Responde en un maximo de 5-6 frases breves y accionables.`
   );
 }
 
@@ -199,7 +202,8 @@ function buildCriticalPrompt(
     `2) Preparacion de evacuacion si es necesario, ` +
     `3) Numeros de emergencia y recursos, ` +
     `4) Que llevar y que dejar atras. ` +
-    `Usa un tono directo, claro y de maxima urgencia. No pierdas tiempo con introducciones.`
+    `Usa un tono directo, claro y de maxima urgencia. No pierdas tiempo con introducciones. ` +
+    `Responde en un maximo de 5-6 frases breves y accionables.`
   );
 }
 

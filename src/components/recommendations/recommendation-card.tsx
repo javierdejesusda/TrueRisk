@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,36 @@ function getRiskLabel(score: number): string {
   if (score <= 60) return 'High';
   if (score <= 80) return 'Very High';
   return 'Critical';
+}
+
+function RecommendationContent({ recommendation }: { recommendation: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = recommendation.length > 280;
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div
+        className={[
+          'text-sm text-text-secondary whitespace-pre-line leading-relaxed',
+          !expanded && isLong ? 'line-clamp-5' : '',
+        ].join(' ')}
+      >
+        {recommendation}
+      </div>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="cursor-pointer self-start text-xs font-medium text-accent-green hover:underline"
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+      <p className="text-xs text-text-muted">
+        Generated {new Date().toLocaleTimeString()}
+      </p>
+    </div>
+  );
 }
 
 export function RecommendationCard({
@@ -63,14 +94,7 @@ export function RecommendationCard({
         </div>
 
         {recommendation ? (
-          <div className="flex flex-col gap-2">
-            <div className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">
-              {recommendation}
-            </div>
-            <p className="text-xs text-text-muted">
-              Generated {new Date().toLocaleTimeString()}
-            </p>
-          </div>
+          <RecommendationContent recommendation={recommendation} />
         ) : (
           <div className="flex flex-col items-center gap-3 py-4">
             <p className="text-sm text-text-muted text-center">
