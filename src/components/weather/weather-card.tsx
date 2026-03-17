@@ -7,6 +7,7 @@ import type { ParsedWeather } from '@/types/weather';
 export interface WeatherCardProps {
   weather: ParsedWeather | null;
   isLoading: boolean;
+  province?: string;
 }
 
 function getWeatherIcon(weather: ParsedWeather): string {
@@ -64,7 +65,7 @@ function MetricItem({ label, value, unit }: { label: string; value: string; unit
   );
 }
 
-export function WeatherCard({ weather, isLoading }: WeatherCardProps) {
+export function WeatherCard({ weather, isLoading, province }: WeatherCardProps) {
   if (isLoading) {
     return (
       <Card padding="md">
@@ -98,9 +99,16 @@ export function WeatherCard({ weather, isLoading }: WeatherCardProps) {
   return (
     <Card padding="md" className={`border-l-4 ${borderColor}`}>
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-text-muted uppercase tracking-wider">
-          Current Weather
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-text-muted uppercase tracking-wider">
+            Current Weather
+          </h3>
+          {province && (
+            <span className="text-xs text-text-secondary font-medium">
+              {province}
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1">

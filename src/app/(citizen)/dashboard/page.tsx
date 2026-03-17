@@ -98,7 +98,7 @@ export default function DashboardPage() {
           animate="visible"
           custom={0}
         >
-          <WeatherCard weather={weather} isLoading={weatherLoading} />
+          <WeatherCard weather={weather} isLoading={weatherLoading} province={user?.province} />
         </motion.div>
 
         {/* Risk Gauge */}
