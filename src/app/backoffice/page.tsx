@@ -98,6 +98,7 @@ export default function BackofficeDashboardPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetching data on mount is intentional
     fetchDashboardData();
   }, [fetchDashboardData]);
 

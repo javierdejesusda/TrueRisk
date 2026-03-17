@@ -33,6 +33,57 @@ export interface MunicipalityForecast {
   daily: DailyForecast[];
 }
 
+interface AemetPeriodEntry {
+  periodo?: string;
+  value?: string;
+  descripcion?: string;
+  direccion?: string | string[];
+  velocidad?: string | string[];
+}
+
+interface AemetHourlyDia {
+  fecha?: string;
+  temperatura?: AemetPeriodEntry[];
+  sensTermica?: AemetPeriodEntry[];
+  humedadRelativa?: AemetPeriodEntry[];
+  precipitacion?: AemetPeriodEntry[];
+  probPrecipitacion?: AemetPeriodEntry[];
+  estadoCielo?: AemetPeriodEntry[];
+  vientoAndRachaMax?: AemetPeriodEntry[];
+  uvMax?: number;
+}
+
+interface AemetDailyDia {
+  fecha?: string;
+  temperatura?: { maxima?: number; minima?: number };
+  humedadRelativa?: { maxima?: number; minima?: number };
+  probPrecipitacion?: AemetPeriodEntry[];
+  estadoCielo?: AemetPeriodEntry[];
+  viento?: AemetPeriodEntry[];
+  uvMax?: number;
+}
+
+interface AemetHourlyEntry {
+  nombre?: string;
+  provincia?: string;
+  elaborado?: string;
+  prediccion?: {
+    dia?: AemetHourlyDia[];
+  };
+}
+
+interface AemetDailyEntry {
+  nombre?: string;
+  provincia?: string;
+  elaborado?: string;
+  prediccion?: {
+    dia?: AemetDailyDia[];
+  };
+}
+
+type AemetHourlyResponse = AemetHourlyEntry[];
+type AemetDailyResponse = AemetDailyEntry[];
+
 async function fetchAemetData(url: string, apiKey: string): Promise<unknown> {
   const metaRes = await fetch(url, {
     headers: { 'api_key': apiKey },
@@ -48,7 +99,7 @@ async function fetchAemetData(url: string, apiKey: string): Promise<unknown> {
   return dataRes.json();
 }
 
-function parseHourlyForecast(data: any): HourlyForecast[] {
+function parseHourlyForecast(data: AemetHourlyResponse): HourlyForecast[] {
   const result: HourlyForecast[] = [];
   if (!data?.[0]?.prediccion?.dia) return result;
 
@@ -70,11 +121,11 @@ function parseHourlyForecast(data: any): HourlyForecast[] {
       const entry: HourlyForecast = {
         hour: `${fecha}T${hour.padStart(2, '0')}:00`,
         temperature: parseInt(t.value) || 0,
-        feelsLike: parseInt(feels.find((f: any) => f.periodo === hour)?.value ?? t.value) || 0,
-        humidity: parseInt(humidity.find((h: any) => h.periodo === hour)?.value ?? '0') || 0,
-        precipitation: parseFloat(precip.find((p: any) => p.periodo === hour)?.value ?? '0') || 0,
+        feelsLike: parseInt(feels.find((f: AemetPeriodEntry) => f.periodo === hour)?.value ?? t.value) || 0,
+        humidity: parseInt(humidity.find((h: AemetPeriodEntry) => h.periodo === hour)?.value ?? '0') || 0,
+        precipitation: parseFloat(precip.find((p: AemetPeriodEntry) => p.periodo === hour)?.value ?? '0') || 0,
         precipitationProb: parseInt(
-          precipProb.find((p: any) => {
+          precipProb.find((p: AemetPeriodEntry) => {
             const per = p.periodo || '';
             const h = parseInt(hour);
             if (per.length === 4) {
@@ -88,8 +139,8 @@ function parseHourlyForecast(data: any): HourlyForecast[] {
         windSpeed: 0,
         windDirection: '',
         gustSpeed: 0,
-        skyDescription: sky.find((s: any) => s.periodo === hour)?.descripcion ?? '',
-        skyCode: sky.find((s: any) => s.periodo === hour)?.value ?? '',
+        skyDescription: sky.find((s: AemetPeriodEntry) => s.periodo === hour)?.descripcion ?? '',
+        skyCode: sky.find((s: AemetPeriodEntry) => s.periodo === hour)?.value ?? '',
       };
 
       // Wind data has mixed format: direction+velocity objects and gust values
@@ -108,25 +159,25 @@ function parseHourlyForecast(data: any): HourlyForecast[] {
   return result;
 }
 
-function parseDailyForecast(data: any): DailyForecast[] {
+function parseDailyForecast(data: AemetDailyResponse): DailyForecast[] {
   const result: DailyForecast[] = [];
   if (!data?.[0]?.prediccion?.dia) return result;
 
   for (const dia of data[0].prediccion.dia) {
     const fecha = dia.fecha?.split('T')[0] || '';
-    const temp = dia.temperatura || {};
-    const hum = dia.humedadRelativa || {};
+    const temp = dia.temperatura ?? { maxima: 0, minima: 0 };
+    const hum = dia.humedadRelativa ?? { maxima: 0, minima: 0 };
     const precipProb = dia.probPrecipitacion || [];
     const sky = dia.estadoCielo || [];
     const wind = dia.viento || [];
 
     // Get the best sky description (prefer midday period)
-    const skyEntry = sky.find((s: any) => s.periodo === '12-24' || s.periodo === '00-24') || sky[0];
-    const windEntry = wind.find((w: any) => w.periodo === '12-24' || w.periodo === '00-24') || wind[0];
+    const skyEntry = sky.find((s: AemetPeriodEntry) => s.periodo === '12-24' || s.periodo === '00-24') || sky[0];
+    const windEntry = wind.find((w: AemetPeriodEntry) => w.periodo === '12-24' || w.periodo === '00-24') || wind[0];
 
     // Get max precipitation probability
     const maxPrecipProb = Math.max(
-      ...precipProb.map((p: any) => parseInt(p.value) || 0),
+      ...precipProb.map((p: AemetPeriodEntry) => parseInt(p.value ?? '0') || 0),
       0
     );
 
@@ -137,8 +188,8 @@ function parseDailyForecast(data: any): DailyForecast[] {
       precipitationProb: maxPrecipProb,
       skyDescription: skyEntry?.descripcion ?? '',
       skyCode: skyEntry?.value ?? '',
-      windSpeed: windEntry?.velocidad ?? 0,
-      windDirection: windEntry?.direccion ?? '',
+      windSpeed: typeof windEntry?.velocidad === 'string' ? parseInt(windEntry.velocidad) || 0 : 0,
+      windDirection: typeof windEntry?.direccion === 'string' ? windEntry.direccion : '',
       humidity: { max: hum.maxima ?? 0, min: hum.minima ?? 0 },
       uvMax: dia.uvMax ?? 0,
     });
@@ -161,16 +212,18 @@ export async function fetchMunicipalityForecast(municipioCode: string): Promise<
     const hourlyData = hourlyResult.status === 'fulfilled' ? hourlyResult.value : null;
     const dailyData = dailyResult.status === 'fulfilled' ? dailyResult.value : null;
 
-    const name = (hourlyData as any)?.[0]?.nombre ?? (dailyData as any)?.[0]?.nombre ?? '';
-    const province = (hourlyData as any)?.[0]?.provincia ?? (dailyData as any)?.[0]?.provincia ?? '';
-    const elaborated = (hourlyData as any)?.[0]?.elaborado ?? new Date().toISOString();
+    const hourly = hourlyData as AemetHourlyResponse | null;
+    const daily = dailyData as AemetDailyResponse | null;
+    const name = hourly?.[0]?.nombre ?? daily?.[0]?.nombre ?? '';
+    const province = hourly?.[0]?.provincia ?? daily?.[0]?.provincia ?? '';
+    const elaborated = hourly?.[0]?.elaborado ?? new Date().toISOString();
 
     return {
       name,
       province,
       elaborated,
-      hourly: hourlyData ? parseHourlyForecast(hourlyData) : [],
-      daily: dailyData ? parseDailyForecast(dailyData) : [],
+      hourly: hourly ? parseHourlyForecast(hourly) : [],
+      daily: daily ? parseDailyForecast(daily) : [],
     };
   } catch (err) {
     console.error('AEMET forecast fetch error:', err);

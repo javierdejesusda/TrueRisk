@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
+import type { Topology } from 'topojson-specification';
 import type { GeoPermissibleObjects } from 'd3';
+import type { FeatureCollection, GeometryObject, GeoJsonProperties } from 'geojson';
 
 interface RotatingEarthProps {
   className?: string;
@@ -62,7 +64,7 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
 
     svgSel.append('path')
       .datum(d3.geoGraticule10())
-      .attr('d', path as any)
+      .attr('d', path as unknown as (d: GeoPermissibleObjects) => string)
       .style('fill', 'none')
       .style('stroke', 'rgba(255, 255, 255, 0.08)')
       .style('stroke-width', '0.5')
@@ -80,30 +82,25 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
       .attr('r', 0.7)
       .attr('fill', '#636366');
 
-    let landGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
-
-    d3.json<any>('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then((data) => {
+    d3.json<Topology>('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then((data) => {
       if (!data) return;
 
-      const land = topojson.feature(data, data.objects.countries) as any;
+      const land = topojson.feature(data, data.objects.countries) as FeatureCollection<GeometryObject, GeoJsonProperties>;
 
-      landGroup = svgSel.append('g')
+      svgSel.append('g')
         .selectAll('path')
         .data(land.features as GeoPermissibleObjects[])
         .enter().append('path')
-        .attr('d', path as any)
+        .attr('d', path as unknown as (d: GeoPermissibleObjects) => string)
         .style('fill', 'url(#halftone)')
         .style('stroke', 'rgba(255, 255, 255, 0.3)')
-        .style('stroke-width', '0.5')
-        .selection().node()?.parentElement
-        ? svgSel.select('g:last-of-type') as any
-        : null;
+        .style('stroke-width', '0.5');
 
       setLoaded(true);
     });
 
     const updatePaths = () => {
-      svgSel.selectAll('path').attr('d', path as any);
+      svgSel.selectAll('path').attr('d', path as unknown as (d: GeoPermissibleObjects) => string);
       globe
         .attr('cx', width / 2)
         .attr('cy', height / 2)

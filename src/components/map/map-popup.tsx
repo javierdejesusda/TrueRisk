@@ -242,6 +242,7 @@ export function MapPopup({ provinceName, summary, municipalityCode, provinceCode
   useEffect(() => {
     const code = municipalityCode || (provinceCode ? PROVINCE_CAPITALS[provinceCode] : null);
     if (!code) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetching data on mount is intentional
     setForecastLoading(true);
     fetch(`/api/forecast/${code}`)
       .then(res => res.json())

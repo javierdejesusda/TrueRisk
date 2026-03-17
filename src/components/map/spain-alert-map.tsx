@@ -14,7 +14,7 @@ export interface SpainAlertMapProps {
   isLoading: boolean;
 }
 
-export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
+export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
