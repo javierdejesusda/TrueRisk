@@ -120,8 +120,8 @@ function parseHourlyForecast(data: AemetHourlyResponse): HourlyForecast[] {
 
       const entry: HourlyForecast = {
         hour: `${fecha}T${hour.padStart(2, '0')}:00`,
-        temperature: parseInt(t.value) || 0,
-        feelsLike: parseInt(feels.find((f: AemetPeriodEntry) => f.periodo === hour)?.value ?? t.value) || 0,
+        temperature: parseInt(t.value ?? '0') || 0,
+        feelsLike: parseInt(feels.find((f: AemetPeriodEntry) => f.periodo === hour)?.value ?? t.value ?? '0') || 0,
         humidity: parseInt(humidity.find((h: AemetPeriodEntry) => h.periodo === hour)?.value ?? '0') || 0,
         precipitation: parseFloat(precip.find((p: AemetPeriodEntry) => p.periodo === hour)?.value ?? '0') || 0,
         precipitationProb: parseInt(

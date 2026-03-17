@@ -64,7 +64,7 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
 
     svgSel.append('path')
       .datum(d3.geoGraticule10())
-      .attr('d', path as unknown as (d: GeoPermissibleObjects) => string)
+      .attr('d', (d) => path(d as GeoPermissibleObjects) ?? '')
       .style('fill', 'none')
       .style('stroke', 'rgba(255, 255, 255, 0.08)')
       .style('stroke-width', '0.5')
@@ -91,7 +91,7 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
         .selectAll('path')
         .data(land.features as GeoPermissibleObjects[])
         .enter().append('path')
-        .attr('d', path as unknown as (d: GeoPermissibleObjects) => string)
+        .attr('d', (d) => path(d as GeoPermissibleObjects) ?? '')
         .style('fill', 'url(#halftone)')
         .style('stroke', 'rgba(255, 255, 255, 0.3)')
         .style('stroke-width', '0.5');
@@ -100,7 +100,7 @@ export function RotatingEarth({ className }: RotatingEarthProps) {
     });
 
     const updatePaths = () => {
-      svgSel.selectAll('path').attr('d', path as unknown as (d: GeoPermissibleObjects) => string);
+      svgSel.selectAll<SVGPathElement, GeoPermissibleObjects>('path').attr('d', (d) => path(d) ?? '');
       globe
         .attr('cx', width / 2)
         .attr('cy', height / 2)
