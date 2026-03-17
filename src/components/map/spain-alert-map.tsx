@@ -205,12 +205,12 @@ export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
                 'fill-color': [
                   'match',
                   ['get', 'alertSeverity'],
-                  5, '#dc2626',
-                  4, '#ef4444',
-                  3, '#f97316',
-                  2, '#fbbf24',
-                  1, '#34d399',
-                  '#1a2b1e',
+                  5, '#FF2D55',
+                  4, '#FF453A',
+                  3, '#FF9F0A',
+                  2, '#FFD60A',
+                  1, '#30D158',
+                  '#1C1C1E',
                 ],
                 'fill-opacity': [
                   'interpolate', ['linear'], ['zoom'],
@@ -224,9 +224,29 @@ export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
               id="province-outline"
               type="line"
               paint={{
-                'line-color': '#2a3f2e',
+                'line-color': '#38383A',
                 'line-width': 1,
                 'line-opacity': ['interpolate', ['linear'], ['zoom'], 6, 1, 7, 0.3],
+              }}
+            />
+            <Layer
+              id="province-labels"
+              type="symbol"
+              layout={{
+                'text-field': ['get', 'provinceName'],
+                'text-size': ['interpolate', ['linear'], ['zoom'], 5, 9, 6, 11, 7, 13],
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                'text-allow-overlap': false,
+                'text-padding': 4,
+                'text-max-width': 7,
+                'text-transform': 'uppercase',
+                'text-letter-spacing': 0.08,
+              }}
+              paint={{
+                'text-color': '#F5F5F7',
+                'text-halo-color': 'rgba(0, 0, 0, 0.8)',
+                'text-halo-width': 1.5,
+                'text-opacity': ['interpolate', ['linear'], ['zoom'], 6.5, 1, 7.5, 0],
               }}
             />
           </Source>
@@ -247,12 +267,12 @@ export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
                 'fill-color': [
                   'match',
                   ['get', 'alertSeverity'],
-                  5, '#dc2626',
-                  4, '#ef4444',
-                  3, '#f97316',
-                  2, '#fbbf24',
-                  1, '#34d399',
-                  '#1a2b1e',
+                  5, '#FF2D55',
+                  4, '#FF453A',
+                  3, '#FF9F0A',
+                  2, '#FFD60A',
+                  1, '#30D158',
+                  '#1C1C1E',
                 ],
                 'fill-opacity': [
                   'case',
@@ -266,8 +286,25 @@ export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
               id="municipality-outline"
               type="line"
               paint={{
-                'line-color': '#2a3f2e',
+                'line-color': '#38383A',
                 'line-width': 0.5,
+              }}
+            />
+            <Layer
+              id="municipality-labels"
+              type="symbol"
+              layout={{
+                'text-field': ['coalesce', ['get', 'municipalityName'], ['get', 'name']],
+                'text-size': ['interpolate', ['linear'], ['zoom'], 7, 9, 9, 12],
+                'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                'text-allow-overlap': false,
+                'text-padding': 2,
+                'text-max-width': 6,
+              }}
+              paint={{
+                'text-color': '#F5F5F7',
+                'text-halo-color': 'rgba(0, 0, 0, 0.8)',
+                'text-halo-width': 1,
               }}
             />
           </Source>
@@ -307,6 +344,7 @@ export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
             />
           </Popup>
         )}
+
       </Map>
 
       {/* Overlay controls */}

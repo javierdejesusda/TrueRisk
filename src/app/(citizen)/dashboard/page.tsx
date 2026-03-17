@@ -32,7 +32,6 @@ export default function DashboardPage() {
   const { weather, isLoading: weatherLoading } = useWeather();
   const { risk, isLoading: riskLoading } = useRiskScore();
   const { alerts, isLoading: alertsLoading } = useAlerts();
-
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [recLoading, setRecLoading] = useState(false);
   const [dismissedAlertId, setDismissedAlertId] = useState<number | null>(null);
@@ -73,7 +72,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-text-primary">Dashboard</h1>
         <p className="text-sm text-text-muted mt-1">
           Real-time climate monitoring
         </p>
@@ -129,7 +128,7 @@ export default function DashboardPage() {
               </h3>
               {alertsLoading ? (
                 <div className="flex items-center justify-center py-6">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent-green" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent-primary" />
                 </div>
               ) : alerts.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-4">
@@ -217,6 +216,7 @@ export default function DashboardPage() {
             </div>
           </Card>
         </motion.div>
+
       </div>
     </div>
   );

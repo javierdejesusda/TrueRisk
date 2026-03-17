@@ -25,7 +25,7 @@ export default function CitizenLayout({
     return (
       <div className="flex h-screen items-center justify-center bg-bg-primary">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent-green" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent-primary" />
           <span className="text-sm text-text-muted">Loading...</span>
         </div>
       </div>

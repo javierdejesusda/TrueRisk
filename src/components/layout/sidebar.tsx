@@ -15,7 +15,7 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-/* ── SVG icon helpers (inline, no external lib) ─────────────── */
+/* SVG icon helpers */
 
 function DashboardIcon() {
   return (
@@ -111,7 +111,7 @@ function CloseIcon() {
   );
 }
 
-/* ── Navigation data ────────────────────────────────────────── */
+/* Navigation data */
 
 const citizenLinks: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
@@ -129,7 +129,7 @@ const backofficeLinks: NavItem[] = [
   { label: 'Citizens', href: '/backoffice/citizens', icon: <PeopleIcon /> },
 ];
 
-/* ── Sidebar component ──────────────────────────────────────── */
+/* Sidebar component */
 
 export function Sidebar({ role }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -143,15 +143,14 @@ export function Sidebar({ role }: SidebarProps) {
 
   const navContent = (
     <>
-      {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-green/15 text-accent-green">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10 1C5 1 1 5 1 10s4 9 9 9 9-4 9-9S15 1 10 1zm0 16c-3.9 0-7-3.1-7-7s3.1-7 7-7 7 3.1 7 7-3.1 7-7 7z" />
             <path d="M10 5l-1.5 4H5l3.5 2.5L7 16l3-2.2 3 2.2-1.5-4.5L15 9h-3.5z" />
           </svg>
         </div>
-        <span className="text-lg font-bold text-text-primary tracking-tight">
+        <span className="text-lg font-bold text-white tracking-tight">
           AlertML
         </span>
       </div>
@@ -168,8 +167,8 @@ export function Sidebar({ role }: SidebarProps) {
               className={[
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                 active
-                  ? 'bg-accent-green/10 text-accent-green'
-                  : 'text-text-secondary hover:bg-bg-card hover:text-text-primary',
+                  ? 'bg-white/[0.08] text-white'
+                  : 'text-[#86868B] hover:text-white',
               ].join(' ')}
             >
               <span className="shrink-0">{item.icon}</span>
@@ -183,7 +182,7 @@ export function Sidebar({ role }: SidebarProps) {
 
   return (
     <>
-      {/* ── Mobile hamburger button ────────────────────────────── */}
+      {/* Mobile hamburger button */}
       <button
         className="fixed top-3 left-3 z-50 rounded-lg bg-bg-secondary p-2 text-text-primary lg:hidden cursor-pointer"
         onClick={() => setMobileOpen((v) => !v)}
@@ -192,7 +191,7 @@ export function Sidebar({ role }: SidebarProps) {
         {mobileOpen ? <CloseIcon /> : <MenuIcon />}
       </button>
 
-      {/* ── Mobile overlay ─────────────────────────────────────── */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -200,10 +199,10 @@ export function Sidebar({ role }: SidebarProps) {
         />
       )}
 
-      {/* ── Sidebar panel ──────────────────────────────────────── */}
+      {/* Sidebar panel */}
       <aside
         className={[
-          'fixed top-0 left-0 z-40 flex h-full w-60 flex-col border-r border-border bg-bg-secondary',
+          'fixed top-0 left-0 z-40 flex h-full w-60 flex-col border-r border-white/[0.06] bg-bg-secondary',
           'transition-transform duration-200 ease-in-out',
           'lg:translate-x-0 lg:static lg:z-auto',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
