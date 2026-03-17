@@ -49,8 +49,8 @@ export default function Home() {
 
         {/* Title */}
         <h1 className="text-5xl font-bold tracking-tight text-text-primary sm:text-6xl lg:text-7xl">
-          Alert
-          <span className="text-accent-green">ML</span>
+          True
+          <span className="text-accent-green">Risk</span>
         </h1>
 
         {/* Subtitle */}

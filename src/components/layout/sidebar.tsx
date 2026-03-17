@@ -152,7 +152,7 @@ export function Sidebar({ role }: SidebarProps) {
           </svg>
         </div>
         <span className="text-lg font-bold text-white tracking-tight">
-          AlertML
+          TrueRisk
         </span>
       </div>
 

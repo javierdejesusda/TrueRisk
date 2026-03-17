@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AlertML - Climate Emergency Management",
+  title: "TrueRisk - Climate Emergency Management",
   description: "Real-time weather monitoring, AI-powered risk analysis, and personalised emergency guidance.",
 };
 

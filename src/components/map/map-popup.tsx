@@ -10,7 +10,7 @@ export interface MapPopupProps {
   summary: {
     maxSeverity: number;
     alertCount: number;
-    alerts: { title: string; severity: number; type: string; source: 'alertml' | 'aemet' }[];
+    alerts: { title: string; severity: number; type: string; source: 'truerisk' | 'aemet' }[];
   };
   municipalityCode?: string;
   provinceCode?: string;

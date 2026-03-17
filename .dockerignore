@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env*
+dev.db
+dev.db-journal
+docker-compose*.yml
+Dockerfile
+.dockerignore

@@ -11,7 +11,7 @@ export interface ProvinceAlertSummary {
   provinceName: string;
   maxSeverity: number;
   alertCount: number;
-  alerts: { title: string; severity: number; type: string; source: 'alertml' | 'aemet' }[];
+  alerts: { title: string; severity: number; type: string; source: 'truerisk' | 'aemet' }[];
 }
 
 export interface MunicipalityAlertSummary {
@@ -19,7 +19,7 @@ export interface MunicipalityAlertSummary {
   municipalityName: string;
   maxSeverity: number;
   alertCount: number;
-  alerts: { title: string; severity: number; type: string; source: 'alertml' | 'aemet' }[];
+  alerts: { title: string; severity: number; type: string; source: 'truerisk' | 'aemet' }[];
 }
 
 export interface MapAlertData {
@@ -58,7 +58,7 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): MapAlertData {
       }
     };
 
-    // 1. Index internal AlertML alerts by province (supports both codes and names)
+    // 1. Index internal TrueRisk alerts by province (supports both codes and names)
     for (const alert of alerts) {
       if (!alert.province || !alert.isActive) continue;
       const code = resolveProvinceCode(alert.province);
@@ -69,7 +69,7 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): MapAlertData {
         title: alert.title,
         severity: alert.severity,
         type: alert.type,
-        source: 'alertml',
+        source: 'truerisk',
       });
       result[code].alertCount++;
       if (alert.severity > result[code].maxSeverity) {
@@ -101,7 +101,7 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): MapAlertData {
       }
     }
 
-    // 3. Index internal AlertML alerts by municipality
+    // 3. Index internal TrueRisk alerts by municipality
     for (const alert of alerts) {
       if (!alert.municipality || !alert.isActive) continue;
       const muniCode = alert.municipality;
@@ -118,7 +118,7 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): MapAlertData {
         title: alert.title,
         severity: alert.severity,
         type: alert.type,
-        source: 'alertml',
+        source: 'truerisk',
       });
       byMunicipality[muniCode].alertCount++;
       if (alert.severity > byMunicipality[muniCode].maxSeverity) {

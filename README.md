@@ -1,6 +1,10 @@
-# AlertML - Plataforma de Gestion de Emergencias Climaticas
+# TrueRisk - Plataforma de Gestion de Emergencias Climaticas
+
+[![CI](https://github.com/DJeison-DVT/AlertML/actions/workflows/ci.yml/badge.svg)](https://github.com/DJeison-DVT/AlertML/actions/workflows/ci.yml)
 
 Plataforma web de gestion de emergencias climaticas con scoring de riesgo ML y recomendaciones personalizadas mediante prompt engineering multi-etapa.
+
+**Live:** [truerisk.cloud](https://truerisk.cloud)
 
 ## Hackathon
 
@@ -71,6 +75,8 @@ src/
 - **Dashboard:** Bento grid con clima actual, gauge de riesgo, alertas activas, recomendaciones IA
 - **Alertas:** Lista de alertas activas con "Obtener consejo personalizado"
 - **Historial:** Graficos de clima y consultas pasadas con el LLM
+- **Mapa:** Mapa interactivo de Espana con alertas por provincia y municipio
+- **Predicciones:** Visualizaciones de modelos ML y distribucion de Gumbel
 - **Perfil:** Editar provincia, tipo de residencia, necesidades especiales
 
 ### Backoffice
@@ -79,18 +85,26 @@ src/
 - **Registros:** Historial meteorologico con analisis ML, exportar CSV
 - **Ciudadanos:** Tabla de usuarios registrados
 
-## Instalacion
+## Instalacion Local
 
 ```bash
+# Instalar dependencias
 npm install
+
+# Generar cliente Prisma e inicializar base de datos
+npx prisma generate
 npx prisma db push
+
+# Poblar base de datos con usuarios demo
 npx tsx prisma/seed.ts
+
+# Iniciar servidor de desarrollo
 npm run dev
 ```
 
 ## Variables de Entorno
 
-Crear `.env.local`:
+Crear `.env`:
 
 ```env
 DATABASE_URL="file:./dev.db"
@@ -110,6 +124,41 @@ USE_MOCK="false"
 | maria_valencia | demo123 | citizen |
 | carlos_madrid | demo123 | citizen |
 | ana_sevilla | demo123 | citizen |
+
+## Despliegue
+
+### Vercel (Recomendado)
+
+1. Conectar repositorio en [vercel.com](https://vercel.com)
+2. Configurar variables de entorno en el dashboard de Vercel
+3. Configurar dominio personalizado: `truerisk.cloud`
+4. El deploy se ejecuta automaticamente con cada push a `main`
+
+### Docker
+
+```bash
+# Construir imagen
+docker build -t truerisk .
+
+# Ejecutar contenedor
+docker run -p 3000:3000 \
+  -e DATABASE_URL="file:./dev.db" \
+  -e JWT_SECRET="<secret>" \
+  -e HACKATON_API_BASE="<url>" \
+  -e HACKATON_API_KEY="<token>" \
+  -e OPENAI_API_KEY="<key>" \
+  truerisk
+
+# O con docker-compose
+docker compose up -d
+```
+
+### CI/CD
+
+El proyecto incluye GitHub Actions que ejecuta en cada push/PR:
+- Type checking (TypeScript)
+- Linting (ESLint)
+- Build de produccion
 
 ## API Endpoints
 
