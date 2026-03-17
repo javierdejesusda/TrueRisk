@@ -17,6 +17,7 @@ const createAlertSchema = z.object({
   severity: z.number().int().min(1).max(5),
   type: z.enum(EMERGENCY_TYPES),
   province: z.string().optional(),
+  municipality: z.string().optional(),
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
   weatherData: z.record(z.string(), z.unknown()).optional(),
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { severity, type, province, title, description, weatherData } =
+    const { severity, type, province, municipality, title, description, weatherData } =
       parsed.data;
 
     const alert = await prisma.alert.create({
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
         severity,
         type,
         province: province ?? null,
+        municipality: municipality ?? null,
         title,
         description,
         weatherData: weatherData ? JSON.stringify(weatherData) : null,

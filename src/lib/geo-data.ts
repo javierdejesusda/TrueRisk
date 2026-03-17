@@ -106,3 +106,94 @@ export function aemetSeverityToNumeric(sev: AemetSeverity): number {
   };
   return map[sev];
 }
+
+// Reverse mapping: province letter code → 2-digit INE province code.
+export const PROVINCE_CODE_TO_INE: Record<string, string> = {};
+for (const [ine, code] of Object.entries(INE_TO_PROVINCE_CODE)) {
+  PROVINCE_CODE_TO_INE[code] = ine;
+}
+
+// Per-province cache for municipality GeoJSON (client-side only).
+const municipalityCache: Record<string, GeoJSON.FeatureCollection> = {};
+
+/**
+ * Fetches the municipality GeoJSON for a single province (identified by its
+ * 2-digit INE code, e.g. "46") and caches it in memory.
+ * Subsequent calls for the same code are served from the cache.
+ */
+export async function loadMunicipalityGeoJSON(
+  ineProvinceCode: string
+): Promise<GeoJSON.FeatureCollection> {
+  if (municipalityCache[ineProvinceCode]) return municipalityCache[ineProvinceCode];
+  const res = await fetch(`/geo/municipalities/${ineProvinceCode}.geojson`);
+  if (!res.ok) throw new Error(`Failed to load municipalities for province ${ineProvinceCode}`);
+  const data = await res.json();
+  municipalityCache[ineProvinceCode] = data;
+  return data;
+}
+
+/**
+ * Fetches municipality GeoJSON for multiple provinces in parallel and merges
+ * all features into a single FeatureCollection. Provinces that fail to load
+ * are silently skipped.
+ */
+export async function loadMunicipalitiesForProvinces(
+  ineProvinceCodes: string[]
+): Promise<GeoJSON.FeatureCollection> {
+  const collections = await Promise.all(
+    ineProvinceCodes.map((code) => loadMunicipalityGeoJSON(code).catch(() => null))
+  );
+
+  const features: GeoJSON.Feature[] = [];
+  for (const col of collections) {
+    if (col) features.push(...col.features);
+  }
+
+  return { type: 'FeatureCollection', features };
+}
+
+/**
+ * Returns a deep-cloned copy of `geojson` with alert data merged into each
+ * municipality feature. Municipality-level alerts take precedence; province-level
+ * alerts cascade down so municipalities inherit their province's severity.
+ * `Math.max()` ensures the highest severity from either source wins.
+ *
+ * Added properties per feature:
+ * - `alertSeverity`      – numeric max severity (municipality or province)
+ * - `alertCount`         – combined alert count from both sources
+ * - `municipalityName`   – human-readable name from the GeoJSON `name` field
+ * - `municipalityCode`   – 5-digit INE municipality code (`cod_muni`)
+ * - `provinceCode`       – letter code key used in PROVINCES
+ */
+export function enrichMunicipalityGeoJSON(
+  geojson: GeoJSON.FeatureCollection,
+  alertsByMunicipality: Record<string, { maxSeverity: number; alertCount: number }>,
+  alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>
+): GeoJSON.FeatureCollection {
+  const clone: GeoJSON.FeatureCollection = JSON.parse(JSON.stringify(geojson));
+
+  for (const feature of clone.features) {
+    const props = feature.properties ?? {};
+    const codMuni: string = props['cod_muni'] ?? '';
+    const codProv: string = props['cod_prov'] ?? codMuni.substring(0, 2);
+    const provinceCode = INE_TO_PROVINCE_CODE[codProv] ?? '';
+
+    // Municipality-specific alert takes precedence, then province cascade.
+    const muniAlert = alertsByMunicipality[codMuni];
+    const provAlert = alertsByProvince[provinceCode];
+
+    const alertSeverity = Math.max(muniAlert?.maxSeverity ?? 0, provAlert?.maxSeverity ?? 0);
+    const alertCount = (muniAlert?.alertCount ?? 0) + (provAlert?.alertCount ?? 0);
+
+    feature.properties = {
+      ...props,
+      alertSeverity,
+      alertCount,
+      municipalityName: props['name'] ?? '',
+      municipalityCode: codMuni,
+      provinceCode,
+    };
+  }
+
+  return clone;
+}

@@ -14,13 +14,37 @@ export interface ProvinceAlertSummary {
   alerts: { title: string; severity: number; type: string; source: 'alertml' | 'aemet' }[];
 }
 
-export function useMapAlerts(aemetAlerts: AemetCapAlert[]): Record<string, ProvinceAlertSummary> {
+export interface MunicipalityAlertSummary {
+  municipalityCode: string;
+  municipalityName: string;
+  maxSeverity: number;
+  alertCount: number;
+  alerts: { title: string; severity: number; type: string; source: 'alertml' | 'aemet' }[];
+}
+
+export interface MapAlertData {
+  byProvince: Record<string, ProvinceAlertSummary>;
+  byMunicipality: Record<string, MunicipalityAlertSummary>;
+}
+
+// Reverse lookup: province name -> province code
+const NAME_TO_CODE: Record<string, string> = {};
+for (const [code, info] of Object.entries(PROVINCES)) {
+  NAME_TO_CODE[info.name.toLowerCase()] = code;
+}
+
+function resolveProvinceCode(province: string): string | null {
+  if (PROVINCES[province]) return province;
+  return NAME_TO_CODE[province.toLowerCase()] ?? null;
+}
+
+export function useMapAlerts(aemetAlerts: AemetCapAlert[]): MapAlertData {
   const alerts = useAppStore((s) => s.alerts);
 
   return useMemo(() => {
     const result: Record<string, ProvinceAlertSummary> = {};
+    const byMunicipality: Record<string, MunicipalityAlertSummary> = {};
 
-    // Helper to ensure a province entry exists
     const ensureProvince = (code: string) => {
       if (!result[code]) {
         const info = PROVINCES[code];
@@ -34,11 +58,11 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): Record<string, Provi
       }
     };
 
-    // 1. Index internal AlertML alerts by province
+    // 1. Index internal AlertML alerts by province (supports both codes and names)
     for (const alert of alerts) {
       if (!alert.province || !alert.isActive) continue;
-      const code = alert.province;
-      if (!PROVINCES[code]) continue;
+      const code = resolveProvinceCode(alert.province);
+      if (!code) continue;
 
       ensureProvince(code);
       result[code].alerts.push({
@@ -77,6 +101,31 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): Record<string, Provi
       }
     }
 
-    return result;
+    // 3. Index internal AlertML alerts by municipality
+    for (const alert of alerts) {
+      if (!alert.municipality || !alert.isActive) continue;
+      const muniCode = alert.municipality;
+      if (!byMunicipality[muniCode]) {
+        byMunicipality[muniCode] = {
+          municipalityCode: muniCode,
+          municipalityName: muniCode, // Name resolved later by map component
+          maxSeverity: 0,
+          alertCount: 0,
+          alerts: [],
+        };
+      }
+      byMunicipality[muniCode].alerts.push({
+        title: alert.title,
+        severity: alert.severity,
+        type: alert.type,
+        source: 'alertml',
+      });
+      byMunicipality[muniCode].alertCount++;
+      if (alert.severity > byMunicipality[muniCode].maxSeverity) {
+        byMunicipality[muniCode].maxSeverity = alert.severity;
+      }
+    }
+
+    return { byProvince: result, byMunicipality };
   }, [alerts, aemetAlerts]);
 }

@@ -3,18 +3,18 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Map, { Source, Layer, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
-import { loadProvinceGeoJSON, enrichGeoJSON } from '@/lib/geo-data';
-import type { ProvinceAlertSummary } from '@/hooks/use-map-alerts';
+import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
+import type { MapAlertData, ProvinceAlertSummary } from '@/hooks/use-map-alerts';
 import { MapLegend } from './map-legend';
 import { MapPopup } from './map-popup';
 import { MapControls } from './map-controls';
 
 export interface SpainAlertMapProps {
-  alertsByProvince: Record<string, ProvinceAlertSummary>;
+  alertData: MapAlertData;
   isLoading: boolean;
 }
 
-export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProps) {
+export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
@@ -23,8 +23,12 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
     latitude: number;
     provinceName: string;
     provinceCode: string;
+    municipalityCode?: string;
   } | null>(null);
   const [hoveredFeatureId, setHoveredFeatureId] = useState<string | null>(null);
+  const [municipalityGeoJSON, setMunicipalityGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [visibleProvinceINEs, setVisibleProvinceINEs] = useState<string[]>([]);
+  const [zoomLevel, setZoomLevel] = useState(5.5);
 
   // Load GeoJSON once
   useEffect(() => {
@@ -37,29 +41,47 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
   // Enrich GeoJSON with alert data (creates new object each time)
   const enrichedGeoJSON = useMemo(() => {
     if (!baseGeoJSON) return null;
-    return enrichGeoJSON(baseGeoJSON, alertsByProvince);
-  }, [baseGeoJSON, alertsByProvince]);
+    return enrichGeoJSON(baseGeoJSON, alertData.byProvince);
+  }, [baseGeoJSON, alertData.byProvince]);
+
+  // Enrich municipality GeoJSON with alert data
+  const enrichedMunicipalityGeoJSON = useMemo(() => {
+    if (!municipalityGeoJSON) return null;
+    return enrichMunicipalityGeoJSON(
+      municipalityGeoJSON,
+      alertData.byMunicipality,
+      alertData.byProvince
+    );
+  }, [municipalityGeoJSON, alertData]);
 
   // Total alert count for controls
   const totalAlerts = useMemo(() => {
-    return Object.values(alertsByProvince).reduce((sum, p) => sum + p.alertCount, 0);
-  }, [alertsByProvince]);
+    const provCount = Object.values(alertData.byProvince).reduce((sum, p) => sum + p.alertCount, 0);
+    const muniCount = Object.values(alertData.byMunicipality).reduce((sum, m) => sum + m.alertCount, 0);
+    return provCount + muniCount;
+  }, [alertData]);
+
+  // Track which source the hovered feature belongs to
+  const hoveredSourceRef = useRef<string>('provinces');
 
   // Hover handling
   const onMouseMove = useCallback((e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
       const feature = e.features[0];
-      const id = feature.properties?.cod_prov;
-      if (hoveredFeatureId !== id) {
+      const isMuni = feature.layer?.id === 'municipality-fill';
+      const source = isMuni ? 'municipalities' : 'provinces';
+      const id = isMuni ? feature.properties?.cod_muni : feature.properties?.cod_prov;
+      if (hoveredFeatureId !== id || hoveredSourceRef.current !== source) {
         if (hoveredFeatureId) {
           mapRef.current?.setFeatureState(
-            { source: 'provinces', id: hoveredFeatureId },
+            { source: hoveredSourceRef.current, id: hoveredFeatureId },
             { hover: false }
           );
         }
+        hoveredSourceRef.current = source;
         setHoveredFeatureId(id);
         mapRef.current?.setFeatureState(
-          { source: 'provinces', id },
+          { source, id },
           { hover: true }
         );
       }
@@ -69,23 +91,55 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
   const onMouseLeave = useCallback(() => {
     if (hoveredFeatureId) {
       mapRef.current?.setFeatureState(
-        { source: 'provinces', id: hoveredFeatureId },
+        { source: hoveredSourceRef.current, id: hoveredFeatureId },
         { hover: false }
       );
       setHoveredFeatureId(null);
     }
   }, [hoveredFeatureId]);
 
+  // Zoom / move handler – track zoom level and lazy-load municipality tiles
+  const onMoveEnd = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const zoom = map.getZoom();
+    setZoomLevel(zoom);
+
+    if (zoom >= 7) {
+      // Determine which provinces are currently visible
+      const features = map.queryRenderedFeatures(undefined, { layers: ['province-fill'] });
+      const ineSet = new Set<string>();
+      for (const f of features) {
+        const codProv = f.properties?.cod_prov;
+        if (codProv) ineSet.add(codProv);
+      }
+      const ineCodes = Array.from(ineSet);
+
+      // Only reload if visible provinces changed
+      const key = ineCodes.sort().join(',');
+      const prevKey = [...visibleProvinceINEs].sort().join(',');
+      if (key !== prevKey) {
+        setVisibleProvinceINEs(ineCodes);
+        loadMunicipalitiesForProvinces(ineCodes).then(setMunicipalityGeoJSON);
+      }
+    }
+  }, [visibleProvinceINEs]);
+
   // Click handling
   const onClick = useCallback((e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
       const feature = e.features[0];
       const props = feature.properties;
+      const isMunicipality = !!props?.municipalityCode;
+
       setPopupInfo({
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
-        provinceName: props?.provinceName || props?.name || '',
+        provinceName: isMunicipality
+          ? (props?.municipalityName || props?.name || '')
+          : (props?.provinceName || props?.name || ''),
         provinceCode: props?.provinceCode || '',
+        municipalityCode: isMunicipality ? props?.municipalityCode : undefined,
       });
     }
   }, []);
@@ -121,10 +175,17 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
         style={{ width: '100%', height: '100%' }}
         mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
         maxBounds={[[-20, 27], [6, 44]]}
-        interactiveLayerIds={enrichedGeoJSON ? ['province-fill'] : []}
+        interactiveLayerIds={
+          enrichedGeoJSON
+            ? zoomLevel >= 7 && enrichedMunicipalityGeoJSON
+              ? ['municipality-fill']
+              : ['province-fill']
+            : []
+        }
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         onClick={onClick}
+        onMoveEnd={onMoveEnd}
         cursor={hoveredFeatureId ? 'pointer' : 'grab'}
       >
         <NavigationControl position="bottom-right" />
@@ -152,10 +213,9 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
                   '#1a2b1e',
                 ],
                 'fill-opacity': [
-                  'case',
-                  ['boolean', ['feature-state', 'hover'], false],
-                  0.8,
-                  0.5,
+                  'interpolate', ['linear'], ['zoom'],
+                  6, ['case', ['boolean', ['feature-state', 'hover'], false], 0.8, 0.5],
+                  7, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
                 ],
               }}
             />
@@ -166,6 +226,48 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
               paint={{
                 'line-color': '#2a3f2e',
                 'line-width': 1,
+                'line-opacity': ['interpolate', ['linear'], ['zoom'], 6, 1, 7, 0.3],
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Municipality layer – visible when zoomed in */}
+        {enrichedMunicipalityGeoJSON && zoomLevel >= 7 && (
+          <Source
+            id="municipalities"
+            type="geojson"
+            data={enrichedMunicipalityGeoJSON}
+            promoteId="cod_muni"
+          >
+            <Layer
+              id="municipality-fill"
+              type="fill"
+              paint={{
+                'fill-color': [
+                  'match',
+                  ['get', 'alertSeverity'],
+                  5, '#dc2626',
+                  4, '#ef4444',
+                  3, '#f97316',
+                  2, '#fbbf24',
+                  1, '#34d399',
+                  '#1a2b1e',
+                ],
+                'fill-opacity': [
+                  'case',
+                  ['boolean', ['feature-state', 'hover'], false],
+                  0.8,
+                  0.55,
+                ],
+              }}
+            />
+            <Layer
+              id="municipality-outline"
+              type="line"
+              paint={{
+                'line-color': '#2a3f2e',
+                'line-width': 0.5,
               }}
             />
           </Source>
@@ -184,13 +286,21 @@ export function SpainAlertMap({ alertsByProvince, isLoading }: SpainAlertMapProp
             <MapPopup
               provinceName={popupInfo.provinceName}
               summary={
-                alertsByProvince[popupInfo.provinceCode] ?? {
-                  provinceCode: popupInfo.provinceCode,
-                  provinceName: popupInfo.provinceName,
-                  maxSeverity: 0,
-                  alertCount: 0,
-                  alerts: [],
-                }
+                popupInfo.municipalityCode
+                  ? (alertData.byMunicipality[popupInfo.municipalityCode] as unknown as ProvinceAlertSummary) ?? {
+                      provinceCode: popupInfo.provinceCode,
+                      provinceName: popupInfo.provinceName,
+                      maxSeverity: alertData.byProvince[popupInfo.provinceCode]?.maxSeverity ?? 0,
+                      alertCount: alertData.byProvince[popupInfo.provinceCode]?.alertCount ?? 0,
+                      alerts: alertData.byProvince[popupInfo.provinceCode]?.alerts ?? [],
+                    }
+                  : alertData.byProvince[popupInfo.provinceCode] ?? {
+                      provinceCode: popupInfo.provinceCode,
+                      provinceName: popupInfo.provinceName,
+                      maxSeverity: 0,
+                      alertCount: 0,
+                      alerts: [],
+                    }
               }
             />
           </Popup>

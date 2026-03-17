@@ -14,11 +14,11 @@ const SpainAlertMap = dynamic(
 
 export default function MapPage() {
   const { alerts: aemetAlerts, isLoading } = useAemetAlerts();
-  const alertsByProvince = useMapAlerts(aemetAlerts);
+  const alertData = useMapAlerts(aemetAlerts);
 
   return (
     <div className="-m-4 lg:-m-6 h-[calc(100vh-3.5rem)]">
-      <SpainAlertMap alertsByProvince={alertsByProvince} isLoading={isLoading} />
+      <SpainAlertMap alertData={alertData} isLoading={isLoading} />
     </div>
   );
 }

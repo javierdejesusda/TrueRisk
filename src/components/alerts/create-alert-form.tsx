@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { PROVINCES } from '@/lib/constants/provinces';
+import { PROVINCE_CODE_TO_INE } from '@/lib/geo-data';
 
 // ── Zod schema ───────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ const alertFormSchema = z.object({
   severity: z.number().int().min(1).max(5),
   type: z.enum(EMERGENCY_TYPES),
   province: z.string().optional(),
+  municipality: z.string().optional(),
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
 });
@@ -56,6 +58,12 @@ const provinceOptions = [
   })),
 ];
 
+// Reverse lookup: province name → province letter code (e.g. "Valencia" → "V")
+const PROVINCE_NAME_TO_CODE: Record<string, string> = {};
+for (const [code, info] of Object.entries(PROVINCES)) {
+  PROVINCE_NAME_TO_CODE[info.name] = code;
+}
+
 // ── Props ────────────────────────────────────────────────────────────────
 
 export interface CreateAlertFormProps {
@@ -81,10 +89,43 @@ export function CreateAlertForm({
   );
   const [type, setType] = useState(defaultValues?.type ?? 'general');
   const [province, setProvince] = useState('');
+  const [municipality, setMunicipality] = useState('');
+  const [municipalityOptions, setMunicipalityOptions] = useState<{ value: string; label: string }[]>([]);
+  const [muniLoading, setMuniLoading] = useState(false);
   const [title, setTitle] = useState(defaultValues?.title ?? '');
   const [description, setDescription] = useState(
     defaultValues?.description ?? '',
   );
+
+  useEffect(() => {
+    setMunicipality('');
+    setMunicipalityOptions([]);
+
+    if (!province) return;
+
+    const provCode = PROVINCE_NAME_TO_CODE[province];
+    if (!provCode) return;
+
+    const ineCode = PROVINCE_CODE_TO_INE[provCode];
+    if (!ineCode) return;
+
+    setMuniLoading(true);
+    fetch(`/api/municipalities/search?province=${ineCode}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setMunicipalityOptions([
+            { value: '', label: 'All municipalities' },
+            ...json.data.map((m: { code: string; name: string }) => ({
+              value: m.code,
+              label: `${m.name} (${m.code})`,
+            })),
+          ]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setMuniLoading(false));
+  }, [province]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +142,7 @@ export function CreateAlertForm({
       severity: parseInt(severity, 10),
       type: type as AlertFormData['type'],
       province: province || undefined,
+      municipality: municipality || undefined,
       title: title.trim(),
       description: description.trim(),
     };
@@ -212,6 +254,20 @@ export function CreateAlertForm({
         onChange={(e) => setProvince(e.target.value)}
         error={fieldErrors.province}
       />
+
+      {province && (
+        <Select
+          label="Municipality"
+          options={
+            municipalityOptions.length > 0
+              ? municipalityOptions
+              : [{ value: '', label: muniLoading ? 'Loading...' : 'Select province first' }]
+          }
+          value={municipality}
+          onChange={(e) => setMunicipality(e.target.value)}
+          error={fieldErrors.municipality}
+        />
+      )}
 
       <Input
         label="Title"

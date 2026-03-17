@@ -43,6 +43,7 @@ model Alert {
   severity     Int
   type         String
   province     String?
+  municipality String?  // INE 5-digit municipality code
   title        String
   description  String
   weatherData  String?

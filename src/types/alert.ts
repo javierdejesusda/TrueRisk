@@ -6,6 +6,7 @@ export interface Alert {
   severity: AlertSeverity;
   type: EmergencyType;
   province: string | null;
+  municipality: string | null;
   title: string;
   description: string;
   isActive: boolean;
