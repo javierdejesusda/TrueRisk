@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { getSessionFromCookies } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import type { SpecialNeed } from '@/types/user';
 
 const VALID_RESIDENCE_TYPES = [
@@ -36,6 +36,7 @@ const updateProfileSchema = z.object({
 
 export async function GET() {
   try {
+    await initializeDatabase();
     const cookieStore = await cookies();
     const session = await getSessionFromCookies(cookieStore);
 
@@ -89,6 +90,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
+    await initializeDatabase();
     const cookieStore = await cookies();
     const session = await getSessionFromCookies(cookieStore);
 

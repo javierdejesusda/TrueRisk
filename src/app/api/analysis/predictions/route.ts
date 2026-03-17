@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getSessionFromCookies } from '@/lib/auth';
 import { fetchWeather } from '@/lib/api-client';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import { analyzeExtremes } from '@/lib/ml/gumbel';
 import { projectTrend } from '@/lib/ml/regression';
 import { estimateRisk } from '@/lib/ml/bayesian';
@@ -14,6 +14,7 @@ import type { ParsedWeather } from '@/types/weather';
 
 export async function GET() {
   try {
+    await initializeDatabase();
     const cookieStore = await cookies();
     const session = await getSessionFromCookies(cookieStore);
     let province = 'Valencia';

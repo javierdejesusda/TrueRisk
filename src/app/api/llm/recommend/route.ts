@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import { fetchWeather } from '@/lib/api-client';
 import { runRecommendationPipeline } from '@/lib/prompts/pipeline';
 import type { UserProfile, ResidenceType, SpecialNeed } from '@/types/user';
@@ -15,6 +15,7 @@ import type { ParsedWeather } from '@/types/weather';
  */
 export async function POST(request: Request) {
   try {
+    await initializeDatabase();
     // ── Parse request body ──────────────────────────────────────────
     const body = await request.json() as {
       userId?: number;

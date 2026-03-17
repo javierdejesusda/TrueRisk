@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import type { PaginatedResponse } from '@/types/api';
 
 export async function GET(request: Request) {
   try {
+    await initializeDatabase();
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
     const pageSize = Math.min(

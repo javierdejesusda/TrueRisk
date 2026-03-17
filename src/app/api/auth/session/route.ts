@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifySession } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 
 export async function GET() {
   try {
+    await initializeDatabase();
     const cookieStore = await cookies();
     const token = cookieStore.get('session')?.value;
 

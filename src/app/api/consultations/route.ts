@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import type { PaginatedResponse } from '@/types/api';
 
 /**
@@ -9,6 +9,7 @@ import type { PaginatedResponse } from '@/types/api';
  */
 export async function GET(request: Request) {
   try {
+    await initializeDatabase();
     const { searchParams } = new URL(request.url);
 
     const userIdParam = searchParams.get('userId');
@@ -74,6 +75,7 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    await initializeDatabase();
     const body = await request.json() as {
       userId: number;
       systemPrompt: string;

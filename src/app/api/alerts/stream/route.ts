@@ -1,8 +1,9 @@
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  await initializeDatabase();
   const encoder = new TextEncoder();
   let intervalId: ReturnType<typeof setInterval> | null = null;
 

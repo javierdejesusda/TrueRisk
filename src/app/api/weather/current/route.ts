@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { getSessionFromCookies } from '@/lib/auth';
 import { fetchWeather } from '@/lib/api-client';
 import { fetchMunicipalityForecast } from '@/lib/aemet-forecast';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import type { ParsedWeather } from '@/types/weather';
 
 // Province name -> AEMET capital municipality code
@@ -108,6 +108,7 @@ async function fetchAemetWeather(province: string): Promise<ParsedWeather | null
 
 export async function GET(request: Request) {
   try {
+    await initializeDatabase();
     const { searchParams } = new URL(request.url);
     const disasterParam = searchParams.get('disaster');
 

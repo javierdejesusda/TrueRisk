@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 
 export async function GET() {
   try {
+    await initializeDatabase();
     const users = await prisma.user.findMany({
       select: {
         id: true,

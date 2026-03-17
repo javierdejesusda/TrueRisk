@@ -3,7 +3,7 @@ import { fetchWeather } from '@/lib/api-client';
 import { computeRiskScore } from '@/lib/ml/risk-engine';
 import { classifyEmergency as classifyEmergencyAI } from '@/lib/openai-client';
 import { classifyEmergency as classifyEmergencyLocal } from '@/lib/ml/decision-tree';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import type { ParsedWeather } from '@/types/weather';
 
 function mapScoreToSeverity(score: number): number {
@@ -14,6 +14,7 @@ function mapScoreToSeverity(score: number): number {
 
 export async function GET() {
   try {
+    await initializeDatabase();
     // 1. Fetch current weather
     let current: ParsedWeather;
     try {

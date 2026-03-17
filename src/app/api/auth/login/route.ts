@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { loginTeam } from '@/lib/api-client';
 import { hashPassword, verifyPassword, createSession } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 
 const loginSchema = z.object({
   nickName: z.string().min(1, 'Nickname is required'),
@@ -11,6 +11,7 @@ const loginSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    await initializeDatabase();
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);
 

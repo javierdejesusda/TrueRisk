@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getSessionFromCookies } from '@/lib/auth';
 import { fetchWeather } from '@/lib/api-client';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 import { computeRiskScore } from '@/lib/ml/risk-engine';
 import type { ParsedWeather } from '@/types/weather';
 import type { ResidenceType, SpecialNeed } from '@/types/user';
 
 export async function GET(request: Request) {
   try {
+    await initializeDatabase();
     const { searchParams } = new URL(request.url);
     const userIdParam = searchParams.get('userId');
 

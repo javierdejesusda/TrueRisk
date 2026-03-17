@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/db';
+import { prisma, initializeDatabase } from '@/lib/db';
 
 const EMERGENCY_TYPES = [
   'flood',
@@ -43,6 +43,7 @@ const deleteAlertSchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    await initializeDatabase();
     const { searchParams } = new URL(request.url);
     const activeParam = searchParams.get('active');
     const provinceParam = searchParams.get('province');
@@ -78,6 +79,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await initializeDatabase();
     const body = await request.json();
     const parsed = createAlertSchema.safeParse(body);
 
@@ -126,6 +128,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    await initializeDatabase();
     const body = await request.json();
     const parsed = updateAlertSchema.safeParse(body);
 
@@ -157,6 +160,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    await initializeDatabase();
     const body = await request.json();
     const parsed = deleteAlertSchema.safeParse(body);
 
