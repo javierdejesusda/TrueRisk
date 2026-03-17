@@ -280,11 +280,13 @@ export function SpainAlertMap({ alertData, isLoading }: SpainAlertMapProps) {
             latitude={popupInfo.latitude}
             anchor="bottom"
             onClose={() => setPopupInfo(null)}
-            maxWidth="300px"
+            maxWidth="340px"
             closeOnClick={false}
           >
             <MapPopup
               provinceName={popupInfo.provinceName}
+              provinceCode={popupInfo.provinceCode}
+              municipalityCode={popupInfo.municipalityCode}
               summary={
                 popupInfo.municipalityCode
                   ? (alertData.byMunicipality[popupInfo.municipalityCode] as unknown as ProvinceAlertSummary) ?? {
