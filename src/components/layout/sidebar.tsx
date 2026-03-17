@@ -56,6 +56,16 @@ function ProfileIcon() {
   );
 }
 
+function MapIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6l5-3 4 3 5-3v11l-5 3-4-3-5 3V6z" />
+      <path d="M8 3v11" />
+      <path d="M12 6v11" />
+    </svg>
+  );
+}
+
 function RecordsIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -96,6 +106,7 @@ function CloseIcon() {
 
 const citizenLinks: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
+  { label: 'Map', href: '/map', icon: <MapIcon /> },
   { label: 'Alerts', href: '/alerts', icon: <AlertIcon /> },
   { label: 'History', href: '/history', icon: <HistoryIcon /> },
   { label: 'Profile', href: '/profile', icon: <ProfileIcon /> },
