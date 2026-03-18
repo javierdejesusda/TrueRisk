@@ -28,12 +28,12 @@ export function NavPill() {
   }, []);
 
   const navItems = [
-    { href: '/', label: 'Map' },
+    { href: '/map', label: 'Map' },
     { href: '/prediction', label: 'Predictions' },
   ];
 
   const isActive = (href: string) => {
-    if (href === '/') return pathname === '/' || pathname === '/map';
+    if (href === '/map') return pathname === '/map';
     return pathname.startsWith(href);
   };
 
