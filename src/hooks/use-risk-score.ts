@@ -5,13 +5,13 @@ import { useAppStore } from '@/store/app-store';
 import type { CompositeRiskScore } from '@/types/risk';
 
 export function useRiskScore(provinceCode?: string) {
-  const user = useAppStore((s) => s.user);
+  const storeCode = useAppStore((s) => s.provinceCode);
   const setRisk = useAppStore((s) => s.setRisk);
   const [risk, setRiskState] = useState<CompositeRiskScore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const code = provinceCode ?? user?.province_code;
+  const code = provinceCode ?? storeCode;
 
   const fetchData = useCallback(async () => {
     if (!code) return;

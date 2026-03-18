@@ -7,13 +7,13 @@ import type { CurrentWeather } from '@/types/weather';
 const REFRESH_INTERVAL = 60_000;
 
 export function useWeather(provinceCode?: string) {
-  const user = useAppStore((s) => s.user);
+  const storeCode = useAppStore((s) => s.provinceCode);
   const setWeatherStore = useAppStore((s) => s.setWeather);
   const [weather, setWeather] = useState<CurrentWeather | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const code = provinceCode ?? user?.province_code ?? '28';
+  const code = provinceCode ?? storeCode;
 
   const fetchData = useCallback(async () => {
     try {
