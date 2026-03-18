@@ -22,19 +22,13 @@ from app.ml.features.weather_indices import (
     compute_wbgt,
 )
 from app.ml.training.config import (
+    DATA_DIR,
     DROUGHT_SEQUENCE_LENGTH,
-    DROUGHT_SPEI_THRESHOLD,
-    FLOOD_PRECIP_HEAVY,
-    FLOOD_PRECIP_MODERATE,
-    FLOOD_SOIL_SATURATED,
     HEATWAVE_CONSECUTIVE_DAYS,
     HEATWAVE_MAX_THRESHOLD,
     HEATWAVE_MIN_THRESHOLD,
     PROCESSED_DIR,
     RAW_DIR,
-    WILDFIRE_DRY_DAYS_THRESHOLD,
-    WILDFIRE_FWI_THRESHOLD,
-    WILDFIRE_HUMIDITY_THRESHOLD,
 )
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -270,38 +264,46 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
 
 
 # ---------------------------------------------------------------------------
-# Label generation
+# Label generation -- ground truth from real event data
 # ---------------------------------------------------------------------------
 
-def _label_flood(df: pd.DataFrame) -> pd.Series:
-    """Flood: precip_24h > 40mm OR (precip > 25mm AND soil_moisture > 0.7)."""
-    return (
-        (df["precip_24h"] > FLOOD_PRECIP_HEAVY)
-        | ((df["precip_24h"] > FLOOD_PRECIP_MODERATE) & (df["soil_moisture"] > FLOOD_SOIL_SATURATED))
-    ).astype(int)
+_EVENTS_DIR = DATA_DIR / "events"
 
 
-def _label_heatwave(df: pd.DataFrame) -> pd.Series:
-    """Heatwave: 3+ consecutive days with max > 35C AND min > 20C."""
-    hw_cond = (df["temperature_max"] > HEATWAVE_MAX_THRESHOLD) & (df["temperature_min"] > HEATWAVE_MIN_THRESHOLD)
-    streak = _consecutive_condition(hw_cond)
-    return (streak >= HEATWAVE_CONSECUTIVE_DAYS).astype(int)
+def _load_event_labels(event_file: str, combined: pd.DataFrame) -> pd.Series:
+    """Load binary labels from a real-event CSV and join to the combined df.
 
+    Event CSVs have columns: date, province_code (+ optional severity).
+    Returns a Series of 0/1 aligned to `combined`.
+    """
+    path = _EVENTS_DIR / event_file
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Event file {path} not found. Run download_events.py first."
+        )
 
-def _label_wildfire(df: pd.DataFrame) -> pd.Series:
-    """Wildfire: FWI > 25 AND consecutive_dry > 10 AND humidity_min < 35%."""
-    return (
-        (df["fwi"] > WILDFIRE_FWI_THRESHOLD)
-        & (df["consecutive_dry_days"] > WILDFIRE_DRY_DAYS_THRESHOLD)
-        & (df["humidity_min"] < WILDFIRE_HUMIDITY_THRESHOLD)
-    ).astype(int)
+    events = pd.read_csv(path, parse_dates=["date"])
+    events["province_code"] = events["province_code"].astype(str).str.zfill(2)
+
+    # Create a set of (date, province_code) tuples for fast lookup
+    event_set = set(zip(events["date"].dt.date, events["province_code"]))
+
+    labels = combined.apply(
+        lambda r: 1 if (r["date"].date(), r["province_code"]) in event_set else 0,
+        axis=1,
+    )
+    return labels
 
 
 # ---------------------------------------------------------------------------
 # Dataset builders
 # ---------------------------------------------------------------------------
 
-# Exact feature names from inference files
+# ---------------------------------------------------------------------------
+# Feature names -- must match inference files exactly.
+# Same 23/18/20/6 features the inference code expects.
+# ---------------------------------------------------------------------------
+
 FLOOD_FEATURES = [
     "precip_1h", "precip_6h", "precip_24h", "precip_48h",
     "precip_forecast_24h", "humidity", "soil_moisture",
@@ -359,35 +361,48 @@ def main() -> None:
     # Replace inf with NaN, then fill
     combined.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    # --- Flood dataset ---
-    flood_label = _label_flood(combined)
+    # ===================================================================
+    # Labels from real event data (no data leakage)
+    # ===================================================================
+    print("\nLoading ground-truth event labels...")
+
+    # --- Flood dataset (real GloFAS discharge exceedance labels) ---
+    flood_label = _load_event_labels("flood_events.csv", combined)
     flood_df = combined[FLOOD_FEATURES].copy()
     flood_df.fillna(0.0, inplace=True)
     flood_df["label"] = flood_label
     flood_df.to_csv(PROCESSED_DIR / "flood_train.csv", index=False)
     pos_rate = flood_label.mean() * 100
-    print(f"Flood:    {len(flood_df)} rows, {pos_rate:.1f}% positive")
+    print(f"Flood:    {len(flood_df)} rows, {pos_rate:.1f}% positive (GloFAS discharge)")
 
-    # --- Heatwave dataset ---
-    hw_label = _label_heatwave(combined)
+    # --- Heatwave dataset (real WMO P95 exceedance labels) ---
+    hw_label = _load_event_labels("heatwave_events.csv", combined)
     hw_df = combined[HEATWAVE_FEATURES].copy()
     hw_df.fillna(0.0, inplace=True)
     hw_df["label"] = hw_label
     hw_df.to_csv(PROCESSED_DIR / "heatwave_train.csv", index=False)
     pos_rate = hw_label.mean() * 100
-    print(f"Heatwave: {len(hw_df)} rows, {pos_rate:.1f}% positive")
+    print(f"Heatwave: {len(hw_df)} rows, {pos_rate:.1f}% positive (WMO P95)")
 
-    # --- Wildfire dataset ---
-    wf_label = _label_wildfire(combined)
+    # --- Wildfire dataset (real satellite/proxy fire detection labels) ---
+    wf_label = _load_event_labels("wildfire_events.csv", combined)
     wf_df = combined[WILDFIRE_FEATURES].copy()
     wf_df.fillna(0.0, inplace=True)
     wf_df["label"] = wf_label
     wf_df.to_csv(PROCESSED_DIR / "wildfire_train.csv", index=False)
     pos_rate = wf_label.mean() * 100
-    print(f"Wildfire: {len(wf_df)} rows, {pos_rate:.1f}% positive")
+    print(f"Wildfire: {len(wf_df)} rows, {pos_rate:.1f}% positive (satellite proxy)")
 
-    # --- Drought LSTM sequences ---
+    # --- Drought LSTM sequences (real soil-moisture deficit labels) ---
     print("\nBuilding drought LSTM sequences...")
+    drought_events = pd.read_csv(
+        _EVENTS_DIR / "drought_events.csv", parse_dates=["date"]
+    )
+    drought_events["province_code"] = drought_events["province_code"].astype(str).str.zfill(2)
+    drought_event_set = set(
+        zip(drought_events["date"].dt.date, drought_events["province_code"])
+    )
+
     sequences_X: list[np.ndarray] = []
     sequences_y: list[int] = []
 
@@ -402,9 +417,9 @@ def main() -> None:
             end = start + DROUGHT_SEQUENCE_LENGTH
             seq = feat_matrix[start:end]
 
-            # Label: SPEI_3m < -1.0 at the day after the sequence
-            target_spei = prov_data.iloc[end]["spei_3m"]
-            label = 1 if target_spei < DROUGHT_SPEI_THRESHOLD else 0
+            # Label: is the target day a drought event day?
+            target_date = prov_data.iloc[end]["date"].date()
+            label = 1 if (target_date, code) in drought_event_set else 0
 
             sequences_X.append(seq)
             sequences_y.append(label)
@@ -421,7 +436,7 @@ def main() -> None:
         y=y_arr,
     )
     pos_rate = y_arr.mean() * 100
-    print(f"Drought:  {len(y_arr)} sequences ({X_arr.shape}), {pos_rate:.1f}% positive")
+    print(f"Drought:  {len(y_arr)} sequences ({X_arr.shape}), {pos_rate:.1f}% positive (soil deficit)")
 
     print("\nAll datasets saved to", PROCESSED_DIR)
 
