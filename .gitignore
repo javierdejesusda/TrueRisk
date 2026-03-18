@@ -27,11 +27,13 @@
 *.jpg
 *.png
 
-# prisma
-prisma/dev.db
-prisma/dev.db-journal
-dev.db
-dev.db-journal
+# python backend
+backend/.env
+backend/app/ml/saved_models/*.joblib
+backend/app/ml/saved_models/*.pt
+*.pyc
+__pycache__/
+.venv/
 
 # playwright
 .playwright-mcp/
@@ -52,4 +54,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+
+.vercel

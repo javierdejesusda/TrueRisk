@@ -1,6 +1,6 @@
 # TrueRisk - Plataforma de Gestion de Emergencias Climaticas
 
-[![CI](https://github.com/DJeison-DVT/AlertML/actions/workflows/ci.yml/badge.svg)](https://github.com/DJeison-DVT/AlertML/actions/workflows/ci.yml)
+[![CI](https://github.com/javierdejesusda/TrueRisk/actions/workflows/ci.yml/badge.svg)](https://github.com/javierdejesusda/TrueRisk/actions/workflows/ci.yml)
 
 Plataforma web de gestion de emergencias climaticas con scoring de riesgo ML y recomendaciones personalizadas mediante prompt engineering multi-etapa.
 
