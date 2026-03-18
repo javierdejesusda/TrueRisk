@@ -8,13 +8,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_backoffice
+from app.api.deps import get_db
 from app.models.alert import Alert
 from app.models.province import Province
 from app.models.risk_score import RiskScore
-from app.models.user import User
 from app.models.weather_record import WeatherRecord
-from app.schemas.auth import UserResponse
 from app.schemas.weather import WeatherRecordResponse
 
 router = APIRouter()
@@ -23,7 +21,6 @@ router = APIRouter()
 @router.get("/stats")
 async def stats(
     db: AsyncSession = Depends(get_db),
-    _user: User = Depends(require_backoffice),
 ):
     """Dashboard statistics for the backoffice."""
     province_count = await db.scalar(select(func.count()).select_from(Province))
@@ -56,23 +53,6 @@ async def stats(
     }
 
 
-@router.get("/citizens", response_model=list[UserResponse])
-async def list_citizens(
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=50, ge=1, le=200),
-    db: AsyncSession = Depends(get_db),
-    _user: User = Depends(require_backoffice),
-):
-    """Paginated list of registered users."""
-    result = await db.execute(
-        select(User)
-        .order_by(User.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    return list(result.scalars().all())
-
-
 @router.get("/weather-records", response_model=list[WeatherRecordResponse])
 async def list_weather_records(
     province: str | None = Query(default=None),
@@ -80,7 +60,6 @@ async def list_weather_records(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
-    _user: User = Depends(require_backoffice),
 ):
     """Paginated weather records with optional province and date filters."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)

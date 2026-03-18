@@ -10,8 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from app.api.deps import get_db, require_backoffice
-from app.models.user import User
+from app.api.deps import get_db
 from app.schemas.alert import (
     AemetAlertResponse,
     AlertCreate,
@@ -48,9 +47,8 @@ async def aemet_alerts():
 async def create_alert(
     body: AlertCreate,
     db: AsyncSession = Depends(get_db),
-    _user: User = Depends(require_backoffice),
 ):
-    """Create a new alert (backoffice only)."""
+    """Create a new alert."""
     return await alert_service.create_alert(db, body)
 
 
@@ -59,9 +57,8 @@ async def update_alert(
     alert_id: int,
     body: AlertUpdate,
     db: AsyncSession = Depends(get_db),
-    _user: User = Depends(require_backoffice),
 ):
-    """Update an existing alert (backoffice only)."""
+    """Update an existing alert."""
     alert = await alert_service.update_alert(db, alert_id, body)
     if alert is None:
         raise HTTPException(status_code=404, detail="Alert not found")
@@ -72,9 +69,8 @@ async def update_alert(
 async def delete_alert(
     alert_id: int,
     db: AsyncSession = Depends(get_db),
-    _user: User = Depends(require_backoffice),
 ):
-    """Delete an alert (backoffice only)."""
+    """Delete an alert."""
     deleted = await alert_service.delete_alert(db, alert_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Alert not found")

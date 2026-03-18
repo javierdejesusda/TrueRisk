@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, provinces, weather, alerts, risk, backoffice
+from app.api import provinces, weather, alerts, risk, backoffice
 
 
 @asynccontextmanager
@@ -43,7 +43,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(provinces.router, prefix="/api/v1/provinces", tags=["provinces"])
 app.include_router(weather.router, prefix="/api/v1/weather", tags=["weather"])
 app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["alerts"])

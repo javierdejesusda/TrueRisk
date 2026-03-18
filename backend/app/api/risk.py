@@ -8,15 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db
 from app.models.province import Province
 from app.models.risk_score import RiskScore
-from app.models.user import User
 from app.schemas.risk import (
     RiskMapEntry,
     RiskMapResponse,
     RiskScoreResponse,
-    UserRiskResponse,
 )
 
 router = APIRouter()
@@ -130,49 +128,3 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
     )
 
 
-@router.get("/user", response_model=UserRiskResponse)
-async def get_user_risk(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Return risk information for the authenticated user's province."""
-    province = await db.get(Province, user.province_code)
-    if province is None:
-        raise HTTPException(status_code=404, detail="Province not found")
-
-    result = await db.execute(
-        select(RiskScore)
-        .where(RiskScore.province_code == user.province_code)
-        .order_by(RiskScore.computed_at.desc())
-        .limit(1)
-    )
-    score = result.scalar_one_or_none()
-
-    # Simple vulnerability heuristic based on user profile
-    vulnerability = 0.0
-    if user.residence_type in ("planta_baja", "sotano"):
-        vulnerability += 0.3
-    if user.special_needs:
-        vulnerability += 0.2 * len(user.special_needs)
-    vulnerability = min(vulnerability, 1.0)
-
-    if score:
-        return UserRiskResponse(
-            province_code=score.province_code,
-            flood_score=score.flood_score,
-            wildfire_score=score.wildfire_score,
-            drought_score=score.drought_score,
-            heatwave_score=score.heatwave_score,
-            composite_score=score.composite_score,
-            dominant_hazard=score.dominant_hazard,
-            severity=score.severity,
-            computed_at=score.computed_at,
-            province_name=province.name,
-            user_vulnerability_score=vulnerability,
-        )
-
-    return UserRiskResponse(
-        **_zero_score(user.province_code),
-        province_name=province.name,
-        user_vulnerability_score=vulnerability,
-    )
