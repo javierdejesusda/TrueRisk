@@ -27,7 +27,7 @@ const staggerItem = {
 };
 
 export default function DashboardPage() {
-  const user = useAppStore((s) => s.user);
+  const provinceCode = useAppStore((s) => s.provinceCode);
   const alerts = useAppStore((s) => s.alerts) as Alert[];
   const { weather, isLoading: weatherLoading } = useWeather();
   const { risk, isLoading: riskLoading } = useRiskScore();
@@ -69,7 +69,7 @@ export default function DashboardPage() {
           animate="visible"
           custom={0}
         >
-          <WeatherCard weather={weather} isLoading={weatherLoading} province={user?.province_code} />
+          <WeatherCard weather={weather} isLoading={weatherLoading} province={provinceCode} />
         </motion.div>
 
         {/* Risk Gauge */}
