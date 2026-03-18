@@ -42,8 +42,12 @@ def _load_model():
         try:
             import torch
 
-            _model = torch.load(MODEL_PATH, map_location="cpu", weights_only=False)
-            # Switch to inference mode (no gradient tracking)
+            from app.ml.models.drought_lstm_arch import DroughtLSTM
+
+            _model = DroughtLSTM()
+            _model.load_state_dict(
+                torch.load(MODEL_PATH, map_location="cpu", weights_only=True)
+            )
             _model.train(False)
             logger.info("Loaded drought LSTM model from %s", MODEL_PATH)
         except Exception:
@@ -140,7 +144,6 @@ def predict_drought_risk(features: dict, sequence: list[list[float]] | None = No
         historical data is unavailable.
     """
     spei_3m = features.get("spei_3m")
-    spei_1m = features.get("spei_1m")
     spei_6m = features.get("spei_6m")
 
     # If SPEI values are available, use the composite formula

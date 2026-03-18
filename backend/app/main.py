@@ -14,9 +14,10 @@ async def lifespan(app: FastAPI):
     if "sqlite" in settings.database_url:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        # Seed province data
-        from app.data.province_data import seed_provinces
-        await seed_provinces()
+
+    # Seed province data on all database backends
+    from app.data.province_data import seed_provinces
+    await seed_provinces()
 
     # Start background scheduler
     from app.scheduler.jobs import setup_scheduler, shutdown_scheduler

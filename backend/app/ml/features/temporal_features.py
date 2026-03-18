@@ -8,7 +8,6 @@ record dicts ordered most-recent-first.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import numpy as np
 

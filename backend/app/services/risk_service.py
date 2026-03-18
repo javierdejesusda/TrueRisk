@@ -315,7 +315,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     soil_moisture = _safe(weather.get("soil_moisture"), 0.3)
     cloud_cover = _safe(weather.get("cloud_cover"), 50.0)
     uv_index = _safe(weather.get("uv_index"), 0.0)
-    dew_point = _safe(weather.get("dew_point"), 10.0)
+    _safe(weather.get("dew_point"), 10.0)  # available but not directly used here
 
     heat_index = _compute_heat_index(temperature, humidity)
     wbgt = _compute_wbgt(temperature, humidity, wind_speed)

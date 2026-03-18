@@ -19,7 +19,6 @@ All functions are pure -- no database access, no side effects.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import numpy as np
 from scipy import stats
