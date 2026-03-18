@@ -1,13 +1,14 @@
 """6-hour data pipeline: fetch weather -> compute risk -> generate alerts."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session
 from app.models import Province, Alert
+from app.models.weather_record import WeatherRecord
 from app.services.risk_service import compute_province_risk
 from app.data.aemet_client import fetch_alerts
 from app.config import settings
@@ -58,6 +59,10 @@ async def run_pipeline():
                     logger.error(f"AEMET alert sync failed: {e}")
 
             await db.commit()
+
+            # Purge weather records older than 90 days
+            await _purge_old_records(db)
+
             logger.info("Pipeline complete.")
         except Exception as e:
             logger.error(f"Pipeline failed: {e}")
@@ -104,3 +109,16 @@ async def _check_and_create_alerts(
         logger.warning(
             f"  ALERT: {hazard} severity={severity} for {province.name} (score={score:.1f})"
         )
+
+
+async def _purge_old_records(db: AsyncSession):
+    """Delete weather records older than 90 days to prevent unbounded growth."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+    result = await db.execute(
+        select(func.count()).select_from(WeatherRecord).where(WeatherRecord.recorded_at < cutoff)
+    )
+    count = result.scalar() or 0
+    if count > 0:
+        await db.execute(delete(WeatherRecord).where(WeatherRecord.recorded_at < cutoff))
+        await db.commit()
+        logger.info(f"Purged {count} weather records older than 90 days")
