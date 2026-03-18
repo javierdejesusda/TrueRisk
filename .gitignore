@@ -35,6 +35,8 @@ backend/data/historical/
 *.pyc
 __pycache__/
 .venv/
+backend/dev.db
+*.egg-info/
 
 # playwright
 .playwright-mcp/
