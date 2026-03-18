@@ -71,10 +71,10 @@ export default function Home() {
           className="mt-10 flex flex-col gap-3 sm:flex-row"
         >
           <Link
-            href="/dashboard"
+            href="/map"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-accent-green px-8 text-sm font-semibold text-bg-primary transition-all hover:brightness-110 hover:scale-[1.03] active:scale-[0.97]"
           >
-            Enter Dashboard
+            Enter TrueRisk
           </Link>
         </motion.div>
       </motion.div>

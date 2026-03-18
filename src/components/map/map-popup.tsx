@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import type { ForecastResponse, HourlyForecast, DailyForecast } from '@/types/weather';
+import type { RiskMapEntry, HazardType } from '@/types/risk';
 
 export interface MapPopupProps {
   provinceName: string;
@@ -12,9 +14,17 @@ export interface MapPopupProps {
     alerts: { title: string; severity: number; hazardType: string; source: 'truerisk' | 'aemet' }[];
   };
   provinceCode?: string;
+  riskData?: RiskMapEntry;
 }
 
 type TabId = 'now' | 'hourly' | 'daily';
+
+const HAZARDS: { key: HazardType; label: string; color: string }[] = [
+  { key: 'flood', label: 'Flood', color: 'bg-blue-500' },
+  { key: 'wildfire', label: 'Wildfire', color: 'bg-orange-500' },
+  { key: 'drought', label: 'Drought', color: 'bg-amber-600' },
+  { key: 'heatwave', label: 'Heatwave', color: 'bg-red-500' },
+];
 
 function severityLabel(severity: number): string {
   if (severity >= 5) return 'Critical';
@@ -30,6 +40,14 @@ function severityVariant(severity: number): 'neutral' | 'success' | 'warning' | 
   if (severity >= 3) return 'warning';
   if (severity >= 1) return 'success';
   return 'neutral';
+}
+
+function riskScoreColor(score: number): string {
+  if (score >= 85) return 'text-[#FF2D55]';
+  if (score >= 70) return 'text-accent-red';
+  if (score >= 50) return 'text-accent-orange';
+  if (score >= 30) return 'text-accent-yellow';
+  return 'text-accent-green';
 }
 
 function tempColor(temp: number): string {
@@ -60,6 +78,45 @@ function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-6">
       <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-text-primary" />
+    </div>
+  );
+}
+
+function RiskSection({ riskData, provinceCode }: { riskData: RiskMapEntry; provinceCode: string }) {
+  return (
+    <div className="mb-3 pb-3 border-b border-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className={`text-xl font-bold font-mono ${riskScoreColor(riskData.composite_score)}`}>
+            {riskData.composite_score.toFixed(0)}
+          </span>
+          <div className="flex flex-col">
+            <span className="text-[9px] text-text-muted uppercase">Risk Score</span>
+            <span className="text-[10px] text-text-secondary capitalize">{riskData.dominant_hazard}</span>
+          </div>
+        </div>
+        <Link
+          href={`/prediction?province=${provinceCode}`}
+          className="text-[10px] text-accent-green hover:underline"
+        >
+          View Predictions →
+        </Link>
+      </div>
+      {/* Mini hazard bars */}
+      <div className="flex flex-col gap-1">
+        {HAZARDS.map(({ key, label, color }) => {
+          const score = riskData[`${key}_score` as keyof RiskMapEntry] as number;
+          return (
+            <div key={key} className="flex items-center gap-1.5">
+              <span className="text-[9px] text-text-muted w-12">{label}</span>
+              <div className="flex-1 h-1 bg-bg-secondary rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, score)}%` }} />
+              </div>
+              <span className="text-[9px] text-text-muted w-5 text-right font-mono">{score.toFixed(0)}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -200,7 +257,7 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
   );
 }
 
-export function MapPopup({ provinceName, summary, provinceCode }: MapPopupProps) {
+export function MapPopup({ provinceName, summary, provinceCode, riskData }: MapPopupProps) {
   const [activeTab, setActiveTab] = useState<TabId>('now');
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastLoading, setForecastLoading] = useState(false);
@@ -236,6 +293,11 @@ export function MapPopup({ provinceName, summary, provinceCode }: MapPopupProps)
           </Badge>
         )}
       </div>
+
+      {/* Risk data section */}
+      {riskData && provinceCode && (
+        <RiskSection riskData={riskData} provinceCode={provinceCode} />
+      )}
 
       <div className="flex gap-1 mb-2 rounded-md bg-bg-card/50 p-0.5">
         {tabConfig.map((tab) => (

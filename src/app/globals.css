@@ -94,6 +94,20 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.glass-heavy {
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  background-color: rgba(28, 28, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-light {
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background-color: rgba(28, 28, 30, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 /* ── Animation keyframes ───────────────────────────────────────── */
 
 @keyframes pulse-glow {
@@ -140,14 +154,34 @@ body {
   }
 }
 
+@keyframes breathe {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes panel-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-panel-enter {
+  animation: panel-enter 0.3s ease-out both;
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
 /* MapLibre popup dark theme override */
 .maplibregl-popup-content {
-  background-color: var(--color-bg-secondary) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: 0.75rem !important;
+  background-color: rgba(28, 28, 30, 0.85) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 1rem !important;
   color: var(--color-text-primary) !important;
   padding: 0 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
 
 .maplibregl-popup-tip {

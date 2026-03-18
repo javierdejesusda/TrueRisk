@@ -28,7 +28,8 @@ export async function loadProvinceGeoJSON(): Promise<GeoJSON.FeatureCollection> 
  */
 export function enrichGeoJSON(
   geojson: GeoJSON.FeatureCollection,
-  alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>
+  alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>,
+  riskByProvince?: Record<string, { compositeScore: number; severity: string; dominantHazard: string }>
 ): GeoJSON.FeatureCollection {
   // Deep-clone to avoid mutating the cached GeoJSON.
   const clone: GeoJSON.FeatureCollection = JSON.parse(JSON.stringify(geojson));
@@ -43,12 +44,21 @@ export function enrichGeoJSON(
     const alertSeverity = alertData?.maxSeverity ?? 0;
     const alertCount = alertData?.alertCount ?? 0;
 
+    // Risk data (optional)
+    const riskData = riskByProvince?.[codProv];
+    const riskScore = riskData?.compositeScore ?? 0;
+    const riskSeverity = riskData?.severity ?? 'low';
+    const dominantHazard = riskData?.dominantHazard ?? '';
+
     feature.properties = {
       ...props,
       alertSeverity,
       alertCount,
       provinceName,
       provinceCode: codProv,
+      riskScore,
+      riskSeverity,
+      dominantHazard,
     };
   }
 

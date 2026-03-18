@@ -1,6 +1,7 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
+import { useAppStore } from '@/store/app-store';
 
 export interface MapControlsProps {
   alertCount: number;
@@ -19,8 +20,38 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh }: MapControlsProps) {
+  const activeMapLayer = useAppStore((s) => s.activeMapLayer);
+  const setActiveMapLayer = useAppStore((s) => s.setActiveMapLayer);
+
   return (
-    <div className="absolute top-4 right-4 z-10">
+    <div className="absolute top-16 right-4 z-10 flex flex-col gap-2">
+      {/* Layer toggle */}
+      <div className="glass-heavy rounded-lg p-1 flex gap-0.5">
+        <button
+          onClick={() => setActiveMapLayer('risk')}
+          className={[
+            'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+            activeMapLayer === 'risk'
+              ? 'bg-accent-green/20 text-accent-green'
+              : 'text-text-muted hover:text-text-secondary',
+          ].join(' ')}
+        >
+          Risk
+        </button>
+        <button
+          onClick={() => setActiveMapLayer('alerts')}
+          className={[
+            'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+            activeMapLayer === 'alerts'
+              ? 'bg-accent-red/20 text-accent-red'
+              : 'text-text-muted hover:text-text-secondary',
+          ].join(' ')}
+        >
+          Alerts
+        </button>
+      </div>
+
+      {/* Controls card */}
       <Card className="bg-bg-secondary/90 backdrop-blur-sm" padding="sm">
         <div className="flex flex-col gap-2">
           {/* Alert count */}
