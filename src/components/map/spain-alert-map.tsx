@@ -61,6 +61,19 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMa
   // Track which source the hovered feature belongs to
   const hoveredSourceRef = useRef<string>('provinces');
 
+  const safeSetFeatureState = useCallback(
+    (source: string, id: string, state: Record<string, unknown>) => {
+      try {
+        if (mapRef.current?.getSource(source)) {
+          mapRef.current.setFeatureState({ source, id }, state);
+        }
+      } catch {
+        // Source not yet added to map — ignore
+      }
+    },
+    []
+  );
+
   // Hover handling
   const onMouseMove = useCallback((e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
@@ -70,30 +83,21 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMa
       const id = isMuni ? feature.properties?.cod_muni : feature.properties?.cod_prov;
       if (hoveredFeatureId !== id || hoveredSourceRef.current !== source) {
         if (hoveredFeatureId) {
-          mapRef.current?.setFeatureState(
-            { source: hoveredSourceRef.current, id: hoveredFeatureId },
-            { hover: false }
-          );
+          safeSetFeatureState(hoveredSourceRef.current, hoveredFeatureId, { hover: false });
         }
         hoveredSourceRef.current = source;
         setHoveredFeatureId(id);
-        mapRef.current?.setFeatureState(
-          { source, id },
-          { hover: true }
-        );
+        safeSetFeatureState(source, id, { hover: true });
       }
     }
-  }, [hoveredFeatureId]);
+  }, [hoveredFeatureId, safeSetFeatureState]);
 
   const onMouseLeave = useCallback(() => {
     if (hoveredFeatureId) {
-      mapRef.current?.setFeatureState(
-        { source: hoveredSourceRef.current, id: hoveredFeatureId },
-        { hover: false }
-      );
+      safeSetFeatureState(hoveredSourceRef.current, hoveredFeatureId, { hover: false });
       setHoveredFeatureId(null);
     }
-  }, [hoveredFeatureId]);
+  }, [hoveredFeatureId, safeSetFeatureState]);
 
   // Zoom / move handler – track zoom level and lazy-load municipality tiles
   const onMoveEnd = useCallback(() => {
