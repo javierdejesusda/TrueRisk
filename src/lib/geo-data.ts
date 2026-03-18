@@ -81,8 +81,8 @@ export function severityToColor(severity: number): string {
   if (severity >= 4) return '#ef4444';
   if (severity >= 3) return '#f97316';
   if (severity >= 2) return '#fbbf24';
-  if (severity >= 1) return '#34d399';
-  return '#1a2b1e';
+  if (severity >= 1) return '#64D2FF';
+  return '#30D158';
 }
 
 /**

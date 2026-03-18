@@ -5,8 +5,8 @@ import { Card } from '@/components/ui/card';
 import { useAppStore } from '@/store/app-store';
 
 const ALERT_LEVELS = [
-  { label: 'No alerts', color: '#1a2b1e' },
-  { label: 'Low', color: '#34d399' },
+  { label: 'No alerts', color: '#30D158' },
+  { label: 'Low', color: '#64D2FF' },
   { label: 'Moderate', color: '#fbbf24' },
   { label: 'High', color: '#f97316' },
   { label: 'Very High', color: '#ef4444' },
