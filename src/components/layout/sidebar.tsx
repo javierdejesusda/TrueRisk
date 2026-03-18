@@ -3,11 +3,6 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import type { Role } from '@/types/user';
-
-export interface SidebarProps {
-  role: Role;
-}
 
 interface NavItem {
   label: string;
@@ -104,29 +99,20 @@ function CloseIcon() {
 
 /* Navigation data */
 
-const citizenLinks: NavItem[] = [
+const navLinks: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
   { label: 'Map', href: '/map', icon: <MapIcon /> },
   { label: 'Predictions', href: '/prediction', icon: <PredictionIcon /> },
   { label: 'Alerts', href: '/alerts', icon: <AlertIcon /> },
-  { label: 'Profile', href: '/profile', icon: <ProfileIcon /> },
-];
-
-const backofficeLinks: NavItem[] = [
-  { label: 'Dashboard', href: '/backoffice', icon: <DashboardIcon /> },
-  { label: 'Map', href: '/map', icon: <MapIcon /> },
-  { label: 'Alerts', href: '/backoffice/alerts', icon: <AlertIcon /> },
-  { label: 'Records', href: '/backoffice/records', icon: <RecordsIcon /> },
-  { label: 'Citizens', href: '/backoffice/citizens', icon: <PeopleIcon /> },
+  { label: 'Settings', href: '/profile', icon: <ProfileIcon /> },
+  { label: 'Admin', href: '/backoffice', icon: <RecordsIcon /> },
 ];
 
 /* Sidebar component */
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-
-  const links = role === 'citizen' ? citizenLinks : backofficeLinks;
 
   const isActive = (href: string) => {
     return pathname === href;
@@ -148,7 +134,7 @@ export function Sidebar({ role }: SidebarProps) {
 
       {/* Nav links */}
       <nav aria-label="Main navigation" className="mt-2 flex flex-col gap-1 px-3">
-        {links.map((item) => {
+        {navLinks.map((item) => {
           const active = isActive(item.href);
           return (
             <Link
