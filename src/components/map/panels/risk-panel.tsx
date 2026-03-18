@@ -55,7 +55,6 @@ export function RiskPanel() {
     <PanelShell
       title="Risk Score"
       icon={ShieldIcon}
-      position="top-16 left-4"
       collapsedContent={collapsedContent}
     >
       {isLoading ? (

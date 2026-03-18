@@ -31,9 +31,12 @@ export default function MapHomePage() {
         allWeather={weatherMarkers}
       />
 
-      {/* Floating panels */}
-      {panelsVisible.risk && <RiskPanel />}
-      {panelsVisible.weather && <WeatherPanel />}
+      {/* Left panels — stacked vertically */}
+      <div className="absolute top-16 left-4 z-40 flex flex-col gap-3 max-h-[calc(100vh-6rem)] overflow-y-auto">
+        {panelsVisible.risk && <RiskPanel />}
+        {panelsVisible.weather && <WeatherPanel />}
+      </div>
+      {/* Right panel — keeps absolute positioning */}
       {panelsVisible.alerts && <AlertsPanel />}
     </div>
   );

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface PanelShellProps {
   title: string;
   icon: ReactNode;
-  position: string;
+  position?: string;
   children: ReactNode;
   collapsedContent?: ReactNode;
   updatedAt?: Date;
@@ -32,7 +32,7 @@ export function PanelShell({
     : null;
 
   return (
-    <div className={`absolute z-40 ${position}`}>
+    <div className={position ? `absolute z-40 ${position}` : ''}>
       <div className="glass-heavy rounded-xl shadow-lg animate-panel-enter min-w-[200px] max-w-[280px]">
         {/* Header */}
         <button
