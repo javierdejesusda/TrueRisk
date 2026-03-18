@@ -97,7 +97,7 @@ export function useAllWeather() {
     return data
       .map((w) => {
         const coords = PROVINCE_COORDS[w.province_code];
-        if (!coords) return null;
+        if (!coords || w.temperature == null) return null;
         return {
           province_code: w.province_code,
           temperature: w.temperature,

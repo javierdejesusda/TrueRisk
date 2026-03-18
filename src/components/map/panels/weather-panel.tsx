@@ -22,9 +22,9 @@ export function WeatherPanel() {
 
   const collapsedContent = weather ? (
     <div className="flex items-center gap-2">
-      <span className="text-sm">{weatherEmoji(weather.temperature)}</span>
+      <span className="text-sm">{weatherEmoji(weather.temperature ?? 0)}</span>
       <span className="text-sm font-bold font-mono text-text-primary">
-        {weather.temperature.toFixed(0)}°C
+        {weather.temperature != null ? weather.temperature.toFixed(0) : '—'}°C
       </span>
     </div>
   ) : null;
@@ -33,7 +33,6 @@ export function WeatherPanel() {
     <PanelShell
       title="Weather"
       icon={ThermometerIcon}
-      position="bottom-20 left-4"
       collapsedContent={collapsedContent}
     >
       {isLoading ? (
@@ -47,7 +46,7 @@ export function WeatherPanel() {
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-md bg-bg-secondary/50 p-2">
               <p className="text-[9px] text-text-muted">Temperature</p>
-              <p className="text-xs font-bold text-text-primary">{weather.temperature.toFixed(1)}°C</p>
+              <p className="text-xs font-bold text-text-primary">{weather.temperature != null ? weather.temperature.toFixed(1) : '—'}°C</p>
             </div>
             <div className="rounded-md bg-bg-secondary/50 p-2">
               <p className="text-[9px] text-text-muted">Humidity</p>

@@ -228,8 +228,8 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
         4, '#FF453A',
         3, '#FF9F0A',
         2, '#FFD60A',
-        1, '#30D158',
-        '#1C1C1E',
+        1, '#64D2FF',
+        '#30D158',
       ] as unknown as maplibregl.ExpressionSpecification;
 
   // Alert pulse fill color
@@ -240,7 +240,7 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     4, '#FF453A',
     3, '#FF9F0A',
     2, '#FFD60A',
-    1, '#30D158',
+    1, '#64D2FF',
     'transparent',
   ] as unknown as maplibregl.ExpressionSpecification;
 
@@ -336,10 +336,13 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
                 'text-size': ['interpolate', ['linear'], ['zoom'], 5, 9, 6, 11, 7, 13],
                 'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
                 'text-allow-overlap': false,
-                'text-padding': 4,
+                'text-padding': 6,
                 'text-max-width': 7,
                 'text-transform': 'uppercase',
                 'text-letter-spacing': 0.08,
+                'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
+                'text-radial-offset': 0.5,
+                'text-justify': 'auto',
               }}
               paint={{
                 'text-color': '#F5F5F7',
@@ -370,8 +373,8 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
                   4, '#FF453A',
                   3, '#FF9F0A',
                   2, '#FFD60A',
-                  1, '#30D158',
-                  '#1C1C1E',
+                  1, '#64D2FF',
+                  '#30D158',
                 ] as unknown as maplibregl.ExpressionSpecification,
                 'fill-opacity': [
                   'case',
@@ -397,8 +400,11 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
                 'text-size': ['interpolate', ['linear'], ['zoom'], 7, 9, 9, 12],
                 'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
                 'text-allow-overlap': false,
-                'text-padding': 2,
+                'text-padding': 3,
                 'text-max-width': 6,
+                'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
+                'text-radial-offset': 0.4,
+                'text-justify': 'auto',
               }}
               paint={{
                 'text-color': '#F5F5F7',
@@ -419,9 +425,9 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
           >
             <div
               className="glass-light rounded-full px-1.5 py-0.5 text-[10px] font-mono font-bold leading-none"
-              style={{ color: tempColor(w.temperature) }}
+              style={{ color: tempColor(w.temperature ?? 0) }}
             >
-              {w.temperature.toFixed(0)}°
+              {w.temperature != null ? `${w.temperature.toFixed(0)}°` : '—'}
             </div>
           </Marker>
         ))}

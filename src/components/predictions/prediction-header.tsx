@@ -17,7 +17,7 @@ export function PredictionHeader({ current }: Props) {
         </p>
       </div>
       <div className="flex items-center gap-3 text-xs text-text-secondary">
-        <span>{current.temperature.toFixed(1)}°C</span>
+        <span>{current.temperature != null ? current.temperature.toFixed(1) : '—'}°C</span>
         <span className="text-text-muted">·</span>
         <span>{current.humidity}% humidity</span>
         <span className="text-text-muted">·</span>
