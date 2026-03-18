@@ -2,41 +2,37 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
-import type { RiskScore } from '@/types/risk';
-import type { ApiResponse } from '@/types/api';
+import type { CompositeRiskScore } from '@/types/risk';
 
-export function useRiskScore() {
+export function useRiskScore(provinceCode?: string) {
   const user = useAppStore((s) => s.user);
-  const [risk, setRisk] = useState<RiskScore | null>(null);
+  const setRisk = useAppStore((s) => s.setRisk);
+  const [risk, setRiskState] = useState<CompositeRiskScore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    if (!user) return;
+  const code = provinceCode ?? user?.province_code;
 
+  const fetchData = useCallback(async () => {
+    if (!code) return;
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/analysis/risk?userId=${user.id}`);
-      const json = (await res.json()) as ApiResponse<RiskScore>;
-
-      if (json.success && json.data) {
-        setRisk(json.data);
-        setError(null);
-      } else {
-        setError(json.error ?? 'Failed to fetch risk score');
-      }
+      const res = await fetch(`/api/risk/${code}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as CompositeRiskScore;
+      setRiskState(data);
+      setRisk(data);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch risk score');
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [code, setRisk]);
 
   useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user, fetchData]);
+    if (code) fetchData();
+  }, [code, fetchData]);
 
   return { risk, isLoading, error, refresh: fetchData };
 }

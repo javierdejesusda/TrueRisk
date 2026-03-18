@@ -23,13 +23,11 @@ const SPECIAL_NEEDS_OPTIONS = [
 ] as const;
 
 const registerSchema = z.object({
-  nickName: z.string().min(3, 'Nickname must be at least 3 characters'),
-  teamName: z.string().min(1, 'Team name is required'),
+  nickname: z.string().min(3, 'Nickname must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  province: z.string().min(1, 'Province is required'),
-  residenceType: z.string().min(1, 'Residence type is required'),
-  specialNeeds: z.array(z.string()),
-  role: z.string(),
+  province_code: z.string().min(1, 'Province is required'),
+  residence_type: z.string().min(1, 'Residence type is required'),
+  special_needs: z.array(z.string()),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -43,11 +41,6 @@ const residenceTypeOptions = Object.entries(RESIDENCE_TYPES).map(([key, info]) =
   value: key,
   label: info.label,
 }));
-
-const roleOptions = [
-  { value: 'citizen', label: 'Citizen' },
-  { value: 'backoffice', label: 'Backoffice' },
-];
 
 export function RegisterForm() {
   const router = useRouter();
@@ -63,24 +56,22 @@ export function RegisterForm() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      nickName: '',
-      teamName: '',
+      nickname: '',
       password: '',
-      province: '',
-      residenceType: '',
-      specialNeeds: [],
-      role: 'citizen',
+      province_code: '',
+      residence_type: '',
+      special_needs: [],
     },
   });
 
-  const selectedNeeds = watch('specialNeeds') ?? [];
+  const selectedNeeds = watch('special_needs') ?? [];
 
   function handleNeedToggle(need: string) {
     const current = selectedNeeds;
     const updated = current.includes(need)
       ? current.filter((n) => n !== need)
       : [...current, need];
-    setValue('specialNeeds', updated, { shouldValidate: true });
+    setValue('special_needs', updated, { shouldValidate: true });
   }
 
   async function onSubmit(data: RegisterFormData) {
@@ -96,12 +87,12 @@ export function RegisterForm() {
 
       const result = await res.json();
 
-      if (!res.ok || !result.success) {
-        setApiError(result.error ?? 'Registration failed');
+      if (!res.ok) {
+        setApiError(result.detail ?? result.error ?? 'Registration failed');
         return;
       }
 
-      const role = result.user?.role;
+      const role = result.user?.role ?? result.role;
       if (role === 'backoffice') {
         router.push('/backoffice');
       } else {
@@ -125,15 +116,8 @@ export function RegisterForm() {
       <Input
         label="Nickname"
         placeholder="Enter your nickname"
-        error={errors.nickName?.message}
-        {...register('nickName')}
-      />
-
-      <Input
-        label="Team Name"
-        placeholder="Enter your team name"
-        error={errors.teamName?.message}
-        {...register('teamName')}
+        error={errors.nickname?.message}
+        {...register('nickname')}
       />
 
       <Input
@@ -148,16 +132,16 @@ export function RegisterForm() {
         label="Province"
         placeholder="Select a province"
         options={provinceOptions}
-        error={errors.province?.message}
-        {...register('province')}
+        error={errors.province_code?.message}
+        {...register('province_code')}
       />
 
       <Select
         label="Residence Type"
         placeholder="Select residence type"
         options={residenceTypeOptions}
-        error={errors.residenceType?.message}
-        {...register('residenceType')}
+        error={errors.residence_type?.message}
+        {...register('residence_type')}
       />
 
       <div className="flex flex-col gap-1.5">
@@ -181,13 +165,6 @@ export function RegisterForm() {
           ))}
         </div>
       </div>
-
-      <Select
-        label="Role"
-        options={roleOptions}
-        error={errors.role?.message}
-        {...register('role')}
-      />
 
       <Button type="submit" loading={isLoading} className="mt-2 w-full">
         {isLoading ? 'Creating account...' : 'Create Account'}

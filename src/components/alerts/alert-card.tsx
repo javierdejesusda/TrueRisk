@@ -1,26 +1,21 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import type { AlertSeverity } from '@/types/alert';
 
 export interface AlertCardProps {
   alert: {
     id: number;
     severity: number;
-    type: string;
-    province: string | null;
+    hazard_type: string;
+    province_code: string | null;
     title: string;
     description: string;
-    isActive: boolean;
-    createdAt: string;
+    is_active: boolean;
+    created_at: string;
   };
-  onGetAdvice?: (alertId: number) => void;
-  adviceLoading?: boolean;
-  advice?: string | null;
 }
 
 function getSeverityBorderClass(severity: number): string {
@@ -66,9 +61,7 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export function AlertCard({ alert, onGetAdvice, adviceLoading, advice }: AlertCardProps) {
-  const [expanded, setExpanded] = useState(false);
-
+export function AlertCard({ alert }: AlertCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -90,10 +83,10 @@ export function AlertCard({ alert, onGetAdvice, adviceLoading, advice }: AlertCa
               {getSeverityLabel(alert.severity)}
             </Badge>
             <Badge variant="neutral" size="sm">
-              {formatType(alert.type)}
+              {formatType(alert.hazard_type)}
             </Badge>
-            {alert.province && (
-              <span className="text-xs text-text-muted">{alert.province}</span>
+            {alert.province_code && (
+              <span className="text-xs text-text-muted">{alert.province_code}</span>
             )}
           </div>
 
@@ -107,48 +100,13 @@ export function AlertCard({ alert, onGetAdvice, adviceLoading, advice }: AlertCa
             {alert.description}
           </p>
 
-          {/* Footer: timestamp + action */}
-          <div className="flex items-center justify-between gap-3">
+          {/* Footer: timestamp */}
+          <div className="flex items-center gap-3">
             <span className="text-xs text-text-muted">
-              {formatRelativeTime(alert.createdAt)}
+              {formatRelativeTime(alert.created_at)}
             </span>
-            {onGetAdvice && (
-              <Button
-                variant="outline"
-                size="sm"
-                loading={adviceLoading}
-                onClick={() => onGetAdvice(alert.id)}
-              >
-                Get Personal Advice
-              </Button>
-            )}
           </div>
         </div>
-
-        {/* Expandable advice section */}
-        {advice && (
-          <div className="border-t border-border">
-            <button
-              type="button"
-              className="flex w-full cursor-pointer items-center justify-between px-5 py-3 text-left"
-              onClick={() => setExpanded(!expanded)}
-            >
-              <span className="text-sm font-medium text-accent-green">
-                Personal Recommendation
-              </span>
-              <span className="text-xs text-text-muted">
-                {expanded ? '\u25B2' : '\u25BC'}
-              </span>
-            </button>
-            {expanded && (
-              <div className="px-5 pb-4">
-                <p className="text-sm leading-relaxed text-text-primary whitespace-pre-wrap">
-                  {advice}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
       </Card>
     </motion.div>
   );

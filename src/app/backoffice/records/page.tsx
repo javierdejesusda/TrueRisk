@@ -14,21 +14,21 @@ interface WeatherRecord {
   temperature: number;
   humidity: number;
   precipitation: number;
-  windSpeed: number | null;
+  wind_speed: number | null;
   pressure: number | null;
-  riskScore: number | null;
-  isDisaster: boolean;
-  recordedAt: string;
+  risk_score: number | null;
+  is_disaster: boolean;
+  recorded_at: string;
 }
 
 type SortField =
-  | 'recordedAt'
+  | 'recorded_at'
   | 'temperature'
   | 'precipitation'
   | 'humidity'
-  | 'windSpeed'
+  | 'wind_speed'
   | 'pressure'
-  | 'riskScore';
+  | 'risk_score';
 type SortDir = 'asc' | 'desc';
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ export default function BackofficeRecordsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [sortField, setSortField] = useState<SortField>('recordedAt');
+  const [sortField, setSortField] = useState<SortField>('recorded_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const pageSize = 20;
 
@@ -52,9 +52,10 @@ export default function BackofficeRecordsPage() {
       const res = await fetch(`/api/weather/history?${params.toString()}`);
       const json = await res.json();
 
-      if (json.success && json.data) {
-        setRecords(json.data.items);
-        setTotal(json.data.total);
+      if (res.ok) {
+        const data = json;
+        setRecords(data.items ?? data);
+        setTotal(data.total ?? (Array.isArray(data) ? data.length : 0));
       }
     } catch {
       // ignore
@@ -72,7 +73,7 @@ export default function BackofficeRecordsPage() {
     const valA = a[sortField] ?? 0;
     const valB = b[sortField] ?? 0;
 
-    if (sortField === 'recordedAt') {
+    if (sortField === 'recorded_at') {
       const dateA = new Date(valA as string).getTime();
       const dateB = new Date(valB as string).getTime();
       return sortDir === 'asc' ? dateA - dateB : dateB - dateA;
@@ -113,14 +114,14 @@ export default function BackofficeRecordsPage() {
     ];
 
     const rows = records.map((r) => [
-      new Date(r.recordedAt).toISOString(),
+      new Date(r.recorded_at).toISOString(),
       r.temperature.toFixed(1),
       r.precipitation.toFixed(1),
       r.humidity.toFixed(1),
-      r.windSpeed?.toFixed(1) ?? '',
+      r.wind_speed?.toFixed(1) ?? '',
       r.pressure?.toFixed(1) ?? '',
-      r.riskScore?.toFixed(1) ?? '',
-      r.isDisaster ? 'Yes' : 'No',
+      r.risk_score?.toFixed(1) ?? '',
+      r.is_disaster ? 'Yes' : 'No',
     ]);
 
     const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -215,11 +216,11 @@ export default function BackofficeRecordsPage() {
               <tr className="border-b border-border text-left">
                 <th
                   className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
-                  onClick={() => toggleSort('recordedAt')}
+                  onClick={() => toggleSort('recorded_at')}
                 >
                   <span className="inline-flex items-center">
                     Date
-                    <SortIndicator field="recordedAt" />
+                    <SortIndicator field="recorded_at" />
                   </span>
                 </th>
                 <th
@@ -251,11 +252,11 @@ export default function BackofficeRecordsPage() {
                 </th>
                 <th
                   className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
-                  onClick={() => toggleSort('windSpeed')}
+                  onClick={() => toggleSort('wind_speed')}
                 >
                   <span className="inline-flex items-center">
                     Wind
-                    <SortIndicator field="windSpeed" />
+                    <SortIndicator field="wind_speed" />
                   </span>
                 </th>
                 <th
@@ -269,11 +270,11 @@ export default function BackofficeRecordsPage() {
                 </th>
                 <th
                   className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
-                  onClick={() => toggleSort('riskScore')}
+                  onClick={() => toggleSort('risk_score')}
                 >
                   <span className="inline-flex items-center">
                     Risk Score
-                    <SortIndicator field="riskScore" />
+                    <SortIndicator field="risk_score" />
                   </span>
                 </th>
                 <th className="px-4 py-3 font-medium text-text-secondary">
@@ -308,7 +309,7 @@ export default function BackofficeRecordsPage() {
                     className="border-b border-border/50 transition-colors hover:bg-bg-card/50"
                   >
                     <td className="px-4 py-3 text-text-primary whitespace-nowrap">
-                      {formatDate(record.recordedAt)}
+                      {formatDate(record.recorded_at)}
                     </td>
                     <td className="px-4 py-3 text-text-primary">
                       {record.temperature.toFixed(1)}°C
@@ -320,20 +321,20 @@ export default function BackofficeRecordsPage() {
                       {record.humidity.toFixed(1)}%
                     </td>
                     <td className="px-4 py-3 text-text-secondary">
-                      {record.windSpeed?.toFixed(1) ?? 'N/A'} km/h
+                      {record.wind_speed?.toFixed(1) ?? 'N/A'} km/h
                     </td>
                     <td className="px-4 py-3 text-text-secondary">
                       {record.pressure?.toFixed(1) ?? 'N/A'} hPa
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`font-semibold ${riskColor(record.riskScore)}`}
+                        className={`font-semibold ${riskColor(record.risk_score)}`}
                       >
-                        {record.riskScore?.toFixed(1) ?? '-'}
+                        {record.risk_score?.toFixed(1) ?? '-'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {record.isDisaster ? (
+                      {record.is_disaster ? (
                         <Badge variant="danger" size="sm" pulse>
                           Yes
                         </Badge>

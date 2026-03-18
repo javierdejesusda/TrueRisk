@@ -1,27 +1,18 @@
 import { create } from 'zustand';
 import type { UserProfile } from '@/types/user';
-import type { ParsedWeather } from '@/types/weather';
+import type { CurrentWeather } from '@/types/weather';
 import type { Alert } from '@/types/alert';
-
-export interface GeoLocation {
-  latitude: number;
-  longitude: number;
-  province: string | null;
-  provinceName: string | null;
-  municipality: string | null;
-  accuracy: number;
-  timestamp: number;
-}
-
-export type GeoStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'error';
+import type { CompositeRiskScore } from '@/types/risk';
 
 interface AppState {
   user: UserProfile | null;
   setUser: (user: UserProfile | null) => void;
-  weather: ParsedWeather | null;
-  setWeather: (weather: ParsedWeather | null) => void;
+  weather: CurrentWeather | null;
+  setWeather: (weather: CurrentWeather | null) => void;
   alerts: Alert[];
   setAlerts: (alerts: Alert[]) => void;
+  risk: CompositeRiskScore | null;
+  setRisk: (risk: CompositeRiskScore | null) => void;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
@@ -34,6 +25,8 @@ export const useAppStore = create<AppState>((set) => ({
   setWeather: (weather) => set({ weather }),
   alerts: [],
   setAlerts: (alerts) => set({ alerts }),
+  risk: null,
+  setRisk: (risk) => set({ risk }),
   sidebarOpen: false,
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),

@@ -56,37 +56,45 @@ export default function BackofficeDashboardPage() {
     setIsLoading(true);
 
     const results = await Promise.allSettled([
-      fetch('/api/weather/current').then((r) => r.json()),
-      fetch('/api/alerts/detect').then((r) => r.json()),
-      fetch('/api/analysis/risk').then((r) => r.json()),
-      fetch('/api/alerts?active=true').then((r) => r.json()),
-      fetch('/api/citizens').then((r) => r.json()),
+      fetch('/api/weather/current/28').then((r) => r.ok ? r.json() : null),
+      fetch('/api/alerts/detect').then((r) => r.ok ? r.json() : null),
+      fetch('/api/risk/28').then((r) => r.ok ? r.json() : null),
+      fetch('/api/alerts?active=true').then((r) => r.ok ? r.json() : null),
+      fetch('/api/citizens').then((r) => r.ok ? r.json() : null),
     ]);
 
     // Weather
-    if (results[0].status === 'fulfilled' && results[0].value.success) {
-      setWeather(results[0].value.data);
+    if (results[0].status === 'fulfilled' && results[0].value) {
+      const w = results[0].value;
+      setWeather({
+        temperature: w.temperature,
+        humidity: w.humidity,
+        precipitation: w.precipitation,
+        windSpeed: w.wind_speed,
+        pressure: w.pressure,
+      });
     }
 
     // Detection
-    if (results[1].status === 'fulfilled' && results[1].value.success) {
-      setDetection(results[1].value.data);
+    if (results[1].status === 'fulfilled' && results[1].value) {
+      setDetection(results[1].value);
     }
 
     // Risk
-    if (results[2].status === 'fulfilled' && results[2].value.success) {
-      setRisk(results[2].value.data);
+    if (results[2].status === 'fulfilled' && results[2].value) {
+      const r = results[2].value;
+      setRisk({
+        score: r.composite_score,
+        severity: r.severity,
+        emergencyType: r.dominant_hazard,
+      });
     }
 
     // Stats
-    const alertCount =
-      results[3].status === 'fulfilled' && results[3].value.success
-        ? (results[3].value.data as unknown[]).length
-        : 0;
-    const citizenCount =
-      results[4].status === 'fulfilled' && results[4].value.success
-        ? (results[4].value.data as unknown[]).length
-        : 0;
+    const alertData = results[3].status === 'fulfilled' ? results[3].value : null;
+    const alertCount = Array.isArray(alertData) ? alertData.length : 0;
+    const citizenData = results[4].status === 'fulfilled' ? results[4].value : null;
+    const citizenCount = Array.isArray(citizenData) ? citizenData.length : 0;
 
     setStats({
       activeAlerts: alertCount,
@@ -426,7 +434,7 @@ export default function BackofficeDashboardPage() {
             detection?.suggestion
               ? {
                   severity: detection.suggestion.severity,
-                  type: detection.suggestion.type,
+                  hazard_type: detection.suggestion.type,
                   title: detection.suggestion.title,
                   description: detection.suggestion.description,
                 }

@@ -2,39 +2,36 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
-import type { ParsedWeather } from '@/types/weather';
-import type { ApiResponse } from '@/types/api';
+import type { CurrentWeather } from '@/types/weather';
 
-const REFRESH_INTERVAL = 60_000; // 60 seconds
+const REFRESH_INTERVAL = 60_000;
 
-export function useWeather() {
+export function useWeather(provinceCode?: string) {
+  const user = useAppStore((s) => s.user);
   const setWeatherStore = useAppStore((s) => s.setWeather);
-  const [weather, setWeather] = useState<ParsedWeather | null>(null);
+  const [weather, setWeather] = useState<CurrentWeather | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const code = provinceCode ?? user?.province_code ?? '28';
+
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/weather/current');
-      const json = (await res.json()) as ApiResponse<ParsedWeather>;
-
-      if (json.success && json.data) {
-        setWeather(json.data);
-        setWeatherStore(json.data);
-        setError(null);
-      } else {
-        setError(json.error ?? 'Failed to fetch weather');
-      }
+      const res = await fetch(`/api/weather/current/${code}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as CurrentWeather;
+      setWeather(data);
+      setWeatherStore(data);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch weather');
     } finally {
       setIsLoading(false);
     }
-  }, [setWeatherStore]);
+  }, [code, setWeatherStore]);
 
   useEffect(() => {
     fetchData();
-
     const interval = setInterval(fetchData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchData]);

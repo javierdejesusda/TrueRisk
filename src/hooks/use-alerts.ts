@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import type { Alert } from '@/types/alert';
-import type { ApiResponse } from '@/types/api';
 
-const REFRESH_INTERVAL = 30_000; // 30 seconds
+const REFRESH_INTERVAL = 30_000;
 
-export function useAlerts() {
+export function useAlerts(filters?: { province?: string; hazard?: string }) {
   const setAlertsStore = useAppStore((s) => s.setAlerts);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,26 +14,25 @@ export function useAlerts() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/alerts?active=true');
-      const json = (await res.json()) as ApiResponse<Alert[]>;
+      const params = new URLSearchParams({ active: 'true' });
+      if (filters?.province) params.set('province', filters.province);
+      if (filters?.hazard) params.set('hazard', filters.hazard);
 
-      if (json.success && json.data) {
-        setAlerts(json.data);
-        setAlertsStore(json.data);
-        setError(null);
-      } else {
-        setError(json.error ?? 'Failed to fetch alerts');
-      }
+      const res = await fetch(`/api/alerts?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as Alert[];
+      setAlerts(data);
+      setAlertsStore(data);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
     } finally {
       setIsLoading(false);
     }
-  }, [setAlertsStore]);
+  }, [setAlertsStore, filters?.province, filters?.hazard]);
 
   useEffect(() => {
     fetchData();
-
     const interval = setInterval(fetchData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchData]);

@@ -59,8 +59,8 @@ export default function Home() {
         </p>
 
         <p className="mt-2 max-w-md text-sm text-text-muted">
-          Real-time weather monitoring, AI-powered risk analysis, and
-          personalised emergency guidance for citizens.
+          Multi-hazard risk intelligence with real-time weather monitoring
+          and personalised emergency guidance for citizens.
         </p>
 
         {/* CTA buttons */}
@@ -119,7 +119,7 @@ export default function Home() {
         className="absolute bottom-6 flex items-center gap-2 text-xs text-text-muted"
       >
         <span className="h-px w-8 bg-border" />
-        <span>Powered by AI weather analysis</span>
+        <span>Multi-hazard risk intelligence</span>
         <span className="h-px w-8 bg-border" />
       </motion.div>
     </div>

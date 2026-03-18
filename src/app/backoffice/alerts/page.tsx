@@ -16,13 +16,13 @@ import type { AlertSeverity } from '@/types/alert';
 interface AlertRow {
   id: number;
   severity: number;
-  type: string;
-  province: string | null;
+  hazard_type: string;
+  province_code: string | null;
   title: string;
   description: string;
-  isActive: boolean;
-  autoDetected: boolean;
-  createdAt: string;
+  is_active: boolean;
+  source: string;
+  created_at: string;
 }
 
 // ── Filter options ───────────────────────────────────────────────────────
@@ -36,20 +36,16 @@ const statusOptions = [
 const typeFilterOptions = [
   { value: '', label: 'All types' },
   { value: 'flood', label: 'Flood' },
-  { value: 'heat_wave', label: 'Heat Wave' },
-  { value: 'cold_snap', label: 'Cold Snap' },
-  { value: 'wind_storm', label: 'Wind Storm' },
-  { value: 'thunderstorm', label: 'Thunderstorm' },
-  { value: 'general', label: 'General' },
+  { value: 'wildfire', label: 'Wildfire' },
+  { value: 'drought', label: 'Drought' },
+  { value: 'heatwave', label: 'Heatwave' },
 ];
 
 const typeLabels: Record<string, string> = {
   flood: 'Flood',
-  heat_wave: 'Heat Wave',
-  cold_snap: 'Cold Snap',
-  wind_storm: 'Wind Storm',
-  thunderstorm: 'Thunderstorm',
-  general: 'General',
+  wildfire: 'Wildfire',
+  drought: 'Drought',
+  heatwave: 'Heatwave',
 };
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -73,10 +69,10 @@ export default function BackofficeAlertsPage() {
       if (statusFilter) params.set('active', statusFilter);
 
       const res = await fetch(`/api/alerts?${params.toString()}`);
-      const json = await res.json();
+      const data = await res.json();
 
-      if (json.success && Array.isArray(json.data)) {
-        setAlerts(json.data);
+      if (res.ok) {
+        setAlerts(Array.isArray(data) ? data : []);
       }
     } catch {
       // Silently fail, alerts remain empty
@@ -91,7 +87,7 @@ export default function BackofficeAlertsPage() {
 
   // Filter by type client-side
   const filteredAlerts = typeFilter
-    ? alerts.filter((a) => a.type === typeFilter)
+    ? alerts.filter((a) => a.hazard_type === typeFilter)
     : alerts;
 
   async function toggleActive(alert: AlertRow) {
@@ -100,13 +96,12 @@ export default function BackofficeAlertsPage() {
       const res = await fetch('/api/alerts', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: alert.id, isActive: !alert.isActive }),
+        body: JSON.stringify({ id: alert.id, is_active: !alert.is_active }),
       });
-      const json = await res.json();
-      if (json.success) {
+      if (res.ok) {
         setAlerts((prev) =>
           prev.map((a) =>
-            a.id === alert.id ? { ...a, isActive: !a.isActive } : a,
+            a.id === alert.id ? { ...a, is_active: !a.is_active } : a,
           ),
         );
       }
@@ -125,9 +120,10 @@ export default function BackofficeAlertsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      const json = await res.json();
-      if (json.success) {
+      if (res.ok) {
         setAlerts((prev) => prev.filter((a) => a.id !== id));
+      } else {
+        await res.json(); // consume body
       }
     } catch {
       // ignore
@@ -268,24 +264,24 @@ export default function BackofficeAlertsPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-text-primary">
-                      {typeLabels[alert.type] ?? alert.type}
+                      {typeLabels[alert.hazard_type] ?? alert.hazard_type}
                     </td>
                     <td className="px-4 py-3 text-text-secondary">
-                      {alert.province ?? 'All'}
+                      {alert.province_code ?? 'All'}
                     </td>
                     <td className="px-4 py-3 text-text-primary">
                       <span className="line-clamp-1">{alert.title}</span>
                     </td>
                     <td className="px-4 py-3">
                       <Badge
-                        variant={alert.isActive ? 'success' : 'neutral'}
+                        variant={alert.is_active ? 'success' : 'neutral'}
                         size="sm"
                       >
-                        {alert.isActive ? 'Active' : 'Inactive'}
+                        {alert.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
-                      {formatDate(alert.createdAt)}
+                      {formatDate(alert.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -295,7 +291,7 @@ export default function BackofficeAlertsPage() {
                           loading={togglingId === alert.id}
                           onClick={() => toggleActive(alert)}
                         >
-                          {alert.isActive ? 'Deactivate' : 'Activate'}
+                          {alert.is_active ? 'Deactivate' : 'Activate'}
                         </Button>
                         <Button
                           variant="danger"

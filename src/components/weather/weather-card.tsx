@@ -2,16 +2,16 @@
 
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { ParsedWeather } from '@/types/weather';
+import type { CurrentWeather } from '@/types/weather';
 
 export interface WeatherCardProps {
-  weather: ParsedWeather | null;
+  weather: CurrentWeather | null;
   isLoading: boolean;
   province?: string;
 }
 
-function getWeatherIcon(weather: ParsedWeather): string {
-  const { precipitation, cloudCover, windSpeed } = weather;
+function getWeatherIcon(weather: CurrentWeather): string {
+  const { precipitation, cloud_cover: cloudCover, wind_speed: windSpeed } = weather;
 
   if (precipitation > 20) return 'storm';
   if (precipitation > 5) return 'rain';
@@ -43,8 +43,8 @@ function WeatherIconDisplay({ type }: { type: string }) {
   );
 }
 
-function getBorderColor(weather: ParsedWeather): string {
-  const { precipitation, temperature, windSpeed } = weather;
+function getBorderColor(weather: CurrentWeather): string {
+  const { precipitation, temperature, wind_speed: windSpeed } = weather;
 
   if (precipitation > 20 || (windSpeed && windSpeed > 60)) return 'border-l-severity-5';
   if (precipitation > 10 || temperature > 40) return 'border-l-severity-4';
@@ -133,7 +133,7 @@ export function WeatherCard({ weather, isLoading, province }: WeatherCardProps) 
           />
           <MetricItem
             label="Wind"
-            value={weather.windSpeed != null ? weather.windSpeed.toFixed(1) : '--'}
+            value={weather.wind_speed != null ? weather.wind_speed.toFixed(1) : '--'}
             unit="km/h"
           />
         </div>

@@ -7,24 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { PROVINCES } from '@/lib/constants/provinces';
-import { PROVINCE_CODE_TO_INE } from '@/lib/geo-data';
 
 // ── Zod schema ───────────────────────────────────────────────────────────
 
-const EMERGENCY_TYPES = [
+const HAZARD_TYPES = [
   'flood',
-  'heat_wave',
-  'cold_snap',
-  'wind_storm',
-  'thunderstorm',
-  'general',
+  'wildfire',
+  'drought',
+  'heatwave',
 ] as const;
 
 const alertFormSchema = z.object({
   severity: z.number().int().min(1).max(5),
-  type: z.enum(EMERGENCY_TYPES),
-  province: z.string().optional(),
-  municipality: z.string().optional(),
+  hazard_type: z.enum(HAZARD_TYPES),
+  province_code: z.string().optional(),
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
 });
@@ -43,33 +39,25 @@ const severityOptions = [
 
 const typeOptions = [
   { value: 'flood', label: 'Flood' },
-  { value: 'heat_wave', label: 'Heat Wave' },
-  { value: 'cold_snap', label: 'Cold Snap' },
-  { value: 'wind_storm', label: 'Wind Storm' },
-  { value: 'thunderstorm', label: 'Thunderstorm' },
-  { value: 'general', label: 'General' },
+  { value: 'wildfire', label: 'Wildfire' },
+  { value: 'drought', label: 'Drought' },
+  { value: 'heatwave', label: 'Heatwave' },
 ];
 
 const provinceOptions = [
   { value: '', label: 'Todas (All provinces)' },
   ...Object.entries(PROVINCES).map(([code, info]) => ({
-    value: info.name,
+    value: code,
     label: `${info.name} (${code})`,
   })),
 ];
-
-// Reverse lookup: province name → province letter code (e.g. "Valencia" → "V")
-const PROVINCE_NAME_TO_CODE: Record<string, string> = {};
-for (const [code, info] of Object.entries(PROVINCES)) {
-  PROVINCE_NAME_TO_CODE[info.name] = code;
-}
 
 // ── Props ────────────────────────────────────────────────────────────────
 
 export interface CreateAlertFormProps {
   defaultValues?: {
     severity?: number;
-    type?: string;
+    hazard_type?: string;
     title?: string;
     description?: string;
   };
@@ -87,45 +75,12 @@ export function CreateAlertForm({
   const [severity, setSeverity] = useState(
     String(defaultValues?.severity ?? '3'),
   );
-  const [type, setType] = useState(defaultValues?.type ?? 'general');
-  const [province, setProvince] = useState('');
-  const [municipality, setMunicipality] = useState('');
-  const [municipalityOptions, setMunicipalityOptions] = useState<{ value: string; label: string }[]>([]);
-  const [muniLoading, setMuniLoading] = useState(false);
+  const [hazardType, setHazardType] = useState(defaultValues?.hazard_type ?? 'flood');
+  const [provinceCode, setProvinceCode] = useState('');
   const [title, setTitle] = useState(defaultValues?.title ?? '');
   const [description, setDescription] = useState(
     defaultValues?.description ?? '',
   );
-
-  useEffect(() => {
-    setMunicipality('');
-    setMunicipalityOptions([]);
-
-    if (!province) return;
-
-    const provCode = PROVINCE_NAME_TO_CODE[province];
-    if (!provCode) return;
-
-    const ineCode = PROVINCE_CODE_TO_INE[provCode];
-    if (!ineCode) return;
-
-    setMuniLoading(true);
-    fetch(`/api/municipalities/search?province=${ineCode}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.data) {
-          setMunicipalityOptions([
-            { value: '', label: 'All municipalities' },
-            ...json.data.map((m: { code: string; name: string }) => ({
-              value: m.code,
-              label: `${m.name} (${m.code})`,
-            })),
-          ]);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setMuniLoading(false));
-  }, [province]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,9 +95,8 @@ export function CreateAlertForm({
 
     const formData: AlertFormData = {
       severity: parseInt(severity, 10),
-      type: type as AlertFormData['type'],
-      province: province || undefined,
-      municipality: municipality || undefined,
+      hazard_type: hazardType as AlertFormData['hazard_type'],
+      province_code: provinceCode || undefined,
       title: title.trim(),
       description: description.trim(),
     };
@@ -171,11 +125,12 @@ export function CreateAlertForm({
 
       const json = await res.json();
 
-      if (!res.ok || !json.success) {
-        if (json.fieldErrors) {
-          setFieldErrors(json.fieldErrors);
+      if (!res.ok) {
+        if (json.detail) {
+          setError(typeof json.detail === 'string' ? json.detail : 'Failed to create alert');
+        } else {
+          setError(json.error ?? 'Failed to create alert');
         }
-        setError(json.error ?? 'Failed to create alert');
         return;
       }
 
@@ -239,35 +194,21 @@ export function CreateAlertForm({
         />
 
         <Select
-          label="Type"
+          label="Hazard Type"
           options={typeOptions}
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          error={fieldErrors.type}
+          value={hazardType}
+          onChange={(e) => setHazardType(e.target.value)}
+          error={fieldErrors.hazard_type}
         />
       </div>
 
       <Select
         label="Province"
         options={provinceOptions}
-        value={province}
-        onChange={(e) => setProvince(e.target.value)}
-        error={fieldErrors.province}
+        value={provinceCode}
+        onChange={(e) => setProvinceCode(e.target.value)}
+        error={fieldErrors.province_code}
       />
-
-      {province && (
-        <Select
-          label="Municipality"
-          options={
-            municipalityOptions.length > 0
-              ? municipalityOptions
-              : [{ value: '', label: muniLoading ? 'Loading...' : 'Select province first' }]
-          }
-          value={municipality}
-          onChange={(e) => setMunicipality(e.target.value)}
-          error={fieldErrors.municipality}
-        />
-      )}
 
       <Input
         label="Title"

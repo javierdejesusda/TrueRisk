@@ -1,15 +1,17 @@
 export type AlertSeverity = 1 | 2 | 3 | 4 | 5;
-export type EmergencyType = 'flood' | 'heat_wave' | 'cold_snap' | 'wind_storm' | 'thunderstorm' | 'general';
+export type HazardType = "flood" | "wildfire" | "drought" | "heatwave";
 
 export interface Alert {
   id: number;
   severity: AlertSeverity;
-  type: EmergencyType;
-  province: string | null;
-  municipality: string | null;
+  hazard_type: HazardType;
+  province_code: string | null;
   title: string;
   description: string;
-  isActive: boolean;
-  autoDetected: boolean;
-  createdAt: Date;
+  source: string;
+  is_active: boolean;
+  onset: string | null;
+  expires: string | null;
+  created_at: string;
+  updated_at: string;
 }

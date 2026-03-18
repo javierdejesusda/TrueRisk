@@ -25,9 +25,9 @@ export function useAuth() {
           return;
         }
 
-        const json = await res.json() as { success: boolean; user?: UserProfile };
+        const json = await res.json() as { user: UserProfile };
         if (!cancelled) {
-          if (json.success && json.user) {
+          if (json.user) {
             setUser(json.user);
           } else {
             setUser(null);

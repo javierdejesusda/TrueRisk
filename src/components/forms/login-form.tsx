@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const loginSchema = z.object({
-  nickName: z.string().min(1, 'Nickname is required'),
+  nickname: z.string().min(1, 'Nickname is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -28,7 +28,7 @@ export function LoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      nickName: '',
+      nickname: '',
       password: '',
     },
   });
@@ -46,12 +46,12 @@ export function LoginForm() {
 
       const result = await res.json();
 
-      if (!res.ok || !result.success) {
-        setApiError(result.error ?? 'Login failed');
+      if (!res.ok) {
+        setApiError(result.detail ?? result.error ?? 'Login failed');
         return;
       }
 
-      const role = result.user?.role;
+      const role = result.user?.role ?? result.role;
       if (role === 'backoffice') {
         router.push('/backoffice');
       } else {
@@ -75,8 +75,8 @@ export function LoginForm() {
       <Input
         label="Nickname"
         placeholder="Enter your nickname"
-        error={errors.nickName?.message}
-        {...register('nickName')}
+        error={errors.nickname?.message}
+        {...register('nickname')}
       />
 
       <Input

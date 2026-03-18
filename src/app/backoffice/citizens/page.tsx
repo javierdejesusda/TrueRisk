@@ -10,12 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface Citizen {
   id: number;
-  nickName: string;
+  nickname: string;
   role: string;
-  province: string;
-  residenceType: string;
-  specialNeeds: string[];
-  createdAt: string;
+  province_code: string;
+  residence_type: string;
+  special_needs: string[];
+  created_at: string;
 }
 
 // ── Label maps ───────────────────────────────────────────────────────────
@@ -70,10 +70,10 @@ export default function BackofficeCitizensPage() {
       setIsLoading(true);
       try {
         const res = await fetch('/api/citizens');
-        const json = await res.json();
+        const data = await res.json();
 
-        if (json.success && Array.isArray(json.data)) {
-          setCitizens(json.data);
+        if (res.ok) {
+          setCitizens(Array.isArray(data) ? data : []);
         }
       } catch {
         // ignore
@@ -165,37 +165,37 @@ export default function BackofficeCitizensPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-card text-xs font-medium text-text-secondary">
-                          {citizen.nickName.charAt(0).toUpperCase()}
+                          {citizen.nickname.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-medium text-text-primary">
-                          {citizen.nickName}
+                          {citizen.nickname}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      {citizen.province ? (
+                      {citizen.province_code ? (
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            provinceColors[citizen.province] ??
+                            provinceColors[citizen.province_code] ??
                             'bg-bg-card text-text-secondary'
                           }`}
                         >
-                          {citizen.province}
+                          {citizen.province_code}
                         </span>
                       ) : (
                         <span className="text-text-muted">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {citizen.residenceType ? (
+                      {citizen.residence_type ? (
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            residenceColors[citizen.residenceType] ??
+                            residenceColors[citizen.residence_type] ??
                             'bg-bg-card text-text-secondary'
                           }`}
                         >
-                          {residenceLabels[citizen.residenceType] ??
-                            citizen.residenceType}
+                          {residenceLabels[citizen.residence_type] ??
+                            citizen.residence_type}
                         </span>
                       ) : (
                         <span className="text-text-muted">-</span>
@@ -203,8 +203,8 @@ export default function BackofficeCitizensPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {citizen.specialNeeds.length > 0 ? (
-                          citizen.specialNeeds.map((need) => (
+                        {citizen.special_needs.length > 0 ? (
+                          citizen.special_needs.map((need) => (
                             <Badge
                               key={need}
                               variant="neutral"
@@ -229,7 +229,7 @@ export default function BackofficeCitizensPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
-                      {formatDate(citizen.createdAt)}
+                      {formatDate(citizen.created_at)}
                     </td>
                   </tr>
                 ))

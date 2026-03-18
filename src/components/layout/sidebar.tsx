@@ -38,15 +38,6 @@ function AlertIcon() {
   );
 }
 
-function HistoryIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="10" cy="10" r="7" />
-      <path d="M10 6v4l3 2" />
-    </svg>
-  );
-}
-
 function ProfileIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -118,7 +109,6 @@ const citizenLinks: NavItem[] = [
   { label: 'Map', href: '/map', icon: <MapIcon /> },
   { label: 'Predictions', href: '/prediction', icon: <PredictionIcon /> },
   { label: 'Alerts', href: '/alerts', icon: <AlertIcon /> },
-  { label: 'History', href: '/history', icon: <HistoryIcon /> },
   { label: 'Profile', href: '/profile', icon: <ProfileIcon /> },
 ];
 

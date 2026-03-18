@@ -8,7 +8,6 @@ import type { Alert, AlertSeverity } from '@/types/alert';
 export interface AlertBannerProps {
   alert: Alert | null;
   onDismiss: () => void;
-  onGetAdvice: () => void;
 }
 
 function getSeverityBorderClass(severity: AlertSeverity): string {
@@ -37,7 +36,7 @@ function formatType(type: string): string {
   return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function AlertBanner({ alert, onDismiss, onGetAdvice }: AlertBannerProps) {
+export function AlertBanner({ alert, onDismiss }: AlertBannerProps) {
   return (
     <AnimatePresence>
       {alert && (
@@ -68,7 +67,7 @@ export function AlertBanner({ alert, onDismiss, onGetAdvice }: AlertBannerProps)
                     {alert.title}
                   </h3>
                   <Badge severity={alert.severity} size="sm" pulse>
-                    {formatType(alert.type)}
+                    {formatType(alert.hazard_type)}
                   </Badge>
                 </div>
                 <p className="text-sm text-text-secondary line-clamp-2">
@@ -77,13 +76,6 @@ export function AlertBanner({ alert, onDismiss, onGetAdvice }: AlertBannerProps)
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={onGetAdvice}
-                >
-                  Get Personalized Advice
-                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

@@ -234,10 +234,10 @@ export default function PredictionPage() {
       try {
         const res = await fetch('/api/analysis/predictions');
         const json = await res.json();
-        if (json.success && json.data) {
-          setData(json.data);
+        if (res.ok) {
+          setData(json);
         } else {
-          setError(json.error ?? 'Failed to load predictions');
+          setError(json.detail ?? 'Failed to load predictions');
         }
       } catch {
         setError('Failed to load predictions');

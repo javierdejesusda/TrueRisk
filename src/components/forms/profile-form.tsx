@@ -40,9 +40,9 @@ const residenceTypeOptions = Object.entries(RESIDENCE_TYPES).map(
 // ── Schema ────────────────────────────────────────────────────────────
 
 const profileSchema = z.object({
-  province: z.string().min(1, 'Province is required'),
-  residenceType: z.string().min(1, 'Residence type is required'),
-  specialNeeds: z.array(z.string()),
+  province_code: z.string().min(1, 'Province is required'),
+  residence_type: z.string().min(1, 'Residence type is required'),
+  special_needs: z.array(z.string()),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -116,10 +116,10 @@ function getRiskPreview(province: string, residenceType: string): string {
 export interface ProfileFormProps {
   user: {
     id: number;
-    nickName: string;
-    province: string;
-    residenceType: string;
-    specialNeeds: string[];
+    nickname: string;
+    province_code: string;
+    residence_type: string;
+    special_needs: string[];
     role: string;
   };
   onSaved?: () => void;
@@ -141,22 +141,22 @@ export function ProfileForm({ user, onSaved }: ProfileFormProps) {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      province: user.province,
-      residenceType: user.residenceType,
-      specialNeeds: user.specialNeeds,
+      province_code: user.province_code,
+      residence_type: user.residence_type,
+      special_needs: user.special_needs,
     },
   });
 
-  const selectedNeeds = watch('specialNeeds') ?? [];
-  const watchedProvince = watch('province');
-  const watchedResidence = watch('residenceType');
+  const selectedNeeds = watch('special_needs') ?? [];
+  const watchedProvince = watch('province_code');
+  const watchedResidence = watch('residence_type');
 
   function handleNeedToggle(need: string) {
     const current = selectedNeeds;
     const updated = current.includes(need)
       ? current.filter((n) => n !== need)
       : [...current, need];
-    setValue('specialNeeds', updated, { shouldValidate: true });
+    setValue('special_needs', updated, { shouldValidate: true });
   }
 
   async function onSubmit(data: ProfileFormData) {
@@ -173,8 +173,8 @@ export function ProfileForm({ user, onSaved }: ProfileFormProps) {
 
       const result = await res.json();
 
-      if (!res.ok || !result.success) {
-        setApiError(result.error ?? 'Failed to update profile');
+      if (!res.ok) {
+        setApiError(result.detail ?? result.error ?? 'Failed to update profile');
         return;
       }
 
@@ -198,11 +198,11 @@ export function ProfileForm({ user, onSaved }: ProfileFormProps) {
       <Card padding="md">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-green/15 text-accent-green text-lg font-bold">
-            {user.nickName.charAt(0).toUpperCase()}
+            {user.nickname.charAt(0).toUpperCase()}
           </div>
           <div>
             <h3 className="text-base font-semibold text-text-primary">
-              {user.nickName}
+              {user.nickname}
             </h3>
             <Badge variant="neutral" size="sm">
               {user.role === 'backoffice' ? 'Backoffice' : 'Citizen'}
@@ -229,16 +229,16 @@ export function ProfileForm({ user, onSaved }: ProfileFormProps) {
           label="Province"
           placeholder="Select a province"
           options={provinceOptions}
-          error={errors.province?.message}
-          {...register('province')}
+          error={errors.province_code?.message}
+          {...register('province_code')}
         />
 
         <Select
           label="Residence Type"
           placeholder="Select residence type"
           options={residenceTypeOptions}
-          error={errors.residenceType?.message}
-          {...register('residenceType')}
+          error={errors.residence_type?.message as string}
+          {...register('residence_type')}
         />
 
         <div className="flex flex-col gap-1.5">

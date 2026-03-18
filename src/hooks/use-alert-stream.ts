@@ -12,7 +12,6 @@ export function useAlertStream() {
   const currentAlerts = useAppStore((s) => s.alerts);
   const alertsRef = useRef(currentAlerts);
 
-  // Keep ref in sync so the SSE callback always has current data
   useEffect(() => {
     alertsRef.current = currentAlerts;
   }, [currentAlerts]);
@@ -30,15 +29,11 @@ export function useAlertStream() {
       eventSource.onmessage = (event: MessageEvent) => {
         try {
           const newAlerts: Alert[] = JSON.parse(event.data);
-
-          // Merge new alerts with existing ones (new first, deduplicated)
           const existingIds = new Set(alertsRef.current.map((a) => a.id));
           const unique = newAlerts.filter((a) => !existingIds.has(a.id));
 
           if (unique.length > 0) {
             setAlerts([...unique, ...alertsRef.current]);
-
-            // Show a toast for each new alert
             for (const alert of unique) {
               showToast({
                 title: alert.title,
@@ -55,7 +50,6 @@ export function useAlertStream() {
       eventSource.onerror = () => {
         eventSource?.close();
         eventSource = null;
-
         if (!unmounted) {
           reconnectTimer = setTimeout(connect, RECONNECT_DELAY);
         }

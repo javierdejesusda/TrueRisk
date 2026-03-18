@@ -6,18 +6,17 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProfileForm } from '@/components/forms/profile-form';
 import { useAuth } from '@/hooks/use-auth';
-import type { ApiResponse } from '@/types/api';
-import type { RiskScore } from '@/types/risk';
+import type { CompositeRiskScore } from '@/types/risk';
 import type { SpecialNeed } from '@/types/user';
 
 interface ProfileData {
   id: number;
-  nickName: string;
-  province: string;
-  residenceType: string;
-  specialNeeds: SpecialNeed[];
+  nickname: string;
+  province_code: string;
+  residence_type: string;
+  special_needs: SpecialNeed[];
   role: string;
-  createdAt: string;
+  created_at: string;
 }
 
 interface StatsData {
@@ -40,11 +39,9 @@ export default function ProfilePage() {
   const fetchProfile = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/profile');
-      const json = (await res.json()) as ApiResponse<ProfileData>;
-
-      if (json.success && json.data) {
-        setProfile(json.data);
-      }
+      if (!res.ok) return;
+      const data = (await res.json()) as ProfileData;
+      setProfile(data);
     } catch {
       // Silently handle
     } finally {
@@ -56,25 +53,15 @@ export default function ProfilePage() {
     if (!user) return;
 
     try {
-      const [riskRes, consultRes] = await Promise.all([
-        fetch(`/api/analysis/risk?userId=${user.id}`),
-        fetch(`/api/consultations?userId=${user.id}&pageSize=1`),
-      ]);
+      const riskRes = await fetch(`/api/risk/${user.province_code}`);
 
-      const riskJson = (await riskRes.json()) as ApiResponse<RiskScore>;
-      const consultJson = (await consultRes.json()) as ApiResponse<{
-        total: number;
-      }>;
-
-      setStats((prev) => ({
-        ...prev,
-        riskScore:
-          riskJson.success && riskJson.data ? riskJson.data.score : null,
-        totalConsultations:
-          consultJson.success && consultJson.data
-            ? consultJson.data.total
-            : 0,
-      }));
+      if (riskRes.ok) {
+        const riskData = (await riskRes.json()) as CompositeRiskScore;
+        setStats((prev) => ({
+          ...prev,
+          riskScore: riskData.composite_score,
+        }));
+      }
     } catch {
       // Silently handle
     } finally {
@@ -93,8 +80,8 @@ export default function ProfilePage() {
   }, [user, fetchStats]);
 
   // Derive memberSince from profile
-  const memberSince = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString('en-GB', {
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',

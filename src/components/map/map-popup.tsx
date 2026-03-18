@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { PROVINCE_CAPITALS } from '@/lib/constants/province-capitals';
-import type { MunicipalityForecast, HourlyForecast, DailyForecast } from '@/lib/aemet-forecast';
+import type { ForecastResponse, HourlyForecast, DailyForecast } from '@/types/weather';
 
 export interface MapPopupProps {
   provinceName: string;
   summary: {
     maxSeverity: number;
     alertCount: number;
-    alerts: { title: string; severity: number; type: string; source: 'truerisk' | 'aemet' }[];
+    alerts: { title: string; severity: number; hazardType: string; source: 'truerisk' | 'aemet' }[];
   };
-  municipalityCode?: string;
   provinceCode?: string;
 }
 
@@ -66,50 +64,40 @@ function LoadingSpinner() {
   );
 }
 
-function NowTab({ forecast, alerts }: { forecast: MunicipalityForecast | null; alerts: MapPopupProps['summary']['alerts'] }) {
+function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alerts: MapPopupProps['summary']['alerts'] }) {
   const current = forecast?.hourly?.[0] ?? null;
 
   return (
     <div className="flex flex-col gap-2">
       {current ? (
         <>
-          {/* Current conditions */}
           <div className="flex items-start justify-between">
             <div>
               <span className={`text-3xl font-bold ${tempColor(current.temperature)}`}>
                 {current.temperature}°
               </span>
-              <p className="text-xs text-text-secondary mt-0.5">{current.skyDescription}</p>
-              <p className="text-[10px] text-text-muted">
-                Feels like {current.feelsLike}°
+              <p className="text-[10px] text-text-muted mt-0.5">
+                Wind: {current.wind_speed} km/h
               </p>
             </div>
-            {forecast && (
-              <p className="text-[10px] text-text-muted text-right max-w-[120px]">
-                {forecast.name}
-              </p>
-            )}
           </div>
 
-          {/* Conditions grid */}
           <div className="grid grid-cols-2 gap-1.5">
             <div className="rounded-md bg-bg-card p-1.5">
               <p className="text-[10px] text-text-muted">Wind</p>
-              <p className="text-xs text-text-primary font-medium">
-                {current.windSpeed} km/h {current.windDirection}
-              </p>
+              <p className="text-xs text-text-primary font-medium">{current.wind_speed} km/h</p>
             </div>
             <div className="rounded-md bg-bg-card p-1.5">
               <p className="text-[10px] text-text-muted">Humidity</p>
               <p className="text-xs text-text-primary font-medium">{current.humidity}%</p>
             </div>
             <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-muted">Precip. prob.</p>
-              <p className="text-xs text-text-primary font-medium">{current.precipitationProb}%</p>
+              <p className="text-[10px] text-text-muted">Precipitation</p>
+              <p className="text-xs text-text-primary font-medium">{current.precipitation} mm</p>
             </div>
             <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-muted">Gusts</p>
-              <p className="text-xs text-text-primary font-medium">{current.gustSpeed} km/h</p>
+              <p className="text-[10px] text-text-muted">Pressure</p>
+              <p className="text-xs text-text-primary font-medium">{current.pressure ?? '—'} hPa</p>
             </div>
           </div>
         </>
@@ -117,22 +105,16 @@ function NowTab({ forecast, alerts }: { forecast: MunicipalityForecast | null; a
         <p className="text-xs text-text-muted py-2">Forecast unavailable</p>
       )}
 
-      {/* Alerts */}
       {alerts.length > 0 && (
         <div className="border-t border-border pt-2">
           <p className="text-[10px] text-text-muted mb-1.5 uppercase tracking-wider">Active Alerts</p>
           <div className="flex flex-col gap-1">
             {alerts.map((alert, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 rounded-lg bg-bg-card p-2"
-              >
+              <div key={i} className="flex items-start gap-2 rounded-lg bg-bg-card p-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-text-primary truncate">
-                    {alert.title}
-                  </p>
+                  <p className="text-xs font-medium text-text-primary truncate">{alert.title}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-text-muted">{alert.type}</span>
+                    <span className="text-[10px] text-text-muted">{alert.hazardType}</span>
                     <span className="text-[10px] text-text-muted">·</span>
                     <span className="text-[10px] text-text-muted capitalize">{alert.source}</span>
                   </div>
@@ -172,23 +154,13 @@ function HourlyTab({ hourly }: { hourly: HourlyForecast[] }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
       {next24.map((h, i) => (
-        <div
-          key={i}
-          className="flex flex-col items-center gap-1 rounded-md bg-bg-card p-1.5 min-w-[60px] shrink-0"
-        >
-          <span className="text-[10px] text-text-muted">{formatHour(h.hour)}</span>
-          <span className={`text-sm font-bold ${tempColor(h.temperature)}`}>
-            {h.temperature}°
-          </span>
-          <span className="text-[10px] text-text-secondary text-center leading-tight">
-            {h.skyDescription}
-          </span>
-          {h.precipitationProb > 0 && (
-            <span className="text-[10px] text-accent-blue">{h.precipitationProb}%</span>
+        <div key={i} className="flex flex-col items-center gap-1 rounded-md bg-bg-card p-1.5 min-w-[60px] shrink-0">
+          <span className="text-[10px] text-text-muted">{formatHour(h.time)}</span>
+          <span className={`text-sm font-bold ${tempColor(h.temperature)}`}>{h.temperature}°</span>
+          <span className="text-[10px] text-text-secondary">{h.humidity}%</span>
+          {h.precipitation > 0 && (
+            <span className="text-[10px] text-accent-blue">{h.precipitation}mm</span>
           )}
-          <span className="text-[10px] text-text-muted">
-            {h.windSpeed} {h.windDirection}
-          </span>
         </div>
       ))}
     </div>
@@ -205,28 +177,22 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
   return (
     <div className="flex flex-col gap-1">
       {days.map((d, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-2 rounded-md bg-bg-card p-2"
-        >
+        <div key={i} className="flex items-center gap-2 rounded-md bg-bg-card p-2">
           <span className="text-xs text-text-secondary w-[52px] shrink-0">
             {formatDayName(d.date)}
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-text-primary truncate">{d.skyDescription}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              {d.precipitationProb > 0 && (
-                <span className="text-[10px] text-accent-blue">{d.precipitationProb}%</span>
+            <div className="flex items-center gap-2">
+              {d.precipitation_sum > 0 && (
+                <span className="text-[10px] text-accent-blue">{d.precipitation_sum}mm</span>
               )}
-              <span className="text-[10px] text-text-muted">
-                {d.windSpeed} km/h {d.windDirection}
-              </span>
+              <span className="text-[10px] text-text-muted">{d.wind_speed_max} km/h</span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className={`text-xs font-bold ${tempColor(d.tempMax)}`}>{d.tempMax}°</span>
+            <span className={`text-xs font-bold ${tempColor(d.temperature_max)}`}>{d.temperature_max}°</span>
             <span className="text-[10px] text-text-muted mx-0.5">/</span>
-            <span className="text-xs text-text-muted">{d.tempMin}°</span>
+            <span className="text-xs text-text-muted">{d.temperature_min}°</span>
           </div>
         </div>
       ))}
@@ -234,24 +200,25 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
   );
 }
 
-export function MapPopup({ provinceName, summary, municipalityCode, provinceCode }: MapPopupProps) {
+export function MapPopup({ provinceName, summary, provinceCode }: MapPopupProps) {
   const [activeTab, setActiveTab] = useState<TabId>('now');
-  const [forecast, setForecast] = useState<MunicipalityForecast | null>(null);
+  const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastLoading, setForecastLoading] = useState(false);
 
   useEffect(() => {
-    const code = municipalityCode || (provinceCode ? PROVINCE_CAPITALS[provinceCode] : null);
-    if (!code) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetching data on mount is intentional
+    if (!provinceCode) return;
     setForecastLoading(true);
-    fetch(`/api/forecast/${code}`)
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && json.data) setForecast(json.data);
+    fetch(`/api/weather/forecast/${provinceCode}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        if (data) setForecast(data);
       })
       .catch(() => {})
       .finally(() => setForecastLoading(false));
-  }, [municipalityCode, provinceCode]);
+  }, [provinceCode]);
 
   const tabConfig: { id: TabId; label: string }[] = [
     { id: 'now', label: 'Now' },
@@ -261,7 +228,6 @@ export function MapPopup({ provinceName, summary, municipalityCode, provinceCode
 
   return (
     <div className="p-3 max-w-[320px]">
-      {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-2">
         <h3 className="text-sm font-semibold text-text-primary truncate">{provinceName}</h3>
         {summary.alertCount > 0 && (
@@ -271,7 +237,6 @@ export function MapPopup({ provinceName, summary, municipalityCode, provinceCode
         )}
       </div>
 
-      {/* Tab bar */}
       <div className="flex gap-1 mb-2 rounded-md bg-bg-card/50 p-0.5">
         {tabConfig.map((tab) => (
           <button
@@ -288,21 +253,14 @@ export function MapPopup({ provinceName, summary, municipalityCode, provinceCode
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="max-h-[350px] overflow-y-auto">
         {forecastLoading ? (
           <LoadingSpinner />
         ) : (
           <>
-            {activeTab === 'now' && (
-              <NowTab forecast={forecast} alerts={summary.alerts} />
-            )}
-            {activeTab === 'hourly' && (
-              <HourlyTab hourly={forecast?.hourly ?? []} />
-            )}
-            {activeTab === 'daily' && (
-              <DailyTab daily={forecast?.daily ?? []} />
-            )}
+            {activeTab === 'now' && <NowTab forecast={forecast} alerts={summary.alerts} />}
+            {activeTab === 'hourly' && <HourlyTab hourly={forecast?.hourly ?? []} />}
+            {activeTab === 'daily' && <DailyTab daily={forecast?.daily ?? []} />}
           </>
         )}
       </div>

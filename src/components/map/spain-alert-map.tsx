@@ -23,7 +23,6 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMa
     latitude: number;
     provinceName: string;
     provinceCode: string;
-    municipalityCode?: string;
   } | null>(null);
   const [hoveredFeatureId, setHoveredFeatureId] = useState<string | null>(null);
   const [municipalityGeoJSON, setMunicipalityGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
@@ -49,16 +48,14 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMa
     if (!municipalityGeoJSON) return null;
     return enrichMunicipalityGeoJSON(
       municipalityGeoJSON,
-      alertData.byMunicipality,
+      {},
       alertData.byProvince
     );
   }, [municipalityGeoJSON, alertData]);
 
   // Total alert count for controls
   const totalAlerts = useMemo(() => {
-    const provCount = Object.values(alertData.byProvince).reduce((sum, p) => sum + p.alertCount, 0);
-    const muniCount = Object.values(alertData.byMunicipality).reduce((sum, m) => sum + m.alertCount, 0);
-    return provCount + muniCount;
+    return Object.values(alertData.byProvince).reduce((sum, p) => sum + p.alertCount, 0);
   }, [alertData]);
 
   // Track which source the hovered feature belongs to
@@ -130,16 +127,11 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMa
     if (e.features && e.features.length > 0) {
       const feature = e.features[0];
       const props = feature.properties;
-      const isMunicipality = !!props?.municipalityCode;
-
       setPopupInfo({
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
-        provinceName: isMunicipality
-          ? (props?.municipalityName || props?.name || '')
-          : (props?.provinceName || props?.name || ''),
+        provinceName: props?.provinceName || props?.name || '',
         provinceCode: props?.provinceCode || '',
-        municipalityCode: isMunicipality ? props?.municipalityCode : undefined,
       });
     }
   }, []);
@@ -323,23 +315,14 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading }: SpainAlertMa
             <MapPopup
               provinceName={popupInfo.provinceName}
               provinceCode={popupInfo.provinceCode}
-              municipalityCode={popupInfo.municipalityCode}
               summary={
-                popupInfo.municipalityCode
-                  ? (alertData.byMunicipality[popupInfo.municipalityCode] as unknown as ProvinceAlertSummary) ?? {
-                      provinceCode: popupInfo.provinceCode,
-                      provinceName: popupInfo.provinceName,
-                      maxSeverity: alertData.byProvince[popupInfo.provinceCode]?.maxSeverity ?? 0,
-                      alertCount: alertData.byProvince[popupInfo.provinceCode]?.alertCount ?? 0,
-                      alerts: alertData.byProvince[popupInfo.provinceCode]?.alerts ?? [],
-                    }
-                  : alertData.byProvince[popupInfo.provinceCode] ?? {
-                      provinceCode: popupInfo.provinceCode,
-                      provinceName: popupInfo.provinceName,
-                      maxSeverity: 0,
-                      alertCount: 0,
-                      alerts: [],
-                    }
+                alertData.byProvince[popupInfo.provinceCode] ?? {
+                  provinceCode: popupInfo.provinceCode,
+                  provinceName: popupInfo.provinceName,
+                  maxSeverity: 0,
+                  alertCount: 0,
+                  alerts: [],
+                }
               }
             />
           </Popup>

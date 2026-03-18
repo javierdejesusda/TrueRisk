@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { WeatherCard } from '@/components/weather/weather-card';
 import { RiskGauge } from '@/components/risk/risk-gauge';
 import { AlertBanner } from '@/components/alerts/alert-banner';
-import { RecommendationCard } from '@/components/recommendations/recommendation-card';
+import { HazardBreakdown } from '@/components/risk/hazard-breakdown';
 import { useWeather } from '@/hooks/use-weather';
 import { useRiskScore } from '@/hooks/use-risk-score';
 import { useAppStore } from '@/store/app-store';
 import type { Alert } from '@/types/alert';
-import type { ApiResponse } from '@/types/api';
 
 const staggerItem = {
   hidden: { opacity: 0, y: 16 },
@@ -32,36 +31,11 @@ export default function DashboardPage() {
   const alerts = useAppStore((s) => s.alerts) as Alert[];
   const { weather, isLoading: weatherLoading } = useWeather();
   const { risk, isLoading: riskLoading } = useRiskScore();
-  const alertsLoading = false; // alerts come from layout's useAlerts via store
-  const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [recLoading, setRecLoading] = useState(false);
   const [dismissedAlertId, setDismissedAlertId] = useState<number | null>(null);
 
   const activeAlert = alerts.find(
-    (a) => a.isActive && a.id !== dismissedAlertId
+    (a) => a.is_active && a.id !== dismissedAlertId
   ) ?? null;
-
-  const requestRecommendation = useCallback(async () => {
-    if (!user) return;
-
-    setRecLoading(true);
-    try {
-      const res = await fetch('/api/llm/recommend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const json = (await res.json()) as ApiResponse<{ recommendation: string }>;
-
-      if (json.success && json.data) {
-        setRecommendation(json.data.recommendation);
-      }
-    } catch {
-      // Silently fail -- recommendation is optional
-    } finally {
-      setRecLoading(false);
-    }
-  }, [user]);
 
   const handleDismissAlert = useCallback(() => {
     if (activeAlert) {
@@ -75,18 +49,15 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-text-primary">Dashboard</h1>
         <p className="text-sm text-text-muted mt-1">
-          Real-time climate monitoring
+          Multi-hazard risk monitoring
         </p>
       </div>
 
       {/* Active alert banner */}
-      {!alertsLoading && (
-        <AlertBanner
-          alert={activeAlert}
-          onDismiss={handleDismissAlert}
-          onGetAdvice={requestRecommendation}
-        />
-      )}
+      <AlertBanner
+        alert={activeAlert}
+        onDismiss={handleDismissAlert}
+      />
 
       {/* Bento grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -98,7 +69,7 @@ export default function DashboardPage() {
           animate="visible"
           custom={0}
         >
-          <WeatherCard weather={weather} isLoading={weatherLoading} province={user?.province} />
+          <WeatherCard weather={weather} isLoading={weatherLoading} province={user?.province_code} />
         </motion.div>
 
         {/* Risk Gauge */}
@@ -109,10 +80,21 @@ export default function DashboardPage() {
           custom={1}
         >
           <RiskGauge
-            score={risk?.score ?? 0}
+            score={risk?.composite_score ?? 0}
             severity={risk?.severity ?? 'low'}
             isLoading={riskLoading}
           />
+        </motion.div>
+
+        {/* Hazard Breakdown -- full width */}
+        <motion.div
+          className="md:col-span-2 lg:col-span-3"
+          variants={staggerItem}
+          initial="hidden"
+          animate="visible"
+          custom={2}
+        >
+          <HazardBreakdown risk={risk} isLoading={riskLoading} />
         </motion.div>
 
         {/* Active Alerts summary */}
@@ -120,18 +102,14 @@ export default function DashboardPage() {
           variants={staggerItem}
           initial="hidden"
           animate="visible"
-          custom={2}
+          custom={3}
         >
           <Card padding="md">
             <div className="flex flex-col gap-3">
               <h3 className="text-sm font-medium text-text-muted uppercase tracking-wider">
                 Active Alerts
               </h3>
-              {alertsLoading ? (
-                <div className="flex items-center justify-center py-6">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent-primary" />
-                </div>
-              ) : alerts.length === 0 ? (
+              {alerts.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-4">
                   <span className="text-2xl">&#x2713;</span>
                   <p className="text-sm text-text-muted text-center">
@@ -164,22 +142,7 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        {/* LLM Recommendation */}
-        <motion.div
-          variants={staggerItem}
-          initial="hidden"
-          animate="visible"
-          custom={3}
-        >
-          <RecommendationCard
-            recommendation={recommendation}
-            riskScore={risk?.score ?? null}
-            isLoading={recLoading}
-            onRequest={requestRecommendation}
-          />
-        </motion.div>
-
-        {/* Recent Activity */}
+        {/* Dominant Hazard Detail */}
         <motion.div
           variants={staggerItem}
           initial="hidden"
@@ -189,35 +152,72 @@ export default function DashboardPage() {
           <Card padding="md">
             <div className="flex flex-col gap-3">
               <h3 className="text-sm font-medium text-text-muted uppercase tracking-wider">
-                Recent Activity
+                Dominant Hazard
               </h3>
-              <div className="flex flex-col gap-2.5">
-                {risk?.anomalies && risk.anomalies.length > 0 ? (
-                  risk.anomalies.slice(0, 4).map((anomaly, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-2 text-sm"
-                    >
-                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-yellow" />
-                      <span className="text-text-secondary">{anomaly}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-text-muted py-2">
-                    No recent anomalies detected
-                  </p>
-                )}
-                {risk?.trend && (
-                  <div className="mt-1 flex items-center gap-2 border-t border-border pt-2">
-                    <span className="text-xs text-text-muted">Trend:</span>
-                    <span className="text-xs text-text-secondary">{risk.trend}</span>
+              {risk ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg capitalize font-semibold text-text-primary">
+                      {risk.dominant_hazard}
+                    </span>
+                    <Badge severity={risk.severity === 'critical' ? 5 : risk.severity === 'very_high' ? 4 : risk.severity === 'high' ? 3 : risk.severity === 'moderate' ? 2 : 1} size="sm">
+                      {risk.severity.replace('_', ' ')}
+                    </Badge>
                   </div>
-                )}
-              </div>
+                  <p className="text-sm text-text-secondary">
+                    Score: {risk[`${risk.dominant_hazard}_score` as keyof typeof risk]}/100
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-text-muted py-2">
+                  Loading hazard analysis...
+                </p>
+              )}
             </div>
           </Card>
         </motion.div>
 
+        {/* Recent Activity */}
+        <motion.div
+          variants={staggerItem}
+          initial="hidden"
+          animate="visible"
+          custom={5}
+        >
+          <Card padding="md">
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-medium text-text-muted uppercase tracking-wider">
+                Risk Summary
+              </h3>
+              {risk ? (
+                <div className="flex flex-col gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Composite</span>
+                    <span className="text-text-primary font-medium">{risk.composite_score.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Flood</span>
+                    <span className="text-text-primary">{risk.flood_score.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Wildfire</span>
+                    <span className="text-text-primary">{risk.wildfire_score.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Drought</span>
+                    <span className="text-text-primary">{risk.drought_score.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Heatwave</span>
+                    <span className="text-text-primary">{risk.heatwave_score.toFixed(1)}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-text-muted py-2">No data available</p>
+              )}
+            </div>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

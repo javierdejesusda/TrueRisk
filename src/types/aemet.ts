@@ -1,4 +1,4 @@
-export type AemetSeverity = 'green' | 'yellow' | 'orange' | 'red';
+export type AemetSeverity = "green" | "yellow" | "orange" | "red";
 
 export interface AemetCapAlert {
   identifier: string;
@@ -8,14 +8,8 @@ export interface AemetCapAlert {
   event: string;
   headline: string;
   description: string;
-  areaDesc: string;
+  area_desc: string;
   geocode: string;
   onset: string;
   expires: string;
-}
-
-export interface AemetAlertResponse {
-  alerts: AemetCapAlert[];
-  fetchedAt: string;
-  area: string;
 }

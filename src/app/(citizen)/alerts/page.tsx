@@ -5,35 +5,26 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCard } from '@/components/alerts/alert-card';
-import { useAuth } from '@/hooks/use-auth';
-import type { ApiResponse } from '@/types/api';
-
 interface AlertData {
   id: number;
   severity: number;
-  type: string;
-  province: string | null;
+  hazard_type: string;
+  province_code: string | null;
   title: string;
   description: string;
-  isActive: boolean;
-  createdAt: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 export default function AlertsPage() {
-  const { user } = useAuth();
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [adviceLoadingId, setAdviceLoadingId] = useState<number | null>(null);
-  const [adviceMap, setAdviceMap] = useState<Record<number, string>>({});
-
   const fetchAlerts = useCallback(async () => {
     try {
       const res = await fetch('/api/alerts?active=true');
-      const json = (await res.json()) as ApiResponse<AlertData[]>;
-
-      if (json.success && json.data) {
-        setAlerts(json.data);
-      }
+      if (!res.ok) return;
+      const data = (await res.json()) as AlertData[];
+      setAlerts(data);
     } catch {
       // Silently handle -- empty list is shown
     } finally {
@@ -44,37 +35,6 @@ export default function AlertsPage() {
   useEffect(() => {
     fetchAlerts();
   }, [fetchAlerts]);
-
-  const handleGetAdvice = useCallback(
-    async (alertId: number) => {
-      if (!user || adviceLoadingId !== null) return;
-
-      setAdviceLoadingId(alertId);
-      try {
-        const res = await fetch('/api/llm/recommend', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, disaster: true }),
-        });
-
-        const json = (await res.json()) as ApiResponse<{
-          recommendation: string;
-        }>;
-
-        if (json.success && json.data) {
-          setAdviceMap((prev) => ({
-            ...prev,
-            [alertId]: json.data!.recommendation,
-          }));
-        }
-      } catch {
-        // Silently handle
-      } finally {
-        setAdviceLoadingId(null);
-      }
-    },
-    [user, adviceLoadingId],
-  );
 
   return (
     <motion.div
@@ -150,9 +110,6 @@ export default function AlertsPage() {
             <AlertCard
               key={alert.id}
               alert={alert}
-              onGetAdvice={handleGetAdvice}
-              adviceLoading={adviceLoadingId === alert.id}
-              advice={adviceMap[alert.id] ?? null}
             />
           ))}
         </div>

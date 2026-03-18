@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 
 export interface HeaderUser {
-  nickName: string;
+  nickname: string;
   role: 'citizen' | 'backoffice';
 }
 
@@ -35,11 +35,11 @@ export function Header({ user, hasActiveAlerts = false }: HeaderProps) {
         <div className="flex items-center gap-2.5">
           {/* Avatar placeholder */}
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-card text-sm font-medium text-text-secondary">
-            {user.nickName.charAt(0).toUpperCase()}
+            {user.nickname.charAt(0).toUpperCase()}
           </div>
           <div className="hidden flex-col sm:flex">
             <span className="text-sm font-medium text-text-primary leading-tight">
-              {user.nickName}
+              {user.nickname}
             </span>
             <Badge
               variant={user.role === 'backoffice' ? 'info' : 'neutral'}
