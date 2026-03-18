@@ -38,7 +38,7 @@ interface WeatherData {
 
 interface Stats {
   activeAlerts: number;
-  totalCitizens: number;
+  monitoredProvinces: number;
   totalConsultations: number;
 }
 
@@ -60,7 +60,7 @@ export default function BackofficeDashboardPage() {
       fetch('/api/alerts/detect').then((r) => r.ok ? r.json() : null),
       fetch('/api/risk/28').then((r) => r.ok ? r.json() : null),
       fetch('/api/alerts?active=true').then((r) => r.ok ? r.json() : null),
-      fetch('/api/citizens').then((r) => r.ok ? r.json() : null),
+      fetch('/api/backoffice/stats').then((r) => r.ok ? r.json() : null),
     ]);
 
     // Weather
@@ -93,12 +93,11 @@ export default function BackofficeDashboardPage() {
     // Stats
     const alertData = results[3].status === 'fulfilled' ? results[3].value : null;
     const alertCount = Array.isArray(alertData) ? alertData.length : 0;
-    const citizenData = results[4].status === 'fulfilled' ? results[4].value : null;
-    const citizenCount = Array.isArray(citizenData) ? citizenData.length : 0;
+    const backofficeStats = results[4].status === 'fulfilled' ? results[4].value : null;
 
     setStats({
       activeAlerts: alertCount,
-      totalCitizens: citizenCount,
+      monitoredProvinces: backofficeStats?.province_count ?? 52,
       totalConsultations: 0,
     });
 
@@ -175,12 +174,12 @@ export default function BackofficeDashboardPage() {
         <Card hoverable>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Registered Citizens</p>
+              <p className="text-sm text-text-secondary">Provinces Monitored</p>
               {isLoading ? (
                 <Skeleton width="48px" height="28px" className="mt-1" />
               ) : (
                 <p className="mt-1 text-2xl font-bold text-accent-blue">
-                  {stats?.totalCitizens ?? 0}
+                  {stats?.monitoredProvinces ?? 0}
                 </p>
               )}
             </div>
@@ -193,10 +192,9 @@ export default function BackofficeDashboardPage() {
                 stroke="currentColor"
                 strokeWidth="1.5"
               >
-                <circle cx="7" cy="7" r="2.5" />
-                <circle cx="14" cy="7" r="2.5" />
-                <path d="M2 17c0-2.8 2-4.5 5-4.5s5 1.7 5 4.5" />
-                <path d="M12 12.5c1.2 0 2.3.4 3.2 1.2.8.8 1.3 1.9 1.3 3.3" />
+                <path d="M3 6l5-3 4 3 5-3v11l-5 3-4-3-5 3V6z" />
+                <path d="M8 3v11" />
+                <path d="M12 6v11" />
               </svg>
             </div>
           </div>
