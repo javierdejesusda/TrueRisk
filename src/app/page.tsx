@@ -71,42 +71,10 @@ export default function Home() {
           className="mt-10 flex flex-col gap-3 sm:flex-row"
         >
           <Link
-            href="/login"
+            href="/dashboard"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-accent-green px-8 text-sm font-semibold text-bg-primary transition-all hover:brightness-110 hover:scale-[1.03] active:scale-[0.97]"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-              />
-            </svg>
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-8 text-sm font-semibold text-text-primary transition-all hover:border-border-hover hover:bg-bg-card hover:scale-[1.03] active:scale-[0.97]"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
-              />
-            </svg>
-            Register
+            Enter Dashboard
           </Link>
         </motion.div>
       </motion.div>
