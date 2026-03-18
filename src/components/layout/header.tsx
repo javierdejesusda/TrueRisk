@@ -1,26 +1,37 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { useAppStore } from '@/store/app-store';
 
-export interface HeaderUser {
-  nickname: string;
-  role: 'citizen' | 'backoffice';
+interface Province {
+  ine_code: string;
+  name: string;
 }
 
 export interface HeaderProps {
-  user: HeaderUser;
   hasActiveAlerts?: boolean;
 }
 
-export function Header({ user, hasActiveAlerts = false }: HeaderProps) {
+export function Header({ hasActiveAlerts = false }: HeaderProps) {
+  const provinceCode = useAppStore((s) => s.provinceCode);
+  const setProvinceCode = useAppStore((s) => s.setProvinceCode);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+
+  useEffect(() => {
+    fetch('/api/provinces')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.provinces) setProvinces(data.provinces);
+      })
+      .catch(() => {});
+  }, []);
+
+  const selectedName = provinces.find((p) => p.ine_code === provinceCode)?.name ?? 'Loading...';
+
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-bg-secondary px-4 lg:px-6">
-      {/* Left spacer for mobile hamburger clearance */}
       <div className="w-10 lg:w-0" />
-
-      {/* Right actions */}
       <div className="ml-auto flex items-center gap-3">
-        {/* Active alert indicator */}
         {hasActiveAlerts && (
           <div className="flex items-center gap-2 text-sm text-accent-red">
             <span className="relative flex h-2.5 w-2.5">
@@ -30,24 +41,24 @@ export function Header({ user, hasActiveAlerts = false }: HeaderProps) {
             <span className="hidden sm:inline">Active alerts</span>
           </div>
         )}
-
-        {/* User info */}
-        <div className="flex items-center gap-2.5">
-          {/* Avatar placeholder */}
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-card text-sm font-medium text-text-secondary">
-            {user.nickname.charAt(0).toUpperCase()}
-          </div>
-          <div className="hidden flex-col sm:flex">
-            <span className="text-sm font-medium text-text-primary leading-tight">
-              {user.nickname}
-            </span>
-            <Badge
-              variant={user.role === 'backoffice' ? 'info' : 'neutral'}
-              size="sm"
-            >
-              {user.role}
-            </Badge>
-          </div>
+        <div className="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted">
+            <circle cx="10" cy="8" r="3" />
+            <path d="M3 18c0-4 3.5-6 7-6s7 2 7 6" />
+          </svg>
+          <select
+            value={provinceCode}
+            onChange={(e) => setProvinceCode(e.target.value)}
+            className="rounded-md border border-border bg-bg-primary px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+          >
+            {provinces.length > 0 ? (
+              provinces.map((p) => (
+                <option key={p.ine_code} value={p.ine_code}>{p.name}</option>
+              ))
+            ) : (
+              <option value={provinceCode}>{selectedName}</option>
+            )}
+          </select>
         </div>
       </div>
     </header>
