@@ -34,7 +34,7 @@ export function ModelCard({
   index,
   children,
 }: ModelCardProps) {
-  const [methodOpen, setMethodOpen] = useState(false);
+  const [methodOpen, setMethodOpen] = useState(true);
 
   return (
     <motion.div
@@ -76,7 +76,7 @@ export function ModelCard({
           >
             <path d="M4 3l3 3-3 3" />
           </svg>
-          How this works
+          Methodology
         </button>
         <AnimatePresence>
           {methodOpen && (

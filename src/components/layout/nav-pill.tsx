@@ -1,31 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app-store';
 
-interface Province {
-  ine_code: string;
-  name: string;
-}
-
 export function NavPill() {
   const pathname = usePathname();
-  const provinceCode = useAppStore((s) => s.provinceCode);
-  const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const alerts = useAppStore((s) => s.alerts);
-  const [provinces, setProvinces] = useState<Province[]>([]);
-
-  useEffect(() => {
-    fetch('/api/provinces')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.provinces) setProvinces(data.provinces);
-      })
-      .catch(() => {});
-  }, []);
 
   const navItems = [
     { href: '/map', label: 'Map' },
@@ -68,25 +50,6 @@ export function NavPill() {
           </Link>
         ))}
       </div>
-
-      <div className="w-px h-5 bg-white/10 shrink-0 hidden sm:block" />
-
-      {/* Province selector */}
-      <select
-        value={provinceCode}
-        onChange={(e) => setProvinceCode(e.target.value)}
-        className="hidden sm:block bg-transparent text-xs text-text-secondary border-none outline-none cursor-pointer max-w-[120px] truncate"
-      >
-        {provinces.length > 0 ? (
-          provinces.map((p) => (
-            <option key={p.ine_code} value={p.ine_code} className="bg-bg-secondary text-text-primary">
-              {p.name}
-            </option>
-          ))
-        ) : (
-          <option value={provinceCode} className="bg-bg-secondary">Loading...</option>
-        )}
-      </select>
 
       {/* Alert indicator */}
       {alerts.length > 0 && (

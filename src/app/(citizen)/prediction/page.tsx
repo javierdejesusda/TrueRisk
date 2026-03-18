@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/app-store';
 import { PredictionHeader } from '@/components/predictions/prediction-header';
+import { ActiveAlertsBanner } from '@/components/predictions/active-alerts-banner';
 import { GumbelChart } from '@/components/predictions/gumbel-chart';
 import { RegressionChart } from '@/components/predictions/regression-chart';
 import { BayesianChart } from '@/components/predictions/bayesian-chart';
@@ -57,12 +58,13 @@ export default function PredictionPage() {
 
   return (
     <motion.div
-      className="min-h-screen pt-20 px-6 lg:px-12 pb-12 max-w-7xl mx-auto overflow-y-auto"
+      className="h-screen pt-20 px-6 lg:px-12 pb-12 max-w-7xl mx-auto overflow-y-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <PredictionHeader current={data.current} />
+      <ActiveAlertsBanner />
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <GumbelChart data={data.gumbel} />
