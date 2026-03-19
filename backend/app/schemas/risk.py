@@ -11,6 +11,9 @@ class RiskScoreResponse(BaseModel):
     wildfire_score: float
     drought_score: float
     heatwave_score: float
+    seismic_score: float = 0.0
+    coldwave_score: float = 0.0
+    windstorm_score: float = 0.0
     composite_score: float
     dominant_hazard: str
     severity: str
@@ -29,6 +32,9 @@ class RiskMapEntry(BaseModel):
     wildfire_score: float
     drought_score: float
     heatwave_score: float
+    seismic_score: float = 0.0
+    coldwave_score: float = 0.0
+    windstorm_score: float = 0.0
 
 
 class RiskMapResponse(BaseModel):
@@ -44,6 +50,9 @@ class UserRiskResponse(BaseModel):
     wildfire_score: float
     drought_score: float
     heatwave_score: float
+    seismic_score: float = 0.0
+    coldwave_score: float = 0.0
+    windstorm_score: float = 0.0
     composite_score: float
     dominant_hazard: str
     severity: str

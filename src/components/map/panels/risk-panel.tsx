@@ -9,6 +9,9 @@ const HAZARDS: { key: HazardType; label: string; color: string }[] = [
   { key: 'wildfire', label: 'Wildfire', color: 'bg-orange-500' },
   { key: 'drought', label: 'Drought', color: 'bg-amber-600' },
   { key: 'heatwave', label: 'Heatwave', color: 'bg-red-500' },
+  { key: 'seismic', label: 'Seismic', color: 'bg-purple-500' },
+  { key: 'coldwave', label: 'Cold Wave', color: 'bg-cyan-500' },
+  { key: 'windstorm', label: 'Windstorm', color: 'bg-emerald-500' },
 ];
 
 function severityColor(score: number): string {
@@ -59,7 +62,7 @@ export function RiskPanel() {
     >
       {isLoading ? (
         <div className="flex flex-col gap-2">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="h-3 rounded bg-bg-secondary animate-pulse" />
           ))}
         </div>

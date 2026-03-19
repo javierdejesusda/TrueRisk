@@ -25,6 +25,9 @@ HAZARD_LABELS = {
     "wildfire": "Riesgo de incendios forestales",
     "drought": "Riesgo de sequía",
     "heatwave": "Riesgo de ola de calor",
+    "seismic": "Riesgo sismico",
+    "coldwave": "Riesgo de ola de frio",
+    "windstorm": "Riesgo de temporal de viento",
 }
 
 
@@ -110,7 +113,7 @@ async def _check_and_create_alerts(
     db: AsyncSession, province: Province, risk: dict
 ):
     """Create alerts when hazard scores cross thresholds."""
-    for hazard in ["flood", "wildfire", "drought", "heatwave"]:
+    for hazard in ["flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"]:
         score = risk.get(f"{hazard}_score", 0)
         if score < ALERT_THRESHOLD_HIGH:
             continue

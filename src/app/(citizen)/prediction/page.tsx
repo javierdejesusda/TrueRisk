@@ -14,7 +14,7 @@ import { EmaChart } from '@/components/predictions/ema-chart';
 import { ZScoreChart } from '@/components/predictions/zscore-chart';
 import { DecisionTreeCard } from '@/components/predictions/decision-tree-card';
 import { KnnMatches } from '@/components/predictions/knn-matches';
-import { FloodModelCard, WildfireModelCard, DroughtModelCard, HeatwaveModelCard, HazardOverviewChart } from '@/components/predictions/hazard-model-cards';
+import { FloodModelCard, WildfireModelCard, DroughtModelCard, HeatwaveModelCard, SeismicModelCard, ColdwaveModelCard, WindstormModelCard, HazardOverviewChart } from '@/components/predictions/hazard-model-cards';
 import { LoadingSkeleton } from '@/components/predictions/shared';
 import { PROVINCES } from '@/lib/provinces';
 
@@ -52,6 +52,9 @@ export default function PredictionPage() {
     wildfire_score: risk.wildfire_score,
     drought_score: risk.drought_score,
     heatwave_score: risk.heatwave_score,
+    seismic_score: risk.seismic_score,
+    coldwave_score: risk.coldwave_score,
+    windstorm_score: risk.windstorm_score,
     composite_score: risk.composite_score,
     dominant_hazard: risk.dominant_hazard,
     severity: risk.severity,
@@ -86,6 +89,9 @@ export default function PredictionPage() {
         <WildfireModelCard riskData={riskData} />
         <DroughtModelCard riskData={riskData} />
         <HeatwaveModelCard riskData={riskData} />
+        <SeismicModelCard riskData={riskData} />
+        <ColdwaveModelCard riskData={riskData} />
+        <WindstormModelCard riskData={riskData} />
         <HazardOverviewChart riskData={riskData} />
       </div>
 

@@ -13,8 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TrueRisk - Climate Emergency Management",
-  description: "Real-time weather monitoring, AI-powered risk analysis, and personalised emergency guidance.",
+  title: {
+    default: "TrueRisk - Multi-Hazard Risk Intelligence for Spain",
+    template: "%s | TrueRisk",
+  },
+  description:
+    "Real-time weather monitoring, AI-powered risk analysis, and personalised emergency guidance for all 52 Spanish provinces.",
+  openGraph: {
+    title: "TrueRisk",
+    description: "Multi-hazard risk intelligence for Spain",
+    url: "https://truerisk.cloud",
+    siteName: "TrueRisk",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

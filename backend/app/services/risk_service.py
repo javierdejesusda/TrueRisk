@@ -13,12 +13,16 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data import open_meteo
+from app.data.ign_seismic import compute_province_seismic_exposure, fetch_recent_quakes
 from app.data.province_data import PROVINCES
+from app.ml.models.coldwave_risk import predict_coldwave_risk
 from app.ml.models.composite_risk import compute_composite_risk
 from app.ml.models.drought_risk import predict_drought_risk
 from app.ml.models.flood_risk import predict_flood_risk
 from app.ml.models.heatwave_risk import predict_heatwave_risk
+from app.ml.models.seismic_risk import predict_seismic_risk
 from app.ml.models.wildfire_risk import predict_wildfire_risk
+from app.ml.models.windstorm_risk import predict_windstorm_risk
 from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.models.weather_record import WeatherRecord
@@ -50,6 +54,9 @@ def get_hazard_weights(province_code: str) -> dict[str, float]:
         "wildfire": data.get("wildfire_risk_weight", 0.5),
         "drought": data.get("drought_risk_weight", 0.5),
         "heatwave": data.get("heatwave_risk_weight", 0.5),
+        "seismic": data.get("seismic_risk_weight", 0.3),
+        "coldwave": data.get("coldwave_risk_weight", 0.3),
+        "windstorm": data.get("windstorm_risk_weight", 0.3),
     }
 
 
@@ -172,6 +179,39 @@ def compute_temporal_features(history: list[dict[str, Any]]) -> dict[str, Any]:
     gusts = [_safe(r.get("wind_gusts")) for r in history[:24]]
     wind_gust_max = max(gusts) if gusts else 0.0
 
+    # Wind speed max 24h
+    winds_24h = [_safe(r.get("wind_speed")) for r in history[:24]]
+    wind_speed_max_24h = max(winds_24h) if winds_24h else 0.0
+
+    # Pressure change over 24h
+    pressure_24h_ago = pressures[23] if len(pressures) > 23 else pressure_now
+    pressure_change_24h = pressure_now - pressure_24h_ago
+
+    # Pressure min over 24h
+    pressure_min_24h = min(pressures[:24]) if pressures[:24] else 1013.0
+
+    # Cold wave features
+    # Temperature min over 7 days
+    temp_min_7d = min(temps[:168]) if temps[:168] else 10.0
+
+    # Consecutive cold days (max temp < 5C in any 24h block)
+    consecutive_cold_days = 0
+    for i in range(0, min(len(temps), 168), 24):
+        day_temps = temps[i : i + 24]
+        if day_temps and max(day_temps) < 5:
+            consecutive_cold_days += 1
+        else:
+            break
+
+    # Consecutive cold nights (min temp < 0C)
+    consecutive_cold_nights = 0
+    for i in range(0, min(len(temps), 168), 24):
+        day_temps = temps[i : i + 24]
+        if day_temps and min(day_temps) < 0:
+            consecutive_cold_nights += 1
+        else:
+            break
+
     return {
         "precip_1h": precip_1h,
         "precip_6h": precip_6h,
@@ -194,6 +234,12 @@ def compute_temporal_features(history: list[dict[str, Any]]) -> dict[str, Any]:
         "consecutive_hot_days": consecutive_hot_days,
         "consecutive_hot_nights": consecutive_hot_nights,
         "wind_gust_max": wind_gust_max,
+        "wind_speed_max_24h": wind_speed_max_24h,
+        "pressure_change_24h": pressure_change_24h,
+        "pressure_min_24h": pressure_min_24h,
+        "temperature_min_7d": temp_min_7d,
+        "consecutive_cold_days": consecutive_cold_days,
+        "consecutive_cold_nights": consecutive_cold_nights,
     }
 
 
@@ -221,6 +267,12 @@ def _empty_temporal() -> dict[str, Any]:
         "consecutive_hot_days": 0,
         "consecutive_hot_nights": 0,
         "wind_gust_max": 0.0,
+        "wind_speed_max_24h": 0.0,
+        "pressure_change_24h": 0.0,
+        "pressure_min_24h": 1013.0,
+        "temperature_min_7d": 10.0,
+        "consecutive_cold_days": 0,
+        "consecutive_cold_nights": 0,
     }
 
 
@@ -244,6 +296,18 @@ def _record_to_dict(record: WeatherRecord) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Heat-index helpers
 # ---------------------------------------------------------------------------
+
+def _compute_wind_chill(temperature: float, wind_speed_kmh: float) -> float:
+    """Wind chill temperature (Celsius). Valid for temp<=10C, wind>=4.8km/h."""
+    if temperature > 10 or wind_speed_kmh < 4.8:
+        return temperature
+    return (
+        13.12
+        + 0.6215 * temperature
+        - 11.37 * wind_speed_kmh**0.16
+        + 0.3965 * temperature * wind_speed_kmh**0.16
+    )
+
 
 def _compute_heat_index(temperature: float, humidity: float) -> float:
     """Rothfusz regression heat-index approximation (Celsius)."""
@@ -314,6 +378,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     # 4. Compute features
     terrain = get_terrain_features(province_code)
     temporal = compute_temporal_features(history) if history else _empty_temporal()
+    weights_data = PROVINCES.get(province_code, {})
     now = datetime.now(timezone.utc)
     month = now.month
     season_sin, season_cos = _season_components(month)
@@ -420,11 +485,61 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "cloud_cover": cloud_cover,
     }
 
+    # 4b. Seismic features (IGN earthquake data)
+    quakes = await fetch_recent_quakes(days=90)
+    seismic_exposure = compute_province_seismic_exposure(
+        province.latitude, province.longitude, quakes
+    )
+    seismic_features = {
+        **seismic_exposure,
+        "seismic_zone_weight": weights_data.get("seismic_risk_weight", 0.3),
+    }
+
+    # 4c. Cold wave features
+    wind_chill = _compute_wind_chill(temperature, wind_speed * 3.6)  # m/s -> km/h
+    coldwave_features = {
+        "temperature": temperature,
+        "temperature_min": temporal["temperature_min"],
+        "temperature_min_7d": temporal["temperature_min_7d"],
+        "wind_chill": wind_chill,
+        "consecutive_cold_days": temporal["consecutive_cold_days"],
+        "consecutive_cold_nights": temporal["consecutive_cold_nights"],
+        "humidity": humidity,
+        "wind_speed": wind_speed,
+        "precipitation_24h": temporal["precip_24h"],
+        "month": month,
+        "latitude": terrain["latitude"],
+        "elevation_m": terrain["elevation_m"],
+        "is_coastal": terrain["is_coastal"],
+        "cloud_cover": cloud_cover,
+    }
+
+    # 4d. Windstorm features
+    windstorm_features = {
+        "wind_speed": wind_speed,
+        "wind_gusts": _safe(weather.get("wind_gusts"), 0.0),
+        "wind_gust_max_24h": temporal["wind_gust_max"],
+        "wind_speed_max_24h": temporal["wind_speed_max_24h"],
+        "pressure": pressure,
+        "pressure_change_6h": temporal["pressure_change_6h"],
+        "pressure_change_24h": temporal["pressure_change_24h"],
+        "pressure_min_24h": temporal["pressure_min_24h"],
+        "humidity": humidity,
+        "precipitation_6h": temporal["precip_6h"],
+        "is_coastal": terrain["is_coastal"],
+        "is_mediterranean": terrain["is_mediterranean"],
+        "elevation_m": terrain["elevation_m"],
+        "month": month,
+    }
+
     # 5. Run models
     flood_raw = predict_flood_risk(flood_features)
     wildfire_raw = predict_wildfire_risk(wildfire_features)
     drought_raw = predict_drought_risk(drought_features)
     heatwave_raw = predict_heatwave_risk(heatwave_features)
+    seismic_raw = predict_seismic_risk(seismic_features)
+    coldwave_raw = predict_coldwave_risk(coldwave_features)
+    windstorm_raw = predict_windstorm_risk(windstorm_features)
 
     # 5b. Apply province-specific hazard weights to differentiate risk by geography
     weights = get_hazard_weights(province_code)
@@ -432,9 +547,14 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     wildfire = min(100.0, wildfire_raw * (0.4 + 0.6 * weights["wildfire"]))
     drought = min(100.0, drought_raw * (0.4 + 0.6 * weights["drought"]))
     heatwave = min(100.0, heatwave_raw * (0.4 + 0.6 * weights["heatwave"]))
+    seismic = min(100.0, seismic_raw * (0.4 + 0.6 * weights["seismic"]))
+    coldwave = min(100.0, coldwave_raw * (0.4 + 0.6 * weights["coldwave"]))
+    windstorm = min(100.0, windstorm_raw * (0.4 + 0.6 * weights["windstorm"]))
 
     # 6. Composite
-    composite = compute_composite_risk(flood, wildfire, drought, heatwave)
+    composite = compute_composite_risk(
+        flood, wildfire, drought, heatwave, seismic, coldwave, windstorm
+    )
 
     # 7. Store in DB
     risk_score = RiskScore(
@@ -446,11 +566,17 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         wildfire_score=composite["wildfire_score"],
         drought_score=composite["drought_score"],
         heatwave_score=composite["heatwave_score"],
+        seismic_score=composite["seismic_score"],
+        coldwave_score=composite["coldwave_score"],
+        windstorm_score=composite["windstorm_score"],
         features_snapshot={
             "flood": flood_features,
             "wildfire": wildfire_features,
             "drought": drought_features,
             "heatwave": heatwave_features,
+            "seismic": seismic_features,
+            "coldwave": coldwave_features,
+            "windstorm": windstorm_features,
         },
         computed_at=now,
     )
@@ -521,6 +647,9 @@ async def get_risk_map(db: AsyncSession) -> list[dict]:
                 "wildfire_score": score.wildfire_score if score else 0.0,
                 "drought_score": score.drought_score if score else 0.0,
                 "heatwave_score": score.heatwave_score if score else 0.0,
+                "seismic_score": score.seismic_score if score else 0.0,
+                "coldwave_score": score.coldwave_score if score else 0.0,
+                "windstorm_score": score.windstorm_score if score else 0.0,
             }
         )
 

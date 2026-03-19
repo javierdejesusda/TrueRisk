@@ -13,6 +13,9 @@ const HAZARDS: { key: HazardType; label: string; color: string }[] = [
   { key: 'wildfire', label: 'Wildfire', color: 'bg-orange-500' },
   { key: 'drought', label: 'Drought', color: 'bg-amber-600' },
   { key: 'heatwave', label: 'Heatwave', color: 'bg-red-500' },
+  { key: 'seismic', label: 'Seismic', color: 'bg-purple-500' },
+  { key: 'coldwave', label: 'Cold Wave', color: 'bg-cyan-500' },
+  { key: 'windstorm', label: 'Windstorm', color: 'bg-emerald-500' },
 ];
 
 export function HazardBreakdown({ risk, isLoading }: HazardBreakdownProps) {
@@ -24,7 +27,7 @@ export function HazardBreakdown({ risk, isLoading }: HazardBreakdownProps) {
         </h3>
         {isLoading ? (
           <div className="flex flex-col gap-3">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="h-4 w-20 rounded bg-bg-secondary animate-pulse" />
                 <div className="flex-1 h-4 rounded bg-bg-secondary animate-pulse" />
