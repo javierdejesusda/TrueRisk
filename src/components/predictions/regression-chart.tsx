@@ -23,15 +23,15 @@ export function RegressionChart({ data }: Props) {
           <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} stroke="rgba(255,255,255,0.1)" />
           <Tooltip content={<DarkTooltip />} />
           <Line type="monotone" dataKey="actual" name="Actual (mm)" stroke="#3b82f6" strokeWidth={2} dot={{ r: 1.5, fill: '#3b82f6' }} connectNulls={false} animationDuration={800} />
-          <Line type="monotone" dataKey="fitted" name="Predicted (mm)" stroke="#06b6d4" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls animationDuration={1000} />
+          <Line type="monotone" dataKey="fitted" name="Predicted (mm)" stroke="#22F58C" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls animationDuration={1000} />
         </LineChart>
       </ResponsiveContainer>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <StatBox label="R²" value={data.rSquared.toFixed(3)} />
         <StatBox label="Slope" value={`${data.slope >= 0 ? '+' : ''}${data.slope.toFixed(3)}`} />
-        <StatBox label="6h Forecast" value={`${data.projected6h} mm`} accent="text-cyan-400" />
-        <StatBox label="12h Forecast" value={`${data.projected12h} mm`} accent="text-cyan-400" />
+        <StatBox label="6h Forecast" value={`${data.projected6h} mm`} accent="text-accent-green" />
+        <StatBox label="12h Forecast" value={`${data.projected12h} mm`} accent="text-accent-green" />
       </div>
     </ModelCard>
   );

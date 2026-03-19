@@ -27,12 +27,12 @@ export function EmaChart({ data }: Props) {
           <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} stroke="rgba(255,255,255,0.1)" />
           <Tooltip content={<DarkTooltip />} />
           <Line type="monotone" dataKey="raw" name="Raw (mm)" stroke="#f97316" strokeWidth={1.5} strokeDasharray="4 2" dot={false} opacity={0.5} animationDuration={800} />
-          <Line type="monotone" dataKey="smoothed" name="EMA (mm)" stroke="#22c55e" strokeWidth={2.5} dot={false} animationDuration={1000} />
+          <Line type="monotone" dataKey="smoothed" name="EMA (mm)" stroke="#22F58C" strokeWidth={2.5} dot={false} animationDuration={1000} />
         </LineChart>
       </ResponsiveContainer>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <StatBox label="Trend" value={data.trend} accent={data.trend === 'rising' ? 'text-red-400' : data.trend === 'falling' ? 'text-green-400' : 'text-text-secondary'} />
+        <StatBox label="Trend" value={data.trend} accent={data.trend === 'rising' ? 'text-accent-red' : data.trend === 'falling' ? 'text-accent-green' : 'text-text-secondary'} />
         <StatBox label="Rate" value={`${data.rateOfChange >= 0 ? '+' : ''}${data.rateOfChange.toFixed(3)}/step`} />
       </div>
     </ModelCard>

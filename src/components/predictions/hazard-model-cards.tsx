@@ -22,10 +22,10 @@ interface Props {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 70) return '#FF453A';
-  if (score >= 50) return '#FF9F0A';
-  if (score >= 30) return '#FFD60A';
-  return '#30D158';
+  if (score >= 70) return '#EF4444';
+  if (score >= 50) return '#F97316';
+  if (score >= 30) return '#FBBF24';
+  return '#22F58C';
 }
 
 function scoreBadge(score: number): { label: string; variant: 'danger' | 'warning' | 'info' | 'success' } {
@@ -45,10 +45,10 @@ function RadialScore({ score }: { score: number }) {
         </RadialBarChart>
       </ResponsiveContainer>
       <div className="flex flex-col gap-1">
-        <span className="text-2xl font-bold font-mono" style={{ color: scoreColor(score) }}>
+        <span className="text-2xl font-bold font-[family-name:var(--font-mono)]" style={{ color: scoreColor(score) }}>
           {score.toFixed(0)}
         </span>
-        <span className="text-[10px] text-text-muted uppercase">Risk Score</span>
+        <span className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase">Risk Score</span>
       </div>
     </div>
   );
@@ -221,11 +221,11 @@ export function HazardOverviewChart({ riskData }: Props) {
   const chartData = [
     { name: 'Flood', score: riskData.flood_score, fill: '#3b82f6' },
     { name: 'Wildfire', score: riskData.wildfire_score, fill: '#f97316' },
-    { name: 'Drought', score: riskData.drought_score, fill: '#d97706' },
+    { name: 'Drought', score: riskData.drought_score, fill: '#FBBF24' },
     { name: 'Heatwave', score: riskData.heatwave_score, fill: '#ef4444' },
     { name: 'Seismic', score: riskData.seismic_score, fill: '#a855f7' },
-    { name: 'Cold Wave', score: riskData.coldwave_score, fill: '#06b6d4' },
-    { name: 'Windstorm', score: riskData.windstorm_score, fill: '#22c55e' },
+    { name: 'Cold Wave', score: riskData.coldwave_score, fill: '#22D3EE' },
+    { name: 'Windstorm', score: riskData.windstorm_score, fill: '#22F58C' },
   ];
 
   return (

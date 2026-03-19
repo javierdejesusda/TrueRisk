@@ -77,8 +77,8 @@ export const GUMBEL_CONFIG: Record<GumbelTab, { name: string; unit: string; stro
 export const DISASTER_COLORS: Record<string, string> = {
   flood: '#3b82f6',
   heat_wave: '#f97316',
-  cold_snap: '#06b6d4',
-  wind_storm: '#22c55e',
+  cold_snap: '#22D3EE',
+  wind_storm: '#22F58C',
 };
 
 export const DISASTER_LABELS: Record<string, string> = {
@@ -98,11 +98,11 @@ export const EMERGENCY_LABELS: Record<string, string> = {
 };
 
 export const EMERGENCY_COLORS: Record<string, string> = {
-  flood: 'text-blue-400',
-  heat_wave: 'text-orange-400',
-  cold_snap: 'text-cyan-400',
-  wind_storm: 'text-green-400',
-  thunderstorm: 'text-yellow-400',
+  flood: 'text-accent-blue',
+  heat_wave: 'text-accent-orange',
+  cold_snap: 'text-severity-1',
+  wind_storm: 'text-accent-green',
+  thunderstorm: 'text-accent-yellow',
   general: 'text-text-secondary',
 };
 
@@ -121,14 +121,14 @@ export function getZScoreColor(z: number): string {
   const abs = Math.abs(z);
   if (abs >= 2) return '#ef4444';
   if (abs >= 1) return '#eab308';
-  return '#22c55e';
+  return '#22F58C';
 }
 
 export function getConfidenceColor(c: number): string {
   if (c >= 0.8) return '#ef4444';
   if (c >= 0.6) return '#f97316';
   if (c >= 0.4) return '#eab308';
-  return '#22c55e';
+  return '#22F58C';
 }
 
 export function capitalizeField(field: string): string {
@@ -140,8 +140,8 @@ export function capitalizeField(field: string): string {
 export function StatBox({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div className="rounded-lg bg-bg-secondary px-3 py-2 text-center">
-      <p className="text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
-      <p className={`text-sm font-bold ${accent ?? 'text-text-primary'}`}>{value}</p>
+      <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
+      <p className={`font-[family-name:var(--font-mono)] text-sm font-bold ${accent ?? 'text-text-primary'}`}>{value}</p>
     </div>
   );
 }
@@ -163,12 +163,12 @@ export function DarkTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border bg-bg-card px-3 py-2 shadow-lg">
+    <div className="glass-heavy rounded-lg border border-border bg-bg-card px-3 py-2 shadow-lg">
       {label !== undefined && (
         <p className="mb-1 text-[10px] text-text-muted">{label}</p>
       )}
       {payload.map((entry) => (
-        <p key={entry.name} className="text-xs" style={{ color: entry.color }}>
+        <p key={entry.name} className="font-[family-name:var(--font-mono)] text-xs" style={{ color: entry.color }}>
           {entry.name}:{' '}
           {typeof entry.value === 'number'
             ? Math.abs(entry.value) < 0.01 && entry.value !== 0

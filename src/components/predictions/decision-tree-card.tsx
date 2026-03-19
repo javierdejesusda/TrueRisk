@@ -18,7 +18,7 @@ export function DecisionTreeCard({ data }: Props) {
       index={5}
     >
       <div className="flex flex-col items-center gap-4">
-        <div className={`text-2xl font-bold ${EMERGENCY_COLORS[data.type] ?? 'text-text-primary'}`}>
+        <div className={`font-[family-name:var(--font-display)] text-2xl font-bold ${EMERGENCY_COLORS[data.type] ?? 'text-text-primary'}`}>
           {EMERGENCY_LABELS[data.type] ?? data.type}
         </div>
 
@@ -26,7 +26,7 @@ export function DecisionTreeCard({ data }: Props) {
         <div className="w-full">
           <div className="flex justify-between text-xs text-text-muted mb-1.5">
             <span>Confidence</span>
-            <span className="font-medium text-text-secondary">
+            <span className="font-[family-name:var(--font-mono)] font-medium text-text-secondary">
               {(data.confidence * 100).toFixed(0)}%
             </span>
           </div>
@@ -43,11 +43,11 @@ export function DecisionTreeCard({ data }: Props) {
 
         {/* Matched rules */}
         <div className="w-full space-y-1.5">
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">Matched Rules</p>
+          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">Matched Rules</p>
           {data.matchedRules.map((rule, i) => (
             <div key={i} className="flex items-start gap-2 text-xs text-text-muted">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-green/50" />
-              <span>{rule}</span>
+              <span className="font-[family-name:var(--font-sans)]">{rule}</span>
             </div>
           ))}
         </div>

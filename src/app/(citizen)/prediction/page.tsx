@@ -65,26 +65,26 @@ export default function PredictionPage() {
       className="h-screen pt-20 px-6 lg:px-12 pb-12 max-w-7xl mx-auto overflow-y-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.3, staggerChildren: 0.05 }}
     >
       <div className="flex items-center gap-3 mb-4">
         <select
           value={provinceCode}
           onChange={(e) => setProvinceCode(e.target.value)}
-          className="glass-heavy rounded-lg px-3 py-2 text-sm text-text-primary bg-transparent border border-border focus:border-accent-primary outline-none cursor-pointer"
+          className="glass-heavy rounded-lg px-3 py-2 text-sm font-[family-name:var(--font-sans)] text-text-primary bg-transparent border border-border focus:border-accent-green outline-none cursor-pointer"
         >
           {PROVINCES.map(p => (
             <option key={p.code} value={p.code} className="bg-bg-secondary">{p.name}</option>
           ))}
         </select>
-        <span className="text-xs text-text-muted">Province analysis</span>
+        <span className="text-xs font-[family-name:var(--font-sans)] text-text-muted">Province analysis</span>
       </div>
       <PredictionHeader current={data.current} />
       <PredictionsExplainer />
 
       {/* Hazard ML Models */}
-      <h2 className="text-sm font-semibold text-text-secondary mt-8 mb-4 uppercase tracking-wider">Hazard ML Models</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">Hazard ML Models</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <FloodModelCard riskData={riskData} />
         <WildfireModelCard riskData={riskData} />
         <DroughtModelCard riskData={riskData} />
@@ -96,8 +96,8 @@ export default function PredictionPage() {
       </div>
 
       {/* Statistical Models */}
-      <h2 className="text-sm font-semibold text-text-secondary mt-8 mb-4 uppercase tracking-wider">Statistical Analysis</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8">
+      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">Statistical Analysis</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
         <GumbelChart data={data.gumbel} />
         <RegressionChart data={data.regression} />
         <BayesianChart data={data.bayesian} />
