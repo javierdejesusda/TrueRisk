@@ -27,7 +27,11 @@ export function MapLegend() {
   const isMobile = useMediaQuery('(max-width: 1023px)');
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
 
-  useEffect(() => { if (isMobile) setCollapsed(true); }, [isMobile]);
+  useEffect(() => {
+    if (!isMobile) return;
+    const id = requestAnimationFrame(() => setCollapsed(true));
+    return () => cancelAnimationFrame(id);
+  }, [isMobile]);
 
   const levels = activeMapLayer === 'risk' ? RISK_LEVELS : ALERT_LEVELS;
   const title = activeMapLayer === 'risk' ? 'Risk Score' : 'Alert Levels';
@@ -67,7 +71,7 @@ export function MapLegend() {
           /* Gradient bar for risk */
           <div className="flex flex-col gap-1.5">
             <div className="flex h-2.5 rounded-full overflow-hidden">
-              {RISK_LEVELS.map((level, i) => (
+              {RISK_LEVELS.map((level) => (
                 <div
                   key={level.label}
                   className="flex-1"
