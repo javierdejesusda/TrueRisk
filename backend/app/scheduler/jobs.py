@@ -3,6 +3,7 @@
 import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.scheduler.pipeline import run_pipeline
+from app.scheduler.backfill import backfill_if_needed
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,13 @@ def setup_scheduler():
         "date",
         id="initial_pipeline",
         name="Initial pipeline run",
+    )
+    # One-time historical backfill (skips if data already exists)
+    scheduler.add_job(
+        backfill_if_needed,
+        "date",
+        id="initial_backfill",
+        name="One-time historical backfill",
     )
     scheduler.start()
     logger.info("Scheduler started: pipeline runs every 6 hours")
