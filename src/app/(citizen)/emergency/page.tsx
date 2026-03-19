@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app-store';
 import { getContacts } from '@/lib/constants/emergency-contacts';
 import { QuickCall } from '@/components/emergency/quick-call';
@@ -40,7 +41,12 @@ export default function EmergencyPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-bg-primary">
-      <div className="mx-auto max-w-2xl px-4 py-20 pb-24 space-y-8">
+      <motion.div
+        className="mx-auto max-w-2xl px-4 py-20 pb-24 space-y-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+      >
         {/* Main 112 button */}
         <section className="text-center space-y-3">
           <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary">Emergencias</h1>
@@ -110,7 +116,7 @@ export default function EmergencyPage() {
           <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-primary">Guia de primeros auxilios</h2>
           <FirstAidCards />
         </section>
-      </div>
+      </motion.div>
 
       <QuickCall floating />
     </div>

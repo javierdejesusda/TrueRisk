@@ -35,7 +35,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             'w-full appearance-none rounded-lg border bg-bg-secondary px-3 py-2 pr-8 text-sm text-text-primary',
             'transition-all duration-150',
             'focus:outline-none',
-            'disabled:cursor-not-allowed disabled:opacity-50',
+            'cursor-pointer disabled:cursor-not-allowed disabled:opacity-50',
             error
               ? 'border-accent-red focus:border-accent-red/60 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]'
               : 'border-border hover:border-border-hover focus:border-accent-green/60 focus:shadow-[0_0_0_3px_rgba(34,245,140,0.1)]',
