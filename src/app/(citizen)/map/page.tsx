@@ -16,9 +16,9 @@ const SpainAlertMap = dynamic(
 );
 
 export default function MapHomePage() {
-  const { alerts: aemetAlerts, isLoading: aemetLoading } = useAemetAlerts();
+  const { alerts: aemetAlerts } = useAemetAlerts();
   const alertData = useMapAlerts(aemetAlerts);
-  const { byProvince: riskByProvince, isLoading: riskLoading } = useRiskMap();
+  const { byProvince: riskByProvince } = useRiskMap();
   const { markers: weatherMarkers } = useAllWeather();
   const panelsVisible = useAppStore((s) => s.panelsVisible);
 
@@ -26,7 +26,6 @@ export default function MapHomePage() {
     <div className="fixed inset-0">
       <SpainAlertMap
         alertData={alertData}
-        isLoading={aemetLoading || riskLoading}
         riskByProvince={riskByProvince}
         allWeather={weatherMarkers}
       />

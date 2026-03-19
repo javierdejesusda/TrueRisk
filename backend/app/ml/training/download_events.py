@@ -16,7 +16,6 @@ All freely available, no API keys required except FIRMS (free MAP_KEY).
 from __future__ import annotations
 
 import time
-from pathlib import Path
 
 import httpx
 import numpy as np

@@ -258,7 +258,6 @@ def _ema_analysis(values: list[float], alpha: float = 0.3) -> dict:
 # ---------------------------------------------------------------------------
 
 def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
-    fields = ["temperature", "humidity", "precipitation", "windSpeed", "pressure"]
     field_map = {
         "temperature": "temperature",
         "humidity": "humidity",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { PROVINCES, type ProvinceInfo } from '@/lib/provinces';
 
 interface ProvinceSearchProps {
@@ -18,13 +18,18 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const results = query.length > 0
-    ? PROVINCES.filter(p => normalize(p.name).includes(normalize(query))).slice(0, 8)
-    : [];
+  const results = useMemo(() =>
+    query.length > 0
+      ? PROVINCES.filter(p => normalize(p.name).includes(normalize(query))).slice(0, 8)
+      : [],
+    [query],
+  );
 
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [query]);
+  const prevQueryRef = useRef(query);
+  if (prevQueryRef.current !== query) {
+    prevQueryRef.current = query;
+    if (activeIndex !== 0) setActiveIndex(0);
+  }
 
   const handleSelect = useCallback((province: ProvinceInfo) => {
     onSelect(province);

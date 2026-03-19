@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import type { PredictionResponse } from './shared';
 
 interface Props {

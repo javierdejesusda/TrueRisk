@@ -1,7 +1,6 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
-import { Badge } from '@/components/ui/badge';
 import { ModelCard } from './model-card';
 import { DarkTooltip, getZScoreColor, capitalizeField, type PredictionResponse } from './shared';
 

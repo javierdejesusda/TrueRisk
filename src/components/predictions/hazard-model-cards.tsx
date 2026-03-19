@@ -1,7 +1,6 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, RadialBarChart, RadialBar } from 'recharts';
-import { Badge } from '@/components/ui/badge';
 import { ModelCard } from './model-card';
 import { DarkTooltip, StatBox } from './shared';
 

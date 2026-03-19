@@ -1,7 +1,6 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Badge } from '@/components/ui/badge';
 import { ModelCard } from './model-card';
 import { StatBox, DarkTooltip, type PredictionResponse } from './shared';
 

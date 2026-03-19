@@ -13,12 +13,11 @@ import { useAppStore } from '@/store/app-store';
 
 export interface SpainAlertMapProps {
   alertData: MapAlertData;
-  isLoading: boolean;
   riskByProvince?: Record<string, RiskMapEntry>;
   allWeather?: Array<{ province_code: string; temperature: number; latitude: number; longitude: number }>;
 }
 
-export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince, allWeather }: SpainAlertMapProps) {
+export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
