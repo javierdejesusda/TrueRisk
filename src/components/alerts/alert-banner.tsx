@@ -63,14 +63,16 @@ export function AlertBanner({ alert, onDismiss }: AlertBannerProps) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-semibold text-text-primary">
+                  <h3 className="font-[family-name:var(--font-display)] text-base font-bold text-text-primary">
                     {alert.title}
                   </h3>
                   <Badge severity={alert.severity} size="sm" pulse>
-                    {formatType(alert.hazard_type)}
+                    <span className="font-[family-name:var(--font-mono)]">
+                      {formatType(alert.hazard_type)}
+                    </span>
                   </Badge>
                 </div>
-                <p className="text-sm text-text-secondary line-clamp-2">
+                <p className="font-[family-name:var(--font-sans)] text-sm text-text-secondary line-clamp-2">
                   {alert.description}
                 </p>
               </div>
