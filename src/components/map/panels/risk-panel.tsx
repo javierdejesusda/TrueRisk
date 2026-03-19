@@ -5,28 +5,26 @@ import { PanelShell } from './panel-shell';
 import type { CompositeRiskScore, HazardType } from '@/types/risk';
 
 const HAZARDS: { key: HazardType; label: string; color: string }[] = [
-  { key: 'flood', label: 'Flood', color: 'bg-blue-500' },
-  { key: 'wildfire', label: 'Wildfire', color: 'bg-orange-500' },
-  { key: 'drought', label: 'Drought', color: 'bg-amber-600' },
-  { key: 'heatwave', label: 'Heatwave', color: 'bg-red-500' },
-  { key: 'seismic', label: 'Seismic', color: 'bg-purple-500' },
-  { key: 'coldwave', label: 'Cold Wave', color: 'bg-cyan-500' },
-  { key: 'windstorm', label: 'Windstorm', color: 'bg-emerald-500' },
+  { key: 'flood', label: 'Flood', color: 'bg-accent-blue' },
+  { key: 'wildfire', label: 'Wildfire', color: 'bg-accent-orange' },
+  { key: 'drought', label: 'Drought', color: 'bg-accent-yellow' },
+  { key: 'heatwave', label: 'Heatwave', color: 'bg-accent-red' },
+  { key: 'seismic', label: 'Seismic', color: 'bg-accent-purple' },
+  { key: 'coldwave', label: 'Cold Wave', color: 'bg-severity-1' },
+  { key: 'windstorm', label: 'Windstorm', color: 'bg-accent-green' },
 ];
 
 function severityColor(score: number): string {
-  if (score >= 85) return 'text-[#FF2D55]';
-  if (score >= 70) return 'text-accent-red';
-  if (score >= 50) return 'text-accent-orange';
-  if (score >= 30) return 'text-accent-yellow';
+  if (score >= 85) return 'text-accent-red';
+  if (score >= 70) return 'text-accent-orange';
+  if (score >= 50) return 'text-accent-yellow';
   return 'text-accent-green';
 }
 
 function severityDot(score: number): string {
-  if (score >= 85) return 'bg-[#FF2D55]';
-  if (score >= 70) return 'bg-accent-red';
-  if (score >= 50) return 'bg-accent-orange';
-  if (score >= 30) return 'bg-accent-yellow';
+  if (score >= 85) return 'bg-accent-red';
+  if (score >= 70) return 'bg-accent-orange';
+  if (score >= 50) return 'bg-accent-yellow';
   return 'bg-accent-green';
 }
 
@@ -44,7 +42,7 @@ export function RiskPanel() {
 
   const collapsedContent = (
     <div className="flex items-center gap-2">
-      <span className={`text-lg font-bold font-mono ${severityColor(score)}`}>
+      <span className={`text-3xl font-bold font-[family-name:var(--font-mono)] ${severityColor(score)}`}>
         {isLoading ? '—' : score.toFixed(0)}
       </span>
       <span className={`h-2 w-2 rounded-full ${severityDot(score)}`} />
@@ -70,11 +68,11 @@ export function RiskPanel() {
         <div className="flex flex-col gap-3">
           {/* Score display */}
           <div className="flex items-center gap-3">
-            <span className={`text-2xl font-bold font-mono ${severityColor(score)}`}>
+            <span className={`text-3xl font-bold font-[family-name:var(--font-mono)] ${severityColor(score)}`}>
               {score.toFixed(0)}
             </span>
             <div className="flex flex-col">
-              <span className="text-[10px] text-text-muted uppercase tracking-wider">Composite</span>
+              <span className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Composite</span>
               <span className="text-xs text-text-secondary capitalize">{risk.severity.replace('_', ' ')}</span>
             </div>
           </div>
@@ -85,17 +83,17 @@ export function RiskPanel() {
               const hazardScore = risk[`${key}_score` as keyof CompositeRiskScore] as number;
               const isDominant = risk.dominant_hazard === key;
               return (
-                <div key={key} className="flex items-center gap-2">
-                  <span className={`text-[10px] w-14 ${isDominant ? 'font-semibold text-text-primary' : 'text-text-muted'}`}>
+                <div key={key} className={`flex items-center gap-2 ${isDominant ? 'border-l-2 border-current pl-1' : ''}`}>
+                  <span className={`text-[10px] w-14 font-[family-name:var(--font-sans)] ${isDominant ? 'font-semibold text-text-primary' : 'text-text-muted'}`}>
                     {label}
                   </span>
-                  <div className="flex-1 h-1.5 bg-bg-secondary rounded-full overflow-hidden">
+                  <div className="flex-1 h-[6px] bg-bg-secondary rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-700 ${color}`}
                       style={{ width: `${Math.min(100, hazardScore)}%` }}
                     />
                   </div>
-                  <span className={`text-[10px] w-6 text-right font-mono ${isDominant ? 'font-bold text-text-primary' : 'text-text-muted'}`}>
+                  <span className={`text-[10px] w-6 text-right font-[family-name:var(--font-mono)] ${isDominant ? 'font-bold text-text-primary' : 'text-text-muted'}`}>
                     {hazardScore.toFixed(0)}
                   </span>
                 </div>

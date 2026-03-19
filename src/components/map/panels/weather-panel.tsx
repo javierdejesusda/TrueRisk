@@ -3,12 +3,11 @@
 import { useWeather } from '@/hooks/use-weather';
 import { PanelShell } from './panel-shell';
 
-function weatherEmoji(temp: number): string {
-  if (temp >= 35) return '🔥';
-  if (temp >= 25) return '☀️';
-  if (temp >= 15) return '⛅';
-  if (temp >= 5) return '🌥️';
-  return '❄️';
+function tempColor(temp: number): string {
+  if (temp >= 35) return 'text-accent-red';
+  if (temp >= 25) return 'text-accent-orange';
+  if (temp >= 15) return 'text-accent-yellow';
+  return 'text-accent-blue';
 }
 
 const ThermometerIcon = (
@@ -22,8 +21,7 @@ export function WeatherPanel() {
 
   const collapsedContent = weather ? (
     <div className="flex items-center gap-2">
-      <span className="text-sm">{weatherEmoji(weather.temperature ?? 0)}</span>
-      <span className="text-sm font-bold font-mono text-text-primary">
+      <span className={`font-[family-name:var(--font-mono)] text-2xl font-bold ${tempColor(weather.temperature ?? 0)}`}>
         {weather.temperature != null ? weather.temperature.toFixed(0) : '—'}°C
       </span>
     </div>
@@ -44,32 +42,32 @@ export function WeatherPanel() {
       ) : weather ? (
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md bg-bg-secondary/50 p-2">
-              <p className="text-[9px] text-text-muted">Temperature</p>
-              <p className="text-xs font-bold text-text-primary">{weather.temperature != null ? weather.temperature.toFixed(1) : '—'}°C</p>
+            <div className="rounded-xl bg-white/[0.03] p-3">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Temperature</p>
+              <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.temperature != null ? weather.temperature.toFixed(1) : '—'}°C</p>
             </div>
-            <div className="rounded-md bg-bg-secondary/50 p-2">
-              <p className="text-[9px] text-text-muted">Humidity</p>
-              <p className="text-xs font-bold text-text-primary">{weather.humidity}%</p>
+            <div className="rounded-xl bg-white/[0.03] p-3">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Humidity</p>
+              <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.humidity}%</p>
             </div>
-            <div className="rounded-md bg-bg-secondary/50 p-2">
-              <p className="text-[9px] text-text-muted">Wind</p>
-              <p className="text-xs font-bold text-text-primary">{weather.wind_speed ?? '—'} km/h</p>
+            <div className="rounded-xl bg-white/[0.03] p-3">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Wind</p>
+              <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.wind_speed ?? '—'} km/h</p>
             </div>
-            <div className="rounded-md bg-bg-secondary/50 p-2">
-              <p className="text-[9px] text-text-muted">Precipitation</p>
-              <p className="text-xs font-bold text-text-primary">{weather.precipitation} mm</p>
+            <div className="rounded-xl bg-white/[0.03] p-3">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Precipitation</p>
+              <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.precipitation} mm</p>
             </div>
             {weather.pressure != null && (
-              <div className="rounded-md bg-bg-secondary/50 p-2">
-                <p className="text-[9px] text-text-muted">Pressure</p>
-                <p className="text-xs font-bold text-text-primary">{weather.pressure} hPa</p>
+              <div className="rounded-xl bg-white/[0.03] p-3">
+                <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Pressure</p>
+                <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.pressure} hPa</p>
               </div>
             )}
             {weather.uv_index != null && (
-              <div className="rounded-md bg-bg-secondary/50 p-2">
-                <p className="text-[9px] text-text-muted">UV Index</p>
-                <p className="text-xs font-bold text-text-primary">{weather.uv_index}</p>
+              <div className="rounded-xl bg-white/[0.03] p-3">
+                <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">UV Index</p>
+                <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.uv_index}</p>
               </div>
             )}
           </div>
