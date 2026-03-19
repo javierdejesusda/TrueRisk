@@ -92,7 +92,7 @@ function RiskSection({ riskData, provinceCode }: { riskData: RiskMapEntry; provi
             {riskData.composite_score.toFixed(0)}
           </span>
           <div className="flex flex-col">
-            <span className="text-[9px] text-text-muted uppercase">Risk Score</span>
+            <span className="text-[9px] text-text-secondary uppercase">Risk Score</span>
             <span className="text-[10px] text-text-secondary capitalize">{riskData.dominant_hazard}</span>
           </div>
         </div>
@@ -109,11 +109,11 @@ function RiskSection({ riskData, provinceCode }: { riskData: RiskMapEntry; provi
           const score = riskData[`${key}_score` as keyof RiskMapEntry] as number;
           return (
             <div key={key} className="flex items-center gap-1.5">
-              <span className="text-[9px] text-text-muted w-12">{label}</span>
+              <span className="text-[9px] text-text-secondary w-12">{label}</span>
               <div className="flex-1 h-1 bg-bg-secondary rounded-full overflow-hidden">
                 <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, score)}%` }} />
               </div>
-              <span className="text-[9px] text-text-muted w-5 text-right font-mono">{score.toFixed(0)}</span>
+              <span className="text-[9px] text-text-secondary w-5 text-right font-mono">{score.toFixed(0)}</span>
             </div>
           );
         })}
@@ -134,7 +134,7 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
               <span className={`text-3xl font-bold ${tempColor(current.temperature)}`}>
                 {current.temperature}°
               </span>
-              <p className="text-[10px] text-text-muted mt-0.5">
+              <p className="text-[10px] text-text-secondary mt-0.5">
                 Wind: {current.wind_speed} km/h
               </p>
             </div>
@@ -142,39 +142,39 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
 
           <div className="grid grid-cols-2 gap-1.5">
             <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-muted">Wind</p>
+              <p className="text-[10px] text-text-secondary">Wind</p>
               <p className="text-xs text-text-primary font-medium">{current.wind_speed} km/h</p>
             </div>
             <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-muted">Humidity</p>
+              <p className="text-[10px] text-text-secondary">Humidity</p>
               <p className="text-xs text-text-primary font-medium">{current.humidity}%</p>
             </div>
             <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-muted">Precipitation</p>
+              <p className="text-[10px] text-text-secondary">Precipitation</p>
               <p className="text-xs text-text-primary font-medium">{current.precipitation} mm</p>
             </div>
             <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-muted">Pressure</p>
+              <p className="text-[10px] text-text-secondary">Pressure</p>
               <p className="text-xs text-text-primary font-medium">{current.pressure ?? '—'} hPa</p>
             </div>
           </div>
         </>
       ) : (
-        <p className="text-xs text-text-muted py-2">Forecast unavailable</p>
+        <p className="text-xs text-text-secondary py-2">Forecast unavailable</p>
       )}
 
       {alerts.length > 0 && (
         <div className="border-t border-border pt-2">
-          <p className="text-[10px] text-text-muted mb-1.5 uppercase tracking-wider">Active Alerts</p>
+          <p className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">Active Alerts</p>
           <div className="flex flex-col gap-1">
             {alerts.map((alert, i) => (
               <div key={i} className="flex items-start gap-2 rounded-lg bg-bg-card p-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-text-primary truncate">{alert.title}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-text-muted">{alert.hazardType}</span>
-                    <span className="text-[10px] text-text-muted">·</span>
-                    <span className="text-[10px] text-text-muted capitalize">{alert.source}</span>
+                    <span className="text-[10px] text-text-secondary">{alert.hazardType}</span>
+                    <span className="text-[10px] text-text-secondary">·</span>
+                    <span className="text-[10px] text-text-secondary capitalize">{alert.source}</span>
                   </div>
                 </div>
                 <span
@@ -196,7 +196,7 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
       )}
 
       {alerts.length === 0 && (
-        <p className="text-xs text-text-muted border-t border-border pt-2">No active alerts</p>
+        <p className="text-xs text-text-secondary border-t border-border pt-2">No active alerts</p>
       )}
     </div>
   );
@@ -206,14 +206,14 @@ function HourlyTab({ hourly }: { hourly: HourlyForecast[] }) {
   const next24 = hourly.slice(0, 24);
 
   if (next24.length === 0) {
-    return <p className="text-xs text-text-muted py-4 text-center">Hourly forecast unavailable</p>;
+    return <p className="text-xs text-text-secondary py-4 text-center">Hourly forecast unavailable</p>;
   }
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
       {next24.map((h, i) => (
         <div key={i} className="flex flex-col items-center gap-1 rounded-md bg-bg-card p-1.5 min-w-[60px] shrink-0">
-          <span className="text-[10px] text-text-muted">{formatHour(h.time)}</span>
+          <span className="text-[10px] text-text-secondary">{formatHour(h.time)}</span>
           <span className={`text-sm font-bold ${tempColor(h.temperature)}`}>{h.temperature}°</span>
           <span className="text-[10px] text-text-secondary">{h.humidity}%</span>
           {h.precipitation > 0 && (
@@ -229,7 +229,7 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
   const days = daily.slice(0, 7);
 
   if (days.length === 0) {
-    return <p className="text-xs text-text-muted py-4 text-center">Daily forecast unavailable</p>;
+    return <p className="text-xs text-text-secondary py-4 text-center">Daily forecast unavailable</p>;
   }
 
   return (
@@ -244,13 +244,13 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
               {d.precipitation_sum > 0 && (
                 <span className="text-[10px] text-accent-blue">{d.precipitation_sum}mm</span>
               )}
-              <span className="text-[10px] text-text-muted">{d.wind_speed_max} km/h</span>
+              <span className="text-[10px] text-text-secondary">{d.wind_speed_max} km/h</span>
             </div>
           </div>
           <div className="text-right shrink-0">
             <span className={`text-xs font-bold ${tempColor(d.temperature_max)}`}>{d.temperature_max}°</span>
-            <span className="text-[10px] text-text-muted mx-0.5">/</span>
-            <span className="text-xs text-text-muted">{d.temperature_min}°</span>
+            <span className="text-[10px] text-text-secondary mx-0.5">/</span>
+            <span className="text-xs text-text-secondary">{d.temperature_min}°</span>
           </div>
         </div>
       ))}
@@ -318,7 +318,7 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
         <RiskSection riskData={riskData} provinceCode={provinceCode} />
       )}
 
-      <div className="flex gap-1 mb-2 rounded-md bg-bg-card/50 p-0.5">
+      <div className="flex gap-1 mb-2 rounded-md bg-bg-card/80 p-0.5">
         {tabConfig.map((tab) => (
           <button
             key={tab.id}
@@ -326,7 +326,7 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
             className={`flex-1 text-xs py-1 px-2 rounded transition-colors ${
               activeTab === tab.id
                 ? 'bg-bg-card text-text-primary font-medium'
-                : 'text-text-muted hover:text-text-secondary'
+                : 'text-text-secondary hover:text-text-secondary'
             }`}
           >
             {tab.label}
