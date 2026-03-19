@@ -31,7 +31,8 @@ export function enrichGeoJSON(
   alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>,
   riskByProvince?: Record<string, { compositeScore: number; severity: string; dominantHazard: string }>
 ): GeoJSON.FeatureCollection {
-  const clone: GeoJSON.FeatureCollection = structuredClone(geojson);
+  // Deep-clone to avoid mutating the cached GeoJSON.
+  const clone: GeoJSON.FeatureCollection = JSON.parse(JSON.stringify(geojson));
 
   for (const feature of clone.features) {
     const props = feature.properties ?? {};
@@ -156,7 +157,7 @@ export function enrichMunicipalityGeoJSON(
   alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>,
   riskByProvince?: Record<string, { compositeScore: number; severity: string; dominantHazard: string }>
 ): GeoJSON.FeatureCollection {
-  const clone: GeoJSON.FeatureCollection = structuredClone(geojson);
+  const clone: GeoJSON.FeatureCollection = JSON.parse(JSON.stringify(geojson));
 
   for (const feature of clone.features) {
     const props = feature.properties ?? {};

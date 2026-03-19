@@ -12,6 +12,7 @@ export function NavPill() {
   const navItems = [
     { href: '/map', label: 'Map' },
     { href: '/prediction', label: 'Predictions' },
+    { href: '/alerts', label: 'Alerts' },
   ];
 
   const isActive = (href: string) => {

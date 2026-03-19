@@ -35,28 +35,9 @@ def _zero_score(province_code: str) -> dict:
     }
 
 
-@router.get("/{province_code}", response_model=RiskScoreResponse)
-async def get_risk(
-    province_code: str,
-    db: AsyncSession = Depends(get_db),
-):
-    """Return the latest risk score for a province."""
-    result = await db.execute(
-        select(RiskScore)
-        .where(RiskScore.province_code == province_code)
-        .order_by(RiskScore.computed_at.desc())
-        .limit(1)
-    )
-    score = result.scalar_one_or_none()
-    if score is None:
-        return _zero_score(province_code)
-    return score
-
-
 @router.get("/all", response_model=list[RiskScoreResponse])
 async def get_all_risks(db: AsyncSession = Depends(get_db)):
     """Return the latest risk scores for all provinces."""
-    # Use a subquery to get the latest score per province
     from sqlalchemy import func
 
     subq = (
@@ -128,3 +109,19 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/{province_code}", response_model=RiskScoreResponse)
+async def get_risk(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the latest risk score for a province."""
+    result = await db.execute(
+        select(RiskScore)
+        .where(RiskScore.province_code == province_code)
+        .order_by(RiskScore.computed_at.desc())
+        .limit(1)
+    )
+    score = result.scalar_one_or_none()
+    if score is None:
+        return _zero_score(province_code)
+    return score

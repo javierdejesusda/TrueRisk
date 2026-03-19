@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Map, { Source, Layer, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
@@ -16,22 +16,10 @@ export interface SpainAlertMapProps {
   isLoading: boolean;
   riskByProvince?: Record<string, RiskMapEntry>;
   allWeather?: Array<{ province_code: string; temperature: number; latitude: number; longitude: number }>;
-  onRefresh?: () => void;
-  lastUpdated?: string | null;
 }
 
-export interface SpainAlertMapHandle {
-  flyToProvince(code: string, lat: number, lng: number): void;
-}
-
-export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>(function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince, allWeather, onRefresh, lastUpdated }, ref) {
+export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince, allWeather }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
-
-  useImperativeHandle(ref, () => ({
-    flyToProvince(code, lat, lng) {
-      mapRef.current?.flyTo({ center: [lng, lat], zoom: 8, duration: 1200, essential: true });
-    },
-  }), []);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
   const [popupInfo, setPopupInfo] = useState<{
@@ -45,57 +33,7 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
   const [visibleProvinceINEs, setVisibleProvinceINEs] = useState<string[]>([]);
   const [zoomLevel, setZoomLevel] = useState(5.5);
 
-  const [terrainEnabled, setTerrainEnabled] = useState(true);
-
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
-
-  const onMapLoad = useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (!map || map.getSource('terrain-dem')) return;
-
-    map.addSource('terrain-dem', {
-      type: 'raster-dem',
-      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-      encoding: 'terrarium',
-      tileSize: 256,
-      maxzoom: 15,
-    });
-
-    map.addLayer({
-      id: 'hillshade',
-      type: 'hillshade',
-      source: 'terrain-dem',
-      paint: {
-        'hillshade-shadow-color': '#000000',
-        'hillshade-highlight-color': '#ffffff',
-        'hillshade-accent-color': '#000000',
-        'hillshade-illumination-anchor': 'viewport',
-        'hillshade-exaggeration': 0.3,
-      },
-    }, 'province-fill');
-
-    map.setTerrain({ source: 'terrain-dem', exaggeration: 1.3 });
-
-    map.setPaintProperty('province-fill', 'fill-color-transition', { duration: 600, delay: 0 });
-    map.setPaintProperty('province-fill', 'fill-opacity-transition', { duration: 200, delay: 0 });
-    map.setPaintProperty('province-outline', 'line-width-transition', { duration: 150, delay: 0 });
-    map.setPaintProperty('province-outline', 'line-color-transition', { duration: 150, delay: 0 });
-  }, []);
-
-  const handleToggleTerrain = useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    if (terrainEnabled) {
-      map.setTerrain(null);
-      map.easeTo({ pitch: 0, duration: 800 });
-    } else {
-      if (map.getSource('terrain-dem')) {
-        map.setTerrain({ source: 'terrain-dem', exaggeration: 1.3 });
-      }
-      map.easeTo({ pitch: 45, duration: 800 });
-    }
-    setTerrainEnabled(!terrainEnabled);
-  }, [terrainEnabled]);
 
   // Load GeoJSON once
   useEffect(() => {
@@ -157,10 +95,10 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
     []
   );
 
+  // Pulse animation for alerted provinces (throttled to 100ms)
   useEffect(() => {
-    let animationId: number;
     const start = performance.now();
-    function animate() {
+    const id = setInterval(() => {
       const elapsed = (performance.now() - start) % 3000;
       const opacity = 0.15 + 0.25 * Math.sin((elapsed / 3000) * Math.PI * 2);
       try {
@@ -174,10 +112,8 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
           ]);
         }
       } catch { /* Layer not ready */ }
-      animationId = requestAnimationFrame(animate);
-    }
-    animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
+    }, 100);
+    return () => clearInterval(id);
   }, []);
 
   // Hover handling
@@ -246,26 +182,11 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
       const feature = e.features[0];
       const props = feature.properties;
       const isMuni = feature.layer?.id === 'municipality-fill';
-      const code = props?.provinceCode || (isMuni ? props?.cod_prov : props?.cod_prov) || '';
-      const name = props?.provinceName || props?.name || '';
-
-      const currentZoom = mapRef.current?.getZoom() ?? 5.5;
-      const targetZoom = Math.max(currentZoom, 7);
-
-      mapRef.current?.flyTo({
-        center: [e.lngLat.lng, e.lngLat.lat],
-        zoom: targetZoom,
-        duration: 1200,
-        essential: true,
-      });
-
-      mapRef.current?.once('moveend', () => {
-        setPopupInfo({
-          longitude: e.lngLat.lng,
-          latitude: e.lngLat.lat,
-          provinceName: name,
-          provinceCode: code,
-        });
+      setPopupInfo({
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+        provinceName: props?.provinceName || props?.name || '',
+        provinceCode: props?.provinceCode || (isMuni ? props?.cod_prov : props?.cod_prov) || '',
       });
     }
   }, []);
@@ -324,34 +245,14 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
     return map;
   }, [allWeather]);
 
-  const weatherGeoJSON = useMemo(() => {
-    if (!allWeather?.length) return null;
-    return {
-      type: 'FeatureCollection' as const,
-      features: allWeather.map(w => ({
-        type: 'Feature' as const,
-        geometry: { type: 'Point' as const, coordinates: [w.longitude, w.latitude] },
-        properties: { temperature: Math.round(w.temperature), province_code: w.province_code },
-      })),
-    };
-  }, [allWeather]);
-
   return (
-    <div className="relative w-full h-full" role="application" aria-label="Interactive climate risk map of Spain" tabIndex={0}>
+    <div className="relative w-full h-full">
       {/* Loading overlay */}
       {geoLoading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-bg-primary/90">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="h-12 w-12 animate-spin rounded-full border-2 border-border border-t-accent-green" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-3 w-3 rounded-full bg-accent-green animate-pulse" />
-              </div>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-text-primary">Loading Map Data</p>
-              <p className="text-xs text-text-muted mt-1">Fetching province boundaries...</p>
-            </div>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-bg-primary/80">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent-green" />
+            <span className="text-sm text-text-muted">Loading map...</span>
           </div>
         </div>
       )}
@@ -377,7 +278,6 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
         onMouseLeave={onMouseLeave}
         onClick={onClick}
         onMoveEnd={onMoveEnd}
-        onLoad={onMapLoad}
         cursor={hoveredFeatureId ? 'pointer' : 'grab'}
       >
         <NavigationControl position="bottom-right" />
@@ -524,35 +424,6 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
           </Source>
         )}
 
-        {weatherGeoJSON && (
-          <Source id="weather-markers" type="geojson" data={weatherGeoJSON}>
-            <Layer
-              id="temp-labels"
-              type="symbol"
-              layout={{
-                'text-field': ['concat', ['to-string', ['get', 'temperature']], '\u00B0'],
-                'text-size': 11,
-                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                'text-allow-overlap': false,
-                'text-padding': 4,
-              }}
-              paint={{
-                'text-color': [
-                  'interpolate', ['linear'], ['get', 'temperature'],
-                  0, '#64D2FF',
-                  15, '#30D158',
-                  25, '#FFD60A',
-                  35, '#FF9F0A',
-                  40, '#FF453A',
-                ] as unknown as maplibregl.ExpressionSpecification,
-                'text-halo-color': 'rgba(0, 0, 0, 0.85)',
-                'text-halo-width': 1.5,
-                'text-opacity': ['interpolate', ['linear'], ['zoom'], 5, 1, 7, 0] as unknown as maplibregl.ExpressionSpecification,
-              }}
-            />
-          </Source>
-        )}
-
         {/* Popup */}
         {popupInfo && (
           <Popup
@@ -587,12 +458,10 @@ export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>
       <MapLegend />
       <MapControls
         alertCount={totalAlerts}
-        lastUpdated={lastUpdated ?? null}
+        lastUpdated={new Date().toISOString()}
         onResetView={handleResetView}
-        onRefresh={onRefresh ?? (() => {})}
-        terrainEnabled={terrainEnabled}
-        onToggleTerrain={handleToggleTerrain}
+        onRefresh={() => {}}
       />
     </div>
   );
-});
+}

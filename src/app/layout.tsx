@@ -13,9 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TrueRisk - Real-Time Climate Risk Intelligence for Spain',
-  description: 'Multi-hazard climate risk visualization platform with real-time weather alerts, ML-powered predictions, and interactive 3D mapping for all 52 Spanish provinces.',
-  keywords: ['climate risk', 'Spain weather', 'AEMET alerts', 'natural hazards', 'risk assessment'],
+  title: "TrueRisk - Climate Emergency Management",
+  description: "Real-time weather monitoring, AI-powered risk analysis, and personalised emergency guidance.",
 };
 
 export default function RootLayout({

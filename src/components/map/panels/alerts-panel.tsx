@@ -30,7 +30,7 @@ const BellIcon = (
 
 export function AlertsPanel() {
   const { alerts, isLoading } = useAlerts();
-  const { alerts: aemetAlerts, error: aemetError } = useAemetAlerts();
+  const { alerts: aemetAlerts } = useAemetAlerts();
 
   const totalCount = alerts.length + aemetAlerts.length;
 
@@ -107,11 +107,6 @@ export function AlertsPanel() {
               </div>
             </div>
           ))}
-        </div>
-      )}
-      {aemetError && (
-        <div className="flex items-center gap-2 rounded-lg bg-accent-yellow/10 px-3 py-2 mt-2">
-          <span className="text-[10px] text-accent-yellow">AEMET feed unavailable</span>
         </div>
       )}
     </PanelShell>
