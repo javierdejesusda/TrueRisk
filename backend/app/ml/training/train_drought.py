@@ -103,8 +103,8 @@ def main() -> None:
         # -- Validate --
         model.train(False)
         val_loss = 0.0
-        all_probs = []
-        all_labels = []
+        all_probs: list[float] = []
+        all_labels: list[float] = []
         with torch.no_grad():
             for X_batch, y_batch in test_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)

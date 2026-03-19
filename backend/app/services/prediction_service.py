@@ -144,7 +144,7 @@ def _linear_regression(values: list[float]) -> dict:
     ]
     for h in range(1, 13):
         step = n - 1 + h
-        data.append({"step": step, "actual": None, "fitted": round(slope * step + intercept, 2)})
+        data.append({"step": step, "actual": 0.0, "fitted": round(slope * step + intercept, 2)})
 
     return {
         "slope": round(slope, 4),
@@ -160,7 +160,7 @@ def _linear_regression(values: list[float]) -> dict:
 # Bayesian event classification
 # ---------------------------------------------------------------------------
 
-_EVENT_THRESHOLDS = {
+_EVENT_THRESHOLDS: dict[str, dict[str, Any]] = {
     "flood": {"field": "precipitation", "threshold": 10.0},
     "heat_wave": {"field": "temperature", "threshold": 35.0},
     "cold_snap": {"field": "temperature", "threshold": 5.0, "below": True},
@@ -178,13 +178,13 @@ def _bayesian_analysis(records: list[dict]) -> list[dict]:
 
     results = []
     for event, cfg in _EVENT_THRESHOLDS.items():
-        field = cfg["field"]
-        threshold = cfg["threshold"]
-        below = cfg.get("below", False)
+        field = str(cfg["field"])
+        threshold = float(cfg["threshold"])
+        below = bool(cfg.get("below", False))
 
         count = 0
         for r in records:
-            v = r.get(field, 0) or 0
+            v = float(r.get(field, 0) or 0)
             if below:
                 if v < threshold:
                     count += 1
@@ -194,7 +194,7 @@ def _bayesian_analysis(records: list[dict]) -> list[dict]:
 
         prior = count / n
         # Likelihood: how extreme is the latest reading relative to threshold
-        latest = records[-1].get(field, 0) or 0
+        latest = float(records[-1].get(field, 0) or 0)
         if below:
             likelihood = max(0, (threshold - latest) / max(threshold, 1)) if latest < threshold else 0
         else:
@@ -351,7 +351,7 @@ def _decision_tree(latest: dict) -> dict:
 # K-Nearest Neighbors (historical event matching)
 # ---------------------------------------------------------------------------
 
-_HISTORICAL_EVENTS = [
+_HISTORICAL_EVENTS: list[dict[str, Any]] = [
     {"year": 2019, "event": "DANA Alicante", "outcome": "catastrophic flooding", "temp": 22, "precip": 90, "wind": 70, "humidity": 95},
     {"year": 2020, "event": "Storm Gloria", "outcome": "coastal flooding", "temp": 8, "precip": 45, "wind": 90, "humidity": 88},
     {"year": 2022, "event": "June heatwave", "outcome": "extreme heat 45°C", "temp": 44, "precip": 0, "wind": 15, "humidity": 12},
@@ -369,13 +369,14 @@ def _knn_matches(latest: dict, k: int = 5) -> list[dict]:
     w = _safe(latest.get("wind_speed"))
     h = _safe(latest.get("humidity"), 50)
 
-    scored = []
+    scored: list[dict[str, Any]] = []
     for evt in _HISTORICAL_EVENTS:
+        et, ep, ew, eh = float(evt["temp"]), float(evt["precip"]), float(evt["wind"]), float(evt["humidity"])
         dist = math.sqrt(
-            ((t - evt["temp"]) / 10) ** 2
-            + ((p - evt["precip"]) / 20) ** 2
-            + ((w - evt["wind"]) / 20) ** 2
-            + ((h - evt["humidity"]) / 20) ** 2
+            ((t - et) / 10) ** 2
+            + ((p - ep) / 20) ** 2
+            + ((w - ew) / 20) ** 2
+            + ((h - eh) / 20) ** 2
         )
         scored.append({
             "event": evt["event"],
@@ -384,7 +385,7 @@ def _knn_matches(latest: dict, k: int = 5) -> list[dict]:
             "year": evt["year"],
         })
 
-    scored.sort(key=lambda x: x["distance"])
+    scored.sort(key=lambda x: float(x["distance"]))
     return scored[:k]
 
 
