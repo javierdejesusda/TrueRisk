@@ -34,9 +34,8 @@ export default function MapHomePage() {
       <div className="absolute top-16 left-4 z-40 flex flex-col gap-3 max-h-[calc(100vh-6rem)] overflow-y-auto">
         {panelsVisible.risk && <RiskPanel />}
         {panelsVisible.weather && <WeatherPanel />}
+        {panelsVisible.alerts && <AlertsPanel />}
       </div>
-      {/* Right panel — keeps absolute positioning */}
-      {panelsVisible.alerts && <AlertsPanel />}
     </div>
   );
 }

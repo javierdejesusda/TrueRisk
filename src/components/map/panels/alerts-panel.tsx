@@ -54,7 +54,6 @@ export function AlertsPanel() {
     <PanelShell
       title="Active Alerts"
       icon={BellIcon}
-      position="top-40 right-4"
       collapsedContent={collapsedContent}
     >
       {isLoading ? (
