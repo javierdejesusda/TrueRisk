@@ -12,29 +12,38 @@
   --color-border-hover: #2E2E42;
 
   --color-text-primary: #EEEEF0;
-  --color-text-secondary: #7A7A8E;
-  --color-text-muted: #3E3E52;
+  --color-text-secondary: #A0A0B4;
+  --color-text-muted: #7A7A90;
 
-  --color-accent-primary: #22F58C;
-  --color-accent-green: #22F58C;
+  --color-accent-primary: #FFFFFF;
+  --color-accent-green: #FFFFFF;
   --color-accent-blue: #3B82F6;
   --color-accent-yellow: #FBBF24;
   --color-accent-orange: #F97316;
   --color-accent-red: #EF4444;
   --color-accent-purple: #A855F7;
 
-  --color-severity-1: #22D3EE;
+  --color-severity-1: #84CC16;
   --color-severity-2: #FBBF24;
   --color-severity-3: #F97316;
   --color-severity-4: #EF4444;
   --color-severity-5: #EC4899;
 
-  --font-display: 'Syne', system-ui, sans-serif;
-  --font-sans: 'Outfit', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Geist', system-ui, sans-serif;
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
 }
 
 /* ── Base styles ───────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
 
 * {
   box-sizing: border-box;
@@ -127,8 +136,8 @@ body {
 /* ── Animation keyframes ───────────────────────────────────────── */
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px 0 var(--glow-color, rgba(34, 245, 140, 0.2)); }
-  50% { box-shadow: 0 0 24px 8px var(--glow-color, rgba(34, 245, 140, 0.35)); }
+  0%, 100% { box-shadow: 0 0 8px 0 var(--glow-color, rgba(255, 255, 255, 0.1)); }
+  50% { box-shadow: 0 0 24px 8px var(--glow-color, rgba(255, 255, 255, 0.2)); }
 }
 
 @keyframes scale-in {

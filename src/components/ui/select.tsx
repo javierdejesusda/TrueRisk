@@ -38,23 +38,23 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             'cursor-pointer disabled:cursor-not-allowed disabled:opacity-50',
             error
               ? 'border-accent-red focus:border-accent-red/60 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]'
-              : 'border-border hover:border-border-hover focus:border-accent-green/60 focus:shadow-[0_0_0_3px_rgba(34,245,140,0.1)]',
+              : 'border-border hover:border-border-hover focus:border-accent-green/60 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.08)]',
             className,
           ].join(' ')}
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%233E3E52' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%237A7A90' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E")`,
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'right 8px center',
           }}
           {...props}
         >
           {placeholder && (
-            <option value="" disabled>
+            <option value="" disabled className="bg-bg-secondary">
               {placeholder}
             </option>
           )}
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} className="bg-bg-secondary">
               {opt.label}
             </option>
           ))}
