@@ -56,7 +56,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
 
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-64">
-      <div className="glass-heavy rounded-lg">
+      <div className="glass-heavy rounded-xl border border-transparent focus-within:shadow-[0_0_0_3px_rgba(34,245,140,0.1)] focus-within:border-accent-green/40 transition-all">
         <div className="relative flex items-center">
           <svg className="absolute left-2.5 text-text-muted" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
@@ -70,7 +70,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={onKeyDown}
-            className="w-full bg-transparent py-2 pl-8 pr-8 text-sm text-text-primary placeholder:text-text-muted outline-none"
+            className="w-full bg-transparent py-2 pl-8 pr-8 font-[family-name:var(--font-sans)] text-sm text-text-primary placeholder:text-text-muted outline-none"
           />
           {query && (
             <button
@@ -86,17 +86,17 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
         </div>
       </div>
       {open && results.length > 0 && (
-        <div ref={listRef} className="glass-heavy rounded-lg mt-1 overflow-hidden max-h-64 overflow-y-auto">
+        <div ref={listRef} className="glass-heavy rounded-xl mt-1 overflow-hidden max-h-64 overflow-y-auto">
           {results.map((province, i) => (
             <button
               key={province.code}
               onMouseDown={() => handleSelect(province)}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors cursor-pointer ${
-                i === activeIndex ? 'bg-accent-primary/15 text-text-primary' : 'text-text-secondary hover:bg-bg-card-hover'
+              className={`w-full text-left px-3 py-2 font-[family-name:var(--font-sans)] text-sm transition-colors cursor-pointer ${
+                i === activeIndex ? 'bg-accent-green/10 text-accent-green' : 'text-text-secondary hover:bg-white/5'
               }`}
             >
               {province.name}
-              <span className="ml-2 text-[10px] text-text-muted font-mono">{province.code}</span>
+              <span className="ml-2 font-[family-name:var(--font-mono)] text-[10px] text-text-muted">{province.code}</span>
             </button>
           ))}
         </div>

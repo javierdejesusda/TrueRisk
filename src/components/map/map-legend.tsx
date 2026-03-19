@@ -1,25 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAppStore } from '@/store/app-store';
 
 const ALERT_LEVELS = [
-  { label: 'No alerts', color: '#16A34A' },
-  { label: 'Low', color: '#64D2FF' },
-  { label: 'Moderate', color: '#fbbf24' },
-  { label: 'High', color: '#f97316' },
-  { label: 'Very High', color: '#ef4444' },
-  { label: 'Critical', color: '#dc2626' },
+  { label: 'No alerts', color: '#22F58C' },
+  { label: 'Low', color: '#22D3EE' },
+  { label: 'Moderate', color: '#FBBF24' },
+  { label: 'High', color: '#F97316' },
+  { label: 'Very High', color: '#EF4444' },
+  { label: 'Critical', color: '#EC4899' },
 ];
 
 const RISK_LEVELS = [
-  { label: 'Low', color: '#16A34A' },
-  { label: 'Moderate', color: '#FFD60A' },
-  { label: 'High', color: '#FF9F0A' },
-  { label: 'Very High', color: '#FF453A' },
-  { label: 'Critical', color: '#FF2D55' },
+  { label: 'Low', color: '#22F58C' },
+  { label: 'Moderate', color: '#FBBF24' },
+  { label: 'High', color: '#F97316' },
+  { label: 'Very High', color: '#EF4444' },
+  { label: 'Critical', color: '#EC4899' },
 ];
 
 export function MapLegend() {
@@ -40,7 +39,7 @@ export function MapLegend() {
     return (
       <button
         onClick={() => setCollapsed(false)}
-        className="absolute bottom-4 left-4 z-10 flex h-8 gap-0.5 rounded-lg overflow-hidden border border-border cursor-pointer"
+        className="absolute bottom-4 left-4 z-10 flex h-8 gap-0.5 glass-heavy rounded-xl overflow-hidden border border-border cursor-pointer"
         aria-label="Show legend"
       >
         {levels.map((level) => (
@@ -56,12 +55,12 @@ export function MapLegend() {
 
   return (
     <div className="absolute bottom-4 left-4 z-10">
-      <Card className="bg-bg-secondary/90 backdrop-blur-sm" padding="sm">
+      <div className="glass-heavy rounded-2xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-text-secondary">{title}</span>
+          <span className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-secondary">{title}</span>
           <button
             onClick={() => setCollapsed(true)}
-            className="text-text-muted hover:text-text-primary text-xs lg:hidden cursor-pointer"
+            className="text-text-muted hover:text-text-primary hover:bg-white/5 rounded-md px-1.5 text-xs lg:hidden cursor-pointer transition-colors"
             aria-label="Collapse legend"
           >
             Hide
@@ -80,9 +79,9 @@ export function MapLegend() {
               ))}
             </div>
             <div className="flex justify-between">
-              <span className="text-[9px] text-text-muted">0</span>
-              <span className="text-[9px] text-text-muted">50</span>
-              <span className="text-[9px] text-text-muted">100</span>
+              <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">0</span>
+              <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">50</span>
+              <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">100</span>
             </div>
           </div>
         ) : (
@@ -94,12 +93,12 @@ export function MapLegend() {
                   className="w-3 h-3 rounded-sm shrink-0 border border-border/50"
                   style={{ backgroundColor: level.color }}
                 />
-                <span className="text-xs text-text-secondary">{level.label}</span>
+                <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-secondary">{level.label}</span>
               </div>
             ))}
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

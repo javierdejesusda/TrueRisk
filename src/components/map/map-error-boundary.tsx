@@ -25,7 +25,7 @@ export class MapErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-text-secondary mb-4">The map encountered an issue. This usually resolves on reload.</p>
             <button
               onClick={() => { this.setState({ hasError: false, error: null }); }}
-              className="rounded-lg bg-accent-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
+              className="rounded-lg bg-accent-green text-[#050508] px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
             >
               Reload Map
             </button>
