@@ -488,8 +488,12 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     # Use last 48 hourly values for regression/EMA charts
     recent_temps = temps[-48:] if len(temps) > 48 else temps
 
+    # Require minimum 30 daily summaries before using daily data path;
+    # otherwise the statistics are degenerate (e.g. 1 record → zero variance)
+    has_enough_daily = len(daily_summaries) >= 30
+
     # Use daily data for Gumbel (statistically meaningful with years of data)
-    if daily_summaries:
+    if has_enough_daily:
         daily_precips = [s.precipitation_sum for s in daily_summaries]
         daily_temp_maxes = [s.temperature_max for s in daily_summaries]
         daily_wind_maxes = [s.wind_speed_max for s in daily_summaries]
@@ -499,7 +503,7 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
         daily_wind_maxes = winds
 
     # Build 365-day baseline from daily summaries for z-score
-    if daily_summaries:
+    if has_enough_daily:
         baseline_records = [
             {
                 "temperature": s.temperature_avg,
@@ -522,10 +526,10 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
             "wind_speed": s.wind_speed_max,
         }
         for s in daily_summaries
-    ] if daily_summaries else None
+    ] if has_enough_daily else None
 
     # Build KNN events from real historical extremes
-    knn_events = _build_knn_events_from_summaries(daily_summaries) if daily_summaries else []
+    knn_events = _build_knn_events_from_summaries(daily_summaries) if has_enough_daily else []
     if len(knn_events) < 5:
         knn_events = _HISTORICAL_EVENTS  # fallback to hardcoded
 

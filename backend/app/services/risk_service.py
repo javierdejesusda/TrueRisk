@@ -42,6 +42,17 @@ def get_terrain_features(province_code: str) -> dict[str, Any]:
     }
 
 
+def get_hazard_weights(province_code: str) -> dict[str, float]:
+    """Return province-specific hazard weights (0..1) that scale raw model scores."""
+    data = PROVINCES.get(province_code, {})
+    return {
+        "flood": data.get("flood_risk_weight", 0.5),
+        "wildfire": data.get("wildfire_risk_weight", 0.5),
+        "drought": data.get("drought_risk_weight", 0.5),
+        "heatwave": data.get("heatwave_risk_weight", 0.5),
+    }
+
+
 def _season_components(month: int) -> tuple[float, float]:
     """Return (sin, cos) encoding for the month so seasonal patterns are smooth."""
     angle = 2 * math.pi * (month - 1) / 12
@@ -410,10 +421,17 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     }
 
     # 5. Run models
-    flood = predict_flood_risk(flood_features)
-    wildfire = predict_wildfire_risk(wildfire_features)
-    drought = predict_drought_risk(drought_features)
-    heatwave = predict_heatwave_risk(heatwave_features)
+    flood_raw = predict_flood_risk(flood_features)
+    wildfire_raw = predict_wildfire_risk(wildfire_features)
+    drought_raw = predict_drought_risk(drought_features)
+    heatwave_raw = predict_heatwave_risk(heatwave_features)
+
+    # 5b. Apply province-specific hazard weights to differentiate risk by geography
+    weights = get_hazard_weights(province_code)
+    flood = min(100.0, flood_raw * (0.4 + 0.6 * weights["flood"]))
+    wildfire = min(100.0, wildfire_raw * (0.4 + 0.6 * weights["wildfire"]))
+    drought = min(100.0, drought_raw * (0.4 + 0.6 * weights["drought"]))
+    heatwave = min(100.0, heatwave_raw * (0.4 + 0.6 * weights["heatwave"]))
 
     # 6. Composite
     composite = compute_composite_risk(flood, wildfire, drought, heatwave)
