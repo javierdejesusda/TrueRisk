@@ -5,8 +5,8 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAppStore } from '@/store/app-store';
 
 const ALERT_LEVELS = [
-  { label: 'No alerts', color: '#22F58C' },
-  { label: 'Low', color: '#22D3EE' },
+  { label: 'No alerts', color: '#008000' },
+  { label: 'Low', color: '#84CC16' },
   { label: 'Moderate', color: '#FBBF24' },
   { label: 'High', color: '#F97316' },
   { label: 'Very High', color: '#EF4444' },
@@ -14,7 +14,7 @@ const ALERT_LEVELS = [
 ];
 
 const RISK_LEVELS = [
-  { label: 'Low', color: '#22F58C' },
+  { label: 'Low', color: '#008000' },
   { label: 'Moderate', color: '#FBBF24' },
   { label: 'High', color: '#F97316' },
   { label: 'Very High', color: '#EF4444' },

@@ -77,7 +77,7 @@ export function AlertsPanel() {
             <div
               key={alert.id}
               className="flex items-start gap-2 rounded-lg bg-white/[0.03] p-2 border-l-[3px]"
-              style={{ borderLeftColor: alert.severity >= 5 ? '#EC4899' : alert.severity >= 4 ? '#EF4444' : alert.severity >= 3 ? '#F97316' : alert.severity >= 2 ? '#FBBF24' : '#22D3EE' }}
+              style={{ borderLeftColor: alert.severity >= 5 ? '#EC4899' : alert.severity >= 4 ? '#EF4444' : alert.severity >= 3 ? '#F97316' : alert.severity >= 2 ? '#FBBF24' : '#84CC16' }}
             >
               <Badge variant={severityVariant(alert.severity)} size="sm">
                 {severityLabel(alert.severity)}
@@ -93,7 +93,7 @@ export function AlertsPanel() {
             <div
               key={`aemet-${i}`}
               className="flex items-start gap-2 rounded-lg bg-white/[0.03] p-2 border-l-[3px]"
-              style={{ borderLeftColor: alert.severity === 'red' ? '#EF4444' : alert.severity === 'orange' ? '#F97316' : alert.severity === 'yellow' ? '#FBBF24' : '#22D3EE' }}
+              style={{ borderLeftColor: alert.severity === 'red' ? '#EF4444' : alert.severity === 'orange' ? '#F97316' : alert.severity === 'yellow' ? '#FBBF24' : '#84CC16' }}
             >
               <Badge
                 variant={

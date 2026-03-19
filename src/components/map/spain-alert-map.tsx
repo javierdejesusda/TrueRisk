@@ -209,8 +209,8 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
     ? [
         'interpolate', ['linear'],
         ['get', 'riskScore'],
-        0,  '#22F58C',
-        20, '#22F58C',
+        0,  '#008000',
+        20, '#008000',
         40, '#FBBF24',
         60, '#F97316',
         80, '#EF4444',
@@ -223,8 +223,8 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
         4, '#EF4444',
         3, '#F97316',
         2, '#FBBF24',
-        1, '#22D3EE',
-        '#22F58C',
+        1, '#84CC16',
+        '#008000',
       ] as unknown as maplibregl.ExpressionSpecification;
 
   // Alert pulse fill color
@@ -235,7 +235,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
     4, '#EF4444',
     3, '#F97316',
     2, '#FBBF24',
-    1, '#22D3EE',
+    1, '#84CC16',
     'transparent',
   ] as unknown as maplibregl.ExpressionSpecification;
 
