@@ -77,7 +77,7 @@ export function ToastContainer() {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 80, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className={`pointer-events-auto flex items-start gap-3 rounded-lg border ${colors.border} ${colors.bg} p-3 shadow-lg backdrop-blur-sm cursor-pointer`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-lg border ${colors.border} ${colors.bg} p-3 shadow-lg backdrop-blur-md cursor-pointer`}
               onClick={() => dismiss(item.id)}
             >
               {/* Severity indicator dot */}

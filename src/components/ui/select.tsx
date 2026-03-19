@@ -23,7 +23,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="text-sm font-medium text-text-secondary"
+            className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)]"
           >
             {label}
           </label>
@@ -33,16 +33,16 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={selectId}
           className={[
             'w-full appearance-none rounded-lg border bg-bg-secondary px-3 py-2 pr-8 text-sm text-text-primary',
-            'transition-colors duration-150',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
+            'transition-all duration-150',
+            'focus:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50',
             error
-              ? 'border-accent-red focus:ring-accent-red/40'
-              : 'border-border hover:border-border-hover focus:border-accent-green focus:ring-accent-green/40',
+              ? 'border-accent-red focus:border-accent-red/60 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]'
+              : 'border-border hover:border-border-hover focus:border-accent-green/60 focus:shadow-[0_0_0_3px_rgba(34,245,140,0.1)]',
             className,
           ].join(' ')}
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b8a70' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%233E3E52' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E")`,
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'right 8px center',
           }}

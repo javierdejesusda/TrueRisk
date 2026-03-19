@@ -51,6 +51,7 @@ export function Badge({
     <span
       className={[
         'inline-flex items-center gap-1 rounded-full border font-medium whitespace-nowrap transition-transform duration-150 hover:scale-105',
+        severity && 'font-mono',
         colorStyle,
         sizeStyles[size],
         pulse && 'animate-pulse',

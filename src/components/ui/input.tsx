@@ -16,7 +16,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-text-secondary"
+            className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)]"
           >
             {label}
           </label>
@@ -27,12 +27,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={[
             'w-full rounded-lg border bg-bg-secondary px-3 py-2 text-sm text-text-primary',
             'placeholder:text-text-muted',
-            'transition-colors duration-150',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
+            'transition-all duration-150',
+            'focus:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50',
             error
-              ? 'border-accent-red focus:ring-accent-red/40'
-              : 'border-border hover:border-border-hover focus:border-accent-green focus:ring-accent-green/40',
+              ? 'border-accent-red focus:border-accent-red/60 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]'
+              : 'border-border hover:border-border-hover focus:border-accent-green/60 focus:shadow-[0_0_0_3px_rgba(34,245,140,0.1)]',
             className,
           ].join(' ')}
           {...props}

@@ -21,11 +21,17 @@ export function Skeleton({
   return (
     <div
       className={[
-        'animate-pulse bg-bg-card',
+        'bg-bg-secondary animate-[shimmer_1.5s_infinite]',
         roundedStyles[rounded],
         className,
       ].join(' ')}
-      style={{ width, height }}
+      style={{
+        width,
+        height,
+        backgroundImage:
+          'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)',
+        backgroundSize: '200% 100%',
+      }}
     />
   );
 }
