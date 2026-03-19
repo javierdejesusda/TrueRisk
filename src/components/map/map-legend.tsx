@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAppStore } from '@/store/app-store';
 
 const ALERT_LEVELS = [
-  { label: 'No alerts', color: '#30D158' },
+  { label: 'No alerts', color: '#16A34A' },
   { label: 'Low', color: '#64D2FF' },
   { label: 'Moderate', color: '#fbbf24' },
   { label: 'High', color: '#f97316' },
@@ -14,9 +15,7 @@ const ALERT_LEVELS = [
 ];
 
 const RISK_LEVELS = [
-  { label: 'No data', color: '#1C1C1E' },
-  { label: 'Very Low', color: '#1A3A2A' },
-  { label: 'Low', color: '#30D158' },
+  { label: 'Low', color: '#16A34A' },
   { label: 'Moderate', color: '#FFD60A' },
   { label: 'High', color: '#FF9F0A' },
   { label: 'Very High', color: '#FF453A' },
@@ -25,7 +24,10 @@ const RISK_LEVELS = [
 
 export function MapLegend() {
   const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 1023px)');
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
+
+  useEffect(() => { if (isMobile) setCollapsed(true); }, [isMobile]);
 
   const levels = activeMapLayer === 'risk' ? RISK_LEVELS : ALERT_LEVELS;
   const title = activeMapLayer === 'risk' ? 'Risk Score' : 'Alert Levels';
