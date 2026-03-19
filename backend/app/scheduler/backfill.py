@@ -5,7 +5,7 @@ import asyncio
 import logging
 from datetime import date, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session
@@ -19,26 +19,51 @@ BACKFILL_YEARS = 5
 
 
 async def backfill_if_needed():
-    """Check if backfill is needed and run it."""
+    """Check if backfill is needed and run it for provinces missing data."""
     async with async_session() as db:
-        count = await db.scalar(
-            select(func.count()).select_from(WeatherDailySummary)
+        # Check per-province: find provinces that have fewer than 365 daily summaries
+        result = await db.execute(select(Province))
+        all_provinces = {p.ine_code for p in result.scalars().all()}
+
+        counts_result = await db.execute(
+            select(
+                WeatherDailySummary.province_code,
+                func.count().label("cnt"),
+            ).group_by(WeatherDailySummary.province_code)
         )
-        if count and count > 1000:
-            logger.info(f"Backfill skipped: {count} daily summaries already exist")
+        counts = {row[0]: row[1] for row in counts_result.all()}
+
+        missing = [
+            code for code in all_provinces
+            if counts.get(code, 0) < 365
+        ]
+
+        if not missing:
+            total = sum(counts.values())
+            logger.info(f"Backfill skipped: all {len(all_provinces)} provinces have sufficient daily data ({total} total records)")
             return
-        await _run_backfill(db)
+
+        logger.info(f"Backfill needed for {len(missing)} provinces (of {len(all_provinces)} total)")
+        await _run_backfill(db, province_codes=missing)
 
 
-async def _run_backfill(db: AsyncSession):
-    """Backfill 5 years of daily summaries for all provinces."""
+async def _run_backfill(db: AsyncSession, province_codes: list[str] | None = None):
+    """Backfill 5 years of daily summaries for specified (or all) provinces."""
     logger.info(f"Starting {BACKFILL_YEARS}-year historical backfill...")
 
     end = date.today() - timedelta(days=1)
     start = end - timedelta(days=BACKFILL_YEARS * 365)
 
     result = await db.execute(select(Province))
-    provinces = result.scalars().all()
+    all_provinces = result.scalars().all()
+
+    if province_codes is not None:
+        target_set = set(province_codes)
+        provinces = [p for p in all_provinces if p.ine_code in target_set]
+    else:
+        provinces = list(all_provinces)
+
+    logger.info(f"Backfilling {len(provinces)} provinces from {start} to {end}")
 
     for idx, province in enumerate(provinces, 1):
         try:
@@ -48,6 +73,19 @@ async def _run_backfill(db: AsyncSession):
                 start.isoformat(),
                 end.isoformat(),
             )
+
+            if not records:
+                logger.warning(f"  No data returned for {province.name} ({idx}/{len(provinces)})")
+                await asyncio.sleep(3)
+                continue
+
+            # Delete any partial existing data for this province before re-inserting
+            await db.execute(
+                delete(WeatherDailySummary).where(
+                    WeatherDailySummary.province_code == province.ine_code
+                )
+            )
+            await db.flush()
 
             batch = []
             for r in records:
@@ -73,11 +111,9 @@ async def _run_backfill(db: AsyncSession):
                     source="archive",
                 ))
 
-            # Bulk insert in chunks, skip duplicates via merge
             for i in range(0, len(batch), 500):
                 chunk = batch[i:i + 500]
-                for summary in chunk:
-                    await db.merge(summary)
+                db.add_all(chunk)
                 await db.commit()
 
             logger.info(
@@ -85,11 +121,11 @@ async def _run_backfill(db: AsyncSession):
                 f"{len(records)} days"
             )
 
-            # Rate limit: 0.5s between provinces
-            await asyncio.sleep(0.5)
+            # Rate limit: 3s between provinces to avoid 429s
+            await asyncio.sleep(3)
 
         except Exception:
-            logger.exception(f"  Failed to backfill {province.name}")
+            logger.exception(f"  Failed to backfill {province.ine_code} ({idx}/{len(provinces)})")
             await db.rollback()
 
     logger.info("Historical backfill complete.")

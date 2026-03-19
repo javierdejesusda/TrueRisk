@@ -160,7 +160,7 @@ def _linear_regression(values: list[float]) -> dict:
     ]
     for h in range(1, 13):
         step = n - 1 + h
-        data.append({"step": step, "actual": 0.0, "fitted": round(slope * step + intercept, 2)})
+        data.append({"step": step, "fitted": round(slope * step + intercept, 2)})
 
     return {
         "slope": round(slope, 4),
@@ -212,13 +212,22 @@ def _bayesian_analysis(records: list[dict], baseline: list[dict] | None = None) 
                     count += 1
 
         prior = count / len(prior_source)
-        # Likelihood: how extreme is the latest reading relative to threshold
+
+        # Likelihood: how close current conditions are to the threshold.
+        # Uses a sigmoid-like ramp so values approaching the threshold still
+        # produce non-zero likelihood (not just binary above/below).
         latest = float(records[-1].get(field, 0) or 0)
         if below:
-            likelihood = max(0, (threshold - latest) / max(threshold, 1)) if latest < threshold else 0
+            # For cold events: likelihood increases as temp drops toward threshold
+            distance = (threshold - latest) / max(abs(threshold), 1)
+            # Ramp: 0 at 2× above threshold, 1 at threshold
+            likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
         else:
-            likelihood = max(0, (latest - threshold) / max(threshold, 1)) if latest > threshold else 0
-        likelihood = min(likelihood, 1.0)
+            # For warm/extreme events: likelihood increases as value rises toward threshold
+            distance = (latest - threshold) / max(abs(threshold), 1)
+            likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
+        # Ensure a small minimum so prior always contributes
+        likelihood = max(likelihood, 0.01)
 
         posterior = prior * likelihood
         normalizer = prior * likelihood + (1 - prior) * max(1 - likelihood, 0.01)
@@ -298,7 +307,20 @@ def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
 
         mean = sum(values) / len(values)
         variance = sum((v - mean) ** 2 for v in values) / len(values)
-        std = math.sqrt(variance) if variance > 0 else 1e-6
+        std = math.sqrt(variance) if variance > 0 else 0.0
+
+        if std < 0.01:
+            # Baseline is essentially constant — z-score is undefined, treat as 0
+            results.append({
+                "field": display_name,
+                "value": round(current, 2),
+                "mean": round(mean, 2),
+                "stdDev": 0.0,
+                "zScore": 0.0,
+                "isAnomaly": False,
+            })
+            continue
+
         z = (current - mean) / std
 
         results.append({
@@ -485,12 +507,18 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     precips = [_safe(r["precipitation"]) for r in record_dicts]
     winds = [_safe(r["wind_speed"]) for r in record_dicts]
 
-    # Use last 48 hourly values for regression/EMA charts
-    recent_temps = temps[-48:] if len(temps) > 48 else temps
-
     # Require minimum 30 daily summaries before using daily data path;
     # otherwise the statistics are degenerate (e.g. 1 record → zero variance)
     has_enough_daily = len(daily_summaries) >= 30
+
+    # For regression/EMA: use daily avg temps when hourly data is sparse (<30 records).
+    # This gives meaningful trend charts from 5 years of daily data instead of 5 flat points.
+    if len(temps) >= 30:
+        recent_temps = temps[-48:] if len(temps) > 48 else temps
+    elif has_enough_daily:
+        recent_temps = [s.temperature_avg for s in daily_summaries[-60:]]
+    else:
+        recent_temps = temps
 
     # Use daily data for Gumbel (statistically meaningful with years of data)
     if has_enough_daily:
@@ -517,16 +545,33 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     else:
         baseline_records = record_dicts
 
-    # Build multi-year Bayesian baseline
-    daily_baseline = [
-        {
-            "temperature": s.temperature_max,
-            "humidity": s.humidity_avg,
-            "precipitation": s.precipitation_sum,
-            "wind_speed": s.wind_speed_max,
-        }
-        for s in daily_summaries
-    ] if has_enough_daily else None
+    # Build multi-year Bayesian baseline + recent records for likelihood
+    if has_enough_daily:
+        daily_baseline = [
+            {
+                "temperature": s.temperature_max,
+                "humidity": s.humidity_avg,
+                "precipitation": s.precipitation_sum,
+                "wind_speed": s.wind_speed_max,
+            }
+            for s in daily_summaries
+        ]
+        # Use recent 30 daily summaries for Bayesian likelihood when hourly is sparse
+        if len(record_dicts) < 30:
+            bayesian_recent = [
+                {
+                    "temperature": s.temperature_max,
+                    "humidity": s.humidity_avg or 50,
+                    "precipitation": s.precipitation_sum,
+                    "wind_speed": s.wind_speed_max,
+                }
+                for s in daily_summaries[-30:]
+            ]
+        else:
+            bayesian_recent = record_dicts
+    else:
+        daily_baseline = None
+        bayesian_recent = record_dicts
 
     # Build KNN events from real historical extremes
     knn_events = _build_knn_events_from_summaries(daily_summaries) if has_enough_daily else []
@@ -540,7 +585,7 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
             "windSpeed": _gumbel_analysis(daily_wind_maxes, _safe(latest["wind_speed"])),
         },
         "regression": _linear_regression(recent_temps),
-        "bayesian": _bayesian_analysis(record_dicts, baseline=daily_baseline),
+        "bayesian": _bayesian_analysis(bayesian_recent, baseline=daily_baseline),
         "ema": _ema_analysis(recent_temps),
         "zScore": _zscore_analysis(baseline_records, latest),
         "decisionTree": _decision_tree(latest),

@@ -208,27 +208,49 @@ async def fetch_flood_forecast(lat: float, lon: float) -> dict[str, Any]:
 async def fetch_historical(
     lat: float, lon: float, start_date: str, end_date: str
 ) -> dict[str, Any]:
-    """Fetch historical daily weather data from Open-Meteo archive."""
-    try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                _ARCHIVE_URL,
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "daily": _DAILY_PARAMS,
-                },
+    """Fetch historical daily weather data from Open-Meteo archive with retry."""
+    import asyncio
+
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+                resp = await client.get(
+                    _ARCHIVE_URL,
+                    params={
+                        "latitude": lat,
+                        "longitude": lon,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "daily": _DAILY_PARAMS,
+                    },
+                )
+                if resp.status_code == 429:
+                    wait = 2 ** attempt * 5  # 5s, 10s, 20s, 40s, 80s
+                    logger.warning(
+                        "Rate limited (429) for (%s, %s), retry %d/%d in %ds",
+                        lat, lon, attempt + 1, max_retries, wait,
+                    )
+                    await asyncio.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                return resp.json()
+        except httpx.HTTPStatusError:
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2 ** attempt * 5)
+                continue
+            logger.exception(
+                "Failed to fetch historical data for (%s, %s) %s..%s after %d retries",
+                lat, lon, start_date, end_date, max_retries,
             )
-            resp.raise_for_status()
-            return resp.json()
-    except Exception:
-        logger.exception(
-            "Failed to fetch historical data for (%s, %s) %s..%s",
-            lat, lon, start_date, end_date,
-        )
-        return {}
+            return {}
+        except Exception:
+            logger.exception(
+                "Failed to fetch historical data for (%s, %s) %s..%s",
+                lat, lon, start_date, end_date,
+            )
+            return {}
+    return {}
 
 
 async def fetch_historical_parsed(
