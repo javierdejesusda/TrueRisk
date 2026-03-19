@@ -27,9 +27,6 @@
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
