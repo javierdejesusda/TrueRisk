@@ -30,7 +30,7 @@ const BellIcon = (
 
 export function AlertsPanel() {
   const { alerts, isLoading } = useAlerts();
-  const { alerts: aemetAlerts } = useAemetAlerts();
+  const { alerts: aemetAlerts, error: aemetError } = useAemetAlerts();
 
   const totalCount = alerts.length + aemetAlerts.length;
 
@@ -54,7 +54,7 @@ export function AlertsPanel() {
     <PanelShell
       title="Active Alerts"
       icon={BellIcon}
-      position="top-16 right-4"
+      position="top-40 right-4"
       collapsedContent={collapsedContent}
     >
       {isLoading ? (
@@ -107,6 +107,11 @@ export function AlertsPanel() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {aemetError && (
+        <div className="flex items-center gap-2 rounded-lg bg-accent-yellow/10 px-3 py-2 mt-2">
+          <span className="text-[10px] text-accent-yellow">AEMET feed unavailable</span>
         </div>
       )}
     </PanelShell>
