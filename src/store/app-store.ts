@@ -27,6 +27,8 @@ interface AppState {
   togglePanel: (panel: keyof PanelsVisible) => void;
   mapSelectedProvince: string | null;
   setMapSelectedProvince: (code: string | null) => void;
+  sseStatus: 'connecting' | 'connected' | 'disconnected';
+  setSseStatus: (status: 'connecting' | 'connected' | 'disconnected') => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -49,6 +51,8 @@ export const useAppStore = create<AppState>()(
         })),
       mapSelectedProvince: null,
       setMapSelectedProvince: (mapSelectedProvince) => set({ mapSelectedProvince }),
+      sseStatus: 'disconnected' as const,
+      setSseStatus: (sseStatus) => set({ sseStatus }),
     }),
     {
       name: 'truerisk-province',

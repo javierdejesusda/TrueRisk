@@ -15,6 +15,7 @@ export interface MapPopupProps {
   };
   provinceCode?: string;
   riskData?: RiskMapEntry;
+  currentTemperature?: number;
 }
 
 type TabId = 'now' | 'hourly' | 'daily';
@@ -257,13 +258,21 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
   );
 }
 
-export function MapPopup({ provinceName, summary, provinceCode, riskData }: MapPopupProps) {
+const forecastCache = new Map<string, { data: ForecastResponse; fetchedAt: number }>();
+const FORECAST_CACHE_TTL = 300_000;
+
+export function MapPopup({ provinceName, summary, provinceCode, riskData, currentTemperature }: MapPopupProps) {
   const [activeTab, setActiveTab] = useState<TabId>('now');
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastLoading, setForecastLoading] = useState(false);
 
   useEffect(() => {
     if (!provinceCode) return;
+    const cached = forecastCache.get(provinceCode);
+    if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+      setForecast(cached.data);
+      return;
+    }
     setForecastLoading(true);
     fetch(`/api/weather/forecast/${provinceCode}`)
       .then(res => {
@@ -271,7 +280,10 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData }: MapP
         return res.json();
       })
       .then(data => {
-        if (data) setForecast(data);
+        if (data) {
+          setForecast(data);
+          forecastCache.set(provinceCode, { data, fetchedAt: Date.now() });
+        }
       })
       .catch(() => {})
       .finally(() => setForecastLoading(false));
@@ -286,7 +298,14 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData }: MapP
   return (
     <div className="p-3 max-w-[320px]">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="text-sm font-semibold text-text-primary truncate">{provinceName}</h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="text-sm font-semibold text-text-primary truncate">{provinceName}</h3>
+          {currentTemperature != null && (
+            <span className={`text-sm font-bold font-mono shrink-0 ${tempColor(currentTemperature)}`}>
+              {currentTemperature.toFixed(0)}°
+            </span>
+          )}
+        </div>
         {summary.alertCount > 0 && (
           <Badge variant={severityVariant(summary.maxSeverity)} size="sm">
             {summary.alertCount} alert{summary.alertCount !== 1 ? 's' : ''}

@@ -9,6 +9,7 @@ const RECONNECT_DELAY = 5_000;
 
 export function useAlertStream() {
   const setAlerts = useAppStore((s) => s.setAlerts);
+  const setSseStatus = useAppStore((s) => s.setSseStatus);
   const currentAlerts = useAppStore((s) => s.alerts);
   const alertsRef = useRef(currentAlerts);
 
@@ -23,8 +24,11 @@ export function useAlertStream() {
 
     function connect() {
       if (unmounted) return;
+      setSseStatus('connecting');
 
       eventSource = new EventSource('/api/alerts/stream');
+
+      eventSource.onopen = () => { if (!unmounted) setSseStatus('connected'); };
 
       eventSource.onmessage = (event: MessageEvent) => {
         try {
@@ -51,6 +55,7 @@ export function useAlertStream() {
         eventSource?.close();
         eventSource = null;
         if (!unmounted) {
+          setSseStatus('disconnected');
           reconnectTimer = setTimeout(connect, RECONNECT_DELAY);
         }
       };
@@ -63,5 +68,5 @@ export function useAlertStream() {
       eventSource?.close();
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
     };
-  }, [setAlerts]);
+  }, [setAlerts, setSseStatus]);
 }
