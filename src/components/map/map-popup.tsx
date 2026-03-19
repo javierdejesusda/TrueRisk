@@ -21,10 +21,10 @@ export interface MapPopupProps {
 type TabId = 'now' | 'hourly' | 'daily';
 
 const HAZARDS: { key: HazardType; label: string; color: string }[] = [
-  { key: 'flood', label: 'Flood', color: 'bg-blue-500' },
-  { key: 'wildfire', label: 'Wildfire', color: 'bg-orange-500' },
-  { key: 'drought', label: 'Drought', color: 'bg-amber-600' },
-  { key: 'heatwave', label: 'Heatwave', color: 'bg-red-500' },
+  { key: 'flood', label: 'Flood', color: 'bg-accent-blue' },
+  { key: 'wildfire', label: 'Wildfire', color: 'bg-accent-orange' },
+  { key: 'drought', label: 'Drought', color: 'bg-accent-yellow' },
+  { key: 'heatwave', label: 'Heatwave', color: 'bg-accent-red' },
 ];
 
 function severityLabel(severity: number): string {
@@ -44,10 +44,9 @@ function severityVariant(severity: number): 'neutral' | 'success' | 'warning' | 
 }
 
 function riskScoreColor(score: number): string {
-  if (score >= 85) return 'text-[#FF2D55]';
-  if (score >= 70) return 'text-accent-red';
-  if (score >= 50) return 'text-accent-orange';
-  if (score >= 30) return 'text-accent-yellow';
+  if (score >= 85) return 'text-accent-red';
+  if (score >= 70) return 'text-accent-orange';
+  if (score >= 50) return 'text-accent-yellow';
   return 'text-accent-green';
 }
 
@@ -78,7 +77,7 @@ function formatDayName(dateString: string): string {
 function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-6">
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-text-primary" />
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent-green" />
     </div>
   );
 }
@@ -88,17 +87,17 @@ function RiskSection({ riskData, provinceCode }: { riskData: RiskMapEntry; provi
     <div className="mb-3 pb-3 border-b border-white/5">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className={`text-xl font-bold font-mono ${riskScoreColor(riskData.composite_score)}`}>
+          <span className={`text-xl font-bold font-[family-name:var(--font-mono)] ${riskScoreColor(riskData.composite_score)}`}>
             {riskData.composite_score.toFixed(0)}
           </span>
           <div className="flex flex-col">
-            <span className="text-[9px] text-text-secondary uppercase">Risk Score</span>
-            <span className="text-[10px] text-text-secondary capitalize">{riskData.dominant_hazard}</span>
+            <span className="text-[9px] text-text-secondary uppercase font-[family-name:var(--font-sans)]">Risk Score</span>
+            <span className="text-[10px] text-text-secondary capitalize font-[family-name:var(--font-sans)]">{riskData.dominant_hazard}</span>
           </div>
         </div>
         <Link
           href={`/prediction?province=${provinceCode}`}
-          className="text-[10px] text-accent-green hover:underline"
+          className="text-[10px] text-accent-green hover:underline font-[family-name:var(--font-sans)]"
         >
           View Predictions →
         </Link>
@@ -109,11 +108,11 @@ function RiskSection({ riskData, provinceCode }: { riskData: RiskMapEntry; provi
           const score = riskData[`${key}_score` as keyof RiskMapEntry] as number;
           return (
             <div key={key} className="flex items-center gap-1.5">
-              <span className="text-[9px] text-text-secondary w-12">{label}</span>
+              <span className="text-[9px] text-text-secondary w-12 font-[family-name:var(--font-sans)]">{label}</span>
               <div className="flex-1 h-1 bg-bg-secondary rounded-full overflow-hidden">
                 <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, score)}%` }} />
               </div>
-              <span className="text-[9px] text-text-secondary w-5 text-right font-mono">{score.toFixed(0)}</span>
+              <span className="text-[9px] text-text-secondary w-5 text-right font-[family-name:var(--font-mono)]">{score.toFixed(0)}</span>
             </div>
           );
         })}
@@ -131,7 +130,7 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
         <>
           <div className="flex items-start justify-between">
             <div>
-              <span className={`text-3xl font-bold ${tempColor(current.temperature)}`}>
+              <span className={`text-3xl font-bold font-[family-name:var(--font-mono)] ${tempColor(current.temperature)}`}>
                 {current.temperature}°
               </span>
               <p className="text-[10px] text-text-secondary mt-0.5">
@@ -141,21 +140,21 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-secondary">Wind</p>
-              <p className="text-xs text-text-primary font-medium">{current.wind_speed} km/h</p>
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <p className="text-[10px] text-text-secondary font-[family-name:var(--font-sans)]">Wind</p>
+              <p className="text-xs text-text-primary font-medium font-[family-name:var(--font-mono)]">{current.wind_speed} km/h</p>
             </div>
-            <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-secondary">Humidity</p>
-              <p className="text-xs text-text-primary font-medium">{current.humidity}%</p>
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <p className="text-[10px] text-text-secondary font-[family-name:var(--font-sans)]">Humidity</p>
+              <p className="text-xs text-text-primary font-medium font-[family-name:var(--font-mono)]">{current.humidity}%</p>
             </div>
-            <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-secondary">Precipitation</p>
-              <p className="text-xs text-text-primary font-medium">{current.precipitation} mm</p>
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <p className="text-[10px] text-text-secondary font-[family-name:var(--font-sans)]">Precipitation</p>
+              <p className="text-xs text-text-primary font-medium font-[family-name:var(--font-mono)]">{current.precipitation} mm</p>
             </div>
-            <div className="rounded-md bg-bg-card p-1.5">
-              <p className="text-[10px] text-text-secondary">Pressure</p>
-              <p className="text-xs text-text-primary font-medium">{current.pressure ?? '—'} hPa</p>
+            <div className="rounded-xl bg-white/[0.03] p-2">
+              <p className="text-[10px] text-text-secondary font-[family-name:var(--font-sans)]">Pressure</p>
+              <p className="text-xs text-text-primary font-medium font-[family-name:var(--font-mono)]">{current.pressure ?? '—'} hPa</p>
             </div>
           </div>
         </>
@@ -167,30 +166,31 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
         <div className="border-t border-border pt-2">
           <p className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">Active Alerts</p>
           <div className="flex flex-col gap-1">
-            {alerts.map((alert, i) => (
-              <div key={i} className="flex items-start gap-2 rounded-lg bg-bg-card p-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-text-primary truncate">{alert.title}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-text-secondary">{alert.hazardType}</span>
-                    <span className="text-[10px] text-text-secondary">·</span>
-                    <span className="text-[10px] text-text-secondary capitalize">{alert.source}</span>
+            {alerts.map((alert, i) => {
+              const severityColor =
+                alert.severity >= 4 ? '#ef4444' :
+                alert.severity >= 3 ? '#f97316' :
+                alert.severity >= 2 ? '#fbbf24' :
+                '#22F58C';
+              return (
+                <div key={i} className="flex items-start gap-2 rounded-lg bg-white/[0.03] border-l-[3px] p-2" style={{ borderLeftColor: severityColor }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-text-primary truncate">{alert.title}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-text-secondary font-[family-name:var(--font-mono)] uppercase">{alert.hazardType}</span>
+                      <span className="text-[10px] text-text-secondary">·</span>
+                      <span className="text-[10px] text-text-secondary capitalize">{alert.source}</span>
+                    </div>
                   </div>
+                  <span
+                    className="text-[10px] font-medium shrink-0 mt-0.5"
+                    style={{ color: severityColor }}
+                  >
+                    {severityLabel(alert.severity)}
+                  </span>
                 </div>
-                <span
-                  className="text-[10px] font-medium shrink-0 mt-0.5"
-                  style={{
-                    color:
-                      alert.severity >= 4 ? '#ef4444' :
-                      alert.severity >= 3 ? '#f97316' :
-                      alert.severity >= 2 ? '#fbbf24' :
-                      '#34d399',
-                  }}
-                >
-                  {severityLabel(alert.severity)}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -212,10 +212,10 @@ function HourlyTab({ hourly }: { hourly: HourlyForecast[] }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
       {next24.map((h, i) => (
-        <div key={i} className="flex flex-col items-center gap-1 rounded-md bg-bg-card p-1.5 min-w-[60px] shrink-0">
-          <span className="text-[10px] text-text-secondary">{formatHour(h.time)}</span>
-          <span className={`text-sm font-bold ${tempColor(h.temperature)}`}>{h.temperature}°</span>
-          <span className="text-[10px] text-text-secondary">{h.humidity}%</span>
+        <div key={i} className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.03] p-2 min-w-[60px] shrink-0">
+          <span className="text-[10px] text-text-secondary font-[family-name:var(--font-mono)]">{formatHour(h.time)}</span>
+          <span className={`text-sm font-bold font-[family-name:var(--font-mono)] ${tempColor(h.temperature)}`}>{h.temperature}°</span>
+          <span className="text-[10px] text-text-secondary font-[family-name:var(--font-mono)]">{h.humidity}%</span>
           {h.precipitation > 0 && (
             <span className="text-[10px] text-accent-blue">{h.precipitation}mm</span>
           )}
@@ -235,22 +235,22 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
   return (
     <div className="flex flex-col gap-1">
       {days.map((d, i) => (
-        <div key={i} className="flex items-center gap-2 rounded-md bg-bg-card p-2">
-          <span className="text-xs text-text-secondary w-[52px] shrink-0">
+        <div key={i} className="flex items-center gap-2 rounded-lg bg-white/[0.03] p-2 hover:bg-white/[0.05] transition-colors">
+          <span className="text-xs text-text-secondary w-[52px] shrink-0 font-[family-name:var(--font-sans)]">
             {formatDayName(d.date)}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {d.precipitation_sum > 0 && (
-                <span className="text-[10px] text-accent-blue">{d.precipitation_sum}mm</span>
+                <span className="text-[10px] text-accent-blue font-[family-name:var(--font-mono)]">{d.precipitation_sum}mm</span>
               )}
-              <span className="text-[10px] text-text-secondary">{d.wind_speed_max} km/h</span>
+              <span className="text-[10px] text-text-secondary font-[family-name:var(--font-mono)]">{d.wind_speed_max} km/h</span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className={`text-xs font-bold ${tempColor(d.temperature_max)}`}>{d.temperature_max}°</span>
+            <span className={`text-xs font-bold font-[family-name:var(--font-mono)] ${tempColor(d.temperature_max)}`}>{d.temperature_max}°</span>
             <span className="text-[10px] text-text-secondary mx-0.5">/</span>
-            <span className="text-xs text-text-secondary">{d.temperature_min}°</span>
+            <span className="text-xs text-text-secondary font-[family-name:var(--font-mono)]">{d.temperature_min}°</span>
           </div>
         </div>
       ))}
@@ -306,9 +306,9 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
     <div className="p-3 max-w-[320px]">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 min-w-0">
-          <h3 className="text-sm font-semibold text-text-primary truncate">{provinceName}</h3>
+          <h3 className="text-base font-bold font-[family-name:var(--font-display)] text-text-primary truncate">{provinceName}</h3>
           {currentTemperature != null && (
-            <span className={`text-sm font-bold font-mono shrink-0 ${tempColor(currentTemperature)}`}>
+            <span className={`text-2xl font-bold font-[family-name:var(--font-mono)] shrink-0 ${tempColor(currentTemperature)}`}>
               {currentTemperature.toFixed(0)}°
             </span>
           )}
@@ -325,14 +325,14 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
         <RiskSection riskData={riskData} provinceCode={provinceCode} />
       )}
 
-      <div className="flex gap-1 mb-2 rounded-md bg-bg-card/80 p-0.5">
+      <div className="flex gap-0 mb-2 border-b border-white/5 pb-0">
         {tabConfig.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 text-xs py-1 px-2 rounded transition-colors ${
+            className={`font-[family-name:var(--font-sans)] text-[11px] px-3 py-2 transition-colors ${
               activeTab === tab.id
-                ? 'bg-bg-card text-text-primary font-medium'
+                ? 'border-b-2 border-accent-green text-accent-green bg-transparent'
                 : 'text-text-secondary hover:text-text-secondary'
             }`}
           >
