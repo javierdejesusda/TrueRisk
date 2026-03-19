@@ -29,6 +29,8 @@ interface AppState {
   setMapSelectedProvince: (code: string | null) => void;
   sseStatus: 'connecting' | 'connected' | 'disconnected';
   setSseStatus: (status: 'connecting' | 'connected' | 'disconnected') => void;
+  pushEnabled: boolean;
+  setPushEnabled: (v: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -53,6 +55,8 @@ export const useAppStore = create<AppState>()(
       setMapSelectedProvince: (mapSelectedProvince) => set({ mapSelectedProvince }),
       sseStatus: 'disconnected' as const,
       setSseStatus: (sseStatus) => set({ sseStatus }),
+      pushEnabled: false,
+      setPushEnabled: (pushEnabled) => set({ pushEnabled }),
     }),
     {
       name: 'truerisk-province',
@@ -60,6 +64,7 @@ export const useAppStore = create<AppState>()(
         provinceCode: state.provinceCode,
         activeMapLayer: state.activeMapLayer,
         panelsVisible: state.panelsVisible,
+        pushEnabled: state.pushEnabled,
       }),
     }
   )
