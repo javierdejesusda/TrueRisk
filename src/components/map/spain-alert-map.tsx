@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import Map, { Source, Layer, Popup, NavigationControl, Marker } from 'react-map-gl/maplibre';
+import { useState, useEffect, useRef, useMemo, useCallback, forwardRef, useImperativeHandle } from 'react';
+import Map, { Source, Layer, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
 import type { MapAlertData } from '@/hooks/use-map-alerts';
@@ -16,17 +16,22 @@ export interface SpainAlertMapProps {
   isLoading: boolean;
   riskByProvince?: Record<string, RiskMapEntry>;
   allWeather?: Array<{ province_code: string; temperature: number; latitude: number; longitude: number }>;
+  onRefresh?: () => void;
+  lastUpdated?: string | null;
 }
 
-function tempColor(temp: number): string {
-  if (temp >= 35) return '#FF453A';
-  if (temp >= 25) return '#FF9F0A';
-  if (temp >= 10) return '#F5F5F7';
-  return '#0A84FF';
+export interface SpainAlertMapHandle {
+  flyToProvince(code: string, lat: number, lng: number): void;
 }
 
-export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince, allWeather }: SpainAlertMapProps) {
+export const SpainAlertMap = forwardRef<SpainAlertMapHandle, SpainAlertMapProps>(function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince, allWeather, onRefresh, lastUpdated }, ref) {
   const mapRef = useRef<MapRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    flyToProvince(code, lat, lng) {
+      mapRef.current?.flyTo({ center: [lng, lat], zoom: 8, duration: 1200, essential: true });
+    },
+  }), []);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
   const [popupInfo, setPopupInfo] = useState<{
@@ -40,7 +45,57 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
   const [visibleProvinceINEs, setVisibleProvinceINEs] = useState<string[]>([]);
   const [zoomLevel, setZoomLevel] = useState(5.5);
 
+  const [terrainEnabled, setTerrainEnabled] = useState(true);
+
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
+
+  const onMapLoad = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || map.getSource('terrain-dem')) return;
+
+    map.addSource('terrain-dem', {
+      type: 'raster-dem',
+      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 15,
+    });
+
+    map.addLayer({
+      id: 'hillshade',
+      type: 'hillshade',
+      source: 'terrain-dem',
+      paint: {
+        'hillshade-shadow-color': '#000000',
+        'hillshade-highlight-color': '#ffffff',
+        'hillshade-accent-color': '#000000',
+        'hillshade-illumination-anchor': 'viewport',
+        'hillshade-exaggeration': 0.3,
+      },
+    }, 'province-fill');
+
+    map.setTerrain({ source: 'terrain-dem', exaggeration: 1.3 });
+
+    map.setPaintProperty('province-fill', 'fill-color-transition', { duration: 600, delay: 0 });
+    map.setPaintProperty('province-fill', 'fill-opacity-transition', { duration: 200, delay: 0 });
+    map.setPaintProperty('province-outline', 'line-width-transition', { duration: 150, delay: 0 });
+    map.setPaintProperty('province-outline', 'line-color-transition', { duration: 150, delay: 0 });
+  }, []);
+
+  const handleToggleTerrain = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    if (terrainEnabled) {
+      map.setTerrain(null);
+      map.easeTo({ pitch: 0, duration: 800 });
+    } else {
+      if (map.getSource('terrain-dem')) {
+        map.setTerrain({ source: 'terrain-dem', exaggeration: 1.3 });
+      }
+      map.easeTo({ pitch: 45, duration: 800 });
+    }
+    setTerrainEnabled(!terrainEnabled);
+  }, [terrainEnabled]);
 
   // Load GeoJSON once
   useEffect(() => {
@@ -76,9 +131,10 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     return enrichMunicipalityGeoJSON(
       municipalityGeoJSON,
       {},
-      alertData.byProvince
+      alertData.byProvince,
+      riskLookup
     );
-  }, [municipalityGeoJSON, alertData]);
+  }, [municipalityGeoJSON, alertData, riskLookup]);
 
   // Total alert count for controls
   const totalAlerts = useMemo(() => {
@@ -101,17 +157,12 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     []
   );
 
-  // Pulse animation for alerted provinces
-  const pulseRef = useRef<number>(0);
   useEffect(() => {
-    let running = true;
-    let start = performance.now();
-
-    const animate = (time: number) => {
-      if (!running) return;
-      const elapsed = (time - start) % 3000;
+    let animationId: number;
+    const start = performance.now();
+    function animate() {
+      const elapsed = (performance.now() - start) % 3000;
       const opacity = 0.15 + 0.25 * Math.sin((elapsed / 3000) * Math.PI * 2);
-
       try {
         const map = mapRef.current?.getMap();
         if (map?.getLayer('province-alert-pulse')) {
@@ -122,17 +173,11 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
             0,
           ]);
         }
-      } catch {
-        // Layer not ready
-      }
-      pulseRef.current = requestAnimationFrame(animate);
-    };
-
-    pulseRef.current = requestAnimationFrame(animate);
-    return () => {
-      running = false;
-      cancelAnimationFrame(pulseRef.current);
-    };
+      } catch { /* Layer not ready */ }
+      animationId = requestAnimationFrame(animate);
+    }
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
   }, []);
 
   // Hover handling
@@ -167,8 +212,18 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     const zoom = map.getZoom();
     setZoomLevel(zoom);
 
-    if (zoom >= 7) {
-      const features = map.queryRenderedFeatures(undefined, { layers: ['province-fill'] });
+    if (zoom >= 6.5) {
+      // Query only the center region of the viewport to load municipalities
+      // for the province being zoomed into, not all visible provinces
+      const canvas = map.getCanvas();
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const pad = Math.min(canvas.width, canvas.height) * 0.25;
+      const bbox: [maplibregl.PointLike, maplibregl.PointLike] = [
+        [cx - pad, cy - pad],
+        [cx + pad, cy + pad],
+      ];
+      const features = map.queryRenderedFeatures(bbox, { layers: ['province-fill'] });
       const ineSet = new Set<string>();
       for (const f of features) {
         const codProv = f.properties?.cod_prov;
@@ -190,11 +245,27 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     if (e.features && e.features.length > 0) {
       const feature = e.features[0];
       const props = feature.properties;
-      setPopupInfo({
-        longitude: e.lngLat.lng,
-        latitude: e.lngLat.lat,
-        provinceName: props?.provinceName || props?.name || '',
-        provinceCode: props?.provinceCode || '',
+      const isMuni = feature.layer?.id === 'municipality-fill';
+      const code = props?.provinceCode || (isMuni ? props?.cod_prov : props?.cod_prov) || '';
+      const name = props?.provinceName || props?.name || '';
+
+      const currentZoom = mapRef.current?.getZoom() ?? 5.5;
+      const targetZoom = Math.max(currentZoom, 7);
+
+      mapRef.current?.flyTo({
+        center: [e.lngLat.lng, e.lngLat.lat],
+        zoom: targetZoom,
+        duration: 1200,
+        essential: true,
+      });
+
+      mapRef.current?.once('moveend', () => {
+        setPopupInfo({
+          longitude: e.lngLat.lng,
+          latitude: e.lngLat.lat,
+          provinceName: name,
+          provinceCode: code,
+        });
       });
     }
   }, []);
@@ -213,12 +284,11 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     ? [
         'interpolate', ['linear'],
         ['get', 'riskScore'],
-        0,  '#1C1C1E',
-        10, '#1A3A2A',
-        30, '#30D158',
-        50, '#FFD60A',
-        70, '#FF9F0A',
-        85, '#FF453A',
+        0,  '#16A34A',
+        20, '#16A34A',
+        40, '#FFD60A',
+        60, '#FF9F0A',
+        80, '#FF453A',
         100, '#FF2D55',
       ] as unknown as maplibregl.ExpressionSpecification
     : [
@@ -229,7 +299,7 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
         3, '#FF9F0A',
         2, '#FFD60A',
         1, '#64D2FF',
-        '#30D158',
+        '#16A34A',
       ] as unknown as maplibregl.ExpressionSpecification;
 
   // Alert pulse fill color
@@ -244,17 +314,44 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
     'transparent',
   ] as unknown as maplibregl.ExpressionSpecification;
 
-  // Show temperature markers at zoom 5-7
-  const showWeatherMarkers = zoomLevel >= 5 && zoomLevel < 7 && allWeather && allWeather.length > 0;
+  // Weather lookup by province code for popup display
+  const weatherByProvince = useMemo(() => {
+    if (!allWeather) return {};
+    const map: Record<string, { temperature: number }> = {};
+    for (const w of allWeather) {
+      if (w.temperature != null) map[w.province_code] = { temperature: w.temperature };
+    }
+    return map;
+  }, [allWeather]);
+
+  const weatherGeoJSON = useMemo(() => {
+    if (!allWeather?.length) return null;
+    return {
+      type: 'FeatureCollection' as const,
+      features: allWeather.map(w => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [w.longitude, w.latitude] },
+        properties: { temperature: Math.round(w.temperature), province_code: w.province_code },
+      })),
+    };
+  }, [allWeather]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full" role="application" aria-label="Interactive climate risk map of Spain" tabIndex={0}>
       {/* Loading overlay */}
       {geoLoading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-bg-primary/80">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent-green" />
-            <span className="text-sm text-text-muted">Loading map...</span>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-bg-primary/90">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="h-12 w-12 animate-spin rounded-full border-2 border-border border-t-accent-green" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-3 w-3 rounded-full bg-accent-green animate-pulse" />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-text-primary">Loading Map Data</p>
+              <p className="text-xs text-text-muted mt-1">Fetching province boundaries...</p>
+            </div>
           </div>
         </div>
       )}
@@ -271,8 +368,8 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
         maxBounds={[[-20, 27], [6, 44]]}
         interactiveLayerIds={
           enrichedGeoJSON
-            ? zoomLevel >= 7 && enrichedMunicipalityGeoJSON
-              ? ['municipality-fill']
+            ? zoomLevel >= 6.5 && enrichedMunicipalityGeoJSON
+              ? ['province-fill', 'municipality-fill']
               : ['province-fill']
             : []
         }
@@ -280,6 +377,7 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
         onMouseLeave={onMouseLeave}
         onClick={onClick}
         onMoveEnd={onMoveEnd}
+        onLoad={onMapLoad}
         cursor={hoveredFeatureId ? 'pointer' : 'grab'}
       >
         <NavigationControl position="bottom-right" />
@@ -299,8 +397,9 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
                 'fill-color': fillColorExpression,
                 'fill-opacity': [
                   'interpolate', ['linear'], ['zoom'],
-                  6, ['case', ['boolean', ['feature-state', 'hover'], false], 0.8, 0.5],
-                  7, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
+                  5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.7],
+                  6, ['case', ['boolean', ['feature-state', 'hover'], false], 0.8, 0.65],
+                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.35],
                 ],
               }}
             />
@@ -323,9 +422,18 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
               id="province-outline"
               type="line"
               paint={{
-                'line-color': '#38383A',
-                'line-width': 1,
-                'line-opacity': ['interpolate', ['linear'], ['zoom'], 6, 1, 7, 0.3],
+                'line-color': [
+                  'case',
+                  ['boolean', ['feature-state', 'hover'], false],
+                  '#FFFFFF',
+                  'rgba(255, 255, 255, 0.5)',
+                ] as unknown as maplibregl.ExpressionSpecification,
+                'line-width': [
+                  'case',
+                  ['boolean', ['feature-state', 'hover'], false],
+                  3,
+                  1.5,
+                ] as unknown as maplibregl.ExpressionSpecification,
               }}
             />
             <Layer
@@ -348,14 +456,14 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
                 'text-color': '#F5F5F7',
                 'text-halo-color': 'rgba(0, 0, 0, 0.8)',
                 'text-halo-width': 1.5,
-                'text-opacity': ['interpolate', ['linear'], ['zoom'], 6.5, 1, 7.5, 0],
+                'text-opacity': ['interpolate', ['linear'], ['zoom'], 6, 1, 7, 0],
               }}
             />
           </Source>
         )}
 
         {/* Municipality layer – visible when zoomed in */}
-        {enrichedMunicipalityGeoJSON && zoomLevel >= 7 && (
+        {enrichedMunicipalityGeoJSON && zoomLevel >= 6.5 && (
           <Source
             id="municipalities"
             type="geojson"
@@ -366,21 +474,12 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
               id="municipality-fill"
               type="fill"
               paint={{
-                'fill-color': [
-                  'match',
-                  ['get', 'alertSeverity'],
-                  5, '#FF2D55',
-                  4, '#FF453A',
-                  3, '#FF9F0A',
-                  2, '#FFD60A',
-                  1, '#64D2FF',
-                  '#30D158',
-                ] as unknown as maplibregl.ExpressionSpecification,
+                'fill-color': fillColorExpression,
                 'fill-opacity': [
                   'case',
                   ['boolean', ['feature-state', 'hover'], false],
-                  0.8,
-                  0.55,
+                  0.95,
+                  0.85,
                 ],
               }}
             />
@@ -388,8 +487,18 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
               id="municipality-outline"
               type="line"
               paint={{
-                'line-color': '#38383A',
-                'line-width': 0.5,
+                'line-color': [
+                  'case',
+                  ['boolean', ['feature-state', 'hover'], false],
+                  '#FFFFFF',
+                  'rgba(255, 255, 255, 0.5)',
+                ] as unknown as maplibregl.ExpressionSpecification,
+                'line-width': [
+                  'case',
+                  ['boolean', ['feature-state', 'hover'], false],
+                  2.5,
+                  1.5,
+                ] as unknown as maplibregl.ExpressionSpecification,
               }}
             />
             <Layer
@@ -397,7 +506,7 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
               type="symbol"
               layout={{
                 'text-field': ['coalesce', ['get', 'municipalityName'], ['get', 'name']],
-                'text-size': ['interpolate', ['linear'], ['zoom'], 7, 9, 9, 12],
+                'text-size': ['interpolate', ['linear'], ['zoom'], 6.5, 9, 8, 12],
                 'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
                 'text-allow-overlap': false,
                 'text-padding': 3,
@@ -415,22 +524,34 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
           </Source>
         )}
 
-        {/* Temperature markers */}
-        {showWeatherMarkers && allWeather!.map((w) => (
-          <Marker
-            key={w.province_code}
-            longitude={w.longitude}
-            latitude={w.latitude}
-            anchor="center"
-          >
-            <div
-              className="glass-light rounded-full px-1.5 py-0.5 text-[10px] font-mono font-bold leading-none"
-              style={{ color: tempColor(w.temperature ?? 0) }}
-            >
-              {w.temperature != null ? `${w.temperature.toFixed(0)}°` : '—'}
-            </div>
-          </Marker>
-        ))}
+        {weatherGeoJSON && (
+          <Source id="weather-markers" type="geojson" data={weatherGeoJSON}>
+            <Layer
+              id="temp-labels"
+              type="symbol"
+              layout={{
+                'text-field': ['concat', ['to-string', ['get', 'temperature']], '\u00B0'],
+                'text-size': 11,
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                'text-allow-overlap': false,
+                'text-padding': 4,
+              }}
+              paint={{
+                'text-color': [
+                  'interpolate', ['linear'], ['get', 'temperature'],
+                  0, '#64D2FF',
+                  15, '#30D158',
+                  25, '#FFD60A',
+                  35, '#FF9F0A',
+                  40, '#FF453A',
+                ] as unknown as maplibregl.ExpressionSpecification,
+                'text-halo-color': 'rgba(0, 0, 0, 0.85)',
+                'text-halo-width': 1.5,
+                'text-opacity': ['interpolate', ['linear'], ['zoom'], 5, 1, 7, 0] as unknown as maplibregl.ExpressionSpecification,
+              }}
+            />
+          </Source>
+        )}
 
         {/* Popup */}
         {popupInfo && (
@@ -455,6 +576,7 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
                 }
               }
               riskData={riskByProvince?.[popupInfo.provinceCode]}
+              currentTemperature={weatherByProvince[popupInfo.provinceCode]?.temperature}
             />
           </Popup>
         )}
@@ -465,10 +587,12 @@ export function SpainAlertMap({ alertData, isLoading: _isLoading, riskByProvince
       <MapLegend />
       <MapControls
         alertCount={totalAlerts}
-        lastUpdated={new Date().toISOString()}
+        lastUpdated={lastUpdated ?? null}
         onResetView={handleResetView}
-        onRefresh={() => {}}
+        onRefresh={onRefresh ?? (() => {})}
+        terrainEnabled={terrainEnabled}
+        onToggleTerrain={handleToggleTerrain}
       />
     </div>
   );
-}
+});

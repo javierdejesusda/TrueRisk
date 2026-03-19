@@ -31,8 +31,7 @@ export function enrichGeoJSON(
   alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>,
   riskByProvince?: Record<string, { compositeScore: number; severity: string; dominantHazard: string }>
 ): GeoJSON.FeatureCollection {
-  // Deep-clone to avoid mutating the cached GeoJSON.
-  const clone: GeoJSON.FeatureCollection = JSON.parse(JSON.stringify(geojson));
+  const clone: GeoJSON.FeatureCollection = structuredClone(geojson);
 
   for (const feature of clone.features) {
     const props = feature.properties ?? {};
@@ -82,7 +81,7 @@ export function severityToColor(severity: number): string {
   if (severity >= 3) return '#f97316';
   if (severity >= 2) return '#fbbf24';
   if (severity >= 1) return '#64D2FF';
-  return '#30D158';
+  return '#16A34A';
 }
 
 /**
@@ -154,9 +153,10 @@ export async function loadMunicipalitiesForProvinces(
 export function enrichMunicipalityGeoJSON(
   geojson: GeoJSON.FeatureCollection,
   alertsByMunicipality: Record<string, { maxSeverity: number; alertCount: number }>,
-  alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>
+  alertsByProvince: Record<string, { maxSeverity: number; alertCount: number }>,
+  riskByProvince?: Record<string, { compositeScore: number; severity: string; dominantHazard: string }>
 ): GeoJSON.FeatureCollection {
-  const clone: GeoJSON.FeatureCollection = JSON.parse(JSON.stringify(geojson));
+  const clone: GeoJSON.FeatureCollection = structuredClone(geojson);
 
   for (const feature of clone.features) {
     const props = feature.properties ?? {};
@@ -171,6 +171,8 @@ export function enrichMunicipalityGeoJSON(
     const alertSeverity = Math.max(muniAlert?.maxSeverity ?? 0, provAlert?.maxSeverity ?? 0);
     const alertCount = (muniAlert?.alertCount ?? 0) + (provAlert?.alertCount ?? 0);
 
+    const riskData = riskByProvince?.[codProv];
+
     feature.properties = {
       ...props,
       alertSeverity,
@@ -178,6 +180,8 @@ export function enrichMunicipalityGeoJSON(
       municipalityName: props['name'] ?? '',
       municipalityCode: codMuni,
       provinceCode: codProv,
+      riskScore: riskData?.compositeScore ?? 0,
+      provinceName: props['name'] ?? '',
     };
   }
 
