@@ -27,7 +27,8 @@ _HOURLY_PARAMS = (
 
 _DAILY_PARAMS = (
     "temperature_2m_max,temperature_2m_min,precipitation_sum,"
-    "wind_speed_10m_max,uv_index_max,et0_fao_evapotranspiration"
+    "wind_speed_10m_max,uv_index_max,et0_fao_evapotranspiration,"
+    "soil_moisture_0_to_7cm_mean"
 )
 
 
@@ -41,12 +42,17 @@ async def fetch_current(lat: float, lon: float) -> dict[str, Any]:
                     "latitude": lat,
                     "longitude": lon,
                     "current": _CURRENT_PARAMS,
+                    "hourly": "soil_moisture_0_to_7cm",
+                    "forecast_days": 1,
                 },
             )
             resp.raise_for_status()
             data = resp.json()
 
         current = data.get("current", {})
+        hourly = data.get("hourly", {})
+        soil_values = hourly.get("soil_moisture_0_to_7cm", [])
+        soil_moisture = soil_values[0] if soil_values else None
         return {
             "temperature": current.get("temperature_2m"),
             "humidity": current.get("relative_humidity_2m"),
@@ -58,6 +64,7 @@ async def fetch_current(lat: float, lon: float) -> dict[str, Any]:
             "cloud_cover": current.get("cloud_cover"),
             "uv_index": current.get("uv_index"),
             "dew_point": current.get("dew_point_2m"),
+            "soil_moisture": soil_moisture,
             "time": current.get("time"),
         }
     except Exception:
@@ -146,6 +153,8 @@ async def fetch_all_provinces(
                         "latitude": lats,
                         "longitude": lons,
                         "current": _CURRENT_PARAMS,
+                        "hourly": "soil_moisture_0_to_7cm",
+                        "forecast_days": 1,
                     },
                 )
                 resp.raise_for_status()
@@ -155,6 +164,8 @@ async def fetch_all_provinces(
                 items = data if isinstance(data, list) else [data]
                 for province, item in zip(batch, items):
                     current = item.get("current", {})
+                    hourly = item.get("hourly", {})
+                    soil_values = hourly.get("soil_moisture_0_to_7cm", [])
                     result[province["code"]] = {
                         "temperature": current.get("temperature_2m"),
                         "humidity": current.get("relative_humidity_2m"),
@@ -166,6 +177,7 @@ async def fetch_all_provinces(
                         "cloud_cover": current.get("cloud_cover"),
                         "uv_index": current.get("uv_index"),
                         "dew_point": current.get("dew_point_2m"),
+                        "soil_moisture": soil_values[0] if soil_values else None,
                         "time": current.get("time"),
                     }
     except Exception:
@@ -217,3 +229,32 @@ async def fetch_historical(
             lat, lon, start_date, end_date,
         )
         return {}
+
+
+async def fetch_historical_parsed(
+    lat: float, lon: float, start_date: str, end_date: str
+) -> list[dict[str, Any]]:
+    """Fetch and parse historical daily data into a list of day records."""
+    raw = await fetch_historical(lat, lon, start_date, end_date)
+    daily = raw.get("daily", {})
+    dates = daily.get("time", [])
+    if not dates:
+        return []
+
+    def _at(key: str, i: int):
+        vals = daily.get(key, [])
+        return vals[i] if i < len(vals) else None
+
+    records = []
+    for i, d in enumerate(dates):
+        records.append({
+            "date": d,
+            "temperature_max": _at("temperature_2m_max", i),
+            "temperature_min": _at("temperature_2m_min", i),
+            "precipitation_sum": _at("precipitation_sum", i) or 0.0,
+            "wind_speed_max": _at("wind_speed_10m_max", i),
+            "uv_index_max": _at("uv_index_max", i),
+            "et0_evapotranspiration": _at("et0_fao_evapotranspiration", i),
+            "soil_moisture_avg": _at("soil_moisture_0_to_7cm_mean", i),
+        })
+    return records
