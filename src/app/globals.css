@@ -202,3 +202,7 @@ body {
 .maplibregl-ctrl-group button {
   filter: invert(1);
 }
+
+.maplibregl-popup {
+  animation: slide-up 0.2s ease-out;
+}

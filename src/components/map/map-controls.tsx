@@ -8,6 +8,8 @@ export interface MapControlsProps {
   lastUpdated: string | null;
   onResetView: () => void;
   onRefresh: () => void;
+  terrainEnabled?: boolean;
+  onToggleTerrain?: () => void;
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -19,12 +21,13 @@ function formatRelativeTime(dateStr: string): string {
   return `${hours}h ago`;
 }
 
-export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh }: MapControlsProps) {
+export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain }: MapControlsProps) {
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
   const setActiveMapLayer = useAppStore((s) => s.setActiveMapLayer);
+  const sseStatus = useAppStore((s) => s.sseStatus);
 
   return (
-    <div className="absolute top-16 right-4 z-10 flex flex-col gap-2">
+    <div className="absolute top-16 right-2 lg:right-4 z-10 flex flex-col gap-2">
       {/* Layer toggle */}
       <div className="glass-heavy rounded-lg p-1 flex gap-0.5">
         <button
@@ -49,6 +52,20 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh }:
         >
           Alerts
         </button>
+        {onToggleTerrain && (
+          <button
+            onClick={onToggleTerrain}
+            className={[
+              'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+              terrainEnabled
+                ? 'bg-accent-green/20 text-accent-green'
+                : 'text-text-muted hover:text-text-secondary',
+            ].join(' ')}
+            aria-label="Toggle 3D terrain"
+          >
+            3D
+          </button>
+        )}
       </div>
 
       {/* Controls card */}
@@ -97,9 +114,16 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh }:
 
           {/* Last updated */}
           {lastUpdated && (
-            <span className="text-[10px] text-text-muted">
-              Updated {formatRelativeTime(lastUpdated)}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className={`inline-block h-1.5 w-1.5 rounded-full ${
+                sseStatus === 'connected' ? 'bg-accent-green' :
+                sseStatus === 'connecting' ? 'bg-accent-yellow animate-pulse' :
+                'bg-accent-red'
+              }`} />
+              <span className="text-[10px] text-text-muted">
+                Updated {formatRelativeTime(lastUpdated)}
+              </span>
+            </div>
           )}
         </div>
       </Card>
