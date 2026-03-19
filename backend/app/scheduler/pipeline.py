@@ -13,6 +13,7 @@ from app.models.weather_daily_summary import WeatherDailySummary
 from app.data import open_meteo
 from app.services.risk_service import compute_province_risk
 from app.data.aemet_client import fetch_alerts
+from app.services.push_service import notify_province
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -146,6 +147,21 @@ async def _check_and_create_alerts(
             onset=datetime.now(timezone.utc),
         )
         db.add(alert)
+        await db.flush()
+        try:
+            await notify_province(
+                db,
+                province.ine_code,
+                {
+                    "title": f"ALERTA: {label} en {province.name}",
+                    "body": f"Nivel de riesgo {'CRITICO' if severity == 5 else 'ALTO'}. Puntuacion: {score:.0f}/100.",
+                    "tag": f"{hazard}-{province.ine_code}",
+                    "url": f"/map?province={province.ine_code}",
+                    "provinceCode": province.ine_code,
+                },
+            )
+        except Exception as push_err:
+            logger.error(f"  Push notification failed for {province.name}: {push_err}")
         logger.warning(
             f"  ALERT: {hazard} severity={severity} for {province.name} (score={score:.1f})"
         )
