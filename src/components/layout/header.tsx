@@ -52,14 +52,14 @@ export function Header({ hasActiveAlerts = false }: HeaderProps) {
           <select
             value={provinceCode}
             onChange={(e) => setProvinceCode(e.target.value)}
-            className="rounded-md border border-border bg-bg-primary px-2 py-1 text-sm text-text-primary font-[family-name:var(--font-sans)] focus:outline-none focus:ring-1 focus:ring-accent-primary focus:shadow-[0_0_0_3px_rgba(34,245,140,0.1)]"
+            className="rounded-md border border-border bg-bg-primary px-2 py-1 text-sm text-text-primary font-[family-name:var(--font-sans)] focus:outline-none focus:ring-1 focus:ring-accent-primary focus:shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
           >
             {provinces.length > 0 ? (
               provinces.map((p) => (
-                <option key={p.ine_code} value={p.ine_code}>{p.name}</option>
+                <option key={p.ine_code} value={p.ine_code} className="bg-bg-secondary">{p.name}</option>
               ))
             ) : (
-              <option value={provinceCode}>{selectedName}</option>
+              <option value={provinceCode} className="bg-bg-secondary">{selectedName}</option>
             )}
           </select>
         </div>

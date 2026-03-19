@@ -87,7 +87,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
             className="w-full font-[family-name:var(--font-sans)] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-text-primary"
           >
             {HAZARD_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value} className="bg-bg-secondary">{opt.label}</option>
             ))}
           </select>
         </div>
@@ -130,7 +130,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         <button
           type="submit"
           disabled={submitting || !coords}
-          className="w-full text-xs bg-accent-green text-[#050508] font-semibold hover:shadow-[0_0_20px_rgba(34,245,140,0.3)] rounded-lg px-3 py-2.5 transition-colors disabled:opacity-50"
+          className="w-full text-xs bg-accent-green text-[#050508] font-semibold hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] rounded-lg px-3 py-2.5 transition-colors disabled:opacity-50"
         >
           {submitting ? 'Enviando...' : 'Enviar reporte'}
         </button>

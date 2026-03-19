@@ -75,7 +75,7 @@ export default function EmergencyPage() {
             className="w-full glass-heavy rounded-xl font-[family-name:var(--font-sans)] px-4 py-3 text-sm text-text-primary appearance-none cursor-pointer hover:bg-white/10 transition-colors"
           >
             {sortedProvinces.map(([code, name]) => (
-              <option key={code} value={code}>{name}</option>
+              <option key={code} value={code} className="bg-bg-secondary">{name}</option>
             ))}
           </select>
         </section>
