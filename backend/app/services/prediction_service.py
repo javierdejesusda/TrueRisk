@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.province import Province
 from app.models.weather_record import WeatherRecord
+from app.models.weather_daily_summary import WeatherDailySummary
 
 
 async def _get_province(db: AsyncSession, province_code: str) -> Province:
@@ -36,6 +37,21 @@ async def _get_history(
             WeatherRecord.recorded_at >= cutoff,
         )
         .order_by(WeatherRecord.recorded_at.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def _get_daily_history(
+    db: AsyncSession, province_code: str, years: int = 5
+) -> list[WeatherDailySummary]:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=years * 365)
+    result = await db.execute(
+        select(WeatherDailySummary)
+        .where(
+            WeatherDailySummary.province_code == province_code,
+            WeatherDailySummary.date >= cutoff.date(),
+        )
+        .order_by(WeatherDailySummary.date.asc())
     )
     return list(result.scalars().all())
 
@@ -168,13 +184,16 @@ _EVENT_THRESHOLDS: dict[str, dict[str, Any]] = {
 }
 
 
-def _bayesian_analysis(records: list[dict]) -> list[dict]:
+def _bayesian_analysis(records: list[dict], baseline: list[dict] | None = None) -> list[dict]:
     n = len(records)
     if n == 0:
         return [
             {"type": k, "probability": 0, "prior": 0, "likelihood": 0}
             for k in _EVENT_THRESHOLDS
         ]
+
+    # Use longer baseline for priors if available
+    prior_source = baseline if baseline else records
 
     results = []
     for event, cfg in _EVENT_THRESHOLDS.items():
@@ -183,7 +202,7 @@ def _bayesian_analysis(records: list[dict]) -> list[dict]:
         below = bool(cfg.get("below", False))
 
         count = 0
-        for r in records:
+        for r in prior_source:
             v = float(r.get(field, 0) or 0)
             if below:
                 if v < threshold:
@@ -192,7 +211,7 @@ def _bayesian_analysis(records: list[dict]) -> list[dict]:
                 if v > threshold:
                     count += 1
 
-        prior = count / n
+        prior = count / len(prior_source)
         # Likelihood: how extreme is the latest reading relative to threshold
         latest = float(records[-1].get(field, 0) or 0)
         if below:
@@ -363,14 +382,53 @@ _HISTORICAL_EVENTS: list[dict[str, Any]] = [
 ]
 
 
-def _knn_matches(latest: dict, k: int = 5) -> list[dict]:
+def _build_knn_events_from_summaries(daily_summaries: list[WeatherDailySummary]) -> list[dict[str, Any]]:
+    """Extract extreme weather days from daily summaries for KNN matching."""
+    events: list[dict[str, Any]] = []
+    for s in daily_summaries:
+        is_extreme = (
+            s.precipitation_sum > 30
+            or s.temperature_max > 38
+            or s.wind_speed_max > 60
+            or (s.temperature_max > 30 and s.precipitation_sum < 0.1)
+        )
+        if not is_extreme:
+            continue
+
+        if s.precipitation_sum > 30:
+            outcome = f"heavy rain ({s.precipitation_sum:.0f}mm)"
+            event = "Heavy precipitation"
+        elif s.temperature_max > 38:
+            outcome = f"extreme heat ({s.temperature_max:.1f}C)"
+            event = "Heat extreme"
+        elif s.wind_speed_max > 60:
+            outcome = f"strong winds ({s.wind_speed_max:.0f}km/h)"
+            event = "Wind event"
+        else:
+            outcome = f"hot dry spell ({s.temperature_max:.1f}C, {s.precipitation_sum:.1f}mm)"
+            event = "Dry heat"
+
+        events.append({
+            "year": s.date.year,
+            "event": f"{event} ({s.date.isoformat()})",
+            "outcome": outcome,
+            "temp": s.temperature_max,
+            "precip": s.precipitation_sum,
+            "wind": s.wind_speed_max,
+            "humidity": s.humidity_avg or 50,
+        })
+    return events
+
+
+def _knn_matches(latest: dict, k: int = 5, events: list[dict] | None = None) -> list[dict]:
     t = _safe(latest.get("temperature"), 20)
     p = _safe(latest.get("precipitation"))
     w = _safe(latest.get("wind_speed"))
     h = _safe(latest.get("humidity"), 50)
 
+    source_events = events if events else _HISTORICAL_EVENTS
     scored: list[dict[str, Any]] = []
-    for evt in _HISTORICAL_EVENTS:
+    for evt in source_events:
         et, ep, ew, eh = float(evt["temp"]), float(evt["precip"]), float(evt["wind"]), float(evt["humidity"])
         dist = math.sqrt(
             ((t - et) / 10) ** 2
@@ -401,6 +459,9 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     if not records:
         raise ValueError("No weather history available for predictions")
 
+    # Fetch multi-year daily summaries for statistically meaningful analysis
+    daily_summaries = await _get_daily_history(db, province_code, years=5)
+
     record_dicts = [
         {
             "temperature": r.temperature,
@@ -427,23 +488,70 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     # Use last 48 hourly values for regression/EMA charts
     recent_temps = temps[-48:] if len(temps) > 48 else temps
 
+    # Use daily data for Gumbel (statistically meaningful with years of data)
+    if daily_summaries:
+        daily_precips = [s.precipitation_sum for s in daily_summaries]
+        daily_temp_maxes = [s.temperature_max for s in daily_summaries]
+        daily_wind_maxes = [s.wind_speed_max for s in daily_summaries]
+    else:
+        daily_precips = precips
+        daily_temp_maxes = temps
+        daily_wind_maxes = winds
+
+    # Build 365-day baseline from daily summaries for z-score
+    if daily_summaries:
+        baseline_records = [
+            {
+                "temperature": s.temperature_avg,
+                "humidity": s.humidity_avg,
+                "precipitation": s.precipitation_sum,
+                "wind_speed": s.wind_speed_avg,
+                "pressure": s.pressure_avg,
+            }
+            for s in daily_summaries[-365:]
+        ]
+    else:
+        baseline_records = record_dicts
+
+    # Build multi-year Bayesian baseline
+    daily_baseline = [
+        {
+            "temperature": s.temperature_max,
+            "humidity": s.humidity_avg,
+            "precipitation": s.precipitation_sum,
+            "wind_speed": s.wind_speed_max,
+        }
+        for s in daily_summaries
+    ] if daily_summaries else None
+
+    # Build KNN events from real historical extremes
+    knn_events = _build_knn_events_from_summaries(daily_summaries) if daily_summaries else []
+    if len(knn_events) < 5:
+        knn_events = _HISTORICAL_EVENTS  # fallback to hardcoded
+
     return {
         "gumbel": {
-            "precipitation": _gumbel_analysis(precips, _safe(latest["precipitation"])),
-            "temperature": _gumbel_analysis(temps, _safe(latest["temperature"])),
-            "windSpeed": _gumbel_analysis(winds, _safe(latest["wind_speed"])),
+            "precipitation": _gumbel_analysis(daily_precips, _safe(latest["precipitation"])),
+            "temperature": _gumbel_analysis(daily_temp_maxes, _safe(latest["temperature"])),
+            "windSpeed": _gumbel_analysis(daily_wind_maxes, _safe(latest["wind_speed"])),
         },
         "regression": _linear_regression(recent_temps),
-        "bayesian": _bayesian_analysis(record_dicts),
+        "bayesian": _bayesian_analysis(record_dicts, baseline=daily_baseline),
         "ema": _ema_analysis(recent_temps),
-        "zScore": _zscore_analysis(record_dicts, latest),
+        "zScore": _zscore_analysis(baseline_records, latest),
         "decisionTree": _decision_tree(latest),
-        "knn": _knn_matches(latest),
+        "knn": _knn_matches(latest, events=knn_events),
         "current": {
             "temperature": round(_safe(latest["temperature"]), 1),
             "humidity": round(_safe(latest["humidity"]), 1),
             "precipitation": round(_safe(latest["precipitation"]), 2),
             "windSpeed": round(_safe(latest["wind_speed"]), 1),
             "pressure": round(_safe(latest["pressure"], 1013), 1),
+        },
+        "dataQuality": {
+            "hourlyRecords": len(records),
+            "dailySummaries": len(daily_summaries),
+            "oldestDailyDate": daily_summaries[0].date.isoformat() if daily_summaries else None,
+            "newestDailyDate": daily_summaries[-1].date.isoformat() if daily_summaries else None,
         },
     }
