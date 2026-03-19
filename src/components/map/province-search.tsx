@@ -25,11 +25,6 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
     [query],
   );
 
-  const prevQueryRef = useRef(query);
-  if (prevQueryRef.current !== query) {
-    prevQueryRef.current = query;
-    if (activeIndex !== 0) setActiveIndex(0);
-  }
 
   const handleSelect = useCallback((province: ProvinceInfo) => {
     onSelect(province);
@@ -71,7 +66,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
             type="text"
             placeholder="Search province..."
             value={query}
-            onChange={e => { setQuery(e.target.value); setOpen(true); }}
+            onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIndex(0); }}
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={onKeyDown}
@@ -79,7 +74,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
           />
           {query && (
             <button
-              onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+              onClick={() => { setQuery(''); setActiveIndex(0); inputRef.current?.focus(); }}
               className="absolute right-2.5 text-text-muted hover:text-text-secondary cursor-pointer"
               aria-label="Clear search"
             >

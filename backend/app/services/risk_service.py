@@ -127,7 +127,7 @@ def compute_temporal_features(history: list[dict[str, Any]]) -> dict[str, Any]:
     soil_moisture_change_24h = soil_now - soil_24h_ago
 
     # Dew-point depression (requires current temp and dew point)
-    dew_point = _safe(history[0].get("dew_point"), None) if history else None
+    dew_point = _safe(history[0].get("dew_point")) if history else None
     dew_point_depression = (
         (temps[0] - dew_point) if (temps and dew_point is not None) else 5.0
     )

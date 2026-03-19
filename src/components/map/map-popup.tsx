@@ -268,25 +268,32 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
 
   useEffect(() => {
     if (!provinceCode) return;
-    const cached = forecastCache.get(provinceCode);
-    if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
-      setForecast(cached.data);
-      return;
-    }
-    setForecastLoading(true);
-    fetch(`/api/weather/forecast/${provinceCode}`)
-      .then(res => {
+    let cancelled = false;
+
+    async function load() {
+      const cached = forecastCache.get(provinceCode!);
+      if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+        if (!cancelled) setForecast(cached.data);
+        return;
+      }
+      if (!cancelled) setForecastLoading(true);
+      try {
+        const res = await fetch(`/api/weather/forecast/${provinceCode}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        if (data) {
+        const data = await res.json();
+        if (!cancelled && data) {
           setForecast(data);
-          forecastCache.set(provinceCode, { data, fetchedAt: Date.now() });
+          forecastCache.set(provinceCode!, { data, fetchedAt: Date.now() });
         }
-      })
-      .catch(() => {})
-      .finally(() => setForecastLoading(false));
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setForecastLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [provinceCode]);
 
   const tabConfig: { id: TabId; label: string }[] = [

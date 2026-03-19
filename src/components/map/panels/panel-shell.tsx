@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PanelShellProps {
@@ -21,15 +21,20 @@ export function PanelShell({
   updatedAt,
 }: PanelShellProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [relativeTime, setRelativeTime] = useState<string | null>(null);
 
-  const relativeTime = updatedAt
-    ? (() => {
-        const mins = Math.floor((Date.now() - updatedAt.getTime()) / 60000);
-        if (mins < 1) return 'Just now';
-        if (mins < 60) return `${mins}m ago`;
-        return `${Math.floor(mins / 60)}h ago`;
-      })()
-    : null;
+  useEffect(() => {
+    if (!updatedAt) return;
+    const compute = () => {
+      const mins = Math.floor((Date.now() - updatedAt.getTime()) / 60000);
+      if (mins < 1) setRelativeTime('Just now');
+      else if (mins < 60) setRelativeTime(`${mins}m ago`);
+      else setRelativeTime(`${Math.floor(mins / 60)}h ago`);
+    };
+    const id = requestAnimationFrame(compute);
+    const interval = setInterval(compute, 60000);
+    return () => { cancelAnimationFrame(id); clearInterval(interval); };
+  }, [updatedAt]);
 
   return (
     <div className={position ? `absolute z-40 ${position}` : ''}>

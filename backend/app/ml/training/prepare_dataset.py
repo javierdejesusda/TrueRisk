@@ -162,7 +162,7 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
 
     # -- FWI system (day by day) --
     ffmc_prev, dmc_prev, dc_prev = 85.0, 6.0, 15.0
-    fwi_cols = {"ffmc": [], "dmc": [], "dc": [], "isi": [], "bui": [], "fwi": []}
+    fwi_cols: dict[str, list[float]] = {"ffmc": [], "dmc": [], "dc": [], "isi": [], "bui": [], "fwi": []}
     for _, row in df.iterrows():
         fwi_out = compute_fwi_system(
             temp=_safe(row["temp_mean"], 20.0),
