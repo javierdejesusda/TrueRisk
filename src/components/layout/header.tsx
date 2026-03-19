@@ -29,11 +29,14 @@ export function Header({ hasActiveAlerts = false }: HeaderProps) {
   const selectedName = provinces.find((p) => p.ine_code === provinceCode)?.name ?? 'Loading...';
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-bg-secondary px-4 lg:px-6">
-      <div className="w-10 lg:w-0" />
+    <header className="flex h-14 items-center justify-between border-b border-border glass-heavy px-4 lg:px-6">
+      <div className="flex items-center gap-2">
+        <div className="w-10 lg:w-0" />
+        <span className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary hidden lg:inline">Admin Panel</span>
+      </div>
       <div className="ml-auto flex items-center gap-3">
         {hasActiveAlerts && (
-          <div className="flex items-center gap-2 text-sm text-accent-red">
+          <div className="flex items-center gap-2 text-sm text-accent-red font-[family-name:var(--font-sans)]">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-red opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-red" />
@@ -49,7 +52,7 @@ export function Header({ hasActiveAlerts = false }: HeaderProps) {
           <select
             value={provinceCode}
             onChange={(e) => setProvinceCode(e.target.value)}
-            className="rounded-md border border-border bg-bg-primary px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+            className="rounded-md border border-border bg-bg-primary px-2 py-1 text-sm text-text-primary font-[family-name:var(--font-sans)] focus:outline-none focus:ring-1 focus:ring-accent-primary focus:shadow-[0_0_0_3px_rgba(34,245,140,0.1)]"
           >
             {provinces.length > 0 ? (
               provinces.map((p) => (

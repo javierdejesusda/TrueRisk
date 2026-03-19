@@ -15,7 +15,7 @@ export default function BackofficeLayout({
   const { hasActiveAlerts } = useAlerts();
 
   return (
-    <div className="flex min-h-screen bg-bg-primary">
+    <div className="relative grain flex min-h-screen bg-bg-primary">
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Header hasActiveAlerts={hasActiveAlerts} />

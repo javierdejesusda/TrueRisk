@@ -153,10 +153,10 @@ export default function BackofficeAlertsPage() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">
+          <h1 className="text-2xl font-bold text-text-primary font-[family-name:var(--font-display)]">
             Alert Management
           </h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="mt-1 text-sm text-text-secondary font-[family-name:var(--font-sans)]">
             Create, monitor, and manage emergency alerts
           </p>
         </div>
@@ -193,25 +193,25 @@ export default function BackofficeAlertsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Severity
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Province
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Title
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -263,10 +263,10 @@ export default function BackofficeAlertsPage() {
                         {alert.severity}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-text-primary font-[family-name:var(--font-mono)] text-[11px] uppercase">
                       {typeLabels[alert.hazard_type] ?? alert.hazard_type}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">
+                    <td className="px-4 py-3 text-text-secondary font-[family-name:var(--font-mono)]">
                       {alert.province_code ?? 'All'}
                     </td>
                     <td className="px-4 py-3 text-text-primary">
@@ -280,7 +280,7 @@ export default function BackofficeAlertsPage() {
                         {alert.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
+                    <td className="px-4 py-3 text-text-secondary whitespace-nowrap font-[family-name:var(--font-mono)] text-[11px]">
                       {formatDate(alert.created_at)}
                     </td>
                     <td className="px-4 py-3">
