@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/app-store';
 import { useRiskScore } from '@/hooks/use-risk-score';
+import { usePredictions } from '@/hooks/use-predictions';
 import { PredictionHeader } from '@/components/predictions/prediction-header';
 import { PredictionsExplainer } from '@/components/predictions/predictions-explainer';
 import { GumbelChart } from '@/components/predictions/gumbel-chart';
@@ -15,37 +15,14 @@ import { ZScoreChart } from '@/components/predictions/zscore-chart';
 import { DecisionTreeCard } from '@/components/predictions/decision-tree-card';
 import { KnnMatches } from '@/components/predictions/knn-matches';
 import { FloodModelCard, WildfireModelCard, DroughtModelCard, HeatwaveModelCard, HazardOverviewChart } from '@/components/predictions/hazard-model-cards';
-import { LoadingSkeleton, type PredictionResponse } from '@/components/predictions/shared';
+import { LoadingSkeleton } from '@/components/predictions/shared';
 import { PROVINCES } from '@/lib/provinces';
 
 export default function PredictionPage() {
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const { risk } = useRiskScore();
-  const [data, setData] = useState<PredictionResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchPredictions = () => {
-      setIsLoading(true);
-      fetch(`/api/analysis/predictions?province=${provinceCode}`)
-        .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
-        .then(({ ok, json }) => {
-          if (ok) {
-            setData(json);
-            setError(null);
-          } else {
-            setError(json.detail ?? 'Failed to load predictions');
-          }
-        })
-        .catch(() => setError('Failed to load predictions'))
-        .finally(() => setIsLoading(false));
-    };
-    fetchPredictions();
-    const interval = setInterval(fetchPredictions, 300_000);
-    return () => clearInterval(interval);
-  }, [provinceCode]);
+  const { data, isLoading, error, refresh } = usePredictions();
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -63,7 +40,7 @@ export default function PredictionPage() {
           {error ?? `No prediction data available for ${provinceName}`}
         </p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={() => refresh()}>Retry</Button>
           <Button variant="outline" size="sm" onClick={() => setProvinceCode('28')}>Try Madrid</Button>
         </div>
       </div>

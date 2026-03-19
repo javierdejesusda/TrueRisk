@@ -56,6 +56,12 @@ export interface PredictionResponse {
     windSpeed: number;
     pressure: number;
   };
+  dataQuality?: {
+    hourlyRecords: number;
+    dailySummaries: number;
+    oldestDailyDate: string | null;
+    newestDailyDate: string | null;
+  };
 }
 
 export type GumbelTab = 'precipitation' | 'temperature' | 'windSpeed';
