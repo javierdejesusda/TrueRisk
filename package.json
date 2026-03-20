@@ -2,6 +2,14 @@
   "name": "truerisk",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "author": "Javier de Jesus <javierdejesusds@gmail.com>",
+  "homepage": "https://truerisk.cloud",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/javierdejesusda/TrueRisk"
+  },
+  "description": "Multi-hazard risk intelligence platform for Spain with ML-powered risk scoring across 7 natural hazards",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
