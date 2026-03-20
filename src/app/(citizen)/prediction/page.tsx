@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/app-store';
 import { useRiskScore } from '@/hooks/use-risk-score';
+import { useRiskExplain } from '@/hooks/use-risk-explain';
 import { usePredictions } from '@/hooks/use-predictions';
 import { PredictionHeader } from '@/components/predictions/prediction-header';
 import { PredictionsExplainer } from '@/components/predictions/predictions-explainer';
@@ -15,6 +16,8 @@ import { ZScoreChart } from '@/components/predictions/zscore-chart';
 import { DecisionTreeCard } from '@/components/predictions/decision-tree-card';
 import { KnnMatches } from '@/components/predictions/knn-matches';
 import { FloodModelCard, WildfireModelCard, DroughtModelCard, HeatwaveModelCard, SeismicModelCard, ColdwaveModelCard, WindstormModelCard, HazardOverviewChart } from '@/components/predictions/hazard-model-cards';
+import { ModelInfoPanel } from '@/components/predictions/model-info-panel';
+import { PipelineDiagram } from '@/components/predictions/pipeline-diagram';
 import { LoadingSkeleton } from '@/components/predictions/shared';
 import { PROVINCES } from '@/lib/provinces';
 import { useTranslations } from 'next-intl';
@@ -25,6 +28,7 @@ export default function PredictionPage() {
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const { risk } = useRiskScore();
+  const { data: explainData } = useRiskExplain();
   const { data, isLoading, error, refresh } = usePredictions();
 
   if (isLoading) return <LoadingSkeleton />;
@@ -63,6 +67,8 @@ export default function PredictionPage() {
     severity: risk.severity,
   } : null;
 
+  const explanations = explainData?.hazards;
+
   return (
     <motion.div
       className="h-screen pt-20 px-6 lg:px-12 pb-12 max-w-7xl mx-auto overflow-y-auto"
@@ -85,18 +91,24 @@ export default function PredictionPage() {
       <PredictionHeader current={data.current} />
       <PredictionsExplainer />
 
+      {/* ML Pipeline Visualization */}
+      <PipelineDiagram />
+
       {/* Hazard ML Models */}
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('modelInventory')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <FloodModelCard riskData={riskData} />
-        <WildfireModelCard riskData={riskData} />
-        <DroughtModelCard riskData={riskData} />
-        <HeatwaveModelCard riskData={riskData} />
-        <SeismicModelCard riskData={riskData} />
-        <ColdwaveModelCard riskData={riskData} />
-        <WindstormModelCard riskData={riskData} />
+        <FloodModelCard riskData={riskData} explanations={explanations} />
+        <WildfireModelCard riskData={riskData} explanations={explanations} />
+        <DroughtModelCard riskData={riskData} explanations={explanations} />
+        <HeatwaveModelCard riskData={riskData} explanations={explanations} />
+        <SeismicModelCard riskData={riskData} explanations={explanations} />
+        <ColdwaveModelCard riskData={riskData} explanations={explanations} />
+        <WindstormModelCard riskData={riskData} explanations={explanations} />
         <HazardOverviewChart riskData={riskData} />
       </div>
+
+      {/* Model Registry */}
+      <ModelInfoPanel />
 
       {/* Statistical Models */}
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('statisticalMethods')}</h2>

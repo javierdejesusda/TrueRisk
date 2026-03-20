@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -59,3 +60,44 @@ class UserRiskResponse(BaseModel):
     computed_at: datetime
     province_name: str
     user_vulnerability_score: float
+
+
+class FeatureContribution(BaseModel):
+    feature: str
+    value: float
+    contribution: float
+    description: str
+
+
+class HazardExplanation(BaseModel):
+    hazard: str
+    score: float
+    contributions: list[FeatureContribution]
+
+
+class RiskExplainResponse(BaseModel):
+    province_code: str
+    computed_at: datetime
+    hazards: list[HazardExplanation]
+
+
+class ModelMetrics(BaseModel):
+    accuracy: float
+    f1_score: float
+    auc_roc: Optional[float] = None
+
+
+class ModelInfo(BaseModel):
+    id: str
+    name: str
+    method: str
+    description: str
+    feature_count: int
+    features: list[str]
+    architecture: str
+    metrics: ModelMetrics
+
+
+class ModelRegistryResponse(BaseModel):
+    models: list[ModelInfo]
+    total: int

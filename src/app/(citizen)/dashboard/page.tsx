@@ -9,6 +9,7 @@ import { RiskOverview } from '@/components/dashboard/risk-overview';
 import { WeatherCard } from '@/components/dashboard/weather-card';
 import { AlertFeed } from '@/components/dashboard/alert-feed';
 import { QuickActions } from '@/components/dashboard/quick-actions';
+import { Walkthrough } from '@/components/ui/walkthrough';
 
 const provinceOptions = Object.entries(PROVINCES)
   .map(([code, info]) => ({ value: code, label: info.name }))
@@ -36,7 +37,7 @@ export default function DashboardPage() {
             {t('subtitle')}
           </p>
         </div>
-        <div className="w-full sm:w-56">
+        <div className="w-full sm:w-56" data-tour="province-select">
           <Select
             label={t('province')}
             options={provinceOptions}
@@ -49,17 +50,17 @@ export default function DashboardPage() {
       {/* Bento grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pb-8">
         {/* Left column: Risk overview (spans 2 rows on desktop) */}
-        <div className="lg:row-span-2">
+        <div className="lg:row-span-2" data-tour="risk-overview">
           <RiskOverview />
         </div>
 
         {/* Top right: Weather */}
-        <div>
+        <div data-tour="weather-card">
           <WeatherCard />
         </div>
 
         {/* Top far right: Alerts */}
-        <div>
+        <div data-tour="alert-feed">
           <AlertFeed />
         </div>
 
@@ -68,6 +69,7 @@ export default function DashboardPage() {
           <QuickActions />
         </div>
       </div>
+      <Walkthrough />
     </motion.div>
   );
 }

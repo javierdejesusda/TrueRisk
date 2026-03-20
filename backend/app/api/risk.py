@@ -1,21 +1,25 @@
-"""Risk API router -- placeholder endpoints until ML models are integrated."""
+"""Risk API router -- risk scores, explainability, and model registry."""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.ml.model_registry import get_model_registry
 from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.schemas.risk import (
+    ModelRegistryResponse,
+    RiskExplainResponse,
     RiskMapEntry,
     RiskMapResponse,
     RiskScoreResponse,
 )
+from app.services.explainability_service import explain_risk
 
 router = APIRouter()
 
@@ -60,6 +64,18 @@ async def get_all_risks(db: AsyncSession = Depends(get_db)):
     )
     scores = result.scalars().all()
     return list(scores) if scores else []
+
+
+@router.get(
+    "/models",
+    response_model=ModelRegistryResponse,
+    summary="Model registry",
+    description="Return metadata for all 7 ML models in the risk pipeline.",
+)
+async def get_models():
+    """Return the ML model inventory with metadata and accuracy metrics."""
+    registry = get_model_registry()
+    return ModelRegistryResponse(models=registry, total=len(registry))
 
 
 @router.get("/map", response_model=RiskMapResponse)
@@ -112,6 +128,56 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
     return RiskMapResponse(
         provinces=entries,
         computed_at=datetime.now(timezone.utc),
+    )
+
+
+@router.get(
+    "/{province_code}/explain",
+    response_model=RiskExplainResponse,
+    summary="Explain risk score",
+    description="Return per-feature importance for each hazard model, derived from the stored features snapshot.",
+)
+async def explain_province_risk(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Compute feature importance for the latest risk score of a province."""
+    result = await db.execute(
+        select(RiskScore)
+        .where(RiskScore.province_code == province_code)
+        .order_by(RiskScore.computed_at.desc())
+        .limit(1)
+    )
+    score = result.scalar_one_or_none()
+    if score is None:
+        raise HTTPException(status_code=404, detail=f"No risk score found for province {province_code}")
+
+    snapshot = score.features_snapshot or {}
+    explanations = explain_risk(snapshot)
+
+    hazard_scores = {
+        "flood": score.flood_score,
+        "wildfire": score.wildfire_score,
+        "drought": score.drought_score,
+        "heatwave": score.heatwave_score,
+        "seismic": score.seismic_score,
+        "coldwave": score.coldwave_score,
+        "windstorm": score.windstorm_score,
+    }
+
+    hazards = [
+        {
+            "hazard": hazard,
+            "score": hazard_scores.get(hazard, 0.0),
+            "contributions": contributions,
+        }
+        for hazard, contributions in explanations.items()
+    ]
+
+    return RiskExplainResponse(
+        province_code=province_code,
+        computed_at=score.computed_at,
+        hazards=hazards,
     )
 
 

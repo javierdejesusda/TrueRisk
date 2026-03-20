@@ -1,6 +1,12 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+HAZARD_TYPES = Literal[
+    "flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"
+]
 
 
 class AlertResponse(BaseModel):
@@ -22,19 +28,19 @@ class AlertResponse(BaseModel):
 
 class AlertCreate(BaseModel):
     severity: int = Field(ge=1, le=5)
-    hazard_type: str
-    province_code: str | None = None
-    title: str
-    description: str
+    hazard_type: HAZARD_TYPES
+    province_code: str | None = Field(default=None, max_length=2)
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=2000)
     onset: datetime | None = None
     expires: datetime | None = None
 
 
 class AlertUpdate(BaseModel):
-    severity: int | None = None
-    hazard_type: str | None = None
-    title: str | None = None
-    description: str | None = None
+    severity: int | None = Field(default=None, ge=1, le=5)
+    hazard_type: HAZARD_TYPES | None = None
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=2000)
     is_active: bool | None = None
 
 

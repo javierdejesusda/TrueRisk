@@ -37,6 +37,8 @@ interface AppState {
   setResidenceType: (v: string) => void;
   specialNeeds: string[];
   setSpecialNeeds: (v: string[]) => void;
+  hasSeenOnboarding: boolean;
+  dismissOnboarding: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -73,6 +75,8 @@ export const useAppStore = create<AppState>()(
       setResidenceType: (residenceType) => set({ residenceType }),
       specialNeeds: [],
       setSpecialNeeds: (specialNeeds) => set({ specialNeeds }),
+      hasSeenOnboarding: false,
+      dismissOnboarding: () => set({ hasSeenOnboarding: true }),
     }),
     {
       name: 'truerisk-province',
@@ -84,6 +88,7 @@ export const useAppStore = create<AppState>()(
         pushEnabled: state.pushEnabled,
         residenceType: state.residenceType,
         specialNeeds: state.specialNeeds,
+        hasSeenOnboarding: state.hasSeenOnboarding,
       }),
     }
   )

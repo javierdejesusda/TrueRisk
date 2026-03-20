@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -12,8 +12,15 @@ from app.services import community_service
 router = APIRouter()
 
 
-@router.post("/reports", response_model=CommunityReportResponse, status_code=201)
+@router.post(
+    "/reports",
+    response_model=CommunityReportResponse,
+    status_code=201,
+    summary="Submit hazard report",
+    description="Submit a new community-sourced hazard observation report.",
+)
 async def create_report(
+    request: Request,
     body: CommunityReportCreate,
     db: AsyncSession = Depends(get_db),
 ):
@@ -22,7 +29,12 @@ async def create_report(
     return report
 
 
-@router.get("/reports", response_model=list[CommunityReportResponse])
+@router.get(
+    "/reports",
+    response_model=list[CommunityReportResponse],
+    summary="List community reports",
+    description="List active community reports with optional province or bounding box filter.",
+)
 async def list_reports(
     province: str | None = Query(default=None),
     min_lat: float | None = Query(default=None),

@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRiskScore } from '@/hooks/use-risk-score';
+import { Tooltip } from '@/components/ui/tooltip';
+import { exportCsv } from '@/lib/export-csv';
 import type { RiskSeverity } from '@/types/risk';
 
 function severityVariant(severity: RiskSeverity): 'success' | 'info' | 'warning' | 'danger' {
@@ -34,13 +36,13 @@ function barColor(score: number): string {
 }
 
 const HAZARDS = [
-  { key: 'flood', field: 'flood_score' },
-  { key: 'wildfire', field: 'wildfire_score' },
-  { key: 'drought', field: 'drought_score' },
-  { key: 'heatwave', field: 'heatwave_score' },
-  { key: 'seismic', field: 'seismic_score' },
-  { key: 'coldwave', field: 'coldwave_score' },
-  { key: 'windstorm', field: 'windstorm_score' },
+  { key: 'flood', field: 'flood_score', tip: '0-20 Low, 20-40 Moderate, 40-60 High, 60-80 Very High, 80+ Critical' },
+  { key: 'wildfire', field: 'wildfire_score', tip: 'Based on FWI system, dry days, humidity, and temperature' },
+  { key: 'drought', field: 'drought_score', tip: 'Derived from SPEI index and soil moisture deficit' },
+  { key: 'heatwave', field: 'heatwave_score', tip: 'Heat index, consecutive hot days/nights, WBGT' },
+  { key: 'seismic', field: 'seismic_score', tip: 'IGN earthquake data: magnitude, frequency, proximity' },
+  { key: 'coldwave', field: 'coldwave_score', tip: 'Wind chill, consecutive cold days, elevation' },
+  { key: 'windstorm', field: 'windstorm_score', tip: 'Wind gusts, pressure dynamics, coastal exposure' },
 ] as const;
 
 export function RiskOverview() {
@@ -97,13 +99,15 @@ export function RiskOverview() {
       </p>
 
       <div className="flex flex-col gap-2.5">
-        {HAZARDS.map(({ key, field }) => {
+        {HAZARDS.map(({ key, field, tip }) => {
           const score = risk[field] as number;
           return (
             <div key={key} className="flex items-center gap-3">
-              <span className="font-[family-name:var(--font-sans)] text-[11px] text-text-secondary w-24 shrink-0 truncate">
-                {th(key)}
-              </span>
+              <Tooltip content={tip} side="right">
+                <span className="font-[family-name:var(--font-sans)] text-[11px] text-text-secondary w-24 shrink-0 truncate cursor-help">
+                  {th(key)}
+                </span>
+              </Tooltip>
               <div className="flex-1 h-1.5 rounded-full bg-bg-secondary overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${barColor(score)}`}
@@ -119,6 +123,22 @@ export function RiskOverview() {
           );
         })}
       </div>
+
+      <button
+        onClick={() => {
+          const rows = HAZARDS.map(({ key, field }) => ({
+            hazard: key,
+            score: Math.round(risk[field] as number),
+            severity: risk.severity,
+            dominant: risk.dominant_hazard,
+            composite: Math.round(risk.composite_score),
+          }));
+          exportCsv(rows, `truerisk-${risk.province_code ?? 'data'}.csv`);
+        }}
+        className="mt-4 w-full cursor-pointer rounded-lg border border-border px-3 py-1.5 text-[11px] font-[family-name:var(--font-sans)] text-text-muted transition-colors hover:border-accent-green hover:text-accent-green"
+      >
+        Export CSV
+      </button>
     </Card>
   );
 }

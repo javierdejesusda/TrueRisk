@@ -8,6 +8,8 @@ import {
 } from 'recharts';
 import { ModelCard } from './model-card';
 import { DarkTooltip, StatBox, SemiCircleGauge } from './shared';
+import { FeatureImportanceChart } from './feature-importance-chart';
+import type { HazardExplanation } from '@/hooks/use-risk-explain';
 
 interface HazardScore {
   flood_score: number;
@@ -24,6 +26,7 @@ interface HazardScore {
 
 interface Props {
   riskData: HazardScore | null;
+  explanations?: HazardExplanation[];
 }
 
 function scoreBadge(score: number, t?: (key: string) => string): { label: string; variant: 'danger' | 'warning' | 'info' | 'success' } {
@@ -31,6 +34,10 @@ function scoreBadge(score: number, t?: (key: string) => string): { label: string
   if (score >= 50) return { label: t ? t('moderateRisk') : 'Moderate Risk', variant: 'warning' };
   if (score >= 30) return { label: t ? t('lowRisk') : 'Low Risk', variant: 'info' };
   return { label: t ? t('minimal') : 'Minimal', variant: 'success' };
+}
+
+function getExplanation(explanations: HazardExplanation[] | undefined, hazard: string): HazardExplanation | undefined {
+  return explanations?.find((e) => e.hazard === hazard);
 }
 
 function FeatureBar({ name, value, color }: { name: string; value: number; color: string }) {
@@ -44,11 +51,16 @@ function FeatureBar({ name, value, color }: { name: string; value: number; color
   );
 }
 
-function HazardCardContent({ score, features, statBoxes }: {
+function HazardCardContent({ score, hazard, explanation, statBoxes, fallbackFeatures, color }: {
   score: number;
-  features: { name: string; value: number; color: string }[];
+  hazard: string;
+  explanation?: HazardExplanation;
   statBoxes: { label: string; value: string }[];
+  fallbackFeatures: { name: string; value: number; color: string }[];
+  color: string;
 }) {
+  const hasExplain = explanation && explanation.contributions.length > 0;
+
   return (
     <>
       <SemiCircleGauge value={score} label="Risk Score" />
@@ -57,20 +69,25 @@ function HazardCardContent({ score, features, statBoxes }: {
           <StatBox key={box.label} label={box.label} value={box.value} />
         ))}
       </div>
-      <div className="mt-3 space-y-1.5">
-        <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">Top features</p>
-        {features.map((f) => (
-          <FeatureBar key={f.name} name={f.name} value={f.value} color={f.color} />
-        ))}
-      </div>
+      {hasExplain ? (
+        <FeatureImportanceChart hazard={hazard} contributions={explanation.contributions} maxItems={5} />
+      ) : (
+        <div className="mt-3 space-y-1.5">
+          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">Top features</p>
+          {fallbackFeatures.map((f) => (
+            <FeatureBar key={f.name} name={f.name} value={f.value} color={f.color} />
+          ))}
+        </div>
+      )}
     </>
   );
 }
 
-export function FloodModelCard({ riskData }: Props) {
+export function FloodModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.flood_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'flood');
 
   return (
     <ModelCard
@@ -83,7 +100,10 @@ export function FloodModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
+        hazard="flood"
+        explanation={explanation}
+        color="#3b82f6"
+        fallbackFeatures={[
           { name: 'Soil moisture', value: 85, color: '#3b82f6' },
           { name: 'Precipitation 24h', value: 72, color: '#3b82f6' },
           { name: 'Pressure trend', value: 58, color: '#3b82f6' },
@@ -98,10 +118,11 @@ export function FloodModelCard({ riskData }: Props) {
   );
 }
 
-export function WildfireModelCard({ riskData }: Props) {
+export function WildfireModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.wildfire_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'wildfire');
 
   return (
     <ModelCard
@@ -114,7 +135,10 @@ export function WildfireModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
+        hazard="wildfire"
+        explanation={explanation}
+        color="#f97316"
+        fallbackFeatures={[
           { name: 'Dry days', value: 78, color: '#f97316' },
           { name: 'FWI index', value: 65, color: '#f97316' },
           { name: 'UV index', value: 52, color: '#f97316' },
@@ -129,10 +153,11 @@ export function WildfireModelCard({ riskData }: Props) {
   );
 }
 
-export function DroughtModelCard({ riskData }: Props) {
+export function DroughtModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.drought_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'drought');
 
   return (
     <ModelCard
@@ -145,7 +170,10 @@ export function DroughtModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
+        hazard="drought"
+        explanation={explanation}
+        color="#FBBF24"
+        fallbackFeatures={[
           { name: 'SPEI index', value: 82, color: '#FBBF24' },
           { name: 'Soil deficit', value: 68, color: '#FBBF24' },
           { name: 'LSTM outlook', value: 55, color: '#FBBF24' },
@@ -160,10 +188,11 @@ export function DroughtModelCard({ riskData }: Props) {
   );
 }
 
-export function HeatwaveModelCard({ riskData }: Props) {
+export function HeatwaveModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.heatwave_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'heatwave');
 
   return (
     <ModelCard
@@ -176,7 +205,10 @@ export function HeatwaveModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
+        hazard="heatwave"
+        explanation={explanation}
+        color="#ef4444"
+        fallbackFeatures={[
           { name: 'WBGT temp', value: 88, color: '#ef4444' },
           { name: 'Hot days', value: 70, color: '#ef4444' },
           { name: 'Temp anomaly', value: 60, color: '#ef4444' },
@@ -191,10 +223,11 @@ export function HeatwaveModelCard({ riskData }: Props) {
   );
 }
 
-export function SeismicModelCard({ riskData }: Props) {
+export function SeismicModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.seismic_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'seismic');
 
   return (
     <ModelCard
@@ -207,7 +240,10 @@ export function SeismicModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
+        hazard="seismic"
+        explanation={explanation}
+        color="#a855f7"
+        fallbackFeatures={[
           { name: 'Magnitude', value: 75, color: '#a855f7' },
           { name: 'Frequency', value: 60, color: '#a855f7' },
           { name: 'Proximity', value: 50, color: '#a855f7' },
@@ -222,10 +258,11 @@ export function SeismicModelCard({ riskData }: Props) {
   );
 }
 
-export function ColdwaveModelCard({ riskData }: Props) {
+export function ColdwaveModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.coldwave_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'coldwave');
 
   return (
     <ModelCard
@@ -238,7 +275,10 @@ export function ColdwaveModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
+        hazard="coldwave"
+        explanation={explanation}
+        color="#22D3EE"
+        fallbackFeatures={[
           { name: 'Wind chill', value: 80, color: '#22D3EE' },
           { name: 'Cold days', value: 65, color: '#22D3EE' },
           { name: 'Elevation', value: 48, color: '#22D3EE' },
@@ -253,10 +293,11 @@ export function ColdwaveModelCard({ riskData }: Props) {
   );
 }
 
-export function WindstormModelCard({ riskData }: Props) {
+export function WindstormModelCard({ riskData, explanations }: Props) {
   const t = useTranslations('HazardModels');
   const score = riskData?.windstorm_score ?? 0;
   const badge = scoreBadge(score, t);
+  const explanation = getExplanation(explanations, 'windstorm');
 
   return (
     <ModelCard
@@ -269,10 +310,13 @@ export function WindstormModelCard({ riskData }: Props) {
     >
       <HazardCardContent
         score={score}
-        features={[
-          { name: 'Wind speed', value: 82, color: '#FFFFFF' },
-          { name: 'Pressure drop', value: 68, color: '#FFFFFF' },
-          { name: 'Gust intensity', value: 55, color: '#FFFFFF' },
+        hazard="windstorm"
+        explanation={explanation}
+        color="#94a3b8"
+        fallbackFeatures={[
+          { name: 'Wind speed', value: 82, color: '#94a3b8' },
+          { name: 'Pressure drop', value: 68, color: '#94a3b8' },
+          { name: 'Gust intensity', value: 55, color: '#94a3b8' },
         ]}
         statBoxes={[
           { label: 'Model', value: 'Rule-based' },
@@ -284,7 +328,7 @@ export function WindstormModelCard({ riskData }: Props) {
   );
 }
 
-export function HazardOverviewChart({ riskData }: Props) {
+export function HazardOverviewChart({ riskData }: { riskData: HazardScore | null }) {
   const [viewMode, setViewMode] = useState<'radar' | 'bar'>('radar');
 
   if (!riskData) return null;
@@ -296,7 +340,7 @@ export function HazardOverviewChart({ riskData }: Props) {
     { name: 'Heatwave', score: riskData.heatwave_score, fill: '#ef4444' },
     { name: 'Seismic', score: riskData.seismic_score, fill: '#a855f7' },
     { name: 'Cold Wave', score: riskData.coldwave_score, fill: '#22D3EE' },
-    { name: 'Windstorm', score: riskData.windstorm_score, fill: '#FFFFFF' },
+    { name: 'Windstorm', score: riskData.windstorm_score, fill: '#94a3b8' },
   ];
 
   return (
@@ -309,7 +353,6 @@ export function HazardOverviewChart({ riskData }: Props) {
       index={11}
       className="lg:col-span-2"
     >
-      {/* View toggle */}
       <div className="flex items-center gap-1 mb-3">
         <button
           onClick={() => setViewMode('radar')}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 interface EmptyStateProps {
@@ -14,9 +15,13 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   return (
     <div className="flex flex-col items-center gap-3 py-12">
       {icon && (
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-green/10">
+        <motion.div
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-green/10"
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
           {icon}
-        </div>
+        </motion.div>
       )}
       <p className="font-[family-name:var(--font-display)] text-lg text-accent-green">{title}</p>
       {description && (

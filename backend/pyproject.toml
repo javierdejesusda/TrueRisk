@@ -25,10 +25,11 @@ dependencies = [
     "joblib>=1.4",
     "sse-starlette>=2.0",
     "pywebpush>=2.0",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-asyncio>=0.24", "httpx", "mypy", "ruff"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-cov>=6.0", "httpx", "mypy", "ruff"]
 training = ["matplotlib>=3.9", "tqdm>=4.66"]
 
 [build-system]
