@@ -33,11 +33,11 @@ export function Card({
   return (
     <div
       className={[
-        'rounded-xl',
+        'relative overflow-hidden rounded-2xl',
         variantStyles[variant],
         paddingStyles[padding],
         hoverable &&
-          'transition-all duration-200 hover:border-border-hover hover:bg-bg-card-hover hover:shadow-[0_0_20px_rgba(52,211,153,0.06)]',
+          'transition-all duration-200 hover:border-accent-green/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.04)]',
         className,
       ]
         .filter(Boolean)

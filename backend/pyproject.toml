@@ -24,6 +24,7 @@ dependencies = [
     "scipy>=1.14",
     "joblib>=1.4",
     "sse-starlette>=2.0",
+    "pywebpush>=2.0",
 ]
 
 [project.optional-dependencies]

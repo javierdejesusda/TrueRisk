@@ -38,14 +38,14 @@ export function PanelShell({
 
   return (
     <div className={position ? `absolute z-40 ${position}` : ''}>
-      <div className="glass-heavy rounded-xl shadow-lg animate-panel-enter min-w-[200px] max-w-[280px]">
+      <div className="glass-heavy rounded-2xl shadow-lg animate-panel-enter min-w-[220px] max-w-[288px]">
         {/* Header */}
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="flex items-center gap-2 w-full px-3 py-2.5 cursor-pointer"
         >
-          <span className="text-text-secondary shrink-0">{icon}</span>
-          <span className="text-xs font-medium text-text-primary flex-1 text-left">{title}</span>
+          <span className="text-accent-green shrink-0">{icon}</span>
+          <span className="font-[family-name:var(--font-display)] text-xs font-bold uppercase tracking-wider text-text-primary flex-1 text-left">{title}</span>
           <svg
             width="12"
             height="12"
@@ -87,7 +87,7 @@ export function PanelShell({
         {/* Updated timestamp */}
         {relativeTime && !collapsed && (
           <div className="px-3 pb-2 -mt-1">
-            <span className="text-[9px] text-text-muted">Updated {relativeTime}</span>
+            <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">Updated {relativeTime}</span>
           </div>
         )}
       </div>

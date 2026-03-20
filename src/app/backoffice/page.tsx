@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,7 @@ interface Stats {
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function BackofficeDashboardPage() {
+  const t = useTranslations('Backoffice');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [risk, setRisk] = useState<RiskData | null>(null);
@@ -134,11 +136,11 @@ export default function BackofficeDashboardPage() {
     >
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">
-          Admin Dashboard
+        <h1 className="text-2xl font-bold text-text-primary font-[family-name:var(--font-display)]">
+          {t('dashboard')}
         </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Overview of system status, alerts, and risk analysis
+        <p className="mt-1 text-sm text-text-secondary font-[family-name:var(--font-sans)]">
+          {t('dashboardSubtitle')}
         </p>
       </div>
 
@@ -147,11 +149,11 @@ export default function BackofficeDashboardPage() {
         <Card hoverable>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Active Alerts</p>
+              <p className="text-sm text-text-secondary font-[family-name:var(--font-sans)]">{t('activeAlerts')}</p>
               {isLoading ? (
                 <Skeleton width="48px" height="28px" className="mt-1" />
               ) : (
-                <p className="mt-1 text-2xl font-bold text-accent-red">
+                <p className="mt-1 text-2xl font-bold text-accent-red font-[family-name:var(--font-mono)]">
                   {stats?.activeAlerts ?? 0}
                 </p>
               )}
@@ -174,11 +176,11 @@ export default function BackofficeDashboardPage() {
         <Card hoverable>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Provinces Monitored</p>
+              <p className="text-sm text-text-secondary font-[family-name:var(--font-sans)]">{t('provincesMonitored')}</p>
               {isLoading ? (
                 <Skeleton width="48px" height="28px" className="mt-1" />
               ) : (
-                <p className="mt-1 text-2xl font-bold text-accent-blue">
+                <p className="mt-1 text-2xl font-bold text-accent-blue font-[family-name:var(--font-mono)]">
                   {stats?.monitoredProvinces ?? 0}
                 </p>
               )}
@@ -203,11 +205,11 @@ export default function BackofficeDashboardPage() {
         <Card hoverable>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Consultations</p>
+              <p className="text-sm text-text-secondary font-[family-name:var(--font-sans)]">{t('consultations')}</p>
               {isLoading ? (
                 <Skeleton width="48px" height="28px" className="mt-1" />
               ) : (
-                <p className="mt-1 text-2xl font-bold text-accent-green">
+                <p className="mt-1 text-2xl font-bold text-accent-green font-[family-name:var(--font-mono)]">
                   {stats?.totalConsultations ?? 0}
                 </p>
               )}
@@ -233,8 +235,8 @@ export default function BackofficeDashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Weather overview */}
         <Card>
-          <h2 className="mb-4 text-lg font-semibold text-text-primary">
-            Weather Overview
+          <h2 className="mb-4 text-lg font-semibold text-text-primary font-[family-name:var(--font-display)]">
+            {t('weatherOverview')}
           </h2>
           {isLoading ? (
             <div className="space-y-3">
@@ -244,34 +246,34 @@ export default function BackofficeDashboardPage() {
             </div>
           ) : weather ? (
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-bg-primary p-3">
-                <p className="text-xs text-text-muted">Temperature</p>
-                <p className="text-lg font-semibold text-text-primary">
+              <div className="rounded-xl bg-white/[0.03] p-3">
+                <p className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">{t('temperature')}</p>
+                <p className="text-lg font-semibold text-text-primary font-[family-name:var(--font-mono)]">
                   {weather.temperature.toFixed(1)}°C
                 </p>
               </div>
-              <div className="rounded-lg bg-bg-primary p-3">
-                <p className="text-xs text-text-muted">Humidity</p>
-                <p className="text-lg font-semibold text-text-primary">
+              <div className="rounded-xl bg-white/[0.03] p-3">
+                <p className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">{t('humidity')}</p>
+                <p className="text-lg font-semibold text-text-primary font-[family-name:var(--font-mono)]">
                   {weather.humidity.toFixed(1)}%
                 </p>
               </div>
-              <div className="rounded-lg bg-bg-primary p-3">
-                <p className="text-xs text-text-muted">Precipitation</p>
-                <p className="text-lg font-semibold text-text-primary">
+              <div className="rounded-xl bg-white/[0.03] p-3">
+                <p className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">{t('precipitation')}</p>
+                <p className="text-lg font-semibold text-text-primary font-[family-name:var(--font-mono)]">
                   {weather.precipitation.toFixed(1)} mm
                 </p>
               </div>
-              <div className="rounded-lg bg-bg-primary p-3">
-                <p className="text-xs text-text-muted">Wind Speed</p>
-                <p className="text-lg font-semibold text-text-primary">
+              <div className="rounded-xl bg-white/[0.03] p-3">
+                <p className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">{t('windSpeed')}</p>
+                <p className="text-lg font-semibold text-text-primary font-[family-name:var(--font-mono)]">
                   {weather.windSpeed?.toFixed(1) ?? 'N/A'} km/h
                 </p>
               </div>
               {weather.pressure !== null && weather.pressure !== undefined && (
-                <div className="col-span-2 rounded-lg bg-bg-primary p-3">
-                  <p className="text-xs text-text-muted">Pressure</p>
-                  <p className="text-lg font-semibold text-text-primary">
+                <div className="col-span-2 rounded-xl bg-white/[0.03] p-3">
+                  <p className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">{t('pressure')}</p>
+                  <p className="text-lg font-semibold text-text-primary font-[family-name:var(--font-mono)]">
                     {weather.pressure.toFixed(1)} hPa
                   </p>
                 </div>
@@ -279,15 +281,15 @@ export default function BackofficeDashboardPage() {
             </div>
           ) : (
             <p className="text-sm text-text-muted">
-              Unable to load weather data
+              {t('unableToLoadWeather')}
             </p>
           )}
         </Card>
 
         {/* Alert detection */}
         <Card>
-          <h2 className="mb-4 text-lg font-semibold text-text-primary">
-            Alert Detection
+          <h2 className="mb-4 text-lg font-semibold text-text-primary font-[family-name:var(--font-display)]">
+            {t('alertDetection')}
           </h2>
           {isLoading ? (
             <div className="space-y-3">
@@ -302,25 +304,24 @@ export default function BackofficeDashboardPage() {
                   <span className="relative inline-flex h-3 w-3 rounded-full bg-accent-red" />
                 </span>
                 <div>
-                  <p className="font-semibold text-accent-red">
-                    Alert Suggested
+                  <p className="font-semibold text-accent-red font-[family-name:var(--font-sans)]">
+                    {t('alertSuggested')}
                   </p>
-                  <p className="text-sm text-text-secondary">
-                    Risk score:{' '}
-                    {detection.suggestion.riskScore.toFixed(1)}/100
+                  <p className="text-sm text-text-secondary font-[family-name:var(--font-mono)]">
+                    {t('riskScoreValue', { score: detection.suggestion.riskScore.toFixed(1) })}
                   </p>
                 </div>
               </div>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm font-[family-name:var(--font-sans)]">
                 <p className="text-text-secondary">
-                  <span className="font-medium text-text-primary">Type:</span>{' '}
-                  {detection.suggestion.type}
+                  <span className="font-medium text-text-primary">{t('type')}:</span>{' '}
+                  <span className="font-[family-name:var(--font-mono)]">{detection.suggestion.type}</span>
                 </p>
                 <p className="text-text-secondary">
                   <span className="font-medium text-text-primary">
-                    Severity:
+                    {t('severity')}:
                   </span>{' '}
-                  {detection.suggestion.severity}/5
+                  <span className="font-[family-name:var(--font-mono)]">{detection.suggestion.severity}/5</span>
                 </p>
                 <p className="text-text-secondary line-clamp-2">
                   {detection.suggestion.description}
@@ -330,7 +331,7 @@ export default function BackofficeDashboardPage() {
                 size="sm"
                 onClick={() => setShowCreateForm(true)}
               >
-                Create Alert
+                {t('createAlert')}
               </Button>
             </div>
           ) : (
@@ -348,9 +349,9 @@ export default function BackofficeDashboardPage() {
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-accent-green">All Clear</p>
-                <p className="text-sm text-text-secondary">
-                  No significant risk detected
+                <p className="font-semibold text-accent-green font-[family-name:var(--font-sans)]">{t('allClear')}</p>
+                <p className="text-sm text-text-secondary font-[family-name:var(--font-sans)]">
+                  {t('noSignificantRisk')}
                 </p>
               </div>
             </div>
@@ -359,8 +360,8 @@ export default function BackofficeDashboardPage() {
 
         {/* Risk Score */}
         <Card className="lg:col-span-2">
-          <h2 className="mb-4 text-lg font-semibold text-text-primary">
-            Current Risk Assessment
+          <h2 className="mb-4 text-lg font-semibold text-text-primary font-[family-name:var(--font-display)]">
+            {t('currentRisk')}
           </h2>
           {isLoading ? (
             <div className="flex items-center gap-6">
@@ -372,15 +373,15 @@ export default function BackofficeDashboardPage() {
             </div>
           ) : risk ? (
             <div className="flex flex-col items-center gap-6 sm:flex-row">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-border bg-bg-primary">
-                <span className="text-3xl font-bold text-text-primary">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-accent-green/30 bg-bg-primary">
+                <span className="text-3xl font-bold text-text-primary font-[family-name:var(--font-mono)]">
                   {risk.score.toFixed(0)}
                 </span>
               </div>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-text-secondary">
-                    Severity:
+                    {t('severity')}:
                   </span>
                   <Badge variant={severityColor(risk.severity)}>
                     {risk.severity.replace('_', ' ')}
@@ -388,14 +389,14 @@ export default function BackofficeDashboardPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-text-secondary">
-                    Emergency Type:
+                    {t('emergencyType')}:
                   </span>
                   <span className="text-sm text-text-primary">
                     {risk.emergencyType.replace('_', ' ')}
                   </span>
                 </div>
                 {/* Risk bar */}
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-bg-primary">
+                <div className="mt-2 h-[6px] w-full overflow-hidden rounded-full bg-bg-primary">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
@@ -415,7 +416,7 @@ export default function BackofficeDashboardPage() {
             </div>
           ) : (
             <p className="text-sm text-text-muted">
-              Unable to compute risk score
+              {t('unableToComputeRisk')}
             </p>
           )}
         </Card>
@@ -425,7 +426,7 @@ export default function BackofficeDashboardPage() {
       <Modal
         isOpen={showCreateForm}
         onClose={() => setShowCreateForm(false)}
-        title="Create Alert"
+        title={t('createAlert')}
       >
         <CreateAlertForm
           defaultValues={

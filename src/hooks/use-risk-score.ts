@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { save, get } from '@/lib/offline-storage';
 import type { CompositeRiskScore } from '@/types/risk';
 
 export function useRiskScore(provinceCode?: string) {
@@ -23,7 +24,13 @@ export function useRiskScore(provinceCode?: string) {
       setRiskState(data);
       setRisk(data);
       setError(null);
+      save('riskScores', code, data);
     } catch (err) {
+      const cached = await get<CompositeRiskScore>('riskScores', code);
+      if (cached) {
+        setRiskState(cached);
+        setRisk(cached);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch risk score');
     } finally {
       setIsLoading(false);

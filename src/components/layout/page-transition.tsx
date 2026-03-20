@@ -14,10 +14,10 @@ export function PageTransition({ children, transitionKey }: PageTransitionProps)
     <AnimatePresence mode="wait">
       <motion.div
         key={transitionKey}
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 8 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
+        exit={{ opacity: 0, y: 16 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       >
         {children}
       </motion.div>

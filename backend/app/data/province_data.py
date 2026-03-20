@@ -81,6 +81,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.35,
         "drought_risk_weight": 0.30,
         "heatwave_risk_weight": 0.25,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.55,
+        "windstorm_risk_weight": 0.45,
     },
     "02": {
         "name": "Albacete",
@@ -96,6 +99,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.70,
+        "seismic_risk_weight": 0.20,
+        "coldwave_risk_weight": 0.55,
+        "windstorm_risk_weight": 0.35,
     },
     "03": {
         "name": "Alicante",
@@ -111,6 +117,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.80,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.65,
+        "coldwave_risk_weight": 0.15,
+        "windstorm_risk_weight": 0.75,
     },
     "04": {
         "name": "Almer\u00eda",
@@ -126,6 +135,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.90,
         "heatwave_risk_weight": 0.60,
+        "seismic_risk_weight": 0.85,
+        "coldwave_risk_weight": 0.15,
+        "windstorm_risk_weight": 0.55,
     },
     "05": {
         "name": "\u00c1vila",
@@ -141,6 +153,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.50,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.80,
+        "windstorm_risk_weight": 0.30,
     },
     "06": {
         "name": "Badajoz",
@@ -156,6 +171,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.65,
         "drought_risk_weight": 0.70,
         "heatwave_risk_weight": 0.85,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.40,
+        "windstorm_risk_weight": 0.30,
     },
     "07": {
         "name": "Illes Balears",
@@ -171,6 +189,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.25,
+        "coldwave_risk_weight": 0.10,
+        "windstorm_risk_weight": 0.70,
     },
     "08": {
         "name": "Barcelona",
@@ -186,6 +207,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.55,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.30,
+        "coldwave_risk_weight": 0.20,
+        "windstorm_risk_weight": 0.50,
     },
     "09": {
         "name": "Burgos",
@@ -201,6 +225,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.40,
         "drought_risk_weight": 0.40,
         "heatwave_risk_weight": 0.35,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.80,
+        "windstorm_risk_weight": 0.45,
     },
     "10": {
         "name": "C\u00e1ceres",
@@ -216,6 +243,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.70,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.80,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.50,
+        "windstorm_risk_weight": 0.30,
     },
     "11": {
         "name": "C\u00e1diz",
@@ -231,6 +261,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.60,
         "heatwave_risk_weight": 0.65,
+        "seismic_risk_weight": 0.30,
+        "coldwave_risk_weight": 0.10,
+        "windstorm_risk_weight": 0.60,
     },
     "12": {
         "name": "Castell\u00f3n",
@@ -246,6 +279,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.60,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.50,
+        "coldwave_risk_weight": 0.20,
+        "windstorm_risk_weight": 0.65,
     },
     "13": {
         "name": "Ciudad Real",
@@ -261,6 +297,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.75,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.55,
+        "windstorm_risk_weight": 0.25,
     },
     "14": {
         "name": "C\u00f3rdoba",
@@ -276,6 +315,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.70,
         "heatwave_risk_weight": 0.90,
+        "seismic_risk_weight": 0.20,
+        "coldwave_risk_weight": 0.35,
+        "windstorm_risk_weight": 0.30,
     },
     "15": {
         "name": "A Coru\u00f1a",
@@ -291,6 +333,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.45,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.35,
+        "windstorm_risk_weight": 0.85,
     },
     "16": {
         "name": "Cuenca",
@@ -306,6 +351,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.60,
         "heatwave_risk_weight": 0.65,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.70,
+        "windstorm_risk_weight": 0.30,
     },
     "17": {
         "name": "Girona",
@@ -321,6 +369,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.45,
         "heatwave_risk_weight": 0.45,
+        "seismic_risk_weight": 0.25,
+        "coldwave_risk_weight": 0.25,
+        "windstorm_risk_weight": 0.55,
     },
     "18": {
         "name": "Granada",
@@ -336,6 +387,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.65,
         "drought_risk_weight": 0.75,
         "heatwave_risk_weight": 0.70,
+        "seismic_risk_weight": 0.90,
+        "coldwave_risk_weight": 0.30,
+        "windstorm_risk_weight": 0.45,
     },
     "19": {
         "name": "Guadalajara",
@@ -351,6 +405,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.55,
         "heatwave_risk_weight": 0.65,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.60,
+        "windstorm_risk_weight": 0.30,
     },
     "20": {
         "name": "Gipuzkoa",
@@ -366,6 +423,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.30,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.35,
+        "windstorm_risk_weight": 0.75,
     },
     "21": {
         "name": "Huelva",
@@ -381,6 +441,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.70,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.70,
+        "seismic_risk_weight": 0.20,
+        "coldwave_risk_weight": 0.15,
+        "windstorm_risk_weight": 0.55,
     },
     "22": {
         "name": "Huesca",
@@ -396,6 +459,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.35,
         "heatwave_risk_weight": 0.40,
+        "seismic_risk_weight": 0.20,
+        "coldwave_risk_weight": 0.65,
+        "windstorm_risk_weight": 0.45,
     },
     "23": {
         "name": "Ja\u00e9n",
@@ -411,6 +477,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.70,
         "drought_risk_weight": 0.70,
         "heatwave_risk_weight": 0.85,
+        "seismic_risk_weight": 0.55,
+        "coldwave_risk_weight": 0.40,
+        "windstorm_risk_weight": 0.30,
     },
     "24": {
         "name": "Le\u00f3n",
@@ -426,6 +495,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.35,
         "heatwave_risk_weight": 0.35,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.75,
+        "windstorm_risk_weight": 0.45,
     },
     "25": {
         "name": "Lleida",
@@ -441,6 +513,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.45,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.20,
+        "coldwave_risk_weight": 0.55,
+        "windstorm_risk_weight": 0.40,
     },
     "26": {
         "name": "La Rioja",
@@ -456,6 +531,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.40,
         "drought_risk_weight": 0.40,
         "heatwave_risk_weight": 0.45,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.55,
+        "windstorm_risk_weight": 0.40,
     },
     "27": {
         "name": "Lugo",
@@ -471,6 +549,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.45,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.45,
+        "windstorm_risk_weight": 0.65,
     },
     "28": {
         "name": "Madrid",
@@ -486,6 +567,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.45,
         "drought_risk_weight": 0.60,
         "heatwave_risk_weight": 0.75,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.55,
+        "windstorm_risk_weight": 0.35,
     },
     "29": {
         "name": "M\u00e1laga",
@@ -501,6 +585,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.75,
         "heatwave_risk_weight": 0.60,
+        "seismic_risk_weight": 0.75,
+        "coldwave_risk_weight": 0.10,
+        "windstorm_risk_weight": 0.55,
     },
     "30": {
         "name": "Murcia",
@@ -516,6 +603,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.85,
         "heatwave_risk_weight": 0.60,
+        "seismic_risk_weight": 0.85,
+        "coldwave_risk_weight": 0.15,
+        "windstorm_risk_weight": 0.60,
     },
     "31": {
         "name": "Navarra",
@@ -531,6 +621,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.40,
         "drought_risk_weight": 0.30,
         "heatwave_risk_weight": 0.30,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.50,
+        "windstorm_risk_weight": 0.50,
     },
     "32": {
         "name": "Ourense",
@@ -546,6 +639,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.25,
         "heatwave_risk_weight": 0.35,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.50,
+        "windstorm_risk_weight": 0.55,
     },
     "33": {
         "name": "Asturias",
@@ -561,6 +657,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.40,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.40,
+        "windstorm_risk_weight": 0.75,
     },
     "34": {
         "name": "Palencia",
@@ -576,6 +675,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.40,
         "drought_risk_weight": 0.45,
         "heatwave_risk_weight": 0.40,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.65,
+        "windstorm_risk_weight": 0.40,
     },
     "35": {
         "name": "Las Palmas",
@@ -591,6 +693,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.70,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.60,
+        "coldwave_risk_weight": 0.05,
+        "windstorm_risk_weight": 0.65,
     },
     "36": {
         "name": "Pontevedra",
@@ -606,6 +711,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.45,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.30,
+        "windstorm_risk_weight": 0.80,
     },
     "37": {
         "name": "Salamanca",
@@ -621,6 +729,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.50,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.65,
+        "windstorm_risk_weight": 0.35,
     },
     "38": {
         "name": "Santa Cruz de Tenerife",
@@ -636,6 +747,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.65,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.45,
+        "seismic_risk_weight": 0.60,
+        "coldwave_risk_weight": 0.05,
+        "windstorm_risk_weight": 0.65,
     },
     "39": {
         "name": "Cantabria",
@@ -651,6 +765,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.35,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.40,
+        "windstorm_risk_weight": 0.80,
     },
     "40": {
         "name": "Segovia",
@@ -666,6 +783,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.45,
         "drought_risk_weight": 0.50,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.75,
+        "windstorm_risk_weight": 0.30,
     },
     "41": {
         "name": "Sevilla",
@@ -681,6 +801,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.70,
         "heatwave_risk_weight": 0.90,
+        "seismic_risk_weight": 0.20,
+        "coldwave_risk_weight": 0.25,
+        "windstorm_risk_weight": 0.35,
     },
     "42": {
         "name": "Soria",
@@ -696,6 +819,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.45,
         "heatwave_risk_weight": 0.40,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.85,
+        "windstorm_risk_weight": 0.35,
     },
     "43": {
         "name": "Tarragona",
@@ -711,6 +837,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.60,
         "drought_risk_weight": 0.55,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.30,
+        "coldwave_risk_weight": 0.20,
+        "windstorm_risk_weight": 0.55,
     },
     "44": {
         "name": "Teruel",
@@ -726,6 +855,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.55,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.90,
+        "windstorm_risk_weight": 0.35,
     },
     "45": {
         "name": "Toledo",
@@ -741,6 +873,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.80,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.50,
+        "windstorm_risk_weight": 0.30,
     },
     "46": {
         "name": "Valencia",
@@ -756,6 +891,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.55,
         "drought_risk_weight": 0.70,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.55,
+        "coldwave_risk_weight": 0.15,
+        "windstorm_risk_weight": 0.75,
     },
     "47": {
         "name": "Valladolid",
@@ -771,6 +909,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.40,
         "drought_risk_weight": 0.50,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.60,
+        "windstorm_risk_weight": 0.35,
     },
     "48": {
         "name": "Bizkaia",
@@ -786,6 +927,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.30,
         "drought_risk_weight": 0.20,
         "heatwave_risk_weight": 0.20,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.35,
+        "windstorm_risk_weight": 0.75,
     },
     "49": {
         "name": "Zamora",
@@ -801,6 +945,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.50,
         "drought_risk_weight": 0.50,
         "heatwave_risk_weight": 0.50,
+        "seismic_risk_weight": 0.10,
+        "coldwave_risk_weight": 0.65,
+        "windstorm_risk_weight": 0.35,
     },
     "50": {
         "name": "Zaragoza",
@@ -816,6 +963,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.45,
         "drought_risk_weight": 0.55,
         "heatwave_risk_weight": 0.65,
+        "seismic_risk_weight": 0.15,
+        "coldwave_risk_weight": 0.50,
+        "windstorm_risk_weight": 0.40,
     },
     "51": {
         "name": "Ceuta",
@@ -831,6 +981,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.35,
         "drought_risk_weight": 0.60,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.40,
+        "coldwave_risk_weight": 0.10,
+        "windstorm_risk_weight": 0.45,
     },
     "52": {
         "name": "Melilla",
@@ -846,6 +999,9 @@ PROVINCES: dict[str, dict] = {
         "wildfire_risk_weight": 0.35,
         "drought_risk_weight": 0.65,
         "heatwave_risk_weight": 0.55,
+        "seismic_risk_weight": 0.40,
+        "coldwave_risk_weight": 0.10,
+        "windstorm_risk_weight": 0.45,
     },
 }
 
@@ -874,6 +1030,9 @@ async def seed_provinces() -> None:
                 wildfire_risk_weight=data["wildfire_risk_weight"],
                 drought_risk_weight=data["drought_risk_weight"],
                 heatwave_risk_weight=data["heatwave_risk_weight"],
+                seismic_risk_weight=data["seismic_risk_weight"],
+                coldwave_risk_weight=data["coldwave_risk_weight"],
+                windstorm_risk_weight=data["windstorm_risk_weight"],
             )
             session.add(province)
 

@@ -44,11 +44,11 @@ export function ModelCard({
       animate="visible"
       custom={index}
     >
-      <Card variant="glass">
+      <Card variant="glass" className="hover:border-accent-green/15 transition-all duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-text-secondary">{title}</h3>
+            <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-secondary">{title}</h3>
             {confidence != null && (
               <span className={`h-2 w-2 rounded-full ${confidenceDotColor(confidence)}`} />
             )}
@@ -57,12 +57,12 @@ export function ModelCard({
             <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
           )}
         </div>
-        <p className="text-xs text-text-muted mb-3">{subtitle}</p>
+        <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-3">{subtitle}</p>
 
         {/* How this works */}
         <button
           onClick={() => setMethodOpen((o) => !o)}
-          className="flex items-center gap-1 text-[10px] text-text-muted hover:text-text-secondary transition-colors mb-3 cursor-pointer"
+          className="flex items-center gap-1 font-[family-name:var(--font-sans)] text-[10px] text-text-muted hover:text-text-secondary transition-colors mb-3 cursor-pointer"
         >
           <svg
             width="10"
@@ -87,7 +87,7 @@ export function ModelCard({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <p className="text-[11px] text-text-muted leading-relaxed mb-4 border-l-2 border-accent-green/30 pl-3">
+              <p className="font-[family-name:var(--font-sans)] text-[11px] text-text-muted leading-relaxed mb-4 border-l-2 border-accent-green/30 pl-3">
                 {methodology}
               </p>
             </motion.div>

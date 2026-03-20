@@ -1,6 +1,6 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 
 export interface MapControlsProps {
@@ -29,14 +29,14 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
   return (
     <div className="absolute top-16 right-2 lg:right-4 z-10 flex flex-col gap-2">
       {/* Layer toggle */}
-      <div className="glass-heavy rounded-lg p-1 flex gap-0.5">
+      <div className="glass-heavy rounded-2xl p-1.5 flex gap-0.5">
         <button
           onClick={() => setActiveMapLayer('risk')}
           className={[
-            'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+            'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer',
             activeMapLayer === 'risk'
-              ? 'bg-accent-green/20 text-accent-green'
-              : 'text-text-muted hover:text-text-secondary',
+              ? 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+              : 'text-text-muted hover:text-text-secondary border border-transparent',
           ].join(' ')}
         >
           Risk
@@ -44,10 +44,10 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
         <button
           onClick={() => setActiveMapLayer('alerts')}
           className={[
-            'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+            'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer',
             activeMapLayer === 'alerts'
-              ? 'bg-accent-red/20 text-accent-red'
-              : 'text-text-muted hover:text-text-secondary',
+              ? 'bg-accent-red/20 text-accent-red border border-accent-red/30'
+              : 'text-text-muted hover:text-text-secondary border border-transparent',
           ].join(' ')}
         >
           Alerts
@@ -56,10 +56,10 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
           <button
             onClick={onToggleTerrain}
             className={[
-              'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+              'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer',
               terrainEnabled
-                ? 'bg-accent-green/20 text-accent-green'
-                : 'text-text-muted hover:text-text-secondary',
+                ? 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                : 'text-text-muted hover:text-text-secondary border border-transparent',
             ].join(' ')}
             aria-label="Toggle 3D terrain"
           >
@@ -69,7 +69,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
       </div>
 
       {/* Controls card */}
-      <Card className="bg-bg-secondary/90 backdrop-blur-sm" padding="sm">
+      <div className="glass-heavy rounded-2xl p-3">
         <div className="flex flex-col gap-2">
           {/* Alert count */}
           <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-red" />
               </span>
             )}
-            <span className="text-xs font-medium text-text-primary">
+            <span className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-primary">
               {alertCount > 0 ? `${alertCount} active alert${alertCount !== 1 ? 's' : ''}` : 'No alerts'}
             </span>
           </div>
@@ -88,7 +88,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
           <div className="flex gap-1.5">
             <button
               onClick={onResetView}
-              className="flex items-center gap-1 rounded-md bg-bg-card px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-card-hover hover:text-text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1 rounded-md bg-bg-card px-2 py-1 text-[11px] text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors cursor-pointer"
               aria-label="Reset map view"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -99,7 +99,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
             </button>
             <button
               onClick={onRefresh}
-              className="flex items-center gap-1 rounded-md bg-bg-card px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-card-hover hover:text-text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1 rounded-md bg-bg-card px-2 py-1 text-[11px] text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors cursor-pointer"
               aria-label="Refresh alerts"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -120,13 +120,13 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
                 sseStatus === 'connecting' ? 'bg-accent-yellow animate-pulse' :
                 'bg-accent-red'
               }`} />
-              <span className="text-[10px] text-text-muted">
+              <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
                 Updated {formatRelativeTime(lastUpdated)}
               </span>
             </div>
           )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

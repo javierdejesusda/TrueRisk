@@ -28,6 +28,9 @@ def _zero_score(province_code: str) -> dict:
         "wildfire_score": 0.0,
         "drought_score": 0.0,
         "heatwave_score": 0.0,
+        "seismic_score": 0.0,
+        "coldwave_score": 0.0,
+        "windstorm_score": 0.0,
         "composite_score": 0.0,
         "dominant_hazard": "none",
         "severity": "low",
@@ -100,6 +103,9 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
                 wildfire_score=score.wildfire_score if score else 0.0,
                 drought_score=score.drought_score if score else 0.0,
                 heatwave_score=score.heatwave_score if score else 0.0,
+                seismic_score=score.seismic_score if score else 0.0,
+                coldwave_score=score.coldwave_score if score else 0.0,
+                windstorm_score=score.windstorm_score if score else 0.0,
             )
         )
 

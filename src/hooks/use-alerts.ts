@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { save, get } from '@/lib/offline-storage';
 import type { Alert } from '@/types/alert';
 
 const REFRESH_INTERVAL = 30_000;
@@ -24,7 +25,13 @@ export function useAlerts(filters?: { province?: string; hazard?: string }) {
       setAlerts(data);
       setAlertsStore(data);
       setError(null);
+      save('alerts', 'active', data);
     } catch (err) {
+      const cached = await get<Alert[]>('alerts', 'active');
+      if (cached) {
+        setAlerts(cached);
+        setAlertsStore(cached);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
     } finally {
       setIsLoading(false);

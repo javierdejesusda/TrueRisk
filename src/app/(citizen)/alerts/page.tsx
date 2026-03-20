@@ -5,14 +5,17 @@ import { useAlerts } from '@/hooks/use-alerts';
 import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 
-function severityLabel(severity: number): string {
-  if (severity >= 5) return 'Critical';
-  if (severity >= 4) return 'Very High';
-  if (severity >= 3) return 'High';
-  if (severity >= 2) return 'Moderate';
-  if (severity >= 1) return 'Low';
-  return 'None';
+type TranslateFn = (key: string) => string;
+
+function severityLabel(severity: number, t: TranslateFn): string {
+  if (severity >= 5) return t('critical');
+  if (severity >= 4) return t('veryHigh');
+  if (severity >= 3) return t('high');
+  if (severity >= 2) return t('moderate');
+  if (severity >= 1) return t('low');
+  return t('none');
 }
 
 function severityVariant(severity: number): 'danger' | 'warning' | 'success' | 'neutral' {
@@ -34,6 +37,7 @@ function formatTime(iso: string | null): string {
 }
 
 export default function AlertsPage() {
+  const t = useTranslations('Alerts');
   const { alerts, isLoading } = useAlerts();
   const { alerts: aemetAlerts, isLoading: aemetLoading } = useAemetAlerts();
 
@@ -48,8 +52,8 @@ export default function AlertsPage() {
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Active Alerts</h1>
-          <p className="mt-1 text-sm text-text-muted">
+          <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-text-primary">{t('title')}</h1>
+          <p className="font-[family-name:var(--font-sans)] mt-1 text-sm text-text-muted">
             Real-time weather and risk alerts from TrueRisk and AEMET
           </p>
         </div>
@@ -60,10 +64,10 @@ export default function AlertsPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-red opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-red" />
               </span>
-              <span className="font-medium">{totalCount} active</span>
+              <span className="font-[family-name:var(--font-mono)] font-bold">{totalCount} {t('activeAlerts').toLowerCase()}</span>
             </>
           ) : (
-            <span className="text-accent-green font-medium">All clear</span>
+            <span className="font-[family-name:var(--font-display)] text-lg text-accent-green font-medium">{t('noAlerts')}</span>
           )}
         </div>
       </div>
@@ -71,7 +75,7 @@ export default function AlertsPage() {
       {(isLoading || aemetLoading) ? (
         <div className="mt-8 flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-20 rounded-xl bg-bg-secondary animate-pulse" />
+            <div key={i} className="h-20 rounded-xl bg-bg-secondary animate-[shimmer_1.5s_infinite]" />
           ))}
         </div>
       ) : totalCount === 0 ? (
@@ -81,30 +85,30 @@ export default function AlertsPage() {
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
-            <p className="text-sm text-text-secondary">No active alerts at this time</p>
-            <p className="text-xs text-text-muted">Alerts from TrueRisk and AEMET will appear here when active</p>
+            <p className="font-[family-name:var(--font-display)] text-lg text-accent-green">{t('noAlerts')}</p>
+            <p className="font-[family-name:var(--font-sans)] text-xs text-text-muted">{t('noAlertsDesc')}</p>
           </div>
         </Card>
       ) : (
         <div className="mt-8 flex flex-col gap-3">
           {alerts.length > 0 && (
             <div>
-              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">TrueRisk Alerts</h2>
+              <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted border-l-2 border-accent-green pl-3 mb-3">TrueRisk Alerts</h2>
               <div className="flex flex-col gap-2">
                 {alerts.map((alert) => (
                   <Card key={alert.id} variant="glass" hoverable>
                     <div className="flex items-start gap-3">
                       <Badge variant={severityVariant(alert.severity)} size="sm">
-                        {severityLabel(alert.severity)}
+                        {severityLabel(alert.severity, t)}
                       </Badge>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary">{alert.title}</p>
-                        <p className="text-xs text-text-secondary mt-1 line-clamp-2">{alert.description}</p>
+                        <p className="font-[family-name:var(--font-sans)] text-sm font-semibold text-text-primary">{alert.title}</p>
+                        <p className="font-[family-name:var(--font-sans)] text-xs text-text-secondary mt-1 line-clamp-2">{alert.description}</p>
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-text-muted">
-                          <span className="capitalize">{alert.hazard_type}</span>
-                          {alert.province_code && <span>Province {alert.province_code}</span>}
-                          <span>Onset: {formatTime(alert.onset)}</span>
-                          <span>Expires: {formatTime(alert.expires)}</span>
+                          <span className="font-[family-name:var(--font-mono)] uppercase tracking-wider capitalize">{alert.hazard_type}</span>
+                          {alert.province_code && <span className="font-[family-name:var(--font-mono)]">Province {alert.province_code}</span>}
+                          <span className="font-[family-name:var(--font-mono)]">Onset: {formatTime(alert.onset)}</span>
+                          <span className="font-[family-name:var(--font-mono)]">Expires: {formatTime(alert.expires)}</span>
                         </div>
                       </div>
                     </div>
@@ -116,7 +120,7 @@ export default function AlertsPage() {
 
           {aemetAlerts.length > 0 && (
             <div className={alerts.length > 0 ? 'mt-4' : ''}>
-              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">AEMET Alerts</h2>
+              <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted border-l-2 border-accent-green pl-3 mb-3">AEMET Alerts</h2>
               <div className="flex flex-col gap-2">
                 {aemetAlerts.map((alert, i) => (
                   <Card key={`aemet-${i}`} variant="glass" hoverable>
@@ -132,13 +136,13 @@ export default function AlertsPage() {
                         {alert.severity}
                       </Badge>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary">{alert.headline || alert.event}</p>
-                        <p className="text-xs text-text-secondary mt-1 line-clamp-2">{alert.description}</p>
+                        <p className="font-[family-name:var(--font-sans)] text-sm font-semibold text-text-primary">{alert.headline || alert.event}</p>
+                        <p className="font-[family-name:var(--font-sans)] text-xs text-text-secondary mt-1 line-clamp-2">{alert.description}</p>
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-text-muted">
-                          <span>{alert.event}</span>
-                          <span>{alert.area_desc}</span>
-                          <span>Onset: {formatTime(alert.onset)}</span>
-                          <span>Expires: {formatTime(alert.expires)}</span>
+                          <span className="font-[family-name:var(--font-mono)] uppercase tracking-wider">{alert.event}</span>
+                          <span className="font-[family-name:var(--font-mono)]">{alert.area_desc}</span>
+                          <span className="font-[family-name:var(--font-mono)]">Onset: {formatTime(alert.onset)}</span>
+                          <span className="font-[family-name:var(--font-mono)]">Expires: {formatTime(alert.expires)}</span>
                         </div>
                       </div>
                     </div>

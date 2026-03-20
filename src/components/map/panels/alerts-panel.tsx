@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAlerts } from '@/hooks/use-alerts';
 import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
 import { Badge } from '@/components/ui/badge';
@@ -42,10 +43,10 @@ export function AlertsPanel() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-red opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-red" />
           </span>
-          <span className="text-xs text-text-primary font-medium">{totalCount} active</span>
+          <span className="text-xs text-text-primary font-[family-name:var(--font-mono)] font-bold">{totalCount} active</span>
         </>
       ) : (
-        <span className="text-xs text-accent-green">All clear</span>
+        <span className="text-xs text-accent-green font-[family-name:var(--font-sans)]">All clear</span>
       )}
     </div>
   );
@@ -68,25 +69,33 @@ export function AlertsPanel() {
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
-          <span className="text-xs text-accent-green font-medium">All clear — no active alerts</span>
+          <span className="text-xs text-accent-green font-medium font-[family-name:var(--font-sans)]">All clear — no active alerts</span>
         </div>
       ) : (
         <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto">
           {/* TrueRisk alerts */}
           {alerts.map((alert) => (
-            <div key={alert.id} className="flex items-start gap-2 rounded-lg bg-bg-secondary/50 p-2">
+            <div
+              key={alert.id}
+              className="flex items-start gap-2 rounded-lg bg-white/[0.03] p-2 border-l-[3px]"
+              style={{ borderLeftColor: alert.severity >= 5 ? '#EC4899' : alert.severity >= 4 ? '#EF4444' : alert.severity >= 3 ? '#F97316' : alert.severity >= 2 ? '#FBBF24' : '#84CC16' }}
+            >
               <Badge variant={severityVariant(alert.severity)} size="sm">
                 {severityLabel(alert.severity)}
               </Badge>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium text-text-primary truncate">{alert.title}</p>
-                <p className="text-[9px] text-text-muted capitalize">{alert.hazard_type}</p>
+                <p className="text-[11px] font-medium text-text-primary truncate font-[family-name:var(--font-sans)]">{alert.title}</p>
+                <p className="text-text-muted font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider">{alert.hazard_type}</p>
               </div>
             </div>
           ))}
           {/* AEMET alerts */}
           {aemetAlerts.map((alert, i) => (
-            <div key={`aemet-${i}`} className="flex items-start gap-2 rounded-lg bg-bg-secondary/50 p-2">
+            <div
+              key={`aemet-${i}`}
+              className="flex items-start gap-2 rounded-lg bg-white/[0.03] p-2 border-l-[3px]"
+              style={{ borderLeftColor: alert.severity === 'red' ? '#EF4444' : alert.severity === 'orange' ? '#F97316' : alert.severity === 'yellow' ? '#FBBF24' : '#84CC16' }}
+            >
               <Badge
                 variant={
                   alert.severity === 'red' ? 'danger' :
@@ -99,10 +108,10 @@ export function AlertsPanel() {
                 {alert.severity}
               </Badge>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium text-text-primary truncate">
+                <p className="text-[11px] font-medium text-text-primary truncate font-[family-name:var(--font-sans)]">
                   {alert.headline || alert.event}
                 </p>
-                <p className="text-[9px] text-text-muted">AEMET</p>
+                <p className="text-text-muted font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider">AEMET</p>
               </div>
             </div>
           ))}

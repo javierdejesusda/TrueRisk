@@ -13,6 +13,7 @@ from app.models.weather_daily_summary import WeatherDailySummary
 from app.data import open_meteo
 from app.services.risk_service import compute_province_risk
 from app.data.aemet_client import fetch_alerts
+from app.services.push_service import notify_province
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,9 @@ HAZARD_LABELS = {
     "wildfire": "Riesgo de incendios forestales",
     "drought": "Riesgo de sequía",
     "heatwave": "Riesgo de ola de calor",
+    "seismic": "Riesgo sismico",
+    "coldwave": "Riesgo de ola de frio",
+    "windstorm": "Riesgo de temporal de viento",
 }
 
 
@@ -110,7 +114,7 @@ async def _check_and_create_alerts(
     db: AsyncSession, province: Province, risk: dict
 ):
     """Create alerts when hazard scores cross thresholds."""
-    for hazard in ["flood", "wildfire", "drought", "heatwave"]:
+    for hazard in ["flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"]:
         score = risk.get(f"{hazard}_score", 0)
         if score < ALERT_THRESHOLD_HIGH:
             continue
@@ -143,6 +147,21 @@ async def _check_and_create_alerts(
             onset=datetime.now(timezone.utc),
         )
         db.add(alert)
+        await db.flush()
+        try:
+            await notify_province(
+                db,
+                province.ine_code,
+                {
+                    "title": f"ALERTA: {label} en {province.name}",
+                    "body": f"Nivel de riesgo {'CRITICO' if severity == 5 else 'ALTO'}. Puntuacion: {score:.0f}/100.",
+                    "tag": f"{hazard}-{province.ine_code}",
+                    "url": f"/map?province={province.ine_code}",
+                    "provinceCode": province.ine_code,
+                },
+            )
+        except Exception as push_err:
+            logger.error(f"  Push notification failed for {province.name}: {push_err}")
         logger.warning(
             f"  ALERT: {hazard} severity={severity} for {province.name} (score={score:.1f})"
         )

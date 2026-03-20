@@ -43,7 +43,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -55,7 +55,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="relative z-10 w-full max-w-lg rounded-xl border border-border bg-bg-secondary p-6 shadow-xl"
+            className="relative z-10 w-full max-w-lg glass-heavy rounded-2xl p-6 shadow-xl"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -68,7 +68,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 </h2>
                 <button
                   onClick={onClose}
-                  className="rounded-md p-1 text-text-muted transition-colors hover:bg-bg-card hover:text-text-primary cursor-pointer"
+                  className="rounded-md p-1 text-text-muted transition-colors hover:bg-white/5 hover:text-text-primary cursor-pointer"
                   aria-label="Close modal"
                 >
                   <svg

@@ -72,7 +72,7 @@ export function AlertCard({ alert }: AlertCardProps) {
         padding="none"
         hoverable
         className={[
-          'border-l-4 transition-all duration-200',
+          'glass rounded-xl border-l-4 transition-all duration-200',
           getSeverityBorderClass(alert.severity),
         ].join(' ')}
       >
@@ -83,26 +83,28 @@ export function AlertCard({ alert }: AlertCardProps) {
               {getSeverityLabel(alert.severity)}
             </Badge>
             <Badge variant="neutral" size="sm">
-              {formatType(alert.hazard_type)}
+              <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider">
+                {formatType(alert.hazard_type)}
+              </span>
             </Badge>
             {alert.province_code && (
-              <span className="text-xs text-text-muted">{alert.province_code}</span>
+              <span className="font-[family-name:var(--font-mono)] text-xs text-text-muted">{alert.province_code}</span>
             )}
           </div>
 
           {/* Title */}
-          <h3 className="mb-1.5 text-base font-semibold text-text-primary">
+          <h3 className="font-[family-name:var(--font-sans)] mb-1.5 text-sm font-semibold text-text-primary">
             {alert.title}
           </h3>
 
           {/* Description */}
-          <p className="mb-3 text-sm leading-relaxed text-text-secondary">
+          <p className="font-[family-name:var(--font-sans)] mb-3 text-sm leading-relaxed text-text-secondary">
             {alert.description}
           </p>
 
           {/* Footer: timestamp */}
           <div className="flex items-center gap-3">
-            <span className="text-xs text-text-muted">
+            <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
               {formatRelativeTime(alert.created_at)}
             </span>
           </div>

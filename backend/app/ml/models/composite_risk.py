@@ -27,15 +27,18 @@ def compute_composite_risk(
     wildfire: float,
     drought: float,
     heatwave: float,
+    seismic: float = 0.0,
+    coldwave: float = 0.0,
+    windstorm: float = 0.0,
 ) -> dict:
-    """Compute the composite risk score from four individual hazard scores.
+    """Compute the composite risk score from individual hazard scores.
 
     The composite is dominated by the single highest hazard.  Secondary
     hazards add a fraction of their score that diminishes with rank:
 
     * 2nd-highest:  +15% of its score
     * 3rd-highest:  +7.5% of its score
-    * 4th-highest:  +5% of its score
+    * etc.
 
     Returns a dict suitable for persisting as a :class:`RiskScore` row.
     """
@@ -44,6 +47,9 @@ def compute_composite_risk(
         "wildfire": wildfire,
         "drought": drought,
         "heatwave": heatwave,
+        "seismic": seismic,
+        "coldwave": coldwave,
+        "windstorm": windstorm,
     }
     sorted_hazards = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
@@ -67,4 +73,7 @@ def compute_composite_risk(
         "wildfire_score": round(wildfire, 2),
         "drought_score": round(drought, 2),
         "heatwave_score": round(heatwave, 2),
+        "seismic_score": round(seismic, 2),
+        "coldwave_score": round(coldwave, 2),
+        "windstorm_score": round(windstorm, 2),
     }

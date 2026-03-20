@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,7 @@ type SortDir = 'asc' | 'desc';
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function BackofficeRecordsPage() {
+  const t = useTranslations('Backoffice');
   const [records, setRecords] = useState<WeatherRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -196,15 +198,15 @@ export default function BackofficeRecordsPage() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">
-            Weather Records
+          <h1 className="text-2xl font-bold text-text-primary font-[family-name:var(--font-display)]">
+            {t('weatherRecords')}
           </h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            Historical weather data and risk assessments ({total} records)
+          <p className="mt-1 text-sm text-text-secondary font-[family-name:var(--font-sans)]">
+            {t('weatherRecordsSubtitle', { total: String(total) })}
           </p>
         </div>
         <Button variant="outline" onClick={exportCsv} disabled={isLoading}>
-          Export CSV
+          {t('exportCsv')}
         </Button>
       </div>
 
@@ -215,70 +217,70 @@ export default function BackofficeRecordsPage() {
             <thead>
               <tr className="border-b border-border text-left">
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('recorded_at')}
                 >
                   <span className="inline-flex items-center">
-                    Date
+                    {t('date')}
                     <SortIndicator field="recorded_at" />
                   </span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('temperature')}
                 >
                   <span className="inline-flex items-center">
-                    Temp
+                    {t('temp')}
                     <SortIndicator field="temperature" />
                   </span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('precipitation')}
                 >
                   <span className="inline-flex items-center">
-                    Precip
+                    {t('precip')}
                     <SortIndicator field="precipitation" />
                   </span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('humidity')}
                 >
                   <span className="inline-flex items-center">
-                    Humidity
+                    {t('humidity')}
                     <SortIndicator field="humidity" />
                   </span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('wind_speed')}
                 >
                   <span className="inline-flex items-center">
-                    Wind
+                    {t('wind')}
                     <SortIndicator field="wind_speed" />
                   </span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('pressure')}
                 >
                   <span className="inline-flex items-center">
-                    Pressure
+                    {t('pressure')}
                     <SortIndicator field="pressure" />
                   </span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary"
+                  className="cursor-pointer px-4 py-3 font-medium text-text-secondary hover:text-text-primary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider"
                   onClick={() => toggleSort('risk_score')}
                 >
                   <span className="inline-flex items-center">
-                    Risk Score
+                    {t('riskScore')}
                     <SortIndicator field="risk_score" />
                   </span>
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Disaster
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('disaster')}
                 </th>
               </tr>
             </thead>
@@ -299,7 +301,7 @@ export default function BackofficeRecordsPage() {
                     colSpan={8}
                     className="px-4 py-12 text-center text-text-muted"
                   >
-                    No weather records found
+                    {t('noRecordsFound')}
                   </td>
                 </tr>
               ) : (
@@ -308,27 +310,27 @@ export default function BackofficeRecordsPage() {
                     key={record.id}
                     className="border-b border-border/50 transition-colors hover:bg-bg-card/50"
                   >
-                    <td className="px-4 py-3 text-text-primary whitespace-nowrap">
+                    <td className="px-4 py-3 text-text-primary whitespace-nowrap font-[family-name:var(--font-mono)] text-[11px]">
                       {formatDate(record.recorded_at)}
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-text-primary font-[family-name:var(--font-mono)] text-[11px]">
                       {record.temperature.toFixed(1)}°C
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-text-primary font-[family-name:var(--font-mono)] text-[11px]">
                       {record.precipitation.toFixed(1)} mm
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-text-primary font-[family-name:var(--font-mono)] text-[11px]">
                       {record.humidity.toFixed(1)}%
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">
+                    <td className="px-4 py-3 text-text-secondary font-[family-name:var(--font-mono)] text-[11px]">
                       {record.wind_speed?.toFixed(1) ?? 'N/A'} km/h
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">
+                    <td className="px-4 py-3 text-text-secondary font-[family-name:var(--font-mono)] text-[11px]">
                       {record.pressure?.toFixed(1) ?? 'N/A'} hPa
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`font-semibold ${riskColor(record.risk_score)}`}
+                        className={`font-semibold font-[family-name:var(--font-mono)] ${riskColor(record.risk_score)}`}
                       >
                         {record.risk_score?.toFixed(1) ?? '-'}
                       </span>
@@ -336,11 +338,11 @@ export default function BackofficeRecordsPage() {
                     <td className="px-4 py-3">
                       {record.is_disaster ? (
                         <Badge variant="danger" size="sm" pulse>
-                          Yes
+                          {t('yes')}
                         </Badge>
                       ) : (
                         <Badge variant="neutral" size="sm">
-                          No
+                          {t('no')}
                         </Badge>
                       )}
                     </td>
@@ -354,8 +356,8 @@ export default function BackofficeRecordsPage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border px-4 py-3">
-            <p className="text-sm text-text-muted">
-              Page {page} of {totalPages}
+            <p className="text-sm text-text-muted font-[family-name:var(--font-mono)] text-[11px]">
+              {t('pageOf', { page: String(page), totalPages: String(totalPages) })}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -364,7 +366,7 @@ export default function BackofficeRecordsPage() {
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                Previous
+                {t('previous')}
               </Button>
               <Button
                 variant="ghost"
@@ -372,7 +374,7 @@ export default function BackofficeRecordsPage() {
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                {t('next')}
               </Button>
             </div>
           </div>

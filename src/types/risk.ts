@@ -1,4 +1,4 @@
-export type HazardType = "flood" | "wildfire" | "drought" | "heatwave";
+export type HazardType = "flood" | "wildfire" | "drought" | "heatwave" | "seismic" | "coldwave" | "windstorm";
 export type RiskSeverity = "low" | "moderate" | "high" | "very_high" | "critical";
 
 export interface CompositeRiskScore {
@@ -8,6 +8,9 @@ export interface CompositeRiskScore {
   wildfire_score: number;
   drought_score: number;
   heatwave_score: number;
+  seismic_score: number;
+  coldwave_score: number;
+  windstorm_score: number;
   dominant_hazard: HazardType;
   severity: RiskSeverity;
   computed_at: string;
@@ -25,6 +28,9 @@ export interface RiskMapEntry {
   wildfire_score: number;
   drought_score: number;
   heatwave_score: number;
+  seismic_score: number;
+  coldwave_score: number;
+  windstorm_score: number;
 }
 
 export interface RiskMapResponse {

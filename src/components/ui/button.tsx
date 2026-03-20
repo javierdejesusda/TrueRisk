@@ -4,13 +4,13 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 const variantStyles = {
   primary:
-    'bg-accent-green text-bg-primary hover:brightness-110 active:brightness-90',
+    'bg-accent-green text-[#050508] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]',
   danger:
-    'bg-accent-red text-white hover:brightness-110 active:brightness-90',
+    'bg-accent-red text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]',
   ghost:
-    'bg-transparent text-text-secondary hover:bg-bg-card hover:text-text-primary',
+    'bg-transparent text-text-secondary hover:bg-white/5 hover:text-text-primary',
   outline:
-    'bg-transparent border border-border text-text-primary hover:border-border-hover hover:bg-bg-card',
+    'border border-border text-text-primary hover:border-accent-green/50 hover:text-accent-green',
   secondary:
     'bg-bg-card text-text-secondary hover:bg-bg-card-hover hover:text-text-primary',
 } as const;
@@ -51,9 +51,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={isDisabled}
         className={[
-          'inline-flex items-center justify-center font-medium transition-all duration-150',
+          'inline-flex items-center justify-center font-medium transition-all duration-200',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green',
-          'active:scale-[0.97] hover:scale-[1.02]',
+          'active:scale-[0.97]',
           'disabled:opacity-50 disabled:pointer-events-none',
           'cursor-pointer',
           variantStyles[variant],

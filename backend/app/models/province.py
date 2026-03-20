@@ -22,3 +22,6 @@ class Province(Base):
     wildfire_risk_weight: Mapped[float] = mapped_column(Float, default=0.3)
     drought_risk_weight: Mapped[float] = mapped_column(Float, default=0.3)
     heatwave_risk_weight: Mapped[float] = mapped_column(Float, default=0.3)
+    seismic_risk_weight: Mapped[float] = mapped_column(Float, default=0.3)
+    coldwave_risk_weight: Mapped[float] = mapped_column(Float, default=0.3)
+    windstorm_risk_weight: Mapped[float] = mapped_column(Float, default=0.3)

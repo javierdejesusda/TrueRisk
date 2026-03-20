@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.api import provinces, weather, alerts, risk, backoffice, analysis
+from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
 
 
 @asynccontextmanager
@@ -49,6 +49,9 @@ app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["alerts"])
 app.include_router(risk.router, prefix="/api/v1/risk", tags=["risk"])
 app.include_router(backoffice.router, prefix="/api/v1/backoffice", tags=["backoffice"])
 app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["analysis"])
+app.include_router(push.router, prefix="/api/v1/push", tags=["push"])
+app.include_router(community.router, prefix="/api/v1/community", tags=["community"])
+app.include_router(advisor.router, prefix="/api/v1/advisor", tags=["advisor"])
 
 
 @app.get("/health")

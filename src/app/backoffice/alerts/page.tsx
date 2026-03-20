@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,32 +26,12 @@ interface AlertRow {
   created_at: string;
 }
 
-// ── Filter options ───────────────────────────────────────────────────────
-
-const statusOptions = [
-  { value: '', label: 'All statuses' },
-  { value: 'true', label: 'Active' },
-  { value: 'false', label: 'Inactive' },
-];
-
-const typeFilterOptions = [
-  { value: '', label: 'All types' },
-  { value: 'flood', label: 'Flood' },
-  { value: 'wildfire', label: 'Wildfire' },
-  { value: 'drought', label: 'Drought' },
-  { value: 'heatwave', label: 'Heatwave' },
-];
-
-const typeLabels: Record<string, string> = {
-  flood: 'Flood',
-  wildfire: 'Wildfire',
-  drought: 'Drought',
-  heatwave: 'Heatwave',
-};
-
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function BackofficeAlertsPage() {
+  const t = useTranslations('Backoffice');
+  const tCommon = useTranslations('Common');
+  const tDisaster = useTranslations('DisasterTypes');
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -61,6 +42,20 @@ export default function BackofficeAlertsPage() {
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+
+  const statusOptions = [
+    { value: '', label: t('allStatuses') },
+    { value: 'true', label: t('active') },
+    { value: 'false', label: t('inactive') },
+  ];
+
+  const typeFilterOptions = [
+    { value: '', label: t('allTypes') },
+    { value: 'flood', label: tDisaster('flood') },
+    { value: 'wildfire', label: tDisaster('wildfire') },
+    { value: 'drought', label: tDisaster('drought') },
+    { value: 'heatwave', label: tDisaster('heatwave') },
+  ];
 
   const fetchAlerts = useCallback(async () => {
     setIsLoading(true);
@@ -153,15 +148,15 @@ export default function BackofficeAlertsPage() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">
-            Alert Management
+          <h1 className="text-2xl font-bold text-text-primary font-[family-name:var(--font-display)]">
+            {t('alertManagement')}
           </h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            Create, monitor, and manage emergency alerts
+          <p className="mt-1 text-sm text-text-secondary font-[family-name:var(--font-sans)]">
+            {t('alertManagementSubtitle')}
           </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
-          Create New Alert
+          {t('createNewAlert')}
         </Button>
       </div>
 
@@ -170,7 +165,7 @@ export default function BackofficeAlertsPage() {
         <div className="flex flex-wrap items-end gap-4">
           <div className="w-40">
             <Select
-              label="Status"
+              label={t('status')}
               options={statusOptions}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -178,7 +173,7 @@ export default function BackofficeAlertsPage() {
           </div>
           <div className="w-40">
             <Select
-              label="Type"
+              label={t('type')}
               options={typeFilterOptions}
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
@@ -193,26 +188,26 @@ export default function BackofficeAlertsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Severity
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('severity')}
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Type
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('type')}
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Province
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('province')}
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Title
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('title')}
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Status
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('status')}
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Created
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('created')}
                 </th>
-                <th className="px-4 py-3 font-medium text-text-secondary">
-                  Actions
+                <th className="px-4 py-3 font-medium text-text-secondary font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wider">
+                  {t('actions')}
                 </th>
               </tr>
             </thead>
@@ -249,7 +244,7 @@ export default function BackofficeAlertsPage() {
                     colSpan={7}
                     className="px-4 py-12 text-center text-text-muted"
                   >
-                    No alerts found
+                    {t('noAlertsFound')}
                   </td>
                 </tr>
               ) : (
@@ -263,10 +258,10 @@ export default function BackofficeAlertsPage() {
                         {alert.severity}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
-                      {typeLabels[alert.hazard_type] ?? alert.hazard_type}
+                    <td className="px-4 py-3 text-text-primary font-[family-name:var(--font-mono)] text-[11px] uppercase">
+                      {tDisaster.has(alert.hazard_type) ? tDisaster(alert.hazard_type as Parameters<typeof tDisaster>[0]) : alert.hazard_type}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">
+                    <td className="px-4 py-3 text-text-secondary font-[family-name:var(--font-mono)]">
                       {alert.province_code ?? 'All'}
                     </td>
                     <td className="px-4 py-3 text-text-primary">
@@ -277,10 +272,10 @@ export default function BackofficeAlertsPage() {
                         variant={alert.is_active ? 'success' : 'neutral'}
                         size="sm"
                       >
-                        {alert.is_active ? 'Active' : 'Inactive'}
+                        {alert.is_active ? t('active') : t('inactive')}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
+                    <td className="px-4 py-3 text-text-secondary whitespace-nowrap font-[family-name:var(--font-mono)] text-[11px]">
                       {formatDate(alert.created_at)}
                     </td>
                     <td className="px-4 py-3">
@@ -291,7 +286,7 @@ export default function BackofficeAlertsPage() {
                           loading={togglingId === alert.id}
                           onClick={() => toggleActive(alert)}
                         >
-                          {alert.is_active ? 'Deactivate' : 'Activate'}
+                          {alert.is_active ? t('deactivate') : t('activate')}
                         </Button>
                         <Button
                           variant="danger"
@@ -299,7 +294,7 @@ export default function BackofficeAlertsPage() {
                           loading={deletingId === alert.id}
                           onClick={() => setDeleteConfirmId(alert.id)}
                         >
-                          Delete
+                          {t('delete')}
                         </Button>
                       </div>
                     </td>
@@ -315,7 +310,7 @@ export default function BackofficeAlertsPage() {
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create New Alert"
+        title={t('createNewAlert')}
       >
         <CreateAlertForm
           onSuccess={() => {
@@ -330,12 +325,11 @@ export default function BackofficeAlertsPage() {
       <Modal
         isOpen={deleteConfirmId !== null}
         onClose={() => setDeleteConfirmId(null)}
-        title="Confirm Delete"
+        title={t('confirmDelete')}
       >
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Are you sure you want to delete this alert? This action cannot be
-            undone.
+            {t('deleteConfirmText')}
           </p>
           <div className="flex items-center justify-end gap-3">
             <Button
@@ -343,7 +337,7 @@ export default function BackofficeAlertsPage() {
               size="sm"
               onClick={() => setDeleteConfirmId(null)}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="danger"
@@ -353,7 +347,7 @@ export default function BackofficeAlertsPage() {
                 if (deleteConfirmId !== null) deleteAlert(deleteConfirmId);
               }}
             >
-              Delete Alert
+              {t('deleteAlert')}
             </Button>
           </div>
         </div>

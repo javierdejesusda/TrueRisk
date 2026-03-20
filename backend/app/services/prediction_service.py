@@ -531,6 +531,7 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
         daily_wind_maxes = winds
 
     # Build 365-day baseline from daily summaries for z-score
+    baseline_records: list[dict[str, Any]] = []
     if has_enough_daily:
         baseline_records = [
             {

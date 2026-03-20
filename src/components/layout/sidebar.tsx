@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from './language-switcher';
 
 interface NavItem {
   label: string;
@@ -86,22 +88,21 @@ function CloseIcon() {
   );
 }
 
-/* Navigation data */
-
-const navLinks: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
-  { label: 'Map', href: '/map', icon: <MapIcon /> },
-  { label: 'Predictions', href: '/prediction', icon: <PredictionIcon /> },
-  { label: 'Alerts', href: '/alerts', icon: <AlertIcon /> },
-  { label: 'Settings', href: '/profile', icon: <ProfileIcon /> },
-  { label: 'Admin', href: '/backoffice', icon: <RecordsIcon /> },
-];
-
 /* Sidebar component */
 
 export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const t = useTranslations('Nav');
+
+  const navLinks: NavItem[] = [
+    { label: t('dashboard'), href: '/dashboard', icon: <DashboardIcon /> },
+    { label: t('map'), href: '/map', icon: <MapIcon /> },
+    { label: t('predictions'), href: '/prediction', icon: <PredictionIcon /> },
+    { label: t('alerts'), href: '/alerts', icon: <AlertIcon /> },
+    { label: t('settings'), href: '/profile', icon: <ProfileIcon /> },
+    { label: t('admin'), href: '/backoffice', icon: <RecordsIcon /> },
+  ];
 
   const isActive = (href: string) => {
     return pathname === href;
@@ -116,9 +117,14 @@ export function Sidebar() {
             <path d="M10 5l-1.5 4H5l3.5 2.5L7 16l3-2.2 3 2.2-1.5-4.5L15 9h-3.5z" />
           </svg>
         </div>
-        <span className="text-lg font-bold text-white tracking-tight">
+        <span className="text-lg font-bold text-accent-green tracking-tight font-[family-name:var(--font-display)]" style={{ textShadow: '0 0 10px rgba(255,255,255,0.15)' }}>
           TrueRisk
         </span>
+      </div>
+
+      {/* Language switcher */}
+      <div className="px-4 mb-1">
+        <LanguageSwitcher />
       </div>
 
       {/* Nav links */}
@@ -131,10 +137,10 @@ export function Sidebar() {
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={[
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 font-[family-name:var(--font-sans)]',
                 active
-                  ? 'bg-white/[0.08] text-white'
-                  : 'text-[#86868B] hover:text-white',
+                  ? 'bg-accent-green/10 text-accent-green'
+                  : 'text-text-secondary hover:text-white',
               ].join(' ')}
             >
               <span className="shrink-0">{item.icon}</span>
@@ -168,7 +174,7 @@ export function Sidebar() {
       {/* Sidebar panel */}
       <aside
         className={[
-          'fixed top-0 left-0 z-40 flex h-full w-60 flex-col border-r border-white/[0.06] bg-bg-secondary',
+          'fixed top-0 left-0 z-40 flex h-full w-60 flex-col border-r border-border bg-bg-secondary',
           'transition-transform duration-200 ease-in-out',
           'lg:translate-x-0 lg:static lg:z-auto',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
