@@ -33,6 +33,10 @@ interface AppState {
   setSseStatus: (status: 'connecting' | 'connected' | 'disconnected') => void;
   pushEnabled: boolean;
   setPushEnabled: (v: boolean) => void;
+  residenceType: string;
+  setResidenceType: (v: string) => void;
+  specialNeeds: string[];
+  setSpecialNeeds: (v: string[]) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -65,6 +69,10 @@ export const useAppStore = create<AppState>()(
       setSseStatus: (sseStatus) => set({ sseStatus }),
       pushEnabled: false,
       setPushEnabled: (pushEnabled) => set({ pushEnabled }),
+      residenceType: '',
+      setResidenceType: (residenceType) => set({ residenceType }),
+      specialNeeds: [],
+      setSpecialNeeds: (specialNeeds) => set({ specialNeeds }),
     }),
     {
       name: 'truerisk-province',
@@ -74,6 +82,8 @@ export const useAppStore = create<AppState>()(
         activeMapLayer: state.activeMapLayer,
         panelsVisible: state.panelsVisible,
         pushEnabled: state.pushEnabled,
+        residenceType: state.residenceType,
+        specialNeeds: state.specialNeeds,
       }),
     }
   )
