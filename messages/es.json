@@ -459,5 +459,10 @@
     "es": "ES",
     "en": "EN",
     "switch": "Idioma"
+  },
+  "NotFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o ha sido movida.",
+    "goToMap": "Ir al Mapa"
   }
 }
