@@ -40,11 +40,11 @@ export default function PredictionPage() {
           </svg>
         </div>
         <p className="text-sm text-text-muted">
-          {error ?? `No prediction data available for ${provinceName}`}
+          {error ?? t('noPredictionData', { province: provinceName })}
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refresh()}>{tCommon('retry')}</Button>
-          <Button variant="outline" size="sm" onClick={() => setProvinceCode('28')}>Try Madrid</Button>
+          <Button variant="outline" size="sm" onClick={() => setProvinceCode('28')}>{t('tryMadrid')}</Button>
         </div>
       </div>
     );
@@ -80,7 +80,7 @@ export default function PredictionPage() {
             <option key={p.code} value={p.code} className="bg-bg-secondary">{p.name}</option>
           ))}
         </select>
-        <span className="text-xs font-[family-name:var(--font-sans)] text-text-muted">Province analysis</span>
+        <span className="text-xs font-[family-name:var(--font-sans)] text-text-muted">{t('provinceAnalysis')}</span>
       </div>
       <PredictionHeader current={data.current} />
       <PredictionsExplainer />

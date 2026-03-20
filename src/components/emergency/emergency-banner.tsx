@@ -36,7 +36,7 @@ export function EmergencyBanner() {
           </span>
           <div className="flex-1 min-w-0">
             <p className="font-[family-name:var(--font-display)] text-xs font-bold text-white uppercase tracking-wider">
-              {isCritical ? 'RIESGO CRITICO' : 'RIESGO ALTO'} — {risk?.dominant_hazard}
+              {isCritical ? tEmergency('criticalRisk') : tEmergency('highRisk')} — {risk?.dominant_hazard}
             </p>
             {expanded && guidance ? (
               <p className="font-[family-name:var(--font-sans)] text-[11px] text-white/90 mt-2 leading-relaxed">
@@ -44,7 +44,7 @@ export function EmergencyBanner() {
               </p>
             ) : (
               <p className="font-[family-name:var(--font-mono)] text-[10px] text-white/70 mt-1">
-                Puntuacion: {risk?.composite_score?.toFixed(0)}/100
+                {tEmergency('score')} {risk?.composite_score?.toFixed(0)}/100
               </p>
             )}
           </div>
@@ -62,7 +62,7 @@ export function EmergencyBanner() {
                 onClick={() => setExpanded(false)}
                 className="font-[family-name:var(--font-sans)] text-[10px] text-white/60 hover:text-white/80 px-2 py-1 cursor-pointer"
               >
-                Minimizar
+                {tEmergency('minimize')}
               </button>
             )}
             <button

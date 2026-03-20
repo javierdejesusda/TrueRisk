@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -25,11 +26,11 @@ interface Props {
   riskData: HazardScore | null;
 }
 
-function scoreBadge(score: number): { label: string; variant: 'danger' | 'warning' | 'info' | 'success' } {
-  if (score >= 70) return { label: 'High Risk', variant: 'danger' };
-  if (score >= 50) return { label: 'Moderate Risk', variant: 'warning' };
-  if (score >= 30) return { label: 'Low Risk', variant: 'info' };
-  return { label: 'Minimal', variant: 'success' };
+function scoreBadge(score: number, t?: (key: string) => string): { label: string; variant: 'danger' | 'warning' | 'info' | 'success' } {
+  if (score >= 70) return { label: t ? t('highRisk') : 'High Risk', variant: 'danger' };
+  if (score >= 50) return { label: t ? t('moderateRisk') : 'Moderate Risk', variant: 'warning' };
+  if (score >= 30) return { label: t ? t('lowRisk') : 'Low Risk', variant: 'info' };
+  return { label: t ? t('minimal') : 'Minimal', variant: 'success' };
 }
 
 function FeatureBar({ name, value, color }: { name: string; value: number; color: string }) {
@@ -67,8 +68,9 @@ function HazardCardContent({ score, features, statBoxes }: {
 }
 
 export function FloodModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.flood_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard
@@ -97,8 +99,9 @@ export function FloodModelCard({ riskData }: Props) {
 }
 
 export function WildfireModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.wildfire_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard
@@ -127,8 +130,9 @@ export function WildfireModelCard({ riskData }: Props) {
 }
 
 export function DroughtModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.drought_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard
@@ -157,8 +161,9 @@ export function DroughtModelCard({ riskData }: Props) {
 }
 
 export function HeatwaveModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.heatwave_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard
@@ -187,8 +192,9 @@ export function HeatwaveModelCard({ riskData }: Props) {
 }
 
 export function SeismicModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.seismic_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard
@@ -217,8 +223,9 @@ export function SeismicModelCard({ riskData }: Props) {
 }
 
 export function ColdwaveModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.coldwave_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard
@@ -247,8 +254,9 @@ export function ColdwaveModelCard({ riskData }: Props) {
 }
 
 export function WindstormModelCard({ riskData }: Props) {
+  const t = useTranslations('HazardModels');
   const score = riskData?.windstorm_score ?? 0;
-  const badge = scoreBadge(score);
+  const badge = scoreBadge(score, t);
 
   return (
     <ModelCard

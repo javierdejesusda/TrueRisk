@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,30 +28,7 @@ const alertFormSchema = z.object({
 
 type AlertFormData = z.infer<typeof alertFormSchema>;
 
-// ── Select options ───────────────────────────────────────────────────────
-
-const severityOptions = [
-  { value: '1', label: '1 - Low' },
-  { value: '2', label: '2 - Moderate' },
-  { value: '3', label: '3 - High' },
-  { value: '4', label: '4 - Very High' },
-  { value: '5', label: '5 - Critical' },
-];
-
-const typeOptions = [
-  { value: 'flood', label: 'Flood' },
-  { value: 'wildfire', label: 'Wildfire' },
-  { value: 'drought', label: 'Drought' },
-  { value: 'heatwave', label: 'Heatwave' },
-];
-
-const provinceOptions = [
-  { value: '', label: 'Todas (All provinces)' },
-  ...Object.entries(PROVINCES).map(([code, info]) => ({
-    value: code,
-    label: `${info.name} (${code})`,
-  })),
-];
+// ── Select options (built inside component for i18n) ─────────────────────
 
 // ── Props ────────────────────────────────────────────────────────────────
 
@@ -72,6 +50,32 @@ export function CreateAlertForm({
   onSuccess,
   onCancel,
 }: CreateAlertFormProps) {
+  const t = useTranslations('CreateAlert');
+  const tCommon = useTranslations('Common');
+
+  const severityOptions = [
+    { value: '1', label: t('severityLow') },
+    { value: '2', label: t('severityModerate') },
+    { value: '3', label: t('severityHigh') },
+    { value: '4', label: t('severityVeryHigh') },
+    { value: '5', label: t('severityCritical') },
+  ];
+
+  const typeOptions = [
+    { value: 'flood', label: t('flood') },
+    { value: 'wildfire', label: t('wildfire') },
+    { value: 'drought', label: t('drought') },
+    { value: 'heatwave', label: t('heatwave') },
+  ];
+
+  const provinceOptions = [
+    { value: '', label: t('allProvinces') },
+    ...Object.entries(PROVINCES).map(([code, info]) => ({
+      value: code,
+      label: `${info.name} (${code})`,
+    })),
+  ];
+
   const [severity, setSeverity] = useState(
     String(defaultValues?.severity ?? '3'),
   );
@@ -127,9 +131,9 @@ export function CreateAlertForm({
 
       if (!res.ok) {
         if (json.detail) {
-          setError(typeof json.detail === 'string' ? json.detail : 'Failed to create alert');
+          setError(typeof json.detail === 'string' ? json.detail : t('failedToCreate'));
         } else {
-          setError(json.error ?? 'Failed to create alert');
+          setError(json.error ?? t('failedToCreate'));
         }
         return;
       }
@@ -138,7 +142,7 @@ export function CreateAlertForm({
       onSuccess?.();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'An unexpected error occurred',
+        err instanceof Error ? err.message : t('unexpectedError'),
       );
     } finally {
       setIsLoading(false);
@@ -164,11 +168,11 @@ export function CreateAlertForm({
             </svg>
           </div>
           <p className="text-sm font-medium text-text-primary">
-            Alert created successfully
+            {t('alertCreated')}
           </p>
           {onCancel && (
             <Button variant="ghost" size="sm" onClick={onCancel}>
-              Close
+              {tCommon('close')}
             </Button>
           )}
         </div>
@@ -186,7 +190,7 @@ export function CreateAlertForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Select
-          label="Severity"
+          label={t('severity')}
           options={severityOptions}
           value={severity}
           onChange={(e) => setSeverity(e.target.value)}
@@ -194,7 +198,7 @@ export function CreateAlertForm({
         />
 
         <Select
-          label="Hazard Type"
+          label={t('hazardType')}
           options={typeOptions}
           value={hazardType}
           onChange={(e) => setHazardType(e.target.value)}
@@ -203,7 +207,7 @@ export function CreateAlertForm({
       </div>
 
       <Select
-        label="Province"
+        label={t('province')}
         options={provinceOptions}
         value={provinceCode}
         onChange={(e) => setProvinceCode(e.target.value)}
@@ -211,10 +215,10 @@ export function CreateAlertForm({
       />
 
       <Input
-        label="Title"
+        label={t('title')}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Alert title..."
+        placeholder={t('titlePlaceholder')}
         error={fieldErrors.title}
       />
 
@@ -223,13 +227,13 @@ export function CreateAlertForm({
           htmlFor="alert-description"
           className="text-sm font-medium text-text-secondary"
         >
-          Description
+          {t('description')}
         </label>
         <textarea
           id="alert-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe the alert conditions..."
+          placeholder={t('descriptionPlaceholder')}
           rows={4}
           className={[
             'w-full rounded-lg border bg-bg-secondary px-3 py-2 text-sm text-text-primary',
@@ -255,11 +259,11 @@ export function CreateAlertForm({
             onClick={onCancel}
             disabled={isLoading}
           >
-            Cancel
+            {tCommon('cancel')}
           </Button>
         )}
         <Button type="submit" loading={isLoading}>
-          Create Alert
+          {t('createAlert')}
         </Button>
       </div>
     </form>

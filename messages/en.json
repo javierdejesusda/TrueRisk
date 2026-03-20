@@ -116,7 +116,10 @@
     "hourlyRecords": "Hourly records",
     "dailySummaries": "Daily summaries",
     "oldestRecord": "Oldest record",
-    "newestRecord": "Newest record"
+    "newestRecord": "Newest record",
+    "noPredictionData": "No prediction data available for {province}",
+    "tryMadrid": "Try Madrid",
+    "provinceAnalysis": "Province analysis"
   },
   "HazardModels": {
     "overview": "Hazard Overview",
@@ -258,7 +261,11 @@
     "policiaLocal": "Local Police",
     "hospital": "Hospital",
     "callLabel": "Call {name}: {number}",
-    "emergencyGuidance": "Emergency Guidance"
+    "emergencyGuidance": "Emergency Guidance",
+    "criticalRisk": "CRITICAL RISK",
+    "highRisk": "HIGH RISK",
+    "score": "Score:",
+    "minimize": "Minimize"
   },
   "Alerts": {
     "title": "Active Alerts",
@@ -275,6 +282,29 @@
     "moderate": "Moderate",
     "low": "Low",
     "none": "None"
+  },
+  "CreateAlert": {
+    "severity": "Severity",
+    "hazardType": "Hazard Type",
+    "province": "Province",
+    "title": "Title",
+    "titlePlaceholder": "Alert title...",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe the alert conditions...",
+    "createAlert": "Create Alert",
+    "alertCreated": "Alert created successfully",
+    "failedToCreate": "Failed to create alert",
+    "unexpectedError": "An unexpected error occurred",
+    "severityLow": "1 - Low",
+    "severityModerate": "2 - Moderate",
+    "severityHigh": "3 - High",
+    "severityVeryHigh": "4 - Very High",
+    "severityCritical": "5 - Critical",
+    "flood": "Flood",
+    "wildfire": "Wildfire",
+    "drought": "Drought",
+    "heatwave": "Heatwave",
+    "allProvinces": "All provinces"
   },
   "Community": {
     "reportHazard": "Report hazard",

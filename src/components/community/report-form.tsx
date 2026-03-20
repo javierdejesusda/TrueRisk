@@ -5,14 +5,6 @@ import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import type { CreateReportData } from '@/hooks/use-community-reports';
 
-const HAZARD_OPTIONS = [
-  { value: 'flood', label: 'Inundacion' },
-  { value: 'road_blocked', label: 'Carretera cortada' },
-  { value: 'power_outage', label: 'Corte de luz' },
-  { value: 'structural_damage', label: 'Dano estructural' },
-  { value: 'other', label: 'Otro' },
-] as const;
-
 interface ReportFormProps {
   onSubmit: (data: CreateReportData) => Promise<unknown>;
   onClose: () => void;
@@ -20,6 +12,14 @@ interface ReportFormProps {
 
 export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
   const t = useTranslations('Community');
+
+  const HAZARD_OPTIONS = [
+    { value: 'flood', label: t('flood') },
+    { value: 'road_blocked', label: t('roadBlocked') },
+    { value: 'power_outage', label: t('powerOutage') },
+    { value: 'structural_damage', label: t('structuralDamage') },
+    { value: 'other', label: t('other') },
+  ] as const;
   const provinceCode = useAppStore((s) => s.provinceCode);
   const [hazardType, setHazardType] = useState<CreateReportData['hazard_type']>('flood');
   const [severity, setSeverity] = useState(3);

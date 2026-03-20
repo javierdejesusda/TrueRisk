@@ -21,15 +21,15 @@ self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {};
   const title = data.title || 'TrueRisk Alert';
   const options = {
-    body: data.body || 'Alerta de emergencia detectada',
+    body: data.body || 'Emergency alert detected',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     vibrate: [200, 100, 200, 100, 200],
     tag: data.tag || 'truerisk-alert',
     data: { url: data.url || '/alerts', provinceCode: data.provinceCode },
     actions: [
-      { action: 'view', title: 'Ver detalles' },
-      { action: 'dismiss', title: 'Descartar' },
+      { action: 'view', title: 'View details' },
+      { action: 'dismiss', title: 'Dismiss' },
     ],
   };
   event.waitUntil(self.registration.showNotification(title, options));

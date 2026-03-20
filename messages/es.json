@@ -116,7 +116,10 @@
     "hourlyRecords": "Registros horarios",
     "dailySummaries": "Resumenes diarios",
     "oldestRecord": "Registro mas antiguo",
-    "newestRecord": "Registro mas reciente"
+    "newestRecord": "Registro mas reciente",
+    "noPredictionData": "No hay datos de prediccion para {province}",
+    "tryMadrid": "Probar Madrid",
+    "provinceAnalysis": "Analisis de provincia"
   },
   "HazardModels": {
     "overview": "Vision General de Peligros",
@@ -258,7 +261,11 @@
     "policiaLocal": "Policia Local",
     "hospital": "Hospital",
     "callLabel": "Llamar a {name}: {number}",
-    "emergencyGuidance": "Orientacion de emergencia"
+    "emergencyGuidance": "Orientacion de emergencia",
+    "criticalRisk": "RIESGO CRITICO",
+    "highRisk": "RIESGO ALTO",
+    "score": "Puntuacion:",
+    "minimize": "Minimizar"
   },
   "Alerts": {
     "title": "Alertas Activas",
@@ -275,6 +282,29 @@
     "moderate": "Moderado",
     "low": "Bajo",
     "none": "Ninguno"
+  },
+  "CreateAlert": {
+    "severity": "Gravedad",
+    "hazardType": "Tipo de peligro",
+    "province": "Provincia",
+    "title": "Titulo",
+    "titlePlaceholder": "Titulo de la alerta...",
+    "description": "Descripcion",
+    "descriptionPlaceholder": "Describe las condiciones de la alerta...",
+    "createAlert": "Crear alerta",
+    "alertCreated": "Alerta creada con exito",
+    "failedToCreate": "Error al crear la alerta",
+    "unexpectedError": "Ocurrio un error inesperado",
+    "severityLow": "1 - Bajo",
+    "severityModerate": "2 - Moderado",
+    "severityHigh": "3 - Alto",
+    "severityVeryHigh": "4 - Muy alto",
+    "severityCritical": "5 - Critico",
+    "flood": "Inundacion",
+    "wildfire": "Incendio forestal",
+    "drought": "Sequia",
+    "heatwave": "Ola de calor",
+    "allProvinces": "Todas las provincias"
   },
   "Community": {
     "reportHazard": "Reportar peligro",
