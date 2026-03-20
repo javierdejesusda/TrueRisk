@@ -14,8 +14,8 @@ describe('exportCsv', () => {
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     createObjectURLSpy = vi.fn().mockReturnValue('blob:test-url');
     revokeObjectURLSpy = vi.fn();
-    global.URL.createObjectURL = createObjectURLSpy;
-    global.URL.revokeObjectURL = revokeObjectURLSpy;
+    global.URL.createObjectURL = createObjectURLSpy as typeof URL.createObjectURL;
+    global.URL.revokeObjectURL = revokeObjectURLSpy as typeof URL.revokeObjectURL;
   });
 
   it('does nothing for empty data', () => {
