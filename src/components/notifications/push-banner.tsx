@@ -12,6 +12,7 @@ export function PushBanner() {
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading localStorage on mount is intentional
     setDismissed(localStorage.getItem(DISMISSED_KEY) === '1');
   }, []);
 

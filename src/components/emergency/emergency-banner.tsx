@@ -18,6 +18,7 @@ export function EmergencyBanner() {
   const isCritical = risk && risk.composite_score >= 80;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on province change is intentional
     setDismissed(false);
   }, [provinceCode]);
 

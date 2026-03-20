@@ -259,7 +259,7 @@ export default function BackofficeAlertsPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-text-primary font-[family-name:var(--font-mono)] text-[11px] uppercase">
-                      {tDisaster.has(alert.hazard_type) ? tDisaster(alert.hazard_type as any) : alert.hazard_type}
+                      {tDisaster.has(alert.hazard_type) ? tDisaster(alert.hazard_type as Parameters<typeof tDisaster>[0]) : alert.hazard_type}
                     </td>
                     <td className="px-4 py-3 text-text-secondary font-[family-name:var(--font-mono)]">
                       {alert.province_code ?? 'All'}

@@ -7,6 +7,7 @@ export function useOfflineStatus() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrating client-only state on mount is intentional
     setIsOffline(!navigator.onLine);
 
     const goOffline = () => setIsOffline(true);
