@@ -15,10 +15,13 @@ export function usePredictions(provinceCode?: string) {
     try {
       setIsLoading(true);
       const res = await fetch(`/api/analysis/predictions?province=${code}`);
-      const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.detail ?? `HTTP ${res.status}`);
+        const text = await res.text();
+        let detail = `HTTP ${res.status}`;
+        try { detail = JSON.parse(text).detail ?? detail; } catch { /* plain text error */ }
+        throw new Error(detail);
       }
+      const json = await res.json();
       setData(json);
       setError(null);
     } catch (err) {
