@@ -76,7 +76,7 @@ async def notify_province(
     )
 
     for item in results:
-        if isinstance(item, Exception):
+        if isinstance(item, BaseException):
             logger.error("Unexpected error sending push: %s", item)
             continue
         sub, outcome = item
