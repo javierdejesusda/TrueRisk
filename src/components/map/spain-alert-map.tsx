@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import Map, { Source, Layer, Popup, NavigationControl } from 'react-map-gl/maplibre';
+import Map, { Source, Layer, Popup, Marker, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
 import type { MapAlertData } from '@/hooks/use-map-alerts';
@@ -14,6 +14,7 @@ import { useAppStore } from '@/store/app-store';
 import { useCommunityReports } from '@/hooks/use-community-reports';
 import { ReportMarkers } from '@/components/community/report-markers';
 import { ReportForm } from '@/components/community/report-form';
+import { useGeolocation, isInSpain } from '@/hooks/use-geolocation';
 
 export interface SpainAlertMapProps {
   alertData: MapAlertData;
@@ -37,9 +38,14 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
   const [zoomLevel, setZoomLevel] = useState(5.5);
 
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
+  const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const t = useTranslations('Map');
   const { reports, submitReport } = useCommunityReports();
   const [showReportForm, setShowReportForm] = useState(false);
+  const geo = useGeolocation();
+  const [hasGeolocated, setHasGeolocated] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lng: number; lat: number } | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   // Load GeoJSON once
   useEffect(() => {
@@ -48,6 +54,71 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
       .catch((err) => console.error('Failed to load GeoJSON:', err))
       .finally(() => setGeoLoading(false));
   }, []);
+
+  // Fly to user's location and set their province once map + geo + GeoJSON are all ready
+  const geolocateUser = useCallback(() => {
+    if (!geo.latitude || !geo.longitude || !baseGeoJSON || !mapRef.current) return;
+    if (!isInSpain(geo.latitude, geo.longitude)) return;
+
+    const userLng = geo.longitude;
+    const userLat = geo.latitude;
+
+    function pointInRing(ring: number[][], px: number, py: number): boolean {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1];
+        const xj = ring[j][0], yj = ring[j][1];
+        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    }
+
+    let matchedCode: string | null = null;
+    for (const feature of baseGeoJSON.features) {
+      const geom = feature.geometry;
+      if (geom.type === 'Polygon') {
+        if (pointInRing(geom.coordinates[0] as number[][], userLng, userLat)) {
+          matchedCode = feature.properties?.['cod_prov'] ?? null;
+          break;
+        }
+      } else if (geom.type === 'MultiPolygon') {
+        for (const polygon of geom.coordinates) {
+          if (pointInRing(polygon[0] as number[][], userLng, userLat)) {
+            matchedCode = feature.properties?.['cod_prov'] ?? null;
+            break;
+          }
+        }
+        if (matchedCode) break;
+      }
+    }
+
+    if (matchedCode) {
+      setProvinceCode(matchedCode);
+    }
+
+    setUserLocation({ lng: userLng, lat: userLat });
+
+    mapRef.current.flyTo({
+      center: [userLng, userLat],
+      zoom: 9,
+      duration: 2500,
+    });
+  }, [geo.latitude, geo.longitude, baseGeoJSON, setProvinceCode]);
+
+  // Trigger geolocation when all conditions are met (geo done + GeoJSON loaded + map ready)
+  useEffect(() => {
+    if (hasGeolocated || geo.isLoading) return;
+    if (!geo.latitude || !geo.longitude) {
+      setHasGeolocated(true);
+      return;
+    }
+    if (!baseGeoJSON || !mapReady) return;
+
+    geolocateUser();
+    setHasGeolocated(true);
+  }, [hasGeolocated, geo.isLoading, geo.latitude, geo.longitude, baseGeoJSON, mapReady, geolocateUser]);
 
   // Build risk lookup for enrichGeoJSON
   const riskLookup = useMemo(() => {
@@ -284,6 +355,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
         onMouseLeave={onMouseLeave}
         onClick={onClick}
         onMoveEnd={onMoveEnd}
+        onLoad={() => setMapReady(true)}
         cursor={hoveredFeatureId ? 'pointer' : 'grab'}
       >
         <NavigationControl position="bottom-right" />
@@ -435,7 +507,12 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
           <Popup
             longitude={popupInfo.longitude}
             latitude={popupInfo.latitude}
-            anchor="bottom"
+            anchor={(() => {
+              const map = mapRef.current?.getMap();
+              if (!map) return 'bottom';
+              const point = map.project([popupInfo.longitude, popupInfo.latitude]);
+              return point.y < map.getContainer().clientHeight * 0.35 ? 'top' : 'bottom';
+            })()}
             onClose={() => setPopupInfo(null)}
             maxWidth="340px"
             closeOnClick={false}
@@ -460,6 +537,16 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
 
         {/* Community report markers */}
         <ReportMarkers reports={reports} />
+
+        {/* User location marker */}
+        {userLocation && (
+          <Marker longitude={userLocation.lng} latitude={userLocation.lat} anchor="center">
+            <div className="relative flex items-center justify-center">
+              <span className="absolute h-8 w-8 animate-ping rounded-full bg-accent-blue/30" />
+              <span className="relative h-4 w-4 rounded-full border-2 border-white bg-accent-blue shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+            </div>
+          </Marker>
+        )}
 
       </Map>
 
