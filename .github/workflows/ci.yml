@@ -87,5 +87,5 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v
         env:
-          DATABASE_URL: postgresql+asyncpg://truerisk:truerisk@localhost:5432/truerisk_test
+          DATABASE_URL: sqlite+aiosqlite:///./test.db
           JWT_SECRET: ci-test-secret
