@@ -2,14 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 
-interface FirstAidCard {
-  title: string;
-  icon: React.ReactNode;
-  borderColor: string;
-  iconColor: string;
-  steps: string[];
-}
-
 function FloodIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -3,7 +3,6 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { DarkTooltip } from './shared';
 import type { FeatureContribution } from '@/hooks/use-risk-explain';
 
 const HAZARD_COLORS: Record<string, string> = {

@@ -118,7 +118,6 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
     if (!baseGeoJSON || !mapReady) return;
 
     geolocateUser();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time geolocation trigger
     setHasGeolocated(true);
   }, [hasGeolocated, geo.isLoading, geo.latitude, geo.longitude, baseGeoJSON, mapReady, geolocateUser]);
 

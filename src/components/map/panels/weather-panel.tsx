@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { useWeather } from '@/hooks/use-weather';
 import { PanelShell } from './panel-shell';
 

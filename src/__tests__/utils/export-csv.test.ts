@@ -3,19 +3,19 @@ import { exportCsv } from '@/lib/export-csv';
 
 describe('exportCsv', () => {
   let createElementSpy: ReturnType<typeof vi.spyOn>;
-  let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
-  let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
+  let createObjectURLSpy: ReturnType<typeof vi.fn>;
+  let revokeObjectURLSpy: ReturnType<typeof vi.fn>;
   let mockLink: { href: string; download: string; style: { display: string }; click: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     mockLink = { href: '', download: '', style: { display: '' }, click: vi.fn() };
-    createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
-    createObjectURLSpy = vi.fn().mockReturnValue('blob:test-url') as any;
-    revokeObjectURLSpy = vi.fn() as any;
-    global.URL.createObjectURL = createObjectURLSpy as any;
-    global.URL.revokeObjectURL = revokeObjectURLSpy as any;
+    createObjectURLSpy = vi.fn().mockReturnValue('blob:test-url');
+    revokeObjectURLSpy = vi.fn();
+    global.URL.createObjectURL = createObjectURLSpy;
+    global.URL.revokeObjectURL = revokeObjectURLSpy;
   });
 
   it('does nothing for empty data', () => {
@@ -44,7 +44,7 @@ describe('exportCsv', () => {
   });
 
   it('handles null and undefined values', () => {
-    exportCsv([{ a: null, b: undefined, c: 'ok' } as any]);
+    exportCsv([{ a: null, b: undefined, c: 'ok' } as Record<string, unknown>]);
     expect(mockLink.click).toHaveBeenCalled();
   });
 

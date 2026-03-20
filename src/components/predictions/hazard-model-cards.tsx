@@ -51,13 +51,12 @@ function FeatureBar({ name, value, color }: { name: string; value: number; color
   );
 }
 
-function HazardCardContent({ score, hazard, explanation, statBoxes, fallbackFeatures, color }: {
+function HazardCardContent({ score, hazard, explanation, statBoxes, fallbackFeatures }: {
   score: number;
   hazard: string;
   explanation?: HazardExplanation;
   statBoxes: { label: string; value: string }[];
   fallbackFeatures: { name: string; value: number; color: string }[];
-  color: string;
 }) {
   const hasExplain = explanation && explanation.contributions.length > 0;
 
@@ -102,7 +101,7 @@ export function FloodModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="flood"
         explanation={explanation}
-        color="#3b82f6"
+
         fallbackFeatures={[
           { name: 'Soil moisture', value: 85, color: '#3b82f6' },
           { name: 'Precipitation 24h', value: 72, color: '#3b82f6' },
@@ -137,7 +136,7 @@ export function WildfireModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="wildfire"
         explanation={explanation}
-        color="#f97316"
+
         fallbackFeatures={[
           { name: 'Dry days', value: 78, color: '#f97316' },
           { name: 'FWI index', value: 65, color: '#f97316' },
@@ -172,7 +171,7 @@ export function DroughtModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="drought"
         explanation={explanation}
-        color="#FBBF24"
+
         fallbackFeatures={[
           { name: 'SPEI index', value: 82, color: '#FBBF24' },
           { name: 'Soil deficit', value: 68, color: '#FBBF24' },
@@ -207,7 +206,7 @@ export function HeatwaveModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="heatwave"
         explanation={explanation}
-        color="#ef4444"
+
         fallbackFeatures={[
           { name: 'WBGT temp', value: 88, color: '#ef4444' },
           { name: 'Hot days', value: 70, color: '#ef4444' },
@@ -242,7 +241,7 @@ export function SeismicModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="seismic"
         explanation={explanation}
-        color="#a855f7"
+
         fallbackFeatures={[
           { name: 'Magnitude', value: 75, color: '#a855f7' },
           { name: 'Frequency', value: 60, color: '#a855f7' },
@@ -277,7 +276,7 @@ export function ColdwaveModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="coldwave"
         explanation={explanation}
-        color="#22D3EE"
+
         fallbackFeatures={[
           { name: 'Wind chill', value: 80, color: '#22D3EE' },
           { name: 'Cold days', value: 65, color: '#22D3EE' },
@@ -312,7 +311,7 @@ export function WindstormModelCard({ riskData, explanations }: Props) {
         score={score}
         hazard="windstorm"
         explanation={explanation}
-        color="#94a3b8"
+
         fallbackFeatures={[
           { name: 'Wind speed', value: 82, color: '#94a3b8' },
           { name: 'Pressure drop', value: 68, color: '#94a3b8' },

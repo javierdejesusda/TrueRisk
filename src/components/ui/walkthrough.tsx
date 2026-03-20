@@ -57,6 +57,7 @@ export function Walkthrough() {
   }, [step]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- measuring DOM layout on mount requires sync setState
     updateRect();
     window.addEventListener('resize', updateRect);
     return () => window.removeEventListener('resize', updateRect);
