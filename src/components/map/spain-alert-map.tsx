@@ -378,7 +378,8 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
                   'interpolate', ['linear'], ['zoom'],
                   5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.7],
                   6, ['case', ['boolean', ['feature-state', 'hover'], false], 0.8, 0.65],
-                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.35],
+                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.45],
+                  7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
                 ],
               }}
             />
@@ -402,16 +403,16 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
               type="line"
               paint={{
                 'line-color': [
-                  'case',
-                  ['boolean', ['feature-state', 'hover'], false],
-                  '#EEEEF0',
-                  'rgba(255, 255, 255, 0.5)',
+                  'interpolate', ['linear'], ['zoom'],
+                  5, ['case', ['boolean', ['feature-state', 'hover'], false], '#EEEEF0', 'rgba(255, 255, 255, 0.5)'],
+                  7, ['case', ['boolean', ['feature-state', 'hover'], false], '#FBBF24', 'rgba(251, 191, 36, 0.8)'],
+                  9, ['case', ['boolean', ['feature-state', 'hover'], false], '#FBBF24', 'rgba(251, 191, 36, 0.6)'],
                 ] as unknown as maplibregl.ExpressionSpecification,
                 'line-width': [
-                  'case',
-                  ['boolean', ['feature-state', 'hover'], false],
-                  3,
-                  1.5,
+                  'interpolate', ['linear'], ['zoom'],
+                  5, ['case', ['boolean', ['feature-state', 'hover'], false], 3, 1.5],
+                  7, ['case', ['boolean', ['feature-state', 'hover'], false], 4, 3],
+                  9, ['case', ['boolean', ['feature-state', 'hover'], false], 4.5, 3.5],
                 ] as unknown as maplibregl.ExpressionSpecification,
               }}
             />
@@ -452,31 +453,31 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
             <Layer
               id="municipality-fill"
               type="fill"
+              beforeId="province-outline"
               paint={{
                 'fill-color': fillColorExpression,
                 'fill-opacity': [
-                  'case',
-                  ['boolean', ['feature-state', 'hover'], false],
-                  0.95,
-                  0.85,
+                  'interpolate', ['linear'], ['zoom'],
+                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.4, 0.25],
+                  7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.95, 0.85],
                 ],
               }}
             />
             <Layer
               id="municipality-outline"
               type="line"
+              beforeId="province-outline"
               paint={{
                 'line-color': [
                   'case',
                   ['boolean', ['feature-state', 'hover'], false],
                   '#EEEEF0',
-                  'rgba(255, 255, 255, 0.5)',
+                  'rgba(255, 255, 255, 0.2)',
                 ] as unknown as maplibregl.ExpressionSpecification,
                 'line-width': [
-                  'case',
-                  ['boolean', ['feature-state', 'hover'], false],
-                  2.5,
-                  1.5,
+                  'interpolate', ['linear'], ['zoom'],
+                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 1, 0.3],
+                  7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 2, 0.8],
                 ] as unknown as maplibregl.ExpressionSpecification,
               }}
             />

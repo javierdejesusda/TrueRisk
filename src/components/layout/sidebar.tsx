@@ -110,7 +110,7 @@ export function Sidebar() {
 
   const navContent = (
     <>
-      <div className="flex items-center gap-2.5 px-4 py-5">
+      <Link href="/" className="flex items-center gap-2.5 px-4 py-5 hover:opacity-80 transition-opacity">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10 1C5 1 1 5 1 10s4 9 9 9 9-4 9-9S15 1 10 1zm0 16c-3.9 0-7-3.1-7-7s3.1-7 7-7 7 3.1 7 7-3.1 7-7 7z" />
@@ -120,7 +120,7 @@ export function Sidebar() {
         <span className="text-lg font-bold text-accent-green tracking-tight font-[family-name:var(--font-display)]" style={{ textShadow: '0 0 10px rgba(255,255,255,0.15)' }}>
           TrueRisk
         </span>
-      </div>
+      </Link>
 
       {/* Language switcher */}
       <div className="px-4 mb-1">

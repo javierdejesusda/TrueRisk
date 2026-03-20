@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
-import { PROVINCES } from '@/lib/constants/provinces';
+import { PROVINCES } from '@/lib/provinces';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -27,8 +27,8 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 // ── Province options ────────────────────────────────────────────────────
 
-const provinceOptions = Object.entries(PROVINCES)
-  .map(([code, info]) => ({ value: code, label: info.name }))
+const provinceOptions = PROVINCES
+  .map((p) => ({ value: p.code, label: p.name }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
 // ── Component ───────────────────────────────────────────────────────────

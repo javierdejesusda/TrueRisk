@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { PROVINCES } from '@/lib/constants/provinces';
+import { PROVINCES } from '@/lib/provinces';
 
 // ── Zod schema ───────────────────────────────────────────────────────────
 
@@ -70,9 +70,9 @@ export function CreateAlertForm({
 
   const provinceOptions = [
     { value: '', label: t('allProvinces') },
-    ...Object.entries(PROVINCES).map(([code, info]) => ({
-      value: code,
-      label: `${info.name} (${code})`,
+    ...PROVINCES.map((p) => ({
+      value: p.code,
+      label: `${p.name} (${p.code})`,
     })),
   ];
 

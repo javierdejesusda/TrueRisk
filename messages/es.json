@@ -148,6 +148,7 @@
     "coldwaveMethod": "Rastrea la sensacion termica, dias frios consecutivos (max <5C) y noches frias (min <0C), altitud y exposicion interior. Disenado para detectar eventos tipo Filomena.",
     "windstorm": "Tormentas de Viento / Vientos DANA",
     "windstormSubtitle": "Basado en reglas — viento + dinamica de presion",
+    "none": "Ninguno",
     "windstormMethod": "Analiza velocidad sostenida del viento, intensidad de rafagas y dinamica de presion barometrica. Caidas rapidas de presion senalan sistemas de tormenta en aproximacion.",
     "model": "Modelo",
     "features": "Caracteristicas",

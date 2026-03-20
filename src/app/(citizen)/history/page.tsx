@@ -6,14 +6,14 @@ import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { Select } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { PROVINCES } from '@/lib/constants/provinces';
+import { PROVINCES } from '@/lib/provinces';
 import { useWeatherHistory } from '@/hooks/use-weather-history';
 import { DateRangeBar, type DateRange } from '@/components/history/date-range-bar';
 import { HistoryChart } from '@/components/history/history-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const provinceOptions = Object.entries(PROVINCES)
-  .map(([code, info]) => ({ value: code, label: info.name }))
+const provinceOptions = PROVINCES
+  .map((p) => ({ value: p.code, label: p.name }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function HistoryPage() {
@@ -38,7 +38,7 @@ export default function HistoryPage() {
     };
   }, [data]);
 
-  const provinceName = PROVINCES[provinceCode]?.name ?? provinceCode;
+  const provinceName = PROVINCES.find(p => p.code === provinceCode)?.name ?? provinceCode;
 
   return (
     <motion.div

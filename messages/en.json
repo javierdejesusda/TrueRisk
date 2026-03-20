@@ -148,6 +148,7 @@
     "coldwaveMethod": "Tracks wind chill temperature, consecutive cold days (max <5C) and cold nights (min <0C), elevation, and inland exposure. Designed to detect Filomena-type events.",
     "windstorm": "Windstorms / DANA Winds",
     "windstormSubtitle": "Rule-based — wind + pressure dynamics",
+    "none": "None",
     "windstormMethod": "Analyzes sustained wind speed, gust intensity, and barometric pressure dynamics. Rapid pressure drops signal approaching storm systems.",
     "model": "Model",
     "features": "Features",

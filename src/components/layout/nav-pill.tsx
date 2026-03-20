@@ -36,12 +36,13 @@ export function NavPill() {
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 glass-heavy rounded-2xl h-12 px-5 max-w-3xl w-auto"
     >
       {/* Logo */}
-      <span
-        className="text-sm font-bold text-accent-green font-[family-name:var(--font-display)] tracking-tight select-none shrink-0"
+      <Link
+        href="/"
+        className="text-sm font-bold text-accent-green font-[family-name:var(--font-display)] tracking-tight select-none shrink-0 hover:opacity-80 transition-opacity"
         style={{ textShadow: '0 0 12px rgba(255, 255, 255, 0.2)' }}
       >
         TrueRisk
-      </span>
+      </Link>
 
       <div className="w-px h-5 bg-gradient-to-b from-transparent via-white/10 to-transparent shrink-0" />
 

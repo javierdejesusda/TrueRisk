@@ -4,15 +4,15 @@ import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { Select } from '@/components/ui/select';
-import { PROVINCES } from '@/lib/constants/provinces';
+import { PROVINCES } from '@/lib/provinces';
 import { RiskOverview } from '@/components/dashboard/risk-overview';
 import { WeatherCard } from '@/components/dashboard/weather-card';
 import { AlertFeed } from '@/components/dashboard/alert-feed';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { Walkthrough } from '@/components/ui/walkthrough';
 
-const provinceOptions = Object.entries(PROVINCES)
-  .map(([code, info]) => ({ value: code, label: info.name }))
+const provinceOptions = PROVINCES
+  .map((p) => ({ value: p.code, label: p.name }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function DashboardPage() {
