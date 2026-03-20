@@ -23,6 +23,7 @@ export const metadata: Metadata = {
   },
   description:
     "Real-time weather monitoring, AI-powered risk analysis, and personalised emergency guidance for all 52 Spanish provinces.",
+  keywords: ["risk intelligence", "weather monitoring", "machine learning", "Spain", "natural hazards"],
   openGraph: {
     title: "TrueRisk",
     description: "Multi-hazard risk intelligence for Spain",
@@ -30,6 +31,11 @@ export const metadata: Metadata = {
     siteName: "TrueRisk",
     locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TrueRisk — Multi-Hazard Risk Intelligence",
+    description: "AI-powered risk scoring across 7 natural hazards for all 52 Spanish provinces",
   },
 };
 
