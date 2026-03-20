@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@swc/helpers": "^0.5.19",
     "@types/topojson-client": "^3.1.5",
     "d3": "^7.9.0",
     "framer-motion": "^12.38.0",
