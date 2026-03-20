@@ -13,6 +13,8 @@ interface PanelsVisible {
 }
 
 interface AppState {
+  locale: 'es' | 'en';
+  setLocale: (locale: 'es' | 'en') => void;
   provinceCode: string;
   setProvinceCode: (code: string) => void;
   weather: CurrentWeather | null;
@@ -36,6 +38,12 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
+      locale: 'es' as const,
+      setLocale: (locale: 'es' | 'en') => {
+        document.cookie = `locale=${locale};path=/;max-age=31536000`;
+        set({ locale });
+        window.location.reload();
+      },
       provinceCode: '28',
       setProvinceCode: (provinceCode) => set({ provinceCode }),
       weather: null,
@@ -61,6 +69,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'truerisk-province',
       partialize: (state) => ({
+        locale: state.locale,
         provinceCode: state.provinceCode,
         activeMapLayer: state.activeMapLayer,
         panelsVisible: state.panelsVisible,

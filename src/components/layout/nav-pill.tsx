@@ -3,20 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
+import { LanguageSwitcher } from './language-switcher';
 
 export function NavPill() {
   const pathname = usePathname();
   const alerts = useAppStore((s) => s.alerts);
   const risk = useAppStore((s) => s.risk);
+  const t = useTranslations('Nav');
 
   const isHighRisk = risk && risk.composite_score >= 60;
 
   const navItems = [
-    { href: '/map', label: 'Map' },
-    { href: '/prediction', label: 'Predictions' },
-    { href: '/alerts', label: 'Alerts' },
-    { href: '/emergency', label: 'SOS' },
+    { href: '/map', label: t('map') },
+    { href: '/prediction', label: t('predictions') },
+    { href: '/alerts', label: t('alerts') },
+    { href: '/emergency', label: t('sos') },
   ];
 
   const isActive = (href: string) => {
@@ -34,7 +37,7 @@ export function NavPill() {
       {/* Logo */}
       <span
         className="text-sm font-bold text-accent-green font-[family-name:var(--font-display)] tracking-tight select-none shrink-0"
-        style={{ textShadow: '0 0 12px rgba(34, 245, 140, 0.4)' }}
+        style={{ textShadow: '0 0 12px rgba(255, 255, 255, 0.2)' }}
       >
         TrueRisk
       </span>
@@ -63,6 +66,9 @@ export function NavPill() {
           </Link>
         ))}
       </div>
+
+      {/* Language switcher */}
+      <LanguageSwitcher />
 
       {/* Alert indicator */}
       {alerts.length > 0 && (
