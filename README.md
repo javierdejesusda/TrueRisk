@@ -1,183 +1,146 @@
-# TrueRisk - Plataforma de Gestion de Emergencias Climaticas
+# TrueRisk
 
 [![CI](https://github.com/javierdejesusda/TrueRisk/actions/workflows/ci.yml/badge.svg)](https://github.com/javierdejesusda/TrueRisk/actions/workflows/ci.yml)
 
-Plataforma web de gestion de emergencias climaticas con scoring de riesgo ML y recomendaciones personalizadas mediante prompt engineering multi-etapa.
+**Climate emergency management platform with ML-powered risk scoring for every province in Spain.**
 
 **Live:** [truerisk.cloud](https://truerisk.cloud)
 
-## Hackathon
+## Screenshots
 
-**RETO: GESTION DE EMERGENCIAS CLIMATICAS** - UPM 2026 by Next Digital Hub
+| Desktop Map View | Province Popup |
+|:-:|:-:|
+| ![Desktop Map](map-desktop.png) | ![Province Popup](map-popup-open.png) |
 
-> "Alerta Roja por lluvia" no significa lo mismo para todos - el riesgo depende de la ubicacion, tipo de residencia y necesidades personales.
+| Fly-to Animation | Madrid Detail |
+|:-:|:-:|
+| ![Fly-to Popup](map-flyto-popup.png) | ![Madrid Popup](map-madrid-popup.png) |
 
-## Arquitectura
+## What It Does
 
-Los datos meteorologicos pasan por un pipeline ML de 6 modelos (EMA, Z-score, Bayesiano, regresion, arbol de decision, KNN) que produce un score de riesgo compuesto 0-100. Este score junto con el perfil del usuario alimenta un pipeline de prompt engineering de 3 etapas que construye prompts ricos en contexto para generar instrucciones de emergencia personalizadas.
+- **Real-time risk scoring** for all 52 Spanish provinces using 7 ML models and live weather data from AEMET and Open-Meteo.
+- **Interactive map** with per-province risk levels, alerts, and seismic activity from the IGN catalog.
+- **Community reporting** where citizens can submit and view local hazard observations.
+- **Emergency advisor** providing AI-driven guidance tailored to current conditions and risk levels.
 
-### Pipeline ML
+## Architecture
 
-| Modelo | Funcion |
-|--------|---------|
-| EMA | Deteccion de tendencias en variables meteorologicas |
-| Z-Score | Deteccion de anomalias estadisticas |
-| Bayesiano | Estimacion probabilistica de riesgo por provincia/estacion |
-| Regresion Lineal | Proyeccion de tendencias a 6h y 12h |
-| Arbol de Decision | Clasificacion del tipo de emergencia |
-| KNN | Similitud con desastres historicos espanoles |
-
-### Score de Riesgo Compuesto (0-100)
-
-```
-40% Severidad Meteorologica (precipitacion, temperatura, humedad, viento)
-25% Vulnerabilidad del Usuario (tipo de residencia, necesidades especiales)
-20% Riesgo Geografico (provincia, zonas historicas de inundacion)
-15% Analisis de Patrones (tendencia EMA, anomalias z-score, similitud KNN)
-```
-
-## Stack Tecnologico
-
-- **Frontend:** Next.js 16, TypeScript, Tailwind CSS v4, Framer Motion, Recharts
-- **Backend:** Next.js App Router API Routes, Prisma + SQLite
-- **Estado:** Zustand
-- **Formularios:** React Hook Form + Zod
-- **LLM:** OpenAI SDK (gpt-4.1-nano dev / gpt-5.4 prod) + API del hackathon
-
-## Estructura del Proyecto
-
-```
-src/
-  app/           # Paginas y rutas API (Next.js App Router)
-    (auth)/      # Login y registro
-    (citizen)/   # Dashboard, alertas, historial, perfil
-    backoffice/  # Panel de administracion
-    api/         # Endpoints REST
-  lib/
-    ml/          # 6 modelos ML + motor de riesgo
-    prompts/     # Templates y pipeline de prompt engineering
-    constants/   # Provincias, tipos de residencia, umbrales
-  components/
-    ui/          # Primitivos: Button, Card, Badge, Input, Modal...
-    layout/      # Sidebar, Header, PageTransition
-    weather/     # WeatherCard, WeatherChart, WeatherTable
-    risk/        # RiskGauge, RiskBreakdown, ProvinceMap
-    alerts/      # AlertBanner, AlertCard, CreateAlertForm
-    recommendations/  # RecommendationCard
-  hooks/         # useWeather, useRiskScore, useAlerts, useAuth
-  store/         # Zustand store
-  types/         # TypeScript types
+```mermaid
+graph LR
+    A[AEMET API] --> D[FastAPI Backend]
+    B[Open-Meteo API] --> D
+    C[IGN Catalog] --> D
+    D --> E[ML Pipeline — 7 Models]
+    E --> F[Risk Scores 0–100]
+    F --> G[Next.js Frontend]
+    D --> G
 ```
 
-## Vistas
+## ML Models
 
-### Ciudadano
-- **Dashboard:** Bento grid con clima actual, gauge de riesgo, alertas activas, recomendaciones IA
-- **Alertas:** Lista de alertas activas con "Obtener consejo personalizado"
-- **Historial:** Graficos de clima y consultas pasadas con el LLM
-- **Mapa:** Mapa interactivo de Espana con alertas por provincia y municipio
-- **Predicciones:** Visualizaciones de modelos ML y distribucion de Gumbel
-- **Perfil:** Editar provincia, tipo de residencia, necesidades especiales
+| Hazard | Method | Details |
+|--------|--------|---------|
+| Flood | XGBoost | 23 features |
+| Wildfire | RF + LightGBM | 20 features |
+| Drought | SPEI + LSTM | 90-day sequences |
+| Heatwave | XGBoost + WBGT | 18 features |
+| Seismic | Rule-based | IGN catalog |
+| Cold wave | Rule-based | Wind chill + persistence |
+| Windstorm | Rule-based | Pressure dynamics |
 
-### Backoffice
-- **Dashboard:** Vision general con deteccion automatica de alertas
-- **Alertas:** CRUD completo, activar/desactivar, creacion automatica
-- **Registros:** Historial meteorologico con analisis ML, exportar CSV
-- **Ciudadanos:** Tabla de usuarios registrados
+## Risk Score (0–100)
 
-## Instalacion Local
+| Weight | Component |
+|--------|-----------|
+| 40% | Weather severity (precipitation, temperature, humidity, wind) |
+| 25% | Vulnerability (building type, special needs) |
+| 20% | Geographic risk (province, historical flood/fire zones) |
+| 15% | Pattern analysis (trends, anomalies, historical similarity) |
+
+## Tech Stack
+
+**Frontend:** Next.js 16, TypeScript, React 19, Tailwind CSS v4, Framer Motion, Zustand, Recharts, MapLibre GL, React Hook Form + Zod, next-intl
+
+**Backend:** Python 3.12, FastAPI, SQLAlchemy, Alembic, scikit-learn, XGBoost, LightGBM, PyTorch (LSTM), httpx
+
+**Data Sources:** AEMET (Spanish weather agency), Open-Meteo (forecast), IGN (seismic catalog)
+
+**Infrastructure:** Docker Compose, GitHub Actions CI
+
+## Getting Started
+
+### Frontend
 
 ```bash
-# Instalar dependencias
 npm install
-
-# Generar cliente Prisma e inicializar base de datos
-npx prisma generate
-npx prisma db push
-
-# Poblar base de datos con usuarios demo
-npx tsx prisma/seed.ts
-
-# Iniciar servidor de desarrollo
 npm run dev
 ```
 
-## Variables de Entorno
-
-Crear `.env`:
-
-```env
-DATABASE_URL="file:./dev.db"
-HACKATON_API_BASE="http://ec2-54-171-51-31.eu-west-1.compute.amazonaws.com"
-HACKATON_API_KEY="<token>"
-OPENAI_API_KEY="<key>"
-OPENAI_MODEL="gpt-4.1-nano"
-JWT_SECRET="<secret>"
-USE_MOCK="false"
-```
-
-## Usuarios Demo
-
-| Usuario | Password | Rol |
-|---------|----------|-----|
-| admin | admin123 | backoffice |
-| maria_valencia | demo123 | citizen |
-| carlos_madrid | demo123 | citizen |
-| ana_sevilla | demo123 | citizen |
-
-## Despliegue
-
-### Vercel (Recomendado)
-
-1. Conectar repositorio en [vercel.com](https://vercel.com)
-2. Configurar variables de entorno en el dashboard de Vercel
-3. Configurar dominio personalizado: `truerisk.cloud`
-4. El deploy se ejecuta automaticamente con cada push a `main`
-
-### Docker
+### Backend
 
 ```bash
-# Construir imagen
-docker build -t truerisk .
-
-# Ejecutar contenedor
-docker run -p 3000:3000 \
-  -e DATABASE_URL="file:./dev.db" \
-  -e JWT_SECRET="<secret>" \
-  -e HACKATON_API_BASE="<url>" \
-  -e HACKATON_API_KEY="<token>" \
-  -e OPENAI_API_KEY="<key>" \
-  truerisk
-
-# O con docker-compose
-docker compose up -d
+cd backend
+pip install -e ".[dev]"
+uvicorn app.main:app --reload
 ```
 
-### CI/CD
+## Docker
 
-El proyecto incluye GitHub Actions que ejecuta en cada push/PR:
-- Type checking (TypeScript)
-- Linting (ESLint)
-- Build de produccion
+```bash
+docker-compose up
+```
 
 ## API Endpoints
 
-| Endpoint | Metodo | Descripcion |
-|----------|--------|-------------|
-| `/api/auth/register` | POST | Registro de usuario |
-| `/api/auth/login` | POST | Inicio de sesion |
-| `/api/auth/session` | GET | Verificar sesion |
-| `/api/auth/profile` | GET/PATCH | Perfil de usuario |
-| `/api/weather/current` | GET | Clima actual |
-| `/api/weather/history` | GET | Historial meteorologico |
-| `/api/analysis/risk` | GET | Analisis de riesgo ML |
-| `/api/llm/recommend` | POST | Recomendacion personalizada |
-| `/api/alerts` | GET/POST/PATCH/DELETE | CRUD de alertas |
-| `/api/alerts/detect` | GET | Deteccion automatica |
-| `/api/alerts/stream` | GET | SSE tiempo real |
-| `/api/consultations` | GET/POST | Historial de consultas |
-| `/api/citizens` | GET | Lista de ciudadanos |
+All endpoints are prefixed with `/api/v1`.
 
-## Equipo
+| Route | Description |
+|-------|-------------|
+| `/api/v1/provinces` | Province data (52 provinces) |
+| `/api/v1/weather` | Current weather, forecast, history |
+| `/api/v1/risk` | Risk scores by province, all, map |
+| `/api/v1/alerts` | CRUD alerts + AEMET alerts + SSE stream |
+| `/api/v1/analysis` | ML prediction pipeline |
+| `/api/v1/community` | Citizen hazard reports |
+| `/api/v1/advisor` | AI emergency guidance |
+| `/api/v1/backoffice` | Admin dashboard stats |
+| `/api/v1/push` | Web Push subscription management |
 
-Hackathon UPM 2026 - Next Digital Hub
+## Project Structure
+
+```
+src/
+  app/
+    (auth)/           # Login and registration
+    (citizen)/        # Dashboard, alerts, history, profile, map
+    backoffice/       # Admin panel
+  components/
+    ui/               # Button, Card, Badge, Input, Modal, ...
+    layout/           # Sidebar, Header, PageTransition
+    map/              # Interactive MapLibre map
+    weather/          # WeatherCard, WeatherChart
+    risk/             # RiskGauge, RiskBreakdown
+    alerts/           # AlertBanner, AlertCard
+    dashboard/        # Dashboard widgets
+    community/        # Community report components
+    emergency/        # Emergency advisor
+    predictions/      # ML prediction views
+  hooks/              # useWeather, useRiskScore, useAlerts, ...
+  store/              # Zustand store
+  types/              # TypeScript type definitions
+  i18n/               # Internationalization (next-intl)
+  lib/
+    constants/        # Provinces, thresholds
+
+backend/
+  app/
+    api/              # FastAPI route handlers
+    ml/               # 7 ML models + feature engineering
+    models/           # SQLAlchemy ORM models
+    schemas/          # Pydantic request/response schemas
+    services/         # Business logic layer
+    scheduler/        # Background tasks
+  alembic/            # Database migrations
+  tests/              # pytest test suite
+  data/               # Seed data and historical records
+```
