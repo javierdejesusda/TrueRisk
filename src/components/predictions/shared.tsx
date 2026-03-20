@@ -78,7 +78,7 @@ export const DISASTER_COLORS: Record<string, string> = {
   flood: '#3b82f6',
   heat_wave: '#f97316',
   cold_snap: '#22D3EE',
-  wind_storm: '#22F58C',
+  wind_storm: '#FFFFFF',
 };
 
 export const DISASTER_LABELS: Record<string, string> = {
@@ -121,14 +121,14 @@ export function getZScoreColor(z: number): string {
   const abs = Math.abs(z);
   if (abs >= 2) return '#ef4444';
   if (abs >= 1) return '#eab308';
-  return '#22F58C';
+  return '#FFFFFF';
 }
 
 export function getConfidenceColor(c: number): string {
   if (c >= 0.8) return '#ef4444';
   if (c >= 0.6) return '#f97316';
   if (c >= 0.4) return '#eab308';
-  return '#22F58C';
+  return '#FFFFFF';
 }
 
 export function capitalizeField(field: string): string {
@@ -168,7 +168,8 @@ export function DarkTooltip({
         <p className="mb-1 text-[10px] text-text-muted">{label}</p>
       )}
       {payload.map((entry) => (
-        <p key={entry.name} className="font-[family-name:var(--font-mono)] text-xs" style={{ color: entry.color }}>
+        <p key={entry.name} className="flex items-center font-[family-name:var(--font-mono)] text-xs" style={{ color: entry.color }}>
+          <span className="inline-block h-2 w-2 rounded-full mr-1.5" style={{ backgroundColor: entry.color }} />
           {entry.name}:{' '}
           {typeof entry.value === 'number'
             ? Math.abs(entry.value) < 0.01 && entry.value !== 0
@@ -177,6 +178,62 @@ export function DarkTooltip({
             : entry.value}
         </p>
       ))}
+    </div>
+  );
+}
+
+// ── Chart Annotation ──────────────────────────────────────────────
+
+export function ChartAnnotation({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-3 border-l-2 border-text-muted/20 pl-3">
+      <p className="font-[family-name:var(--font-sans)] text-[11px] text-text-muted leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
+// ── Semi-Circle Gauge ─────────────────────────────────────────────
+
+function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  const x1 = cx + r * Math.cos(startAngle);
+  const y1 = cy - r * Math.sin(startAngle);
+  const x2 = cx + r * Math.cos(endAngle);
+  const y2 = cy - r * Math.sin(endAngle);
+  const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+  return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 0 ${x2} ${y2}`;
+}
+
+export function SemiCircleGauge({ value, max = 100, size = 120, label }: { value: number; max?: number; size?: number; label?: string }) {
+  const pct = Math.min(value / max, 1);
+  const radius = (size - 12) / 2;
+  const cx = size / 2;
+  const cy = size / 2 + 4;
+  const startAngle = Math.PI;
+  const endAngle = 0;
+  const sweepAngle = startAngle - (startAngle - endAngle) * pct;
+
+  const bgArc = describeArc(cx, cy, radius, endAngle, startAngle);
+  const fgArc = describeArc(cx, cy, radius, sweepAngle, startAngle);
+
+  const color = value >= 70 ? '#ef4444' : value >= 50 ? '#f97316' : value >= 30 ? '#eab308' : '#22c55e';
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg width={size} height={size / 2 + 16} viewBox={`0 0 ${size} ${size / 2 + 16}`}>
+        <path d={bgArc} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={8} strokeLinecap="round" />
+        <path d={fgArc} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round" />
+        {/* Tick marks */}
+        {[0, 25, 50, 75, 100].map((tick) => {
+          const a = Math.PI - (tick / 100) * Math.PI;
+          const x1 = cx + (radius + 2) * Math.cos(a);
+          const y1 = cy - (radius + 2) * Math.sin(a);
+          const x2 = cx + (radius - 4) * Math.cos(a);
+          const y2 = cy - (radius - 4) * Math.sin(a);
+          return <line key={tick} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />;
+        })}
+        <text x={cx} y={cy - 6} textAnchor="middle" fill={color} fontSize={20} fontWeight="bold" fontFamily="var(--font-mono)">{value.toFixed(0)}</text>
+        {label && <text x={cx} y={cy + 10} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-sans)">{label}</text>}
+      </svg>
     </div>
   );
 }
