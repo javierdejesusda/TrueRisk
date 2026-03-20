@@ -1,7 +1,15 @@
+import { Skeleton } from '@/components/ui/skeleton';
+
 export default function Loading() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="animate-spin h-8 w-8 border-2 border-accent-primary border-t-transparent rounded-full" />
+    <div className="h-screen pt-20 px-6 lg:px-12 pb-12 max-w-5xl mx-auto overflow-y-auto">
+      <Skeleton className="h-8 w-48 mb-2" />
+      <Skeleton className="h-4 w-72 mb-8" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-40 rounded-2xl" />
+        ))}
+      </div>
     </div>
   );
 }
