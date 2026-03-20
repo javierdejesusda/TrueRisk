@@ -13,6 +13,7 @@ from app.ml.model_registry import get_model_registry
 from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.schemas.risk import (
+    FeatureContribution,
     HazardExplanation,
     ModelRegistryResponse,
     RiskExplainResponse,
@@ -170,7 +171,7 @@ async def explain_province_risk(
         HazardExplanation(
             hazard=hazard,
             score=hazard_scores.get(hazard, 0.0),
-            contributions=contributions,
+            contributions=[FeatureContribution(**c) for c in contributions],
         )
         for hazard, contributions in explanations.items()
     ]
