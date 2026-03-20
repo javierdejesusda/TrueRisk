@@ -32,7 +32,8 @@ export function useGeolocation() {
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setState({ latitude: null, longitude: null, isLoading: false, error: 'not-supported' });
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- checking browser support on mount is intentional
+      setState((s) => ({ ...s, isLoading: false, error: 'not-supported' }));
       return;
     }
 

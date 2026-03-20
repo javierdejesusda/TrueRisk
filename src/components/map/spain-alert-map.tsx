@@ -111,12 +111,14 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
   useEffect(() => {
     if (hasGeolocated || geo.isLoading) return;
     if (!geo.latitude || !geo.longitude) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time flag on geo failure
       setHasGeolocated(true);
       return;
     }
     if (!baseGeoJSON || !mapReady) return;
 
     geolocateUser();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time geolocation trigger
     setHasGeolocated(true);
   }, [hasGeolocated, geo.isLoading, geo.latitude, geo.longitude, baseGeoJSON, mapReady, geolocateUser]);
 
@@ -507,12 +509,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
           <Popup
             longitude={popupInfo.longitude}
             latitude={popupInfo.latitude}
-            anchor={(() => {
-              const map = mapRef.current?.getMap();
-              if (!map) return 'bottom';
-              const point = map.project([popupInfo.longitude, popupInfo.latitude]);
-              return point.y < map.getContainer().clientHeight * 0.35 ? 'top' : 'bottom';
-            })()}
+            anchor={popupInfo.latitude > 41.5 ? 'top' : 'bottom'}
             onClose={() => setPopupInfo(null)}
             maxWidth="340px"
             closeOnClick={false}
