@@ -37,7 +37,7 @@ export function Card({
         variantStyles[variant],
         paddingStyles[padding],
         hoverable &&
-          'transition-all duration-200 hover:border-accent-green/20 hover:shadow-[0_0_30px_rgba(34,245,140,0.06)]',
+          'transition-all duration-200 hover:border-accent-green/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.04)]',
         className,
       ]
         .filter(Boolean)

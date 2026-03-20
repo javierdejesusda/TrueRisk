@@ -4,7 +4,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 const variantStyles = {
   primary:
-    'bg-accent-green text-[#050508] hover:shadow-[0_0_20px_rgba(34,245,140,0.3)]',
+    'bg-accent-green text-[#050508] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]',
   danger:
     'bg-accent-red text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]',
   ghost:
