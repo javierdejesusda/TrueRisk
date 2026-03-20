@@ -1,15 +1,17 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEmergencyGuidance } from '@/hooks/use-emergency-advisor';
 
 export function AdvisorPanel() {
+  const t = useTranslations('Emergency');
   const { guidance } = useEmergencyGuidance();
 
   if (!guidance) {
     return (
       <div className="space-y-3">
         <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary">
-          Guia de emergencia
+          {t('emergencyGuidance')}
         </h3>
         <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center gap-3">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

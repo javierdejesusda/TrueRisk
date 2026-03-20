@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 const DISMISSED_KEY = 'truerisk-push-dismissed';
 
 export function PushBanner() {
+  const t = useTranslations('Community');
   const { isSupported, isSubscribed, isLoading, subscribe } = usePushNotifications();
   const [dismissed, setDismissed] = useState(true);
 
@@ -32,22 +34,22 @@ export function PushBanner() {
           !
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-primary">Activa alertas de emergencia</p>
-          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted">Recibe avisos cuando haya riesgo alto en tu provincia</p>
+          <p className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-primary">{t('pushTitle')}</p>
+          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted">{t('pushDescription')}</p>
         </div>
         <div className="flex gap-2 shrink-0">
           <button
             onClick={handleDismiss}
             className="font-[family-name:var(--font-sans)] cursor-pointer text-[10px] text-text-muted hover:text-text-secondary px-2 py-1"
           >
-            Ahora no
+            {t('pushDisable')}
           </button>
           <button
             onClick={handleEnable}
             disabled={isLoading}
             className="font-[family-name:var(--font-sans)] cursor-pointer text-[10px] font-medium bg-accent-green/20 text-accent-green hover:bg-accent-green/30 px-3 py-1 rounded-lg transition-colors disabled:opacity-50"
           >
-            {isLoading ? '...' : 'Activar'}
+            {isLoading ? '...' : t('pushEnable')}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 const RotatingEarth = dynamic(
   () => import('@/components/globe/rotating-earth').then((m) => ({ default: m.RotatingEarth })),
@@ -10,6 +11,8 @@ const RotatingEarth = dynamic(
 );
 
 export default function Home() {
+  const t = useTranslations('Home');
+  const tc = useTranslations('Common');
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg-primary px-4">
       {/* Globe background */}
@@ -43,7 +46,7 @@ export default function Home() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-green" />
           </span>
           <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider text-text-secondary">
-            System Active
+            {tc('systemActive')}
           </span>
         </motion.div>
 
@@ -57,7 +60,7 @@ export default function Home() {
           True
           <span
             className="text-accent-green"
-            style={{ filter: 'drop-shadow(0 0 20px rgba(34, 245, 140, 0.4))' }}
+            style={{ filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.3))' }}
           >
             Risk
           </span>
@@ -70,7 +73,7 @@ export default function Home() {
           transition={{ delay: 0.25, duration: 0.5 }}
           className="mt-4 max-w-lg font-[family-name:var(--font-sans)] text-lg font-light text-text-secondary sm:text-xl"
         >
-          Climate Emergency Management Platform
+          {t('subtitle')}
         </motion.p>
 
         <motion.p
@@ -79,8 +82,7 @@ export default function Home() {
           transition={{ delay: 0.25, duration: 0.5 }}
           className="mt-2 max-w-md text-sm text-text-muted"
         >
-          Multi-hazard risk intelligence with real-time weather monitoring
-          and personalised emergency guidance for citizens.
+          {t('description')}
         </motion.p>
 
         {/* CTA buttons */}
@@ -92,9 +94,9 @@ export default function Home() {
         >
           <Link
             href="/map"
-            className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-accent-green px-10 text-base font-semibold text-bg-primary transition-all hover:brightness-110 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(34,245,140,0.3)] active:scale-[0.97]"
+            className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-accent-green px-10 text-base font-semibold text-bg-primary transition-all hover:brightness-110 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(255,255,255,0.15)] active:scale-[0.97]"
           >
-            Enter TrueRisk
+            {t('enterButton')}
             <span className="inline-block transition-transform group-hover:translate-x-1">
               &rarr;
             </span>
@@ -110,7 +112,7 @@ export default function Home() {
         className="absolute bottom-6 flex items-center gap-2 font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-[0.2em] text-text-muted"
       >
         <span className="h-px w-8 bg-border" />
-        <span>Multi-hazard risk intelligence</span>
+        <span>{tc('multiHazardIntelligence')}</span>
         <span className="h-px w-8 bg-border" />
       </motion.div>
     </div>

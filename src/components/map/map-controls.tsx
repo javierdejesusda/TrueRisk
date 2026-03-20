@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 
 export interface MapControlsProps {

@@ -17,8 +17,11 @@ import { KnnMatches } from '@/components/predictions/knn-matches';
 import { FloodModelCard, WildfireModelCard, DroughtModelCard, HeatwaveModelCard, SeismicModelCard, ColdwaveModelCard, WindstormModelCard, HazardOverviewChart } from '@/components/predictions/hazard-model-cards';
 import { LoadingSkeleton } from '@/components/predictions/shared';
 import { PROVINCES } from '@/lib/provinces';
+import { useTranslations } from 'next-intl';
 
 export default function PredictionPage() {
+  const t = useTranslations('Predictions');
+  const tCommon = useTranslations('Common');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const { risk } = useRiskScore();
@@ -40,7 +43,7 @@ export default function PredictionPage() {
           {error ?? `No prediction data available for ${provinceName}`}
         </p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => refresh()}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={() => refresh()}>{tCommon('retry')}</Button>
           <Button variant="outline" size="sm" onClick={() => setProvinceCode('28')}>Try Madrid</Button>
         </div>
       </div>
@@ -83,7 +86,7 @@ export default function PredictionPage() {
       <PredictionsExplainer />
 
       {/* Hazard ML Models */}
-      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">Hazard ML Models</h2>
+      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('modelInventory')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <FloodModelCard riskData={riskData} />
         <WildfireModelCard riskData={riskData} />
@@ -96,7 +99,7 @@ export default function PredictionPage() {
       </div>
 
       {/* Statistical Models */}
-      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">Statistical Analysis</h2>
+      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('statisticalMethods')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
         <GumbelChart data={data.gumbel} />
         <RegressionChart data={data.regression} />

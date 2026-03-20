@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 export function QuickCall({ floating = false }: { floating?: boolean }) {
   if (floating) {
     return (

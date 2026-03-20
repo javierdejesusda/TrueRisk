@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAlerts } from '@/hooks/use-alerts';
 import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
 import { Badge } from '@/components/ui/badge';

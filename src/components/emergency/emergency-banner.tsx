@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { useEmergencyGuidance } from '@/hooks/use-emergency-advisor';
 
 export function EmergencyBanner() {
+  const tCommon = useTranslations('Common');
+  const tEmergency = useTranslations('Emergency');
   const risk = useAppStore((s) => s.risk);
   const provinceCode = useAppStore((s) => s.provinceCode);
   const { guidance } = useEmergencyGuidance();
@@ -50,7 +53,7 @@ export function EmergencyBanner() {
                 onClick={() => setExpanded(true)}
                 className="font-[family-name:var(--font-sans)] text-[10px] text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg transition-colors cursor-pointer"
               >
-                Guia
+                {tEmergency('emergencyGuidance')}
               </button>
             )}
             {expanded && (
@@ -64,7 +67,7 @@ export function EmergencyBanner() {
             <button
               onClick={() => setDismissed(true)}
               className="text-white/60 hover:text-white/90 p-1 cursor-pointer"
-              aria-label="Cerrar"
+              aria-label={tCommon('close')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6 6 18M6 6l12 12" />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import type { CreateReportData } from '@/hooks/use-community-reports';
 
@@ -18,6 +19,7 @@ interface ReportFormProps {
 }
 
 export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
+  const t = useTranslations('Community');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const [hazardType, setHazardType] = useState<CreateReportData['hazard_type']>('flood');
   const [severity, setSeverity] = useState(3);
@@ -36,7 +38,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         setLocating(false);
       },
       () => {
-        setError('No se pudo obtener la ubicacion');
+        setError(t('locationError'));
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -46,7 +48,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coords) {
-      setError('Necesitas compartir tu ubicacion');
+      setError(t('locationRequired'));
       return;
     }
     setSubmitting(true);
@@ -62,7 +64,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al enviar');
+      setError(err instanceof Error ? err.message : t('submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -75,12 +77,12 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         className="glass-heavy rounded-2xl w-full max-w-md p-5 space-y-4"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-[family-name:var(--font-display)] font-bold text-text-primary">Reportar peligro</h2>
+          <h2 className="text-sm font-[family-name:var(--font-display)] font-bold text-text-primary">{t('reportHazard')}</h2>
           <button type="button" onClick={onClose} className="text-text-muted cursor-pointer hover:text-text-primary transition-colors text-lg">&times;</button>
         </div>
 
         <div className="space-y-1">
-          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">Tipo de peligro</label>
+          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">{t('hazardType')}</label>
           <select
             value={hazardType}
             onChange={(e) => setHazardType(e.target.value as CreateReportData['hazard_type'])}
@@ -93,7 +95,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">Gravedad: <span className="font-[family-name:var(--font-mono)]">{severity}/5</span></label>
+          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">{t('severity')}: <span className="font-[family-name:var(--font-mono)]">{severity}/5</span></label>
           <input
             type="range"
             min={1}
@@ -105,14 +107,14 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">Descripcion (opcional)</label>
+          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">{t('description')}</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={500}
             rows={3}
             className="w-full font-[family-name:var(--font-sans)] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-text-primary resize-none"
-            placeholder="Describe lo que ves..."
+            placeholder={t('descriptionPlaceholder')}
           />
         </div>
 
@@ -122,7 +124,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
           disabled={locating}
           className="w-full font-[family-name:var(--font-sans)] text-xs font-medium bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors text-text-secondary disabled:opacity-50"
         >
-          {locating ? 'Obteniendo ubicacion...' : coords ? <span>Ubicacion: <span className="font-[family-name:var(--font-mono)]">{coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}</span></span> : 'Usar mi ubicacion'}
+          {locating ? t('gettingLocation') : coords ? <span>{t('locationObtained')}: <span className="font-[family-name:var(--font-mono)]">{coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}</span></span> : t('useMyLocation')}
         </button>
 
         {error && <p className="font-[family-name:var(--font-sans)] text-xs text-red-400">{error}</p>}
@@ -132,7 +134,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
           disabled={submitting || !coords}
           className="w-full text-xs bg-accent-green text-[#050508] font-semibold hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] rounded-lg px-3 py-2.5 transition-colors disabled:opacity-50"
         >
-          {submitting ? 'Enviando...' : 'Enviar reporte'}
+          {submitting ? t('sending') : t('sendReport')}
         </button>
       </form>
     </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRiskScore } from '@/hooks/use-risk-score';
 import { PanelShell } from './panel-shell';
 import type { CompositeRiskScore, HazardType } from '@/types/risk';

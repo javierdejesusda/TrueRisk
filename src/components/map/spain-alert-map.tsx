@@ -6,6 +6,7 @@ import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
 import type { MapAlertData } from '@/hooks/use-map-alerts';
 import type { RiskMapEntry } from '@/types/risk';
+import { useTranslations } from 'next-intl';
 import { MapLegend } from './map-legend';
 import { MapPopup } from './map-popup';
 import { MapControls } from './map-controls';
@@ -36,6 +37,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
   const [zoomLevel, setZoomLevel] = useState(5.5);
 
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
+  const t = useTranslations('Map');
   const { reports, submitReport } = useCommunityReports();
   const [showReportForm, setShowReportForm] = useState(false);
 
@@ -256,7 +258,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-bg-primary/80">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent-green" />
-            <span className="text-sm text-text-muted">Loading map...</span>
+            <span className="text-sm text-text-muted">{t('loadingMap')}</span>
           </div>
         </div>
       )}
@@ -476,7 +478,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
         className="absolute bottom-6 left-6 z-10 flex items-center gap-2 glass-heavy rounded-xl border border-white/10 px-4 py-2.5 text-xs font-medium text-text-primary hover:bg-white/10 transition-colors"
       >
         <span className="text-orange-400">!</span>
-        Reportar peligro
+        {t('reportHazard')}
       </button>
 
       {showReportForm && (

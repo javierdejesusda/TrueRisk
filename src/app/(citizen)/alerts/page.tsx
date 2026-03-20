@@ -5,14 +5,17 @@ import { useAlerts } from '@/hooks/use-alerts';
 import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 
-function severityLabel(severity: number): string {
-  if (severity >= 5) return 'Critical';
-  if (severity >= 4) return 'Very High';
-  if (severity >= 3) return 'High';
-  if (severity >= 2) return 'Moderate';
-  if (severity >= 1) return 'Low';
-  return 'None';
+type TranslateFn = (key: string) => string;
+
+function severityLabel(severity: number, t: TranslateFn): string {
+  if (severity >= 5) return t('critical');
+  if (severity >= 4) return t('veryHigh');
+  if (severity >= 3) return t('high');
+  if (severity >= 2) return t('moderate');
+  if (severity >= 1) return t('low');
+  return t('none');
 }
 
 function severityVariant(severity: number): 'danger' | 'warning' | 'success' | 'neutral' {
@@ -34,6 +37,7 @@ function formatTime(iso: string | null): string {
 }
 
 export default function AlertsPage() {
+  const t = useTranslations('Alerts');
   const { alerts, isLoading } = useAlerts();
   const { alerts: aemetAlerts, isLoading: aemetLoading } = useAemetAlerts();
 
@@ -48,7 +52,7 @@ export default function AlertsPage() {
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-text-primary">Active Alerts</h1>
+          <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-text-primary">{t('title')}</h1>
           <p className="font-[family-name:var(--font-sans)] mt-1 text-sm text-text-muted">
             Real-time weather and risk alerts from TrueRisk and AEMET
           </p>
@@ -60,10 +64,10 @@ export default function AlertsPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-red opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-red" />
               </span>
-              <span className="font-[family-name:var(--font-mono)] font-bold">{totalCount} active</span>
+              <span className="font-[family-name:var(--font-mono)] font-bold">{totalCount} {t('activeAlerts').toLowerCase()}</span>
             </>
           ) : (
-            <span className="font-[family-name:var(--font-display)] text-lg text-accent-green font-medium">All clear</span>
+            <span className="font-[family-name:var(--font-display)] text-lg text-accent-green font-medium">{t('noAlerts')}</span>
           )}
         </div>
       </div>
@@ -81,8 +85,8 @@ export default function AlertsPage() {
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
-            <p className="font-[family-name:var(--font-display)] text-lg text-accent-green">No active alerts at this time</p>
-            <p className="font-[family-name:var(--font-sans)] text-xs text-text-muted">Alerts from TrueRisk and AEMET will appear here when active</p>
+            <p className="font-[family-name:var(--font-display)] text-lg text-accent-green">{t('noAlerts')}</p>
+            <p className="font-[family-name:var(--font-sans)] text-xs text-text-muted">{t('noAlertsDesc')}</p>
           </div>
         </Card>
       ) : (
@@ -95,7 +99,7 @@ export default function AlertsPage() {
                   <Card key={alert.id} variant="glass" hoverable>
                     <div className="flex items-start gap-3">
                       <Badge variant={severityVariant(alert.severity)} size="sm">
-                        {severityLabel(alert.severity)}
+                        {severityLabel(alert.severity, t)}
                       </Badge>
                       <div className="flex-1 min-w-0">
                         <p className="font-[family-name:var(--font-sans)] text-sm font-semibold text-text-primary">{alert.title}</p>

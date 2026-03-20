@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { PROVINCES, type ProvinceInfo } from '@/lib/provinces';
 
 interface ProvinceSearchProps {
@@ -12,6 +13,7 @@ function normalize(str: string): string {
 }
 
 export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
+  const t = useTranslations('Map');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -56,7 +58,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
 
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-64">
-      <div className="glass-heavy rounded-xl border border-transparent focus-within:shadow-[0_0_0_3px_rgba(34,245,140,0.1)] focus-within:border-accent-green/40 transition-all">
+      <div className="glass-heavy rounded-xl border border-transparent focus-within:shadow-[0_0_0_3px_rgba(255,255,255,0.08)] focus-within:border-accent-green/40 transition-all">
         <div className="relative flex items-center">
           <svg className="absolute left-2.5 text-text-muted" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
@@ -64,7 +66,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search province..."
+            placeholder={t('searchProvince')}
             value={query}
             onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIndex(0); }}
             onFocus={() => setOpen(true)}
@@ -76,7 +78,7 @@ export function ProvinceSearch({ onSelect }: ProvinceSearchProps) {
             <button
               onClick={() => { setQuery(''); setActiveIndex(0); inputRef.current?.focus(); }}
               className="absolute right-2.5 text-text-muted hover:text-text-secondary cursor-pointer"
-              aria-label="Clear search"
+              aria-label={t('clearSearch')}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18" /><path d="m6 6 12 12" />

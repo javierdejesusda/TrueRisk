@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { getContacts } from '@/lib/constants/emergency-contacts';
 import { QuickCall } from '@/components/emergency/quick-call';
@@ -33,6 +34,7 @@ const PROVINCE_NAMES: Record<string, string> = {
 const sortedProvinces = Object.entries(PROVINCE_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
 
 export default function EmergencyPage() {
+  const t = useTranslations('Emergency');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const contacts = getContacts(provinceCode);
@@ -49,7 +51,7 @@ export default function EmergencyPage() {
       >
         {/* Main 112 button */}
         <section className="text-center space-y-3">
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary">Emergencias</h1>
+          <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary">{t('title')}</h1>
           <a
             href="tel:112"
             aria-label="Llamar al 112"
@@ -58,15 +60,15 @@ export default function EmergencyPage() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
-            Llamar 112
+            {t('call112')}
           </a>
-          <p className="font-[family-name:var(--font-mono)] text-xs text-text-muted">Numero de emergencias de Espana - gratuito 24h</p>
+          <p className="font-[family-name:var(--font-mono)] text-xs text-text-muted">{t('emergencyNumber')}</p>
         </section>
 
         {/* Province selector */}
         <section className="space-y-2">
           <label htmlFor="province-select" className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary">
-            Tu provincia
+            {t('yourProvince')}
           </label>
           <select
             id="province-select"
@@ -83,7 +85,7 @@ export default function EmergencyPage() {
         {/* Province-specific contacts */}
         <section className="space-y-3">
           <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-primary">
-            Contactos de emergencia — {provinceName}
+            {t('emergencyContacts')} — {provinceName}
           </h2>
           {hasContacts ? (
             <div className="grid gap-2">
@@ -101,7 +103,7 @@ export default function EmergencyPage() {
             </div>
           ) : (
             <p className="text-xs text-text-muted bg-white/5 border border-white/10 rounded-xl p-4">
-              No hay contactos especificos para esta provincia. Usa el 112 para cualquier emergencia.
+              {t('noContacts')}
             </p>
           )}
         </section>
@@ -113,7 +115,7 @@ export default function EmergencyPage() {
 
         {/* First aid cards */}
         <section className="space-y-3">
-          <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-primary">Guia de primeros auxilios</h2>
+          <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-primary">{t('firstAidGuide')}</h2>
           <FirstAidCards />
         </section>
       </motion.div>

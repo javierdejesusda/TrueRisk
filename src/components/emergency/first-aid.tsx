@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface FirstAidCard {
   title: string;
   icon: React.ReactNode;
@@ -48,73 +50,66 @@ function SeismicIcon() {
   );
 }
 
-const CARDS: FirstAidCard[] = [
+interface FirstAidCardDef {
+  titleKey: string;
+  stepsKey: string;
+  icon: React.ReactNode;
+  borderColor: string;
+  iconColor: string;
+}
+
+const CARD_DEFS: FirstAidCardDef[] = [
   {
-    title: 'Seguridad ante inundaciones',
+    titleKey: 'flood',
+    stepsKey: 'floodSteps',
     icon: <FloodIcon />,
     borderColor: 'border-accent-blue/40',
     iconColor: 'text-accent-blue',
-    steps: [
-      'Sube a plantas altas. Nunca bajes al sotano.',
-      'No camines ni conduzcas por zonas inundadas.',
-      'Alejate de rios, barrancos y cauces secos.',
-      'Desconecta la electricidad si el agua sube.',
-      'Ten preparado un kit de emergencia con agua, linterna y documentos.',
-      'Si quedas atrapado, sube al tejado y senala tu posicion.',
-    ],
   },
   {
-    title: 'Golpe de calor',
+    titleKey: 'heatwave',
+    stepsKey: 'heatwaveSteps',
     icon: <HeatIcon />,
     borderColor: 'border-accent-orange/40',
     iconColor: 'text-accent-orange',
-    steps: [
-      'Traslada a la persona a un lugar fresco y a la sombra.',
-      'Dale agua fresca a pequenos sorbos.',
-      'Aplica panos humedos en frente, cuello y munecas.',
-      'Abanica para bajar la temperatura corporal.',
-      'Llama al 112 si pierde el conocimiento.',
-      'Evita alcohol y cafeina durante olas de calor.',
-    ],
   },
   {
-    title: 'Protocolo sismico',
+    titleKey: 'earthquake',
+    stepsKey: 'earthquakeSteps',
     icon: <SeismicIcon />,
     borderColor: 'border-accent-yellow/40',
     iconColor: 'text-accent-yellow',
-    steps: [
-      'Agachate, cubrete bajo una mesa solida y sujetate.',
-      'Alejate de ventanas, espejos y objetos pesados.',
-      'No uses el ascensor. Usa las escaleras.',
-      'Si estas fuera, alejate de edificios y cables electricos.',
-      'Tras el temblor, comprueba fugas de gas y danos estructurales.',
-      'Prepara un punto de encuentro con tu familia.',
-    ],
   },
 ];
 
 export function FirstAidCards() {
+  const t = useTranslations('FirstAid');
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {CARDS.map((card) => (
-        <div
-          key={card.title}
-          className={`glass rounded-2xl border-t-4 ${card.borderColor} p-4`}
-        >
-          <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
-            {card.icon}
-            {card.title}
-          </h3>
-          <ol className="space-y-2">
-            {card.steps.map((step, i) => (
-              <li key={i} className="bg-white/[0.03] rounded-lg p-2 flex gap-2 font-[family-name:var(--font-sans)] text-xs text-text-secondary leading-relaxed">
-                <span className="font-[family-name:var(--font-mono)] text-text-muted shrink-0">{i + 1}.</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      ))}
+      {CARD_DEFS.map((card) => {
+        const title = t(card.titleKey);
+        const steps = t(card.stepsKey).split('. ').filter(Boolean).map(s => s.endsWith('.') ? s : s + '.');
+        return (
+          <div
+            key={card.titleKey}
+            className={`glass rounded-2xl border-t-4 ${card.borderColor} p-4`}
+          >
+            <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
+              {card.icon}
+              {title}
+            </h3>
+            <ol className="space-y-2">
+              {steps.map((step, i) => (
+                <li key={i} className="bg-white/[0.03] rounded-lg p-2 flex gap-2 font-[family-name:var(--font-sans)] text-xs text-text-secondary leading-relaxed">
+                  <span className="font-[family-name:var(--font-mono)] text-text-muted shrink-0">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
+        );
+      })}
     </div>
   );
 }

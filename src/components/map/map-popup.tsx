@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import type { ForecastResponse, HourlyForecast, DailyForecast } from '@/types/weather';
@@ -171,7 +172,7 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
                 alert.severity >= 4 ? '#ef4444' :
                 alert.severity >= 3 ? '#f97316' :
                 alert.severity >= 2 ? '#fbbf24' :
-                '#22F58C';
+                '#008000';
               return (
                 <div key={i} className="flex items-start gap-2 rounded-lg bg-white/[0.03] border-l-[3px] p-2" style={{ borderLeftColor: severityColor }}>
                   <div className="flex-1 min-w-0">
@@ -262,6 +263,7 @@ const forecastCache = new Map<string, { data: ForecastResponse; fetchedAt: numbe
 const FORECAST_CACHE_TTL = 300_000;
 
 export function MapPopup({ provinceName, summary, provinceCode, riskData, currentTemperature }: MapPopupProps) {
+  const t = useTranslations('Map');
   const [activeTab, setActiveTab] = useState<TabId>('now');
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastLoading, setForecastLoading] = useState(false);
@@ -297,9 +299,9 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
   }, [provinceCode]);
 
   const tabConfig: { id: TabId; label: string }[] = [
-    { id: 'now', label: 'Now' },
-    { id: 'hourly', label: 'Hourly' },
-    { id: 'daily', label: '7 Days' },
+    { id: 'now', label: t('now') },
+    { id: 'hourly', label: t('hourly') },
+    { id: 'daily', label: t('sevenDays') },
   ];
 
   return (

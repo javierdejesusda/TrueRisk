@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 
 interface Province {
@@ -13,6 +14,7 @@ export interface HeaderProps {
 }
 
 export function Header({ hasActiveAlerts = false }: HeaderProps) {
+  const t = useTranslations('Backoffice');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -32,7 +34,7 @@ export function Header({ hasActiveAlerts = false }: HeaderProps) {
     <header className="flex h-14 items-center justify-between border-b border-border glass-heavy px-4 lg:px-6">
       <div className="flex items-center gap-2">
         <div className="w-10 lg:w-0" />
-        <span className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary hidden lg:inline">Admin Panel</span>
+        <span className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary hidden lg:inline">{t('adminPanel')}</span>
       </div>
       <div className="ml-auto flex items-center gap-3">
         {hasActiveAlerts && (
@@ -41,7 +43,7 @@ export function Header({ hasActiveAlerts = false }: HeaderProps) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-red opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-red" />
             </span>
-            <span className="hidden sm:inline">Active alerts</span>
+            <span className="hidden sm:inline">{t('activeAlerts')}</span>
           </div>
         )}
         <div className="flex items-center gap-2">
