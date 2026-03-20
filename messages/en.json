@@ -24,7 +24,23 @@
   "Home": {
     "subtitle": "Climate Emergency Management Platform",
     "description": "Multi-hazard risk intelligence with real-time weather monitoring and personalised emergency guidance for citizens.",
-    "enterButton": "Enter TrueRisk"
+    "enterButton": "Enter TrueRisk",
+    "learnMore": "Learn More"
+  },
+  "Landing": {
+    "featuresTitle": "What TrueRisk Does",
+    "featuresSubtitle": "Real-time risk intelligence for every corner of Spain",
+    "monitoringTitle": "Real-Time Monitoring",
+    "monitoringDesc": "Live weather data across all 52 Spanish provinces, updated continuously from AEMET stations.",
+    "mlModelsTitle": "7 ML Models",
+    "mlModelsDesc": "Dedicated models for flood, wildfire, drought, heatwave, seismic, coldwave, and windstorm risk.",
+    "emergencyTitle": "Emergency Guidance",
+    "emergencyDesc": "AI-powered personalised safety instructions when a hazard threatens your area.",
+    "communityTitle": "Community Alerts",
+    "communityDesc": "Citizen hazard reporting combined with official AEMET warnings for ground-truth awareness.",
+    "builtWith": "Built with",
+    "provincesCoverage": "Covers all 52 Spanish provinces",
+    "copyright": "\u00a9 {year} TrueRisk. All rights reserved."
   },
   "Map": {
     "searchProvince": "Search province...",

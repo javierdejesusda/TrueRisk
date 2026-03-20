@@ -24,7 +24,23 @@
   "Home": {
     "subtitle": "Plataforma de Gestion de Emergencias Climaticas",
     "description": "Inteligencia de riesgo multi-peligro con monitorizacion meteorologica en tiempo real y orientacion de emergencia personalizada para ciudadanos.",
-    "enterButton": "Entrar a TrueRisk"
+    "enterButton": "Entrar a TrueRisk",
+    "learnMore": "Saber mas"
+  },
+  "Landing": {
+    "featuresTitle": "Que hace TrueRisk",
+    "featuresSubtitle": "Inteligencia de riesgo en tiempo real para cada rincon de Espana",
+    "monitoringTitle": "Monitorizacion en Tiempo Real",
+    "monitoringDesc": "Datos meteorologicos en vivo de las 52 provincias espanolas, actualizados continuamente desde estaciones AEMET.",
+    "mlModelsTitle": "7 Modelos ML",
+    "mlModelsDesc": "Modelos dedicados para riesgo de inundacion, incendio, sequia, ola de calor, sismico, ola de frio y tormenta de viento.",
+    "emergencyTitle": "Orientacion de Emergencia",
+    "emergencyDesc": "Instrucciones de seguridad personalizadas con IA cuando un peligro amenaza tu zona.",
+    "communityTitle": "Alertas Comunitarias",
+    "communityDesc": "Reportes ciudadanos de peligros combinados con avisos oficiales de AEMET para mayor conciencia situacional.",
+    "builtWith": "Construido con",
+    "provincesCoverage": "Cubre las 52 provincias espanolas",
+    "copyright": "\u00a9 {year} TrueRisk. Todos los derechos reservados."
   },
   "Map": {
     "searchProvince": "Buscar provincia...",
