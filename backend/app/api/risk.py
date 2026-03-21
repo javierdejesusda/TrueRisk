@@ -12,6 +12,7 @@ from app.api.deps import get_db
 from app.ml.model_registry import get_model_registry
 from app.models.province import Province
 from app.models.risk_score import RiskScore
+from app.schemas.forecast import ForecastResponse, HazardForecast, HorizonPrediction
 from app.schemas.risk import (
     FeatureContribution,
     HazardExplanation,
@@ -179,6 +180,51 @@ async def explain_province_risk(
     return RiskExplainResponse(
         province_code=province_code,
         computed_at=score.computed_at,
+        hazards=hazards,
+    )
+
+
+@router.get("/{province_code}/forecast", response_model=ForecastResponse)
+async def get_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
+    """Multi-horizon risk forecast with uncertainty bounds (TFT + GNN)."""
+    from collections import defaultdict
+
+    from app.services.forecast_service import get_province_forecast
+
+    rows = await get_province_forecast(db, province_code)
+
+    if not rows:
+        return ForecastResponse(province_code=province_code, computed_at=None, hazards=[])
+
+    # Group by hazard
+    by_hazard: dict[str, list] = defaultdict(list)
+    attention_by_hazard: dict[str, dict] = {}
+    computed_at = None
+
+    for row in rows:
+        by_hazard[row.hazard].append(HorizonPrediction(
+            horizon_hours=row.horizon_hours,
+            q10=row.q10,
+            q50=row.q50,
+            q90=row.q90,
+        ))
+        if row.attention_weights:
+            attention_by_hazard[row.hazard] = row.attention_weights
+        if computed_at is None:
+            computed_at = row.computed_at
+
+    hazards = [
+        HazardForecast(
+            hazard=h,
+            horizons=sorted(preds, key=lambda p: p.horizon_hours),
+            attention_weights=attention_by_hazard.get(h, {}),
+        )
+        for h, preds in by_hazard.items()
+    ]
+
+    return ForecastResponse(
+        province_code=province_code,
+        computed_at=computed_at,
         hazards=hazards,
     )
 

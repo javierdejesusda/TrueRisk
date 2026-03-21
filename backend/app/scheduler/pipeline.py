@@ -74,6 +74,29 @@ async def run_pipeline():
             await db.flush()
             logger.info(f"Stored weather records for {len(weather_map)} provinces")
 
+            # 1c. Fetch supplementary data sources (best-effort, non-blocking)
+            if settings.firms_map_key:
+                try:
+                    from app.data.nasa_firms import fetch_active_fires
+                    fires = await fetch_active_fires()
+                    logger.info(f"Fetched {len(fires)} active fire hotspots")
+                except Exception as e:
+                    logger.error(f"NASA FIRMS fetch failed: {e}")
+
+            try:
+                from app.data.usgs_earthquake import fetch_recent_quakes as usgs_quakes
+                quakes = await usgs_quakes()
+                logger.info(f"Fetched {len(quakes)} USGS earthquakes")
+            except Exception as e:
+                logger.error(f"USGS fetch failed: {e}")
+
+            try:
+                from app.data.ree_energy import fetch_demand
+                energy = await fetch_demand()
+                logger.info(f"Fetched REE demand: {energy.get('current_demand_mw')} MW")
+            except Exception as e:
+                logger.error(f"REE fetch failed: {e}")
+
             # 2. Compute risk for each province
             for province in provinces:
                 try:
@@ -95,6 +118,16 @@ async def run_pipeline():
                     logger.info(f"Fetched {len(aemet_alerts)} AEMET alerts")
                 except Exception as e:
                     logger.error(f"AEMET alert sync failed: {e}")
+
+            # 5. Compute TFT + GNN forecasts
+            from app.ml.training.config import ENABLE_TFT_FORECASTS
+            if ENABLE_TFT_FORECASTS:
+                try:
+                    from app.services.forecast_service import compute_all_forecasts
+                    await compute_all_forecasts(db)
+                    logger.info("Forecast computation complete")
+                except Exception as e:
+                    logger.error(f"Forecast computation failed: {e}")
 
             await db.commit()
 
@@ -162,6 +195,16 @@ async def _check_and_create_alerts(
             )
         except Exception as push_err:
             logger.error(f"  Push notification failed for {province.name}: {push_err}")
+        if severity >= 4 and settings.twilio_account_sid:
+            try:
+                from app.services.sms_service import send_critical_alert_sms
+                sids = await send_critical_alert_sms(
+                    province.name, hazard, severity, score
+                )
+                if sids:
+                    logger.info(f"  SMS sent for {province.name}: {len(sids)} messages")
+            except Exception as sms_err:
+                logger.error(f"  SMS failed for {province.name}: {sms_err}")
         logger.warning(
             f"  ALERT: {hazard} severity={severity} for {province.name} (score={score:.1f})"
         )

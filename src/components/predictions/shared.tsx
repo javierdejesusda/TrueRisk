@@ -64,6 +64,25 @@ export interface PredictionResponse {
   };
 }
 
+export interface HorizonPrediction {
+  horizon_hours: number;
+  q10: number;
+  q50: number;
+  q90: number;
+}
+
+export interface HazardForecast {
+  hazard: string;
+  horizons: HorizonPrediction[];
+  attention_weights: Record<string, number>;
+}
+
+export interface ForecastResponse {
+  province_code: string;
+  computed_at: string | null;
+  hazards: HazardForecast[];
+}
+
 export type GumbelTab = 'precipitation' | 'temperature' | 'windSpeed';
 
 // ── Constants ──────────────────────────────────────────────────────

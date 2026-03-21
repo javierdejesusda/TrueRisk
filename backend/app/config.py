@@ -9,6 +9,28 @@ class Settings(BaseSettings):
     vapid_public_key: str = ""
     vapid_contact_email: str = "mailto:alerts@truerisk.cloud"
 
+    # OpenAI
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4.1-nano"
+
+    # Twilio
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_messaging_service_sid: str = ""
+    twilio_from_phone: str = ""
+    twilio_admin_phones: list[str] = []
+
+    # Data source API keys
+    firms_map_key: str = ""
+    openaq_api_key: str = ""
+    cdsapi_key: str = ""
+    cdsapi_url: str = "https://cds.climate.copernicus.eu/api"
+
+    # Security
+    trusted_proxies: list[str] = [
+        "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8",
+    ]
+
     model_config = {"env_file": ".env"}
 
 

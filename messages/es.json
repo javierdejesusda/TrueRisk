@@ -119,7 +119,9 @@
     "newestRecord": "Registro mas reciente",
     "noPredictionData": "No hay datos de prediccion para {province}",
     "tryMadrid": "Probar Madrid",
-    "provinceAnalysis": "Analisis de provincia"
+    "provinceAnalysis": "Analisis de provincia",
+    "forecastTitle": "Prediccion de Riesgo Multi-Horizonte",
+    "forecastSubtitle": "Prediccion probabilistica TFT + GNN"
   },
   "HazardModels": {
     "overview": "Vision General de Peligros",
@@ -495,5 +497,11 @@
     "title": "Página no encontrada",
     "description": "La página que buscas no existe o ha sido movida.",
     "goToMap": "Ir al Mapa"
+  },
+  "AiSummary": {
+    "title": "Analisis Meteorologico IA",
+    "generate": "Generar Resumen",
+    "generating": "Generando...",
+    "description": "Obten un analisis impulsado por IA de las condiciones meteorologicas actuales y evaluacion de riesgos."
   }
 }

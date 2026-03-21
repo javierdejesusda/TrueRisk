@@ -208,3 +208,86 @@ async def fetch_forecast(
             "Failed to fetch AEMET forecast for municipality %s", municipality_code
         )
         return None
+
+
+async def fetch_hourly_forecast(
+    api_key: str, municipality_code: str
+) -> list[dict[str, Any]]:
+    """Fetch hourly forecast per municipality from AEMET."""
+    cache_key = f"hourly:{municipality_code}"
+    now = time.time()
+    if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
+        return _alert_cache[cache_key]
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            meta = await client.get(
+                f"{_AEMET_BASE}/prediccion/especifica/municipio/horaria/{municipality_code}",
+                headers={"api_key": api_key},
+            )
+            meta.raise_for_status()
+            datos_url = meta.json().get("datos")
+            if not datos_url:
+                return []
+            data_resp = await client.get(datos_url)
+            data_resp.raise_for_status()
+            result = data_resp.json()
+        _alert_cache[cache_key] = result
+        _alert_cache_ts[cache_key] = now
+        return result
+    except Exception:
+        logger.exception("Failed to fetch AEMET hourly for %s", municipality_code)
+        return _alert_cache.get(cache_key, [])
+
+
+async def fetch_wildfire_index(api_key: str) -> dict[str, Any] | None:
+    """Fetch official wildfire danger index."""
+    cache_key = "fire_idx:national"
+    now = time.time()
+    if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
+        return _alert_cache[cache_key]
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            meta = await client.get(
+                f"{_AEMET_BASE}/incendios/mapas/nivel/diario",
+                headers={"api_key": api_key},
+            )
+            meta.raise_for_status()
+            datos_url = meta.json().get("datos")
+            if not datos_url:
+                return None
+            data_resp = await client.get(datos_url)
+            data_resp.raise_for_status()
+            result = data_resp.json()
+        _alert_cache[cache_key] = result
+        _alert_cache_ts[cache_key] = now
+        return result
+    except Exception:
+        logger.exception("Failed to fetch AEMET wildfire index")
+        return _alert_cache.get(cache_key)
+
+
+async def fetch_weather_stations(api_key: str) -> list[dict[str, Any]]:
+    """Fetch latest observations from all AEMET weather stations."""
+    cache_key = "stations:all"
+    now = time.time()
+    if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
+        return _alert_cache[cache_key]
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            meta = await client.get(
+                f"{_AEMET_BASE}/observacion/convencional/todas",
+                headers={"api_key": api_key},
+            )
+            meta.raise_for_status()
+            datos_url = meta.json().get("datos")
+            if not datos_url:
+                return []
+            data_resp = await client.get(datos_url)
+            data_resp.raise_for_status()
+            result = data_resp.json()
+        _alert_cache[cache_key] = result
+        _alert_cache_ts[cache_key] = now
+        return result
+    except Exception:
+        logger.exception("Failed to fetch AEMET stations")
+        return _alert_cache.get(cache_key, [])

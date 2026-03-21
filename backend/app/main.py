@@ -3,18 +3,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 from app.api.errors import register_error_handlers
 from app.config import settings
 from app.database import engine, Base
+from app.rate_limit import limiter
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
+from app.api import ai_summary, sms, data_sources
 
 _start_time = time.time()
-
-limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 
 
 @asynccontextmanager
@@ -108,6 +107,9 @@ app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["analysis"]
 app.include_router(push.router, prefix="/api/v1/push", tags=["push"])
 app.include_router(community.router, prefix="/api/v1/community", tags=["community"])
 app.include_router(advisor.router, prefix="/api/v1/advisor", tags=["advisor"])
+app.include_router(ai_summary.router, prefix="/api/v1/ai-summary", tags=["ai-summary"])
+app.include_router(sms.router, prefix="/api/v1/sms", tags=["sms"])
+app.include_router(data_sources.router, prefix="/api/v1/data", tags=["data-sources"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

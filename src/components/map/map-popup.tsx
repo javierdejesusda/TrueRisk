@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import type { ForecastResponse, HourlyForecast, DailyForecast } from '@/types/weather';
 import type { RiskMapEntry, HazardType } from '@/types/risk';
+import type { AirQualityData } from '@/hooks/use-air-quality';
+import type { DemographicsData } from '@/hooks/use-demographics';
 
 export interface MapPopupProps {
   provinceName: string;
@@ -122,7 +124,52 @@ function RiskSection({ riskData, provinceCode }: { riskData: RiskMapEntry; provi
   );
 }
 
-function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alerts: MapPopupProps['summary']['alerts'] }) {
+function AirQualitySection({ data }: { data: AirQualityData }) {
+  const params = [
+    { key: 'no2', label: 'NO₂', value: data.no2, unit: 'μg/m³', warn: 40 },
+    { key: 'co', label: 'CO', value: data.co, unit: 'μg/m³', warn: 10000 },
+    { key: 'so2', label: 'SO₂', value: data.so2, unit: 'μg/m³', warn: 20 },
+    { key: 'pm25', label: 'PM2.5', value: data.pm25, unit: 'μg/m³', warn: 25 },
+    { key: 'pm10', label: 'PM10', value: data.pm10, unit: 'μg/m³', warn: 50 },
+    { key: 'o3', label: 'O₃', value: data.o3, unit: 'μg/m³', warn: 100 },
+  ].filter(p => p.value != null);
+
+  if (params.length === 0) return null;
+
+  return (
+    <div className="border-t border-border pt-2">
+      <p className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">Air Quality — {data.station_name}</p>
+      <div className="grid grid-cols-3 gap-1">
+        {params.map(p => (
+          <div key={p.key} className="rounded-lg bg-white/[0.03] p-1.5 text-center">
+            <p className="text-[9px] text-text-secondary">{p.label}</p>
+            <p className={`text-xs font-medium font-[family-name:var(--font-mono)] ${
+              p.value! > p.warn ? 'text-accent-red' : 'text-accent-green'
+            }`}>
+              {p.value!.toFixed(0)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DemographicsSection({ data }: { data: DemographicsData }) {
+  if (!data.total_population) return null;
+  return (
+    <div className="border-t border-border pt-2">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] text-text-secondary uppercase tracking-wider">Population</p>
+        <p className="text-xs font-medium font-[family-name:var(--font-mono)] text-text-primary">
+          {data.total_population.toLocaleString('es-ES')}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function NowTab({ forecast, alerts, airQuality, demographics }: { forecast: ForecastResponse | null; alerts: MapPopupProps['summary']['alerts']; airQuality?: AirQualityData | null; demographics?: DemographicsData | null }) {
   const current = forecast?.hourly?.[0] ?? null;
 
   return (
@@ -199,6 +246,9 @@ function NowTab({ forecast, alerts }: { forecast: ForecastResponse | null; alert
       {alerts.length === 0 && (
         <p className="text-xs text-text-secondary border-t border-border pt-2">No active alerts</p>
       )}
+
+      {airQuality && <AirQualitySection data={airQuality} />}
+      {demographics && <DemographicsSection data={demographics} />}
     </div>
   );
 }
@@ -260,6 +310,8 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
 }
 
 const forecastCache = new Map<string, { data: ForecastResponse; fetchedAt: number }>();
+const aqCache = new Map<string, { data: AirQualityData | null; fetchedAt: number }>();
+const demoCache = new Map<string, { data: DemographicsData | null; fetchedAt: number }>();
 const FORECAST_CACHE_TTL = 300_000;
 
 export function MapPopup({ provinceName, summary, provinceCode, riskData, currentTemperature }: MapPopupProps) {
@@ -267,6 +319,8 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
   const [activeTab, setActiveTab] = useState<TabId>('now');
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastLoading, setForecastLoading] = useState(false);
+  const [airQuality, setAirQuality] = useState<AirQualityData | null>(null);
+  const [demographics, setDemographics] = useState<DemographicsData | null>(null);
 
   useEffect(() => {
     if (!provinceCode) return;
@@ -294,7 +348,41 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
       }
     }
 
+    async function loadAirQuality() {
+      const cached = aqCache.get(provinceCode!);
+      if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+        if (!cancelled) setAirQuality(cached.data);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/data/air-quality/${provinceCode}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const result = Object.keys(data).length > 0 && data.station_name ? data : null;
+        if (!cancelled) setAirQuality(result);
+        aqCache.set(provinceCode!, { data: result, fetchedAt: Date.now() });
+      } catch { /* ignore */ }
+    }
+
+    async function loadDemographics() {
+      const cached = demoCache.get(provinceCode!);
+      if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+        if (!cancelled) setDemographics(cached.data);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/data/demographics/${provinceCode}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const result = data.total_population ? data : null;
+        if (!cancelled) setDemographics(result);
+        demoCache.set(provinceCode!, { data: result, fetchedAt: Date.now() });
+      } catch { /* ignore */ }
+    }
+
     load();
+    loadAirQuality();
+    loadDemographics();
     return () => { cancelled = true; };
   }, [provinceCode]);
 
@@ -348,7 +436,7 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
           <LoadingSpinner />
         ) : (
           <>
-            {activeTab === 'now' && <NowTab forecast={forecast} alerts={summary.alerts} />}
+            {activeTab === 'now' && <NowTab forecast={forecast} alerts={summary.alerts} airQuality={airQuality} demographics={demographics} />}
             {activeTab === 'hourly' && <HourlyTab hourly={forecast?.hourly ?? []} />}
             {activeTab === 'daily' && <DailyTab daily={forecast?.daily ?? []} />}
           </>

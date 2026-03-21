@@ -5,6 +5,8 @@ import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
 import { useMapAlerts } from '@/hooks/use-map-alerts';
 import { useRiskMap } from '@/hooks/use-risk-map';
 import { useAllWeather } from '@/hooks/use-all-weather';
+import { useFireHotspots } from '@/hooks/use-fire-hotspots';
+import { useEarthquakes } from '@/hooks/use-earthquakes';
 import { RiskPanel } from '@/components/map/panels/risk-panel';
 import { WeatherPanel } from '@/components/map/panels/weather-panel';
 import { AlertsPanel } from '@/components/map/panels/alerts-panel';
@@ -20,6 +22,8 @@ export default function MapHomePage() {
   const alertData = useMapAlerts(aemetAlerts);
   const { byProvince: riskByProvince } = useRiskMap();
   const { markers: weatherMarkers } = useAllWeather();
+  const { data: fireHotspots } = useFireHotspots();
+  const { data: earthquakes } = useEarthquakes();
   const panelsVisible = useAppStore((s) => s.panelsVisible);
 
   return (
@@ -28,6 +32,8 @@ export default function MapHomePage() {
         alertData={alertData}
         riskByProvince={riskByProvince}
         allWeather={weatherMarkers}
+        fireHotspots={fireHotspots}
+        earthquakes={earthquakes}
       />
 
       {/* Left panels — stacked vertically */}

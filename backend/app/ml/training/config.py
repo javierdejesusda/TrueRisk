@@ -83,3 +83,32 @@ LSTM_EPOCHS = 50
 LSTM_LR = 1e-3
 LSTM_WEIGHT_DECAY = 1e-5
 LSTM_PATIENCE = 10
+
+# ---------------------------------------------------------------------------
+# Forecast horizons (hours ahead)
+# ---------------------------------------------------------------------------
+FORECAST_HORIZONS = [6, 12, 24, 48, 72, 168]
+TFT_MAX_PREDICTION_LENGTH = len(FORECAST_HORIZONS)  # 6 steps
+TFT_MAX_ENCODER_LENGTH = 168  # 7 days of hourly lookback
+
+# Temporal Fusion Transformer
+TFT_HIDDEN_SIZE = 64
+TFT_ATTENTION_HEAD_SIZE = 4
+TFT_DROPOUT = 0.1
+TFT_HIDDEN_CONTINUOUS_SIZE = 32
+TFT_QUANTILES = [0.1, 0.5, 0.9]
+TFT_BATCH_SIZE = 128
+TFT_EPOCHS = 100
+TFT_LR = 1e-3
+TFT_PATIENCE = 15
+TFT_GRADIENT_CLIP = 0.1
+
+# Graph Attention Network (spatial refinement)
+GNN_HIDDEN_CHANNELS = 32
+GNN_NUM_LAYERS = 3
+GNN_DROPOUT = 0.2
+GNN_LR = 5e-4
+GNN_EPOCHS = 50
+
+# Feature flag
+ENABLE_TFT_FORECASTS = True

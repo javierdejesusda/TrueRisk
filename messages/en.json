@@ -119,7 +119,9 @@
     "newestRecord": "Newest record",
     "noPredictionData": "No prediction data available for {province}",
     "tryMadrid": "Try Madrid",
-    "provinceAnalysis": "Province analysis"
+    "provinceAnalysis": "Province analysis",
+    "forecastTitle": "Multi-Horizon Risk Forecast",
+    "forecastSubtitle": "TFT + GNN probabilistic forecasting"
   },
   "HazardModels": {
     "overview": "Hazard Overview",
@@ -497,5 +499,11 @@
     "title": "Page not found",
     "description": "The page you are looking for does not exist or has been moved.",
     "goToMap": "Go to Map"
+  },
+  "AiSummary": {
+    "title": "AI Weather Analysis",
+    "generate": "Generate Summary",
+    "generating": "Generating...",
+    "description": "Get an AI-powered analysis of current weather conditions and risk assessment for this province."
   }
 }

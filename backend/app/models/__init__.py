@@ -6,6 +6,8 @@ from app.models.risk_score import RiskScore
 from app.models.alert import Alert
 from app.models.push_subscription import PushSubscription
 from app.models.community_report import CommunityReport
+from app.models.risk_forecast import RiskForecast
+from app.models.sms_subscription import SmsSubscription
 
 __all__ = [
     "User",
@@ -16,4 +18,6 @@ __all__ = [
     "Alert",
     "PushSubscription",
     "CommunityReport",
+    "RiskForecast",
+    "SmsSubscription",
 ]

@@ -114,8 +114,39 @@ MODEL_REGISTRY: list[dict] = [
 
 
 def get_model_registry() -> list[dict]:
-    """Return the full model registry."""
-    return MODEL_REGISTRY
+    """Return the full model registry, with TFT upgrades when available."""
+    from app.ml.training.config import ENABLE_TFT_FORECASTS
+
+    if not ENABLE_TFT_FORECASTS:
+        return MODEL_REGISTRY
+
+    TFT_UPGRADES = {
+        "flood": {
+            "method": "XGBoost + Temporal Fusion Transformer",
+            "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
+        },
+        "wildfire": {
+            "method": "RF + LightGBM + Temporal Fusion Transformer",
+            "architecture": "Ensemble classifier + TFT quantile regression (multi-horizon)",
+        },
+        "heatwave": {
+            "method": "XGBoost + Temporal Fusion Transformer",
+            "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
+        },
+        "drought": {
+            "method": "SPEI + LSTM + Temporal Fusion Transformer",
+            "architecture": "SPEI mapping + LSTM + TFT quantile regression (multi-horizon)",
+        },
+    }
+
+    registry = []
+    for entry in MODEL_REGISTRY:
+        if entry["id"] in TFT_UPGRADES:
+            upgraded = {**entry, **TFT_UPGRADES[entry["id"]]}
+            registry.append(upgraded)
+        else:
+            registry.append(entry)
+    return registry
 
 
 def get_model_by_id(model_id: str) -> dict | None:

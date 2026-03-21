@@ -19,6 +19,10 @@ import { FloodModelCard, WildfireModelCard, DroughtModelCard, HeatwaveModelCard,
 import { ModelInfoPanel } from '@/components/predictions/model-info-panel';
 import { PipelineDiagram } from '@/components/predictions/pipeline-diagram';
 import { LoadingSkeleton } from '@/components/predictions/shared';
+import { useForecast } from '@/hooks/use-forecast';
+import { ForecastChart } from '@/components/predictions/forecast-chart';
+import { AttentionWeightsChart } from '@/components/predictions/attention-weights-chart';
+import { AiWeatherSummary } from '@/components/predictions/ai-weather-summary';
 import { PROVINCES } from '@/lib/provinces';
 import { useTranslations } from 'next-intl';
 
@@ -30,6 +34,7 @@ export default function PredictionPage() {
   const { risk } = useRiskScore();
   const { data: explainData } = useRiskExplain();
   const { data, isLoading, error, refresh } = usePredictions();
+  const { data: forecastData, isLoading: forecastLoading } = useForecast();
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -91,8 +96,18 @@ export default function PredictionPage() {
       <PredictionHeader current={data.current} />
       <PredictionsExplainer />
 
+      {/* AI Weather Summary */}
+      <AiWeatherSummary />
+
       {/* ML Pipeline Visualization */}
       <PipelineDiagram />
+
+      {/* Multi-Horizon Risk Forecast */}
+      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('forecastTitle')}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <ForecastChart data={forecastData} isLoading={forecastLoading} />
+        <AttentionWeightsChart data={forecastData} />
+      </div>
 
       {/* Hazard ML Models */}
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('modelInventory')}</h2>

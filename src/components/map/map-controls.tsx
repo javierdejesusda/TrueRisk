@@ -1,6 +1,7 @@
 'use client';
 
 import { useAppStore } from '@/store/app-store';
+import type { DataLayerVisibility } from './data-layers';
 
 export interface MapControlsProps {
   alertCount: number;
@@ -9,6 +10,10 @@ export interface MapControlsProps {
   onRefresh: () => void;
   terrainEnabled?: boolean;
   onToggleTerrain?: () => void;
+  dataLayers?: DataLayerVisibility;
+  onToggleDataLayer?: (layer: keyof DataLayerVisibility) => void;
+  fireCount?: number;
+  quakeCount?: number;
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -20,7 +25,7 @@ function formatRelativeTime(dateStr: string): string {
   return `${hours}h ago`;
 }
 
-export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain }: MapControlsProps) {
+export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain, dataLayers, onToggleDataLayer, fireCount, quakeCount }: MapControlsProps) {
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
   const setActiveMapLayer = useAppStore((s) => s.setActiveMapLayer);
   const sseStatus = useAppStore((s) => s.sseStatus);
@@ -66,6 +71,36 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
           </button>
         )}
       </div>
+
+      {/* Data layer toggles */}
+      {dataLayers && onToggleDataLayer && (
+        <div className="glass-heavy rounded-2xl p-1.5 flex flex-col gap-0.5">
+          <button
+            onClick={() => onToggleDataLayer('fires')}
+            className={[
+              'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5',
+              dataLayers.fires
+                ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30'
+                : 'text-text-muted hover:text-text-secondary border border-transparent',
+            ].join(' ')}
+          >
+            <span className="text-[9px]">🔥</span>
+            Fires{fireCount ? ` (${fireCount})` : ''}
+          </button>
+          <button
+            onClick={() => onToggleDataLayer('earthquakes')}
+            className={[
+              'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5',
+              dataLayers.earthquakes
+                ? 'bg-accent-red/20 text-accent-red border border-accent-red/30'
+                : 'text-text-muted hover:text-text-secondary border border-transparent',
+            ].join(' ')}
+          >
+            <span className="text-[9px]">📍</span>
+            Quakes{quakeCount ? ` (${quakeCount})` : ''}
+          </button>
+        </div>
+      )}
 
       {/* Controls card */}
       <div className="glass-heavy rounded-2xl p-3">

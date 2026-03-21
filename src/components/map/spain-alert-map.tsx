@@ -15,14 +15,20 @@ import { useCommunityReports } from '@/hooks/use-community-reports';
 import { ReportMarkers } from '@/components/community/report-markers';
 import { ReportForm } from '@/components/community/report-form';
 import { useGeolocation, isInSpain } from '@/hooks/use-geolocation';
+import { DataLayers } from './data-layers';
+import type { DataLayerVisibility } from './data-layers';
+import type { FireHotspot } from '@/hooks/use-fire-hotspots';
+import type { Earthquake } from '@/hooks/use-earthquakes';
 
 export interface SpainAlertMapProps {
   alertData: MapAlertData;
   riskByProvince?: Record<string, RiskMapEntry>;
   allWeather?: Array<{ province_code: string; temperature: number; latitude: number; longitude: number }>;
+  fireHotspots?: FireHotspot[] | null;
+  earthquakes?: Earthquake[] | null;
 }
 
-export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAlertMapProps) {
+export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotspots, earthquakes }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
@@ -46,6 +52,14 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
   const [hasGeolocated, setHasGeolocated] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lng: number; lat: number } | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [dataLayerVisibility, setDataLayerVisibility] = useState<DataLayerVisibility>({
+    fires: false,
+    earthquakes: false,
+  });
+
+  const toggleDataLayer = useCallback((layer: keyof DataLayerVisibility) => {
+    setDataLayerVisibility(prev => ({ ...prev, [layer]: !prev[layer] }));
+  }, []);
 
   // Load GeoJSON once
   useEffect(() => {
@@ -504,6 +518,13 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
           </Source>
         )}
 
+        {/* Data overlay layers (fires, earthquakes) */}
+        <DataLayers
+          fireHotspots={fireHotspots ?? null}
+          earthquakes={earthquakes ?? null}
+          visibleLayers={dataLayerVisibility}
+        />
+
         {/* Popup */}
         {popupInfo && (
           <Popup
@@ -554,6 +575,10 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather }: SpainAl
         lastUpdated={new Date().toISOString()}
         onResetView={handleResetView}
         onRefresh={() => {}}
+        dataLayers={dataLayerVisibility}
+        onToggleDataLayer={toggleDataLayer}
+        fireCount={fireHotspots?.length}
+        quakeCount={earthquakes?.length}
       />
 
       {/* Report hazard button */}
