@@ -107,6 +107,7 @@ export function ProfileForm() {
     watch,
     formState: { isDirty },
   } = useForm<ProfileFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(profileSchema) as any,
     defaultValues: {
       provinceCode,

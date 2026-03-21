@@ -4,6 +4,17 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 
+interface ExtendedSession {
+    backendToken?: string;
+    user?: {
+        id?: string;
+        name?: string | null;
+        email?: string | null;
+        image?: string | null;
+        role?: string;
+    };
+}
+
 export function useAuth() {
     const { data: session, status } = useSession();
     const setBackendToken = useAppStore((s) => s.setBackendToken);
@@ -11,7 +22,7 @@ export function useAuth() {
 
     useEffect(() => {
         if (session) {
-            const s = session as any;
+            const s = session as ExtendedSession;
             if (s.backendToken) {
                 setBackendToken(s.backendToken);
             }
@@ -31,23 +42,25 @@ export function useAuth() {
     }, [session, status, setBackendToken, setAuthUser]);
 
     useEffect(() => {
-        if (status !== 'authenticated' || !(session as any)?.backendToken) return;
-        const token = (session as any).backendToken;
+        const s = session as ExtendedSession | null;
+        if (status !== 'authenticated' || !s?.backendToken) return;
         fetch('/api/account/me', {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${s.backendToken}` },
         })
             .then((res) => (res.ok ? res.json() : null))
-            .then((data) => {
+            .then((data: Record<string, unknown> | null) => {
                 if (data?.province_code) {
-                    useAppStore.getState().setProvinceCode(data.province_code);
+                    useAppStore.getState().setProvinceCode(data.province_code as string);
                 }
             })
             .catch(() => {});
     }, [status, session]);
 
+    const ext = session as ExtendedSession | null;
+
     return {
         user: session?.user || null,
-        backendToken: (session as any)?.backendToken || null,
+        backendToken: ext?.backendToken || null,
         isAuthenticated: status === 'authenticated',
         isLoading: status === 'loading',
         signIn,

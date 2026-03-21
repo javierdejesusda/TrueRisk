@@ -145,8 +145,10 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     if (!provinceCode) return;
     const province = PROVINCES.find(p => p.code === provinceCode);
     if (!province || !mapRef.current) return;
+    const map = mapRef.current;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fallback on geo failure
     setUserLocation({ lng: province.lng, lat: province.lat });
-    mapRef.current.flyTo({
+    map.flyTo({
       center: [province.lng, province.lat],
       zoom: 8,
       duration: 2000,

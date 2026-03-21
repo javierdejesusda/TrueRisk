@@ -113,6 +113,7 @@ export function NavPill() {
           ].join(' ')}
         >
           {user?.image ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={user.image}
               alt=""

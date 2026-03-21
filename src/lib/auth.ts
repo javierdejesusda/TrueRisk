@@ -49,8 +49,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         async jwt({ token, user, account }) {
             if (user) {
-                token.backendToken = (user as any).backendToken;
-                token.role = (user as any).role;
+                const u = user as Record<string, unknown>;
+                token.backendToken = u.backendToken;
+                token.role = u.role;
                 token.userId = user.id;
             }
             if (account && account.provider !== 'credentials') {
