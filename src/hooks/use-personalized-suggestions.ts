@@ -75,9 +75,10 @@ export function usePersonalizedSuggestions() {
               reader.cancel();
               return;
             }
-            if (line.startsWith('data: ')) {
-              const chunk = line.slice(6);
-              setContent((prev) => prev + chunk);
+            if (line === 'data: ' || line === 'data:') {
+              setContent((prev) => prev + '\n');
+            } else if (line.startsWith('data: ')) {
+              setContent((prev) => prev + line.slice(6));
             }
           }
         }
