@@ -38,6 +38,9 @@ backend/data/historical/
 __pycache__/
 .venv/
 backend/dev.db
+backend/test.db
+backend/lightning_logs/
+backend/app/ml/saved_models/*.ckpt
 *.egg-info/
 
 # playwright
