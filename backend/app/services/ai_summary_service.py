@@ -67,7 +67,7 @@ async def stream_weather_summary(
         f"Active Alerts: {context.get('alerts')}\n"
     )
 
-    messages = [
+    messages: list[dict[str, str]] = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_message},
     ]
@@ -75,7 +75,7 @@ async def stream_weather_summary(
     try:
         async with client.chat.completions.stream(
             model=settings.openai_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=800,
             temperature=0.3,
         ) as stream:
@@ -86,11 +86,11 @@ async def stream_weather_summary(
         logger.info("Falling back to standard streaming API")
         response = await client.chat.completions.create(
             model=settings.openai_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=800,
             temperature=0.3,
             stream=True,
         )
-        async for chunk in response:
+        async for chunk in response:  # type: ignore[union-attr]
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content

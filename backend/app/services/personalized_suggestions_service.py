@@ -65,7 +65,7 @@ async def stream_personalized_suggestions(
         f"Active Alerts: {context.get('alerts')}\n"
     )
 
-    messages = [
+    messages: list[dict[str, str]] = [
         {"role": "system", "content": SUGGESTIONS_PROMPT},
         {"role": "user", "content": user_context + risk_context},
     ]
@@ -73,7 +73,7 @@ async def stream_personalized_suggestions(
     try:
         async with client.chat.completions.stream(
             model=settings.openai_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=600,
             temperature=0.4,
         ) as stream:
@@ -83,11 +83,11 @@ async def stream_personalized_suggestions(
     except (AttributeError, TypeError):
         response = await client.chat.completions.create(
             model=settings.openai_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=600,
             temperature=0.4,
             stream=True,
         )
-        async for chunk in response:
+        async for chunk in response:  # type: ignore[union-attr]
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
