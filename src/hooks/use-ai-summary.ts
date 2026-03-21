@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
-
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+import { BACKEND_URL } from '@/lib/backend-url';
 
 export function useAiSummary() {
   const [content, setContent] = useState('');
@@ -35,7 +34,7 @@ export function useAiSummary() {
 
       try {
         const res = await fetch(
-          `${BACKEND}/api/v1/ai-summary/stream/${provinceCode}?locale=${locale}`,
+          `${BACKEND_URL}/api/v1/ai-summary/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
 
@@ -59,7 +58,7 @@ export function useAiSummary() {
           buffer = lines.pop() || '';
 
           for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
+            const line = lines[i].replace(/\r$/, '');
             if (line.startsWith('event: done')) {
               setIsStreaming(false);
               reader.cancel();
