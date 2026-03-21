@@ -8,6 +8,9 @@ import type { ForecastResponse, HourlyForecast, DailyForecast } from '@/types/we
 import type { RiskMapEntry, HazardType } from '@/types/risk';
 import type { AirQualityData } from '@/hooks/use-air-quality';
 import type { DemographicsData } from '@/hooks/use-demographics';
+import type { VegetationData } from '@/hooks/use-vegetation';
+import type { SeismicData } from '@/hooks/use-seismic';
+import type { SolarData } from '@/hooks/use-solar';
 
 export interface MapPopupProps {
   provinceName: string;
@@ -169,7 +172,79 @@ function DemographicsSection({ data }: { data: DemographicsData }) {
   );
 }
 
-function NowTab({ forecast, alerts, airQuality, demographics }: { forecast: ForecastResponse | null; alerts: MapPopupProps['summary']['alerts']; airQuality?: AirQualityData | null; demographics?: DemographicsData | null }) {
+function VegetationSection({ data }: { data: VegetationData }) {
+  if (!data.classification && data.ndvi == null) return null;
+  const ndviColor = (data.ndvi ?? 0) >= 0.5 ? 'text-accent-green' : (data.ndvi ?? 0) >= 0.2 ? 'text-accent-yellow' : 'text-accent-red';
+  return (
+    <div className="border-t border-border pt-2">
+      <p className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">Vegetation Health</p>
+      <div className="flex items-center justify-between">
+        {data.ndvi != null && (
+          <p className={`text-xs font-medium font-[family-name:var(--font-mono)] ${ndviColor}`}>
+            NDVI: {data.ndvi.toFixed(2)}
+          </p>
+        )}
+        {data.classification && (
+          <p className="text-xs text-text-secondary capitalize font-[family-name:var(--font-sans)]">{data.classification}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SeismicSection({ data }: { data: SeismicData }) {
+  if (!data.event_count && !data.max_magnitude) return null;
+  return (
+    <div className="border-t border-border pt-2">
+      <p className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">Seismic Activity (90d)</p>
+      <div className="grid grid-cols-3 gap-1">
+        {data.event_count != null && (
+          <div className="rounded-lg bg-white/[0.03] p-1.5 text-center">
+            <p className="text-[9px] text-text-secondary">Events</p>
+            <p className="text-xs font-medium font-[family-name:var(--font-mono)] text-text-primary">{data.event_count}</p>
+          </div>
+        )}
+        {data.max_magnitude != null && (
+          <div className="rounded-lg bg-white/[0.03] p-1.5 text-center">
+            <p className="text-[9px] text-text-secondary">Max Mag</p>
+            <p className={`text-xs font-medium font-[family-name:var(--font-mono)] ${data.max_magnitude >= 4 ? 'text-accent-red' : data.max_magnitude >= 3 ? 'text-accent-orange' : 'text-accent-green'}`}>
+              {data.max_magnitude.toFixed(1)}
+            </p>
+          </div>
+        )}
+        {data.closest_distance_km != null && (
+          <div className="rounded-lg bg-white/[0.03] p-1.5 text-center">
+            <p className="text-[9px] text-text-secondary">Nearest</p>
+            <p className="text-xs font-medium font-[family-name:var(--font-mono)] text-text-primary">{data.closest_distance_km.toFixed(0)} km</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SolarSection({ data }: { data: SolarData }) {
+  if (data.allsky_sfc_sw_dwn == null) return null;
+  return (
+    <div className="border-t border-border pt-2">
+      <p className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">Solar & Agmet</p>
+      <div className="grid grid-cols-2 gap-1">
+        <div className="rounded-lg bg-white/[0.03] p-1.5 text-center">
+          <p className="text-[9px] text-text-secondary">Solar Rad.</p>
+          <p className="text-xs font-medium font-[family-name:var(--font-mono)] text-accent-yellow">{data.allsky_sfc_sw_dwn.toFixed(1)} kWh/m²</p>
+        </div>
+        {data.rh2m != null && (
+          <div className="rounded-lg bg-white/[0.03] p-1.5 text-center">
+            <p className="text-[9px] text-text-secondary">Humidity</p>
+            <p className="text-xs font-medium font-[family-name:var(--font-mono)] text-text-primary">{data.rh2m.toFixed(0)}%</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NowTab({ forecast, alerts, airQuality, demographics, vegetation, seismic, solar }: { forecast: ForecastResponse | null; alerts: MapPopupProps['summary']['alerts']; airQuality?: AirQualityData | null; demographics?: DemographicsData | null; vegetation?: VegetationData | null; seismic?: SeismicData | null; solar?: SolarData | null }) {
   const current = forecast?.hourly?.[0] ?? null;
 
   return (
@@ -248,6 +323,9 @@ function NowTab({ forecast, alerts, airQuality, demographics }: { forecast: Fore
       )}
 
       {airQuality && <AirQualitySection data={airQuality} />}
+      {vegetation && <VegetationSection data={vegetation} />}
+      {seismic && <SeismicSection data={seismic} />}
+      {solar && <SolarSection data={solar} />}
       {demographics && <DemographicsSection data={demographics} />}
     </div>
   );
@@ -312,6 +390,9 @@ function DailyTab({ daily }: { daily: DailyForecast[] }) {
 const forecastCache = new Map<string, { data: ForecastResponse; fetchedAt: number }>();
 const aqCache = new Map<string, { data: AirQualityData | null; fetchedAt: number }>();
 const demoCache = new Map<string, { data: DemographicsData | null; fetchedAt: number }>();
+const vegCache = new Map<string, { data: VegetationData | null; fetchedAt: number }>();
+const seismicCache = new Map<string, { data: SeismicData | null; fetchedAt: number }>();
+const solarCache = new Map<string, { data: SolarData | null; fetchedAt: number }>();
 const FORECAST_CACHE_TTL = 300_000;
 
 export function MapPopup({ provinceName, summary, provinceCode, riskData, currentTemperature }: MapPopupProps) {
@@ -321,6 +402,9 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
   const [forecastLoading, setForecastLoading] = useState(false);
   const [airQuality, setAirQuality] = useState<AirQualityData | null>(null);
   const [demographics, setDemographics] = useState<DemographicsData | null>(null);
+  const [vegetation, setVegetation] = useState<VegetationData | null>(null);
+  const [seismic, setSeismic] = useState<SeismicData | null>(null);
+  const [solar, setSolar] = useState<SolarData | null>(null);
 
   useEffect(() => {
     if (!provinceCode) return;
@@ -380,9 +464,60 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
       } catch { /* ignore */ }
     }
 
+    async function loadVegetation() {
+      const cached = vegCache.get(provinceCode!);
+      if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+        if (!cancelled) setVegetation(cached.data);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/data/vegetation/${provinceCode}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const result = Object.keys(data).length > 0 ? data : null;
+        if (!cancelled) setVegetation(result);
+        vegCache.set(provinceCode!, { data: result, fetchedAt: Date.now() });
+      } catch { /* ignore */ }
+    }
+
+    async function loadSeismic() {
+      const cached = seismicCache.get(provinceCode!);
+      if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+        if (!cancelled) setSeismic(cached.data);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/data/seismic/${provinceCode}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const result = Object.keys(data).length > 0 ? data : null;
+        if (!cancelled) setSeismic(result);
+        seismicCache.set(provinceCode!, { data: result, fetchedAt: Date.now() });
+      } catch { /* ignore */ }
+    }
+
+    async function loadSolar() {
+      const cached = solarCache.get(provinceCode!);
+      if (cached && Date.now() - cached.fetchedAt < FORECAST_CACHE_TTL) {
+        if (!cancelled) setSolar(cached.data);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/data/solar/${provinceCode}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const result = Object.keys(data).length > 0 ? data : null;
+        if (!cancelled) setSolar(result);
+        solarCache.set(provinceCode!, { data: result, fetchedAt: Date.now() });
+      } catch { /* ignore */ }
+    }
+
     load();
     loadAirQuality();
     loadDemographics();
+    loadVegetation();
+    loadSeismic();
+    loadSolar();
     return () => { cancelled = true; };
   }, [provinceCode]);
 
@@ -436,7 +571,7 @@ export function MapPopup({ provinceName, summary, provinceCode, riskData, curren
           <LoadingSpinner />
         ) : (
           <>
-            {activeTab === 'now' && <NowTab forecast={forecast} alerts={summary.alerts} airQuality={airQuality} demographics={demographics} />}
+            {activeTab === 'now' && <NowTab forecast={forecast} alerts={summary.alerts} airQuality={airQuality} demographics={demographics} vegetation={vegetation} seismic={seismic} solar={solar} />}
             {activeTab === 'hourly' && <HourlyTab hourly={forecast?.hourly ?? []} />}
             {activeTab === 'daily' && <DailyTab daily={forecast?.daily ?? []} />}
           </>

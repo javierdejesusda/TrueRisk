@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import type { DataLayerVisibility } from './data-layers';
 
@@ -14,18 +15,20 @@ export interface MapControlsProps {
   onToggleDataLayer?: (layer: keyof DataLayerVisibility) => void;
   fireCount?: number;
   quakeCount?: number;
+  reservoirCount?: number;
 }
 
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, t: (key: string, values?: Record<string, string | number | Date>) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('justNow');
+  if (mins < 60) return t('minutesAgo', { mins });
   const hours = Math.floor(mins / 60);
-  return `${hours}h ago`;
+  return t('hoursAgo', { hrs: hours });
 }
 
-export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain, dataLayers, onToggleDataLayer, fireCount, quakeCount }: MapControlsProps) {
+export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain, dataLayers, onToggleDataLayer, fireCount, quakeCount, reservoirCount }: MapControlsProps) {
+  const t = useTranslations('Map');
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
   const setActiveMapLayer = useAppStore((s) => s.setActiveMapLayer);
   const sseStatus = useAppStore((s) => s.sseStatus);
@@ -43,7 +46,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
               : 'text-text-muted hover:text-text-secondary border border-transparent',
           ].join(' ')}
         >
-          Risk
+          {t('risk')}
         </button>
         <button
           onClick={() => setActiveMapLayer('alerts')}
@@ -54,7 +57,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
               : 'text-text-muted hover:text-text-secondary border border-transparent',
           ].join(' ')}
         >
-          Alerts
+          {t('alerts')}
         </button>
         {onToggleTerrain && (
           <button
@@ -85,7 +88,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
             ].join(' ')}
           >
             <span className="text-[9px]">🔥</span>
-            Fires{fireCount ? ` (${fireCount})` : ''}
+            {t('fires')}{fireCount ? ` (${fireCount})` : ''}
           </button>
           <button
             onClick={() => onToggleDataLayer('earthquakes')}
@@ -96,8 +99,18 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
                 : 'text-text-muted hover:text-text-secondary border border-transparent',
             ].join(' ')}
           >
-            <span className="text-[9px]">📍</span>
-            Quakes{quakeCount ? ` (${quakeCount})` : ''}
+            {t('quakes')}{quakeCount ? ` (${quakeCount})` : ''}
+          </button>
+          <button
+            onClick={() => onToggleDataLayer('reservoirs')}
+            className={[
+              'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5',
+              dataLayers.reservoirs
+                ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30'
+                : 'text-text-muted hover:text-text-secondary border border-transparent',
+            ].join(' ')}
+          >
+            {t('reservoirs')}{reservoirCount ? ` (${reservoirCount})` : ''}
           </button>
         </div>
       )}
@@ -114,7 +127,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
               </span>
             )}
             <span className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-primary">
-              {alertCount > 0 ? `${alertCount} active alert${alertCount !== 1 ? 's' : ''}` : 'No alerts'}
+              {alertCount > 0 ? `${alertCount} ${t('active')}` : t('noAlertsLabel')}
             </span>
           </div>
 
@@ -129,7 +142,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
                 <path d="M6 1v4l2.5 1.5" />
                 <circle cx="6" cy="6" r="5" />
               </svg>
-              Reset
+              {t('reset')}
             </button>
             <button
               onClick={onRefresh}
@@ -142,7 +155,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
                 <path d="M9.7 4.5A4.5 4.5 0 0 0 2.3 3L1 4.5" />
                 <path d="M2.3 7.5A4.5 4.5 0 0 0 9.7 9L11 7.5" />
               </svg>
-              Refresh
+              {t('refreshLabel')}
             </button>
           </div>
 
@@ -155,7 +168,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
                 'bg-accent-red'
               }`} />
               <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
-                Updated {formatRelativeTime(lastUpdated)}
+                {t('updatedAgo', { time: formatRelativeTime(lastUpdated, t) })}
               </span>
             </div>
           )}

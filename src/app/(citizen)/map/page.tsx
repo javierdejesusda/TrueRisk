@@ -7,6 +7,7 @@ import { useRiskMap } from '@/hooks/use-risk-map';
 import { useAllWeather } from '@/hooks/use-all-weather';
 import { useFireHotspots } from '@/hooks/use-fire-hotspots';
 import { useEarthquakes } from '@/hooks/use-earthquakes';
+import { useReservoirs } from '@/hooks/use-reservoirs';
 import { RiskPanel } from '@/components/map/panels/risk-panel';
 import { WeatherPanel } from '@/components/map/panels/weather-panel';
 import { AlertsPanel } from '@/components/map/panels/alerts-panel';
@@ -24,6 +25,7 @@ export default function MapHomePage() {
   const { markers: weatherMarkers } = useAllWeather();
   const { data: fireHotspots } = useFireHotspots();
   const { data: earthquakes } = useEarthquakes();
+  const { data: reservoirData } = useReservoirs();
   const panelsVisible = useAppStore((s) => s.panelsVisible);
 
   return (
@@ -34,6 +36,7 @@ export default function MapHomePage() {
         allWeather={weatherMarkers}
         fireHotspots={fireHotspots}
         earthquakes={earthquakes}
+        reservoirs={reservoirData}
       />
 
       {/* Left panels — stacked vertically */}

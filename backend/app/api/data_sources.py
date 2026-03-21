@@ -98,3 +98,62 @@ async def get_solar(province_code: str, db: AsyncSession = Depends(get_db)):
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
     return await fetch_solar_and_agmet(province.latitude, province.longitude)
+
+
+@router.get("/seismic/{province_code}")
+async def get_seismic(province_code: str, db: AsyncSession = Depends(get_db)):
+    """Seismic exposure for a province from IGN."""
+    from app.models.province import Province
+    from app.data.ign_seismic import fetch_recent_quakes, compute_province_seismic_exposure
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+    quakes = await fetch_recent_quakes()
+    return compute_province_seismic_exposure(province.latitude, province.longitude, quakes)
+
+
+@router.get("/air-quality-forecast/{province_code}")
+async def get_air_quality_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
+    """Air quality forecast from Copernicus CAMS."""
+    from app.models.province import Province
+    from app.data.copernicus_cams import fetch_air_quality_forecast
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+    return await fetch_air_quality_forecast(province.latitude, province.longitude)
+
+
+@router.get("/seasonal/{province_code}")
+async def get_seasonal(province_code: str, db: AsyncSession = Depends(get_db)):
+    """Seasonal climate outlook from ECMWF."""
+    from app.models.province import Province
+    from app.data.ecmwf_seasonal import fetch_seasonal_outlook
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+    return await fetch_seasonal_outlook(province.latitude, province.longitude)
+
+
+@router.get("/wildfire-index")
+async def get_wildfire_index():
+    """Wildfire danger index from AEMET."""
+    from app.data.aemet_client import fetch_wildfire_index
+    from app.config import settings
+
+    if not settings.aemet_api_key:
+        return {"error": "AEMET API key not configured"}
+    return await fetch_wildfire_index(settings.aemet_api_key)
+
+
+@router.get("/weather-stations")
+async def get_weather_stations():
+    """Latest observations from AEMET weather stations."""
+    from app.data.aemet_client import fetch_weather_stations
+    from app.config import settings
+
+    if not settings.aemet_api_key:
+        return []
+    return await fetch_weather_stations(settings.aemet_api_key)

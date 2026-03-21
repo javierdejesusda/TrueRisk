@@ -1,17 +1,18 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRiskScore } from '@/hooks/use-risk-score';
 import { PanelShell } from './panel-shell';
 import type { CompositeRiskScore, HazardType } from '@/types/risk';
 
-const HAZARDS: { key: HazardType; label: string; color: string }[] = [
-  { key: 'flood', label: 'Flood', color: 'bg-accent-blue' },
-  { key: 'wildfire', label: 'Wildfire', color: 'bg-accent-orange' },
-  { key: 'drought', label: 'Drought', color: 'bg-accent-yellow' },
-  { key: 'heatwave', label: 'Heatwave', color: 'bg-accent-red' },
-  { key: 'seismic', label: 'Seismic', color: 'bg-accent-purple' },
-  { key: 'coldwave', label: 'Cold Wave', color: 'bg-severity-1' },
-  { key: 'windstorm', label: 'Windstorm', color: 'bg-accent-green' },
+const HAZARD_KEYS: { key: HazardType; tKey: string; color: string }[] = [
+  { key: 'flood', tKey: 'flood', color: 'bg-accent-blue' },
+  { key: 'wildfire', tKey: 'wildfire', color: 'bg-accent-orange' },
+  { key: 'drought', tKey: 'drought', color: 'bg-accent-yellow' },
+  { key: 'heatwave', tKey: 'heatwave', color: 'bg-accent-red' },
+  { key: 'seismic', tKey: 'seismic', color: 'bg-accent-purple' },
+  { key: 'coldwave', tKey: 'coldwave', color: 'bg-severity-1' },
+  { key: 'windstorm', tKey: 'windstorm', color: 'bg-accent-green' },
 ];
 
 function severityColor(score: number): string {
@@ -35,6 +36,7 @@ const ShieldIcon = (
 );
 
 export function RiskPanel() {
+  const t = useTranslations('Map');
   const { risk, isLoading } = useRiskScore();
 
   const score = risk?.composite_score ?? 0;
@@ -54,7 +56,7 @@ export function RiskPanel() {
 
   return (
     <PanelShell
-      title="Risk Score"
+      title={t('panelRiskScore')}
       icon={ShieldIcon}
       collapsedContent={collapsedContent}
     >
@@ -72,20 +74,20 @@ export function RiskPanel() {
               {score.toFixed(0)}
             </span>
             <div className="flex flex-col">
-              <span className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Composite</span>
+              <span className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('composite')}</span>
               <span className="text-xs text-text-secondary capitalize">{risk.severity.replace('_', ' ')}</span>
             </div>
           </div>
 
           {/* Hazard bars */}
           <div className="flex flex-col gap-2">
-            {HAZARDS.map(({ key, label, color }) => {
+            {HAZARD_KEYS.map(({ key, tKey, color }) => {
               const hazardScore = risk[`${key}_score` as keyof CompositeRiskScore] as number;
               const isDominant = risk.dominant_hazard === key;
               return (
                 <div key={key} className={`flex items-center gap-2 ${isDominant ? 'border-l-2 border-current pl-1' : ''}`}>
                   <span className={`text-[10px] w-14 font-[family-name:var(--font-sans)] ${isDominant ? 'font-semibold text-text-primary' : 'text-text-muted'}`}>
-                    {label}
+                    {t(tKey)}
                   </span>
                   <div className="flex-1 h-[6px] bg-bg-secondary rounded-full overflow-hidden">
                     <div
@@ -102,7 +104,7 @@ export function RiskPanel() {
           </div>
         </div>
       ) : (
-        <p className="text-xs text-text-muted">No risk data</p>
+        <p className="text-xs text-text-muted">{t('noRiskData')}</p>
       )}
     </PanelShell>
   );

@@ -15,7 +15,8 @@ export function useAemetAlerts() {
       const res = await fetch('/api/alerts/aemet');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as AemetCapAlert[];
-      setAlerts(data);
+      // Filter out "green" (Minor/Unknown) alerts — they represent no actual hazard
+      setAlerts(data.filter((a) => a.severity !== 'green'));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch AEMET alerts');

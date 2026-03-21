@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAlerts } from '@/hooks/use-alerts';
 import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
+import { aemetSeverityToNumeric } from '@/lib/geo-data';
 import type { Alert } from '@/types/alert';
-import type { AemetCapAlert } from '@/types/aemet';
+import type { AemetCapAlert, AemetSeverity } from '@/types/aemet';
 
 interface UnifiedAlert {
   id: string;
@@ -18,15 +19,6 @@ interface UnifiedAlert {
   badgeLabel: string;
   source: string;
   time: string;
-}
-
-function aemetSeverityToNumber(severity: string): number {
-  switch (severity) {
-    case 'red': return 5;
-    case 'orange': return 4;
-    case 'yellow': return 2;
-    default: return 1;
-  }
 }
 
 function severityVariant(severity: number): 'success' | 'info' | 'warning' | 'danger' {
@@ -72,9 +64,9 @@ function unifyAlerts(
   }
 
   for (const a of aemetAlerts) {
-    const sev = aemetSeverityToNumber(a.severity);
+    const sev = aemetSeverityToNumeric(a.severity as AemetSeverity);
     unified.push({
-      id: `aemet-${a.identifier}`,
+      id: `aemet-${a.identifier}-${a.geocode}`,
       title: a.headline || a.event,
       severity: sev,
       badgeVariant: severityVariant(sev),

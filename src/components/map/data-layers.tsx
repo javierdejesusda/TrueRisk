@@ -5,15 +5,25 @@ import { Marker } from 'react-map-gl/maplibre';
 import type { FireHotspot } from '@/hooks/use-fire-hotspots';
 import type { Earthquake } from '@/hooks/use-earthquakes';
 
+export interface ReservoirPoint {
+  name: string;
+  lat?: number;
+  lon?: number;
+  capacity_hm3: number;
+  volume_hm3: number;
+}
+
 interface DataLayersProps {
   fireHotspots: FireHotspot[] | null;
   earthquakes: Earthquake[] | null;
+  reservoirs?: ReservoirPoint[] | null;
   visibleLayers: DataLayerVisibility;
 }
 
 export interface DataLayerVisibility {
   fires: boolean;
   earthquakes: boolean;
+  reservoirs: boolean;
 }
 
 function FireMarker({ fire }: { fire: FireHotspot }) {
@@ -72,7 +82,32 @@ function EarthquakeMarker({ quake }: { quake: Earthquake }) {
   );
 }
 
-export function DataLayers({ fireHotspots, earthquakes, visibleLayers }: DataLayersProps) {
+function ReservoirMarker({ reservoir }: { reservoir: ReservoirPoint }) {
+  const fillPct = reservoir.capacity_hm3 > 0
+    ? (reservoir.volume_hm3 / reservoir.capacity_hm3) * 100
+    : 0;
+  const size = Math.max(10, Math.min(20, reservoir.capacity_hm3 / 50));
+  const color = fillPct >= 70 ? 'rgba(59, 130, 246, 0.7)'
+    : fillPct >= 40 ? 'rgba(251, 191, 36, 0.7)'
+    : 'rgba(239, 68, 68, 0.7)';
+
+  return (
+    <Marker longitude={reservoir.lon ?? 0} latitude={reservoir.lat ?? 0} anchor="center">
+      <div
+        className="rounded-full border border-blue-400/60"
+        style={{
+          width: size,
+          height: size,
+          backgroundColor: color,
+          boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)',
+        }}
+        title={`${reservoir.name}\n${fillPct.toFixed(0)}% full (${reservoir.volume_hm3.toFixed(1)} / ${reservoir.capacity_hm3.toFixed(1)} hm\u00b3)`}
+      />
+    </Marker>
+  );
+}
+
+export function DataLayers({ fireHotspots, earthquakes, reservoirs, visibleLayers }: DataLayersProps) {
   // Limit fire markers for performance — show top 200 by FRP
   const topFires = useMemo(() => {
     if (!fireHotspots || !visibleLayers.fires) return [];
@@ -86,6 +121,11 @@ export function DataLayers({ fireHotspots, earthquakes, visibleLayers }: DataLay
     return earthquakes.filter(q => q.magnitude >= 2.5);
   }, [earthquakes, visibleLayers.earthquakes]);
 
+  const visibleReservoirs = useMemo(() => {
+    if (!reservoirs || !visibleLayers.reservoirs) return [];
+    return reservoirs.filter(r => r.lat != null && r.lon != null);
+  }, [reservoirs, visibleLayers.reservoirs]);
+
   return (
     <>
       {visibleLayers.fires && topFires.map((fire, i) => (
@@ -93,6 +133,9 @@ export function DataLayers({ fireHotspots, earthquakes, visibleLayers }: DataLay
       ))}
       {visibleLayers.earthquakes && visibleQuakes.map((quake, i) => (
         <EarthquakeMarker key={`quake-${i}`} quake={quake} />
+      ))}
+      {visibleLayers.reservoirs && visibleReservoirs.map((res, i) => (
+        <ReservoirMarker key={`reservoir-${i}`} reservoir={res} />
       ))}
     </>
   );

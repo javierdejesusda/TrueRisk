@@ -16,7 +16,7 @@ import { ReportMarkers } from '@/components/community/report-markers';
 import { ReportForm } from '@/components/community/report-form';
 import { useGeolocation, isInSpain } from '@/hooks/use-geolocation';
 import { DataLayers } from './data-layers';
-import type { DataLayerVisibility } from './data-layers';
+import type { DataLayerVisibility, ReservoirPoint } from './data-layers';
 import type { FireHotspot } from '@/hooks/use-fire-hotspots';
 import type { Earthquake } from '@/hooks/use-earthquakes';
 
@@ -26,9 +26,10 @@ export interface SpainAlertMapProps {
   allWeather?: Array<{ province_code: string; temperature: number; latitude: number; longitude: number }>;
   fireHotspots?: FireHotspot[] | null;
   earthquakes?: Earthquake[] | null;
+  reservoirs?: ReservoirPoint[] | null;
 }
 
-export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotspots, earthquakes }: SpainAlertMapProps) {
+export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotspots, earthquakes, reservoirs }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
@@ -55,6 +56,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
   const [dataLayerVisibility, setDataLayerVisibility] = useState<DataLayerVisibility>({
     fires: false,
     earthquakes: false,
+    reservoirs: false,
   });
 
   const toggleDataLayer = useCallback((layer: keyof DataLayerVisibility) => {
@@ -522,6 +524,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         <DataLayers
           fireHotspots={fireHotspots ?? null}
           earthquakes={earthquakes ?? null}
+          reservoirs={reservoirs ?? null}
           visibleLayers={dataLayerVisibility}
         />
 
@@ -579,6 +582,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         onToggleDataLayer={toggleDataLayer}
         fireCount={fireHotspots?.length}
         quakeCount={earthquakes?.length}
+        reservoirCount={reservoirs?.length}
       />
 
       {/* Report hazard button */}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useWeather } from '@/hooks/use-weather';
 import { PanelShell } from './panel-shell';
 
@@ -17,6 +18,7 @@ const ThermometerIcon = (
 );
 
 export function WeatherPanel() {
+  const t = useTranslations('Map');
   const { weather, isLoading } = useWeather();
 
   const collapsedContent = weather ? (
@@ -29,7 +31,7 @@ export function WeatherPanel() {
 
   return (
     <PanelShell
-      title="Weather"
+      title={t('panelWeather')}
       icon={ThermometerIcon}
       collapsedContent={collapsedContent}
     >
@@ -43,37 +45,37 @@ export function WeatherPanel() {
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-white/[0.03] p-3">
-              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Temperature</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('temperature')}</p>
               <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.temperature != null ? weather.temperature.toFixed(1) : '—'}°C</p>
             </div>
             <div className="rounded-xl bg-white/[0.03] p-3">
-              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Humidity</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('humidity')}</p>
               <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.humidity}%</p>
             </div>
             <div className="rounded-xl bg-white/[0.03] p-3">
-              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Wind</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('wind')}</p>
               <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.wind_speed ?? '—'} km/h</p>
             </div>
             <div className="rounded-xl bg-white/[0.03] p-3">
-              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Precipitation</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('precipitation')}</p>
               <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.precipitation} mm</p>
             </div>
             {weather.pressure != null && (
               <div className="rounded-xl bg-white/[0.03] p-3">
-                <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Pressure</p>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('pressure')}</p>
                 <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.pressure} hPa</p>
               </div>
             )}
             {weather.uv_index != null && (
               <div className="rounded-xl bg-white/[0.03] p-3">
-                <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">UV Index</p>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('uvIndex')}</p>
                 <p className="text-lg font-bold text-text-primary font-[family-name:var(--font-mono)]">{weather.uv_index}</p>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <p className="text-xs text-text-muted">No weather data</p>
+        <p className="text-xs text-text-muted">{t('noWeatherData')}</p>
       )}
     </PanelShell>
   );

@@ -93,7 +93,7 @@ export function aemetSeverityToNumeric(sev: AemetSeverity): number {
   const map: Record<AemetSeverity, number> = {
     green: 0,
     yellow: 2,
-    orange: 3,
+    orange: 4,
     red: 5,
   };
   return map[sev];

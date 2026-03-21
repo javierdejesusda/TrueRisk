@@ -48,21 +48,35 @@ _SEVERITY_MAP: dict[str, str] = {
 def zone_code_to_ine_province(zone_code: str) -> str:
     """Convert an AEMET zone code to a 2-digit INE province code.
 
-    The zone code looks like ``61091201A`` (or similar).  Strip trailing
-    letters first, then inspect the leading digits.  If the CCAA prefix
-    (positions 0-1) is ``65`` (Canarias), look up the province using
-    ``CANARIAS_ZONE_TO_PROVINCE``; otherwise digits 2-3 are the INE code.
+    The zone code looks like ``61091201A`` (or similar).  Strip all
+    non-digit characters, then inspect the leading digits.  If the CCAA
+    prefix (positions 0-1) is ``65`` (Canarias), look up the province
+    using ``CANARIAS_ZONE_TO_PROVINCE``; otherwise digits 2-3 are the
+    INE code.  Returns empty string for unparseable codes.
     """
-    digits = re.sub(r"[A-Za-z]+$", "", zone_code)
+    if not zone_code:
+        return ""
+    # Strip ALL non-digit characters (handles leading letters like "ES")
+    digits = re.sub(r"[^0-9]", "", zone_code)
+    if len(digits) < 2:
+        return ""
     if len(digits) < 4:
-        return digits[:2] if len(digits) >= 2 else "00"
+        return digits[:2].zfill(2)
 
     ccaa = digits[0:2]
     if ccaa == "65":
         zone_key = digits[2:4]
         return CANARIAS_ZONE_TO_PROVINCE.get(zone_key, "35")
 
-    return digits[2:4]
+    ine = digits[2:4]
+    # Validate INE code is in range 01-52
+    try:
+        code_int = int(ine)
+        if 1 <= code_int <= 52:
+            return ine
+    except ValueError:
+        pass
+    return ""
 
 
 def _extract_tag(xml: str, tag: str) -> str:
@@ -91,7 +105,9 @@ def parse_cap_xml(xml_text: str) -> list[dict[str, Any]]:
         sent = _extract_tag(alert_xml, "sent")
 
         info_blocks = _extract_all_blocks(alert_xml, "info")
-        for info_xml in info_blocks:
+        # Only process the first <info> block per alert to avoid duplicates
+        # from multilingual CAP alerts (Spanish, English, etc.)
+        for info_xml in info_blocks[:1]:
             raw_severity = _extract_tag(info_xml, "severity")
             severity = _SEVERITY_MAP.get(raw_severity, "green")
             event = _extract_tag(info_xml, "event")
@@ -101,14 +117,15 @@ def parse_cap_xml(xml_text: str) -> list[dict[str, Any]]:
             expires = _extract_tag(info_xml, "expires")
 
             area_blocks = _extract_all_blocks(info_xml, "area")
-            for area_xml in area_blocks:
+            for area_idx, area_xml in enumerate(area_blocks):
                 area_desc = _extract_tag(area_xml, "areaDesc")
                 # geocode value is the zone code
                 geocode_value = _extract_tag(area_xml, "value")
                 ine_code = zone_code_to_ine_province(geocode_value) if geocode_value else ""
 
+                unique_id = f"{identifier}_{area_idx}" if len(area_blocks) > 1 else identifier
                 alerts.append({
-                    "identifier": identifier,
+                    "identifier": unique_id,
                     "sender": sender,
                     "sent": sent,
                     "severity": severity,
@@ -174,6 +191,9 @@ async def fetch_alerts(
     except Exception:
         logger.exception("Failed to fetch AEMET alerts for area=%s", area)
         return _alert_cache.get(cache_key, [])
+
+    # Filter out alerts with empty/invalid geocodes
+    all_alerts = [a for a in all_alerts if a.get("geocode")]
 
     # Update cache
     _alert_cache[cache_key] = all_alerts
