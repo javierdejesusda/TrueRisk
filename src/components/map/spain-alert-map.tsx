@@ -145,6 +145,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     if (!provinceCode) return;
     const province = PROVINCES.find(p => p.code === provinceCode);
     if (!province || !mapRef.current) return;
+    setUserLocation({ lng: province.lng, lat: province.lat });
     mapRef.current.flyTo({
       center: [province.lng, province.lat],
       zoom: 8,
