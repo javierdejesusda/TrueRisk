@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+from pathlib import Path
 
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
@@ -76,9 +77,6 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
         split_idx,
         total_samples - split_idx,
     )
-
-    # Use the dataset's built-in parameters to create the validation set
-    validation_dataset = training_dataset  # will be sliced via dataloader
 
     # Create dataloaders
     train_dataloader = training_dataset.to_dataloader(

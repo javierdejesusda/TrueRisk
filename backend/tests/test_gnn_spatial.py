@@ -1,5 +1,4 @@
 """Tests for GNN spatial refinement module."""
-import pytest
 import torch
 
 

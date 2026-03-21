@@ -88,7 +88,7 @@ def test_explain_risk_all_hazards():
 
 
 def test_contributions_sorted_descending():
-    contributions = explain_flood({"precip_24h": 70, "precip_6h": 35, "soil_moisture": 0.7})
+    explain_flood({"precip_24h": 70, "precip_6h": 35, "soil_moisture": 0.7})
     result = explain_risk({"flood": {"precip_24h": 70, "precip_6h": 35, "soil_moisture": 0.7}})
     flood = result["flood"]
     for i in range(len(flood) - 1):

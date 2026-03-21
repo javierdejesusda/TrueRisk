@@ -1,5 +1,4 @@
 """Tests for HazardTFT base wrapper."""
-import pytest
 from app.ml.models.tft_base import HazardTFT, FORECAST_HORIZONS
 
 

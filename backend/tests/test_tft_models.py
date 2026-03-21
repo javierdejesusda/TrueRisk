@@ -1,5 +1,4 @@
 """Tests for per-hazard TFT inference modules."""
-import pytest
 
 
 class TestFloodTFT:

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Source, Layer, Marker } from 'react-map-gl/maplibre';
+import { Marker } from 'react-map-gl/maplibre';
 import type { FireHotspot } from '@/hooks/use-fire-hotspots';
 import type { Earthquake } from '@/hooks/use-earthquakes';
 
