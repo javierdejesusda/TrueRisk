@@ -12,6 +12,7 @@ from app.database import engine, Base
 from app.rate_limit import limiter
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
 from app.api import ai_summary, sms, data_sources
+from app.api import auth, suggestions
 
 _start_time = time.time()
 
@@ -110,6 +111,8 @@ app.include_router(advisor.router, prefix="/api/v1/advisor", tags=["advisor"])
 app.include_router(ai_summary.router, prefix="/api/v1/ai-summary", tags=["ai-summary"])
 app.include_router(sms.router, prefix="/api/v1/sms", tags=["sms"])
 app.include_router(data_sources.router, prefix="/api/v1/data", tags=["data-sources"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(suggestions.router, prefix="/api/v1/suggestions", tags=["suggestions"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

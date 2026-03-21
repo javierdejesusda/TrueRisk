@@ -1,17 +1,24 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
+import { useAuth } from '@/hooks/use-auth';
 import { LanguageSwitcher } from './language-switcher';
 
 export function NavPill() {
   const pathname = usePathname();
   const alerts = useAppStore((s) => s.alerts);
   const risk = useAppStore((s) => s.risk);
+  const clearAuth = useAppStore((s) => s.clearAuth);
   const t = useTranslations('Nav');
+  const tAuth = useTranslations('Auth');
+  const { user, signOut } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isHighRisk = risk && risk.composite_score >= 60;
 
@@ -27,6 +34,27 @@ export function NavPill() {
     if (href === '/map') return pathname === '/map';
     return pathname.startsWith(href);
   };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
+
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
+
+  function handleSignOut() {
+    clearAuth();
+    signOut({ callbackUrl: '/login' });
+    setDropdownOpen(false);
+  }
 
   return (
     <motion.nav
@@ -72,30 +100,84 @@ export function NavPill() {
       {/* Language switcher */}
       <LanguageSwitcher />
 
-      {/* Profile icon link */}
-      <Link
-        href="/profile"
-        className={[
-          'flex items-center justify-center p-1.5 rounded-lg transition-all duration-200 shrink-0',
-          isActive('/profile')
-            ? 'bg-accent-green/15 text-accent-green'
-            : 'text-text-secondary hover:text-text-primary hover:bg-white/5',
-        ].join(' ')}
-        title="Profile"
-      >
-        <svg
-          className="w-4 h-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      {/* User avatar with dropdown */}
+      <div className="relative shrink-0" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setDropdownOpen((prev) => !prev)}
+          className={[
+            'flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200 cursor-pointer overflow-hidden',
+            isActive('/profile')
+              ? 'ring-2 ring-accent-green'
+              : 'ring-1 ring-white/10 hover:ring-white/30',
+          ].join(' ')}
         >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      </Link>
+          {user?.image ? (
+            <img
+              src={user.image}
+              alt=""
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex items-center justify-center w-full h-full bg-accent-green/20 text-accent-green text-xs font-bold font-[family-name:var(--font-display)]">
+              {userInitial}
+            </span>
+          )}
+        </button>
+
+        <AnimatePresence>
+          {dropdownOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -4, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 top-full mt-2 w-44 glass-heavy rounded-xl py-1.5 shadow-lg"
+            >
+              <Link
+                href="/profile"
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {t('settings')}
+              </Link>
+              <div className="mx-3 my-1 border-t border-white/5" />
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-accent-red hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                {tAuth('logoutButton')}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Alert indicator */}
       {alerts.length > 0 && (

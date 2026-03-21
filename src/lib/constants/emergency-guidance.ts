@@ -193,3 +193,62 @@ export function getGuidanceForRisk(
   if (!dominantHazard || !compositeScore || compositeScore < 60) return null;
   return EMERGENCY_GUIDANCE[dominantHazard] ?? null;
 }
+
+/* ── Personalized guidance based on user profile ─────────────── */
+
+export interface UserProfileForGuidance {
+  special_needs?: string[];
+  mobility_level?: string;
+  has_vehicle?: boolean;
+  medical_conditions?: string;
+}
+
+export interface PersonalizedTip {
+  key: string;
+  category: string;
+}
+
+/**
+ * Returns a list of personalized guidance tip keys based on the user's
+ * profile. Consumers should use the key with `t(key)` from the
+ * Emergency i18n namespace to render the translated string.
+ */
+export function getPersonalizedGuidance(
+  userProfile: UserProfileForGuidance | null | undefined,
+): PersonalizedTip[] {
+  if (!userProfile) return [];
+
+  const tips: PersonalizedTip[] = [];
+  const needs = userProfile.special_needs ?? [];
+
+  if (needs.includes('elderly')) {
+    tips.push({ key: 'guidanceElderly', category: 'elderly' });
+  }
+
+  if (needs.includes('children')) {
+    tips.push({ key: 'guidanceChildren', category: 'children' });
+  }
+
+  if (needs.includes('pets')) {
+    tips.push({ key: 'guidancePets', category: 'pets' });
+  }
+
+  if (
+    needs.includes('disability') ||
+    (userProfile.mobility_level && userProfile.mobility_level !== 'full')
+  ) {
+    tips.push({ key: 'guidanceDisability', category: 'disability' });
+  }
+
+  if (needs.includes('medical') || userProfile.medical_conditions) {
+    tips.push({ key: 'guidanceMedical', category: 'medical' });
+  }
+
+  if (userProfile.has_vehicle === true) {
+    tips.push({ key: 'guidanceVehicle', category: 'vehicle' });
+  } else if (userProfile.has_vehicle === false) {
+    tips.push({ key: 'guidanceNoVehicle', category: 'vehicle' });
+  }
+
+  return tips;
+}

@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4.1-nano"
 
+    # Auth / JWT
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 43200  # 30 days
+
     # Twilio
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
@@ -31,7 +36,7 @@ class Settings(BaseSettings):
         "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8",
     ]
 
-    model_config = {"env_file": ".env"}
+    model_config = {"env_file": ".env", "extra": "ignore"}
 
 
 settings = Settings()

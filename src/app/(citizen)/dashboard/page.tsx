@@ -10,6 +10,7 @@ import { WeatherCard } from '@/components/dashboard/weather-card';
 import { AlertFeed } from '@/components/dashboard/alert-feed';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { Walkthrough } from '@/components/ui/walkthrough';
+import { PersonalizedSuggestions } from '@/components/dashboard/personalized-suggestions';
 
 const provinceOptions = PROVINCES
   .map((p) => ({ value: p.code, label: p.name }))
@@ -67,6 +68,11 @@ export default function DashboardPage() {
         {/* Bottom spanning 2 columns: Quick actions */}
         <div className="lg:col-span-2">
           <QuickActions />
+        </div>
+
+        {/* Full width: Personalized suggestions */}
+        <div className="lg:col-span-3">
+          <PersonalizedSuggestions />
         </div>
       </div>
       <Walkthrough />

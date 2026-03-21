@@ -3,10 +3,12 @@
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
+import { useAuth } from '@/hooks/use-auth';
 import { getContacts } from '@/lib/constants/emergency-contacts';
 import { QuickCall } from '@/components/emergency/quick-call';
 import { FirstAidCards } from '@/components/emergency/first-aid';
 import { AdvisorPanel } from '@/components/emergency/advisor-panel';
+import { UserEmergencyCard } from '@/components/emergency/user-emergency-card';
 
 const CONTACT_LABELS: Record<string, string> = {
   proteccionCivil: 'Proteccion Civil',
@@ -35,6 +37,7 @@ const sortedProvinces = Object.entries(PROVINCE_NAMES).sort((a, b) => a[1].local
 
 export default function EmergencyPage() {
   const t = useTranslations('Emergency');
+  const { isAuthenticated } = useAuth();
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const contacts = getContacts(provinceCode);
@@ -49,6 +52,9 @@ export default function EmergencyPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       >
+        {/* User emergency card (if authenticated) */}
+        {isAuthenticated && <UserEmergencyCard />}
+
         {/* Main 112 button */}
         <section className="text-center space-y-3">
           <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary">{t('title')}</h1>

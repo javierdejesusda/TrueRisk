@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
 
-export function useAiSummary() {
+export function usePersonalizedSuggestions() {
   const [content, setContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export function useAiSummary() {
 
       try {
         const res = await fetch(
-          `/api/ai-summary/stream/${provinceCode}?locale=${locale}`,
+          `/api/suggestions/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
 
@@ -86,7 +86,7 @@ export function useAiSummary() {
         if ((err as Error).name !== 'AbortError') {
           setError(
             (err as Error).message ||
-              'Connection failed — check that the backend is running',
+              'Connection failed -- check that the backend is running',
           );
           setIsStreaming(false);
         }

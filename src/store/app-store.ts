@@ -39,6 +39,11 @@ interface AppState {
   setSpecialNeeds: (v: string[]) => void;
   hasSeenOnboarding: boolean;
   dismissOnboarding: () => void;
+  backendToken: string | null;
+  setBackendToken: (token: string | null) => void;
+  authUser: { id: number; name: string; email: string; image: string; role: string } | null;
+  setAuthUser: (user: AppState['authUser']) => void;
+  clearAuth: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -77,6 +82,11 @@ export const useAppStore = create<AppState>()(
       setSpecialNeeds: (specialNeeds) => set({ specialNeeds }),
       hasSeenOnboarding: false,
       dismissOnboarding: () => set({ hasSeenOnboarding: true }),
+      backendToken: null,
+      setBackendToken: (backendToken) => set({ backendToken }),
+      authUser: null,
+      setAuthUser: (authUser) => set({ authUser }),
+      clearAuth: () => set({ backendToken: null, authUser: null }),
     }),
     {
       name: 'truerisk-province',
@@ -89,6 +99,7 @@ export const useAppStore = create<AppState>()(
         residenceType: state.residenceType,
         specialNeeds: state.specialNeeds,
         hasSeenOnboarding: state.hasSeenOnboarding,
+        backendToken: state.backendToken,
       }),
     }
   )

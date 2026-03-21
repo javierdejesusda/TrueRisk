@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
           source: "/api/advisor/:path*",
           destination: "/api/advisor/:path*",
         },
+        {
+          source: "/api/auth/:path*",
+          destination: "/api/auth/:path*",
+        },
       ],
       afterFiles: [],
       fallback: [

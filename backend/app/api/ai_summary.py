@@ -8,8 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_optional_user
 from app.config import settings
+from app.models.user import User
 from app.rate_limit import limiter
 from app.security.real_ip import get_real_ip
 from app.services.ai_summary_service import stream_weather_summary
@@ -26,6 +27,7 @@ async def stream_summary(
     province_code: str,
     locale: str = Query(default="es", pattern="^(es|en)$"),
     db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ):
     """SSE stream of AI weather summary. Rate limited to 5/min per real IP."""
     if not settings.openai_api_key:
@@ -35,9 +37,19 @@ async def stream_summary(
 
     context = await get_advisor_context(province_code, db)
 
+    user_profile = None
+    if user:
+        user_profile = {
+            "residence_type": user.residence_type,
+            "special_needs": user.special_needs if isinstance(user.special_needs, list) else [],
+            "mobility_level": user.mobility_level,
+            "has_vehicle": user.has_vehicle,
+            "medical_conditions": user.medical_conditions,
+        }
+
     async def event_generator():
         try:
-            async for chunk in stream_weather_summary(context, locale):
+            async for chunk in stream_weather_summary(context, locale, user_profile):
                 if await request.is_disconnected():
                     break
                 yield {"event": "delta", "data": chunk}
