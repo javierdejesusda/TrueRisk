@@ -572,7 +572,11 @@
     "pref_heatwave": "Heatwave",
     "pref_seismic": "Seismic",
     "pref_coldwave": "Cold wave",
-    "pref_windstorm": "Windstorm"
+    "pref_windstorm": "Windstorm",
+    "phoneTitle": "Phone number",
+    "phoneNumber": "Mobile phone",
+    "phonePlaceholder": "+34 xxx xxx xxx",
+    "phoneDesc": "Your phone number to receive SMS alerts"
   },
   "Language": {
     "es": "ES",

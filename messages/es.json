@@ -570,7 +570,11 @@
     "pref_heatwave": "Ola de calor",
     "pref_seismic": "Sismico",
     "pref_coldwave": "Ola de frio",
-    "pref_windstorm": "Tormenta de viento"
+    "pref_windstorm": "Tormenta de viento",
+    "phoneTitle": "Numero de telefono",
+    "phoneNumber": "Telefono movil",
+    "phonePlaceholder": "+34 xxx xxx xxx",
+    "phoneDesc": "Tu numero de telefono para recibir alertas por SMS"
   },
   "Language": {
     "es": "ES",

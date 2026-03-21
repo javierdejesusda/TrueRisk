@@ -28,6 +28,7 @@ const profileSchema = z.object({
   provinceCode: z.string().min(1),
   residenceType: z.string(),
   specialNeeds: z.array(z.string()),
+  phoneNumber: z.string().default(''),
   emergencyContactName: z.string().default(''),
   emergencyContactPhone: z.string().default(''),
   medicalConditions: z.string().default(''),
@@ -59,6 +60,7 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
     province_code: 'provinceCode',
     residence_type: 'residenceType',
     special_needs: 'specialNeeds',
+    phone_number: 'phoneNumber',
     emergency_contact_name: 'emergencyContactName',
     emergency_contact_phone: 'emergencyContactPhone',
     medical_conditions: 'medicalConditions',
@@ -110,6 +112,7 @@ export function ProfileForm() {
       provinceCode,
       residenceType,
       specialNeeds,
+      phoneNumber: '',
       emergencyContactName: '',
       emergencyContactPhone: '',
       medicalConditions: '',
@@ -135,6 +138,7 @@ export function ProfileForm() {
           provinceCode: (mapped.provinceCode as string) || provinceCode,
           residenceType: (mapped.residenceType as string) || residenceType,
           specialNeeds: (mapped.specialNeeds as string[]) || specialNeeds,
+          phoneNumber: (mapped.phoneNumber as string) || '',
           emergencyContactName: (mapped.emergencyContactName as string) || '',
           emergencyContactPhone: (mapped.emergencyContactPhone as string) || '',
           medicalConditions: (mapped.medicalConditions as string) || '',
@@ -298,6 +302,29 @@ export function ProfileForm() {
             </div>
           )}
         />
+      </Card>
+
+      {/* Phone Number */}
+      <Card variant="glass">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
+          {t('phoneTitle')}
+        </h2>
+        <div className="flex flex-col gap-4">
+          <Controller
+            name="phoneNumber"
+            control={control}
+            render={({ field }) => (
+              <Input
+                label={t('phoneNumber')}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t('phonePlaceholder')}
+              />
+            )}
+          />
+          <p className="text-xs text-text-muted">{t('phoneDesc')}</p>
+        </div>
       </Card>
 
       {/* Emergency Contact */}

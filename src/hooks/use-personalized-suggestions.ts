@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
 
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+
 export function usePersonalizedSuggestions() {
   const [content, setContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -33,7 +35,7 @@ export function usePersonalizedSuggestions() {
 
       try {
         const res = await fetch(
-          `/api/suggestions/stream/${provinceCode}?locale=${locale}`,
+          `${BACKEND}/api/v1/suggestions/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
 

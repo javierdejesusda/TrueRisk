@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Map, { Source, Layer, Popup, Marker, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
+import { PROVINCES } from '@/lib/provinces';
 import type { MapAlertData } from '@/hooks/use-map-alerts';
 import type { RiskMapEntry } from '@/types/risk';
 import { useTranslations } from 'next-intl';
@@ -136,6 +137,20 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     geolocateUser();
     setHasGeolocated(true);
   }, [hasGeolocated, geo.isLoading, geo.latitude, geo.longitude, baseGeoJSON, mapReady, geolocateUser]);
+
+  // Fallback: fly to user's stored province if geolocation didn't work
+  useEffect(() => {
+    if (!hasGeolocated || !mapReady || userLocation) return;
+    const provinceCode = useAppStore.getState().provinceCode;
+    if (!provinceCode) return;
+    const province = PROVINCES.find(p => p.code === provinceCode);
+    if (!province || !mapRef.current) return;
+    mapRef.current.flyTo({
+      center: [province.lng, province.lat],
+      zoom: 8,
+      duration: 2000,
+    });
+  }, [hasGeolocated, mapReady, userLocation]);
 
   // Build risk lookup for enrichGeoJSON
   const riskLookup = useMemo(() => {

@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
 
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+
 export function useAiSummary() {
   const [content, setContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -26,14 +28,14 @@ export function useAiSummary() {
       abortRef.current = controller;
 
       const token = useAppStore.getState().backendToken;
-      const headers: Record<string, string> = { Accept: 'text/event-stream' };
+      const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
       try {
         const res = await fetch(
-          `/api/ai-summary/stream/${provinceCode}?locale=${locale}`,
+          `${BACKEND}/api/v1/ai-summary/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
 
@@ -86,7 +88,7 @@ export function useAiSummary() {
         if ((err as Error).name !== 'AbortError') {
           setError(
             (err as Error).message ||
-              'Connection failed — check that the backend is running',
+              'Connection failed',
           );
           setIsStreaming(false);
         }

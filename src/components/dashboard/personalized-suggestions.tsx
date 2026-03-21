@@ -41,9 +41,15 @@ export function PersonalizedSuggestions() {
 
       {content ? (
         <div className="prose prose-invert prose-sm max-w-none text-text-secondary">
-          <Streamdown mode={isStreaming ? 'streaming' : 'static'}>
-            {content}
-          </Streamdown>
+          {isStreaming ? (
+            <div className="whitespace-pre-wrap font-[family-name:var(--font-sans)] text-sm leading-relaxed">
+              {content}
+            </div>
+          ) : (
+            <Streamdown mode="static">
+              {content}
+            </Streamdown>
+          )}
         </div>
       ) : !isStreaming && !error ? (
         <p className="text-text-muted text-sm font-[family-name:var(--font-sans)]">

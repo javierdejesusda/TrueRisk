@@ -30,6 +30,7 @@ class ProfileUpdateRequest(BaseModel):
     special_needs: list[str] | None = None
     emergency_contact_name: str | None = None
     emergency_contact_phone: str | None = None
+    phone_number: str | None = None
     medical_conditions: str | None = None
     mobility_level: str | None = None
     has_vehicle: bool | None = None
@@ -53,6 +54,7 @@ class UserResponse(BaseModel):
     special_needs: list | dict
     emergency_contact_name: str | None = None
     emergency_contact_phone: str | None = None
+    phone_number: str | None = None
     medical_conditions: str | None = None
     mobility_level: str
     has_vehicle: bool

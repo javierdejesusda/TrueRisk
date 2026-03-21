@@ -30,6 +30,21 @@ export function useAuth() {
         }
     }, [session, status, setBackendToken, setAuthUser]);
 
+    useEffect(() => {
+        if (status !== 'authenticated' || !(session as any)?.backendToken) return;
+        const token = (session as any).backendToken;
+        fetch('/api/account/me', {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data?.province_code) {
+                    useAppStore.getState().setProvinceCode(data.province_code);
+                }
+            })
+            .catch(() => {});
+    }, [status, session]);
+
     return {
         user: session?.user || null,
         backendToken: (session as any)?.backendToken || null,
