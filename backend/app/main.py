@@ -112,6 +112,7 @@ app.include_router(ai_summary.router, prefix="/api/v1/ai-summary", tags=["ai-sum
 app.include_router(sms.router, prefix="/api/v1/sms", tags=["sms"])
 app.include_router(data_sources.router, prefix="/api/v1/data", tags=["data-sources"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(auth.router, prefix="/api/v1/account", tags=["account"])
 app.include_router(suggestions.router, prefix="/api/v1/suggestions", tags=["suggestions"])
 
 

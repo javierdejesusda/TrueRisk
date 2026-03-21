@@ -23,7 +23,7 @@ export function UserEmergencyCard() {
   const [showFirstResponder, setShowFirstResponder] = useState(false);
 
   useEffect(() => {
-    apiFetch('/api/auth/me')
+    apiFetch('/api/account/me')
       .then((res) => {
         if (res.ok) return res.json();
         return null;

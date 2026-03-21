@@ -127,7 +127,7 @@ export function ProfileForm() {
   const fetchProfile = useCallback(async () => {
     if (!backendToken) return;
     try {
-      const res = await apiFetch('/api/auth/me');
+      const res = await apiFetch('/api/account/me');
       if (res.ok) {
         const data = await res.json();
         const mapped = fromSnakeCasePayload(data);
@@ -171,7 +171,7 @@ export function ProfileForm() {
       setSaving(true);
       try {
         const payload = toSnakeCasePayload(data);
-        const res = await apiFetch('/api/auth/me', {
+        const res = await apiFetch('/api/account/me', {
           method: 'PATCH',
           body: JSON.stringify(payload),
         });
