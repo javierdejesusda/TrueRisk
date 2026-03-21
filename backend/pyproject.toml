@@ -11,8 +11,6 @@ dependencies = [
     "alembic>=1.14",
     "pydantic>=2.10",
     "pydantic-settings>=2.7",
-    "python-jose[cryptography]>=3.3",
-    "passlib[bcrypt]>=1.7",
     "httpx>=0.28",
     "apscheduler>=3.10,<4",
     "xgboost>=2.1",
@@ -26,11 +24,14 @@ dependencies = [
     "sse-starlette>=2.0",
     "pywebpush>=2.0",
     "slowapi>=0.1.9",
+    "pytorch-forecasting>=1.1",
+    "pytorch-lightning>=2.4",
+    "torch-geometric>=2.6",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-cov>=6.0", "httpx", "mypy", "ruff"]
-training = ["matplotlib>=3.9", "tqdm>=4.66"]
+training = ["matplotlib>=3.9", "tqdm>=4.66", "tensorboard>=2.18"]
 
 [build-system]
 requires = ["setuptools>=75"]
