@@ -5,16 +5,16 @@ import { Source, Layer } from 'react-map-gl/maplibre';
 import type { CommunityReport } from '@/hooks/use-community-reports';
 
 const HAZARD_COLORS: Record<string, string> = {
-  flood: '#3B82F6',
-  road_blocked: '#F97316',
-  power_outage: '#FBBF24',
-  structural_damage: '#EF4444',
-  other: '#A855F7',
-  people_trapped: '#DC2626',
-  fire: '#EF4444',
-  landslide: '#92400E',
-  missing_person: '#EC4899',
-  medical_emergency: '#DC2626',
+  flood: '#3B82F6',           // blue
+  road_blocked: '#F97316',    // orange
+  power_outage: '#FBBF24',    // yellow
+  structural_damage: '#EF4444', // red
+  other: '#A855F7',           // purple
+  people_trapped: '#991B1B',  // dark red
+  fire: '#EA580C',            // deep orange
+  landslide: '#92400E',       // brown
+  missing_person: '#EC4899',  // pink
+  medical_emergency: '#DC2626', // red
 };
 
 interface ReportMarkersProps {

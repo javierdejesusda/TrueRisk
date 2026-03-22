@@ -81,7 +81,7 @@ export function useCommunityReports(provinceCode?: string) {
   }, []);
 
   const upvoteReport = useCallback(async (reportId: number) => {
-    const res = await fetch(`/api/community/reports/${reportId}/upvote`, { method: 'POST' });
+    const res = await apiFetch(`/api/community/reports/${reportId}/upvote`, { method: 'POST' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const updated = await res.json() as CommunityReport;
     setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));

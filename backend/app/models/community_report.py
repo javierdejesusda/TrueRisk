@@ -24,7 +24,7 @@ class CommunityReport(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime)
 
     # Enhanced fields
-    photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     urgency: Mapped[int] = mapped_column(Integer, default=3)  # 1-5
     reporter_user_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
