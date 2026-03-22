@@ -13,6 +13,8 @@ export default function SafetyPage() {
     familyStatus,
     checkIns,
     pendingLinks,
+    isLoading,
+    error,
     checkIn,
     getFamilyStatus: _getFamilyStatus,
     createLink,
@@ -23,6 +25,16 @@ export default function SafetyPage() {
 
   const lastCheckIn = checkIns.length > 0 ? checkIns[0] : null;
 
+  if (isLoading) {
+    return (
+      <PageTransition transitionKey="safety">
+        <div className="h-full flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
+        </div>
+      </PageTransition>
+    );
+  }
+
   return (
     <PageTransition transitionKey="safety">
       <div className="h-full overflow-y-auto pt-20 pb-6 px-4 sm:px-6 max-w-2xl mx-auto">
@@ -30,6 +42,11 @@ export default function SafetyPage() {
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-text-primary">
             {t('title')}
           </h1>
+          {error && (
+            <p className="mt-2 font-[family-name:var(--font-sans)] text-sm text-red-400">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-5">

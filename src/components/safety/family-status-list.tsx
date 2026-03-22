@@ -4,36 +4,11 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import type { FamilyMemberStatus } from '@/hooks/use-safety-check';
-import type { SafetyStatus } from '@/hooks/use-safety-check';
+import { STATUS_COLORS, STATUS_LABELS, timeAgo } from './utils';
 
 interface FamilyStatusListProps {
   familyStatus: FamilyMemberStatus[];
   onRequestCheckIn: (userId: number) => Promise<void>;
-}
-
-const DOT_COLORS: Record<SafetyStatus, string> = {
-  safe: 'bg-green-400',
-  need_help: 'bg-red-400',
-  evacuating: 'bg-orange-400',
-  sheltering: 'bg-blue-400',
-};
-
-const STATUS_LABELS: Record<SafetyStatus, string> = {
-  safe: 'safe',
-  need_help: 'needHelp',
-  evacuating: 'evacuating',
-  sheltering: 'sheltering',
-};
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return '<1m';
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d`;
 }
 
 function hoursSinceCheckIn(dateStr: string | undefined): number {
@@ -98,7 +73,7 @@ export function FamilyStatusList({ familyStatus, onRequestCheckIn }: FamilyStatu
                     showUrgent
                       ? 'bg-red-400 animate-pulse'
                       : status
-                        ? DOT_COLORS[status]
+                        ? STATUS_COLORS[status]
                         : 'bg-white/20',
                   ].join(' ')}
                 />

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { apiFetch } from '@/lib/api-client';
 
 export type SafetyStatus = 'safe' | 'need_help' | 'evacuating' | 'sheltering';
 
@@ -45,10 +46,6 @@ export function useSafetyCheck() {
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const headers: Record<string, string> = token
-    ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-    : { 'Content-Type': 'application/json' };
-
   const checkIn = useCallback(async (status: SafetyStatus, message?: string, latitude?: number, longitude?: number) => {
     try {
       const body: Record<string, unknown> = { status };
@@ -56,9 +53,8 @@ export function useSafetyCheck() {
       if (latitude !== undefined) body.latitude = latitude;
       if (longitude !== undefined) body.longitude = longitude;
 
-      const res = await fetch('/api/safety/check-in', {
+      const res = await apiFetch('/api/safety/check-in', {
         method: 'POST',
-        headers,
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -69,12 +65,12 @@ export function useSafetyCheck() {
       setError(err instanceof Error ? err.message : 'Failed to check in');
       throw err;
     }
-  }, [headers]);
+  }, []);
 
   const getFamilyStatus = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/safety/family-status', { headers });
+      const res = await apiFetch('/api/safety/family-status');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as FamilyMemberStatus[];
       setFamilyStatus(data);
@@ -84,16 +80,15 @@ export function useSafetyCheck() {
     } finally {
       setIsLoading(false);
     }
-  }, [headers]);
+  }, []);
 
   const createLink = useCallback(async (nickname: string, relationship?: string) => {
     try {
       const body: Record<string, string> = { nickname };
       if (relationship) body.relationship = relationship;
 
-      const res = await fetch('/api/safety/links', {
+      const res = await apiFetch('/api/safety/links', {
         method: 'POST',
-        headers,
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -107,13 +102,12 @@ export function useSafetyCheck() {
       setError(err instanceof Error ? err.message : 'Failed to create link');
       throw err;
     }
-  }, [headers, getFamilyStatus]);
+  }, [getFamilyStatus]);
 
   const acceptLink = useCallback(async (linkId: number) => {
     try {
-      const res = await fetch(`/api/safety/links/${linkId}/accept`, {
+      const res = await apiFetch(`/api/safety/links/${linkId}/accept`, {
         method: 'PATCH',
-        headers,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setPendingLinks((prev) => prev.filter((link) => link.id !== linkId));
@@ -122,13 +116,12 @@ export function useSafetyCheck() {
       setError(err instanceof Error ? err.message : 'Failed to accept link');
       throw err;
     }
-  }, [headers, getFamilyStatus]);
+  }, [getFamilyStatus]);
 
   const deleteLink = useCallback(async (linkId: number) => {
     try {
-      const res = await fetch(`/api/safety/links/${linkId}`, {
+      const res = await apiFetch(`/api/safety/links/${linkId}`, {
         method: 'DELETE',
-        headers,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await getFamilyStatus();
@@ -136,37 +129,37 @@ export function useSafetyCheck() {
       setError(err instanceof Error ? err.message : 'Failed to delete link');
       throw err;
     }
-  }, [headers, getFamilyStatus]);
+  }, [getFamilyStatus]);
 
   const requestCheckIn = useCallback(async (userId: number) => {
     try {
-      const res = await fetch(`/api/safety/request/${userId}`, {
+      const res = await apiFetch(`/api/safety/request/${userId}`, {
         method: 'POST',
-        headers,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request check-in');
       throw err;
     }
-  }, [headers]);
+  }, []);
 
   const fetchCheckIns = useCallback(async () => {
     try {
-      const res = await fetch('/api/safety/check-ins?limit=20', { headers });
+      const res = await apiFetch('/api/safety/check-ins?limit=20');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as SafetyCheckIn[];
       setCheckIns(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch check-ins');
     }
-  }, [headers]);
+  }, []);
 
   // Initial fetch
   useEffect(() => {
     if (token) {
       getFamilyStatus();
       fetchCheckIns();
+      // TODO: Fetch pending links on mount when backend adds GET /links endpoint
     }
   }, [token, getFamilyStatus, fetchCheckIns]);
 
@@ -175,13 +168,22 @@ export function useSafetyCheck() {
     if (!token) return;
 
     intervalRef.current = setInterval(() => {
-      getFamilyStatus();
+      apiFetch('/api/safety/family-status')
+        .then((res) => {
+          if (res.ok) return res.json();
+        })
+        .then((data) => {
+          if (data) setFamilyStatus(data as FamilyMemberStatus[]);
+        })
+        .catch(() => {
+          // silent refresh failure
+        });
     }, 30_000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [token, getFamilyStatus]);
+  }, [token]);
 
   return {
     familyStatus,

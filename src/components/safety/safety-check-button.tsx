@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import type { SafetyStatus } from '@/hooks/use-safety-check';
+import { STATUS_LABELS, timeAgo } from './utils';
 
 interface SafetyCheckButtonProps {
   onCheckIn: (status: SafetyStatus, message?: string) => Promise<unknown>;
@@ -16,24 +17,6 @@ const STATUS_CONFIG: { status: SafetyStatus; colorClass: string; bgClass: string
   { status: 'evacuating', colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20', icon: '→' },
   { status: 'sheltering', colorClass: 'text-blue-400', bgClass: 'bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20', icon: '⌂' },
 ];
-
-const STATUS_LABELS: Record<SafetyStatus, string> = {
-  safe: 'safe',
-  need_help: 'needHelp',
-  evacuating: 'evacuating',
-  sheltering: 'sheltering',
-};
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return '<1m';
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d`;
-}
 
 export function SafetyCheckButton({ onCheckIn, lastCheckIn }: SafetyCheckButtonProps) {
   const t = useTranslations('Safety');
