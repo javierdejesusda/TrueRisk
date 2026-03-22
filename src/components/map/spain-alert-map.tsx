@@ -596,10 +596,10 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         reservoirCount={reservoirs?.length}
       />
 
-      {/* Report hazard button */}
+      {/* Report hazard button — positioned above legend */}
       <button
         onClick={() => setShowReportForm(true)}
-        className="absolute bottom-6 left-6 z-10 flex items-center gap-2 glass-heavy rounded-xl border border-white/10 px-4 py-2.5 text-xs font-medium text-text-primary hover:bg-white/10 transition-colors"
+        className="absolute bottom-14 left-4 z-10 flex items-center gap-2 glass-heavy rounded-xl border border-white/10 px-4 py-2.5 text-xs font-medium text-text-primary hover:bg-white/10 transition-colors"
       >
         <span className="text-orange-400">!</span>
         {t('reportHazard')}

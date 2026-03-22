@@ -25,6 +25,7 @@ export function NavPill() {
   const navItems = [
     { href: '/dashboard', label: t('dashboard') },
     { href: '/map', label: t('map') },
+    { href: '/preparedness', label: t('preparedness') },
     { href: '/prediction', label: t('predictions') },
     { href: '/alerts', label: t('alerts') },
     { href: '/emergency', label: t('sos') },

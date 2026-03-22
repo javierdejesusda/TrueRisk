@@ -18,6 +18,7 @@
     "alerts": "Alertas",
     "sos": "SOS",
     "dashboard": "Panel",
+    "preparedness": "Preparacion",
     "settings": "Ajustes",
     "admin": "Admin"
   },
@@ -598,6 +599,31 @@
     "generating": "Generando...",
     "description": "Obtener recomendaciones de seguridad personalizadas basadas en tu perfil y las condiciones actuales de riesgo.",
     "loginRequired": "Inicia sesion para ver consejos personalizados"
+  },
+  "Preparedness": {
+    "title": "Preparacion",
+    "subtitle": "Tu puntuacion de preparacion ante desastres y plan de accion",
+    "scoreLabel": "Tu Puntuacion",
+    "trendLabel": "Tendencia",
+    "buildPlan": "Crear tu plan",
+    "configureAlerts": "Configurar alertas",
+    "itemsToComplete": "{count} elementos por completar",
+    "improveScore": "Mejorar tu puntuacion"
+  },
+  "AlertIntelligence": {
+    "whyThisAlert": "Por que veo esto?",
+    "relevance": "Relevancia",
+    "factors": "Factores",
+    "quietHours": "Horas de silencio",
+    "quietHoursStart": "Inicio",
+    "quietHoursEnd": "Fin",
+    "emergencyOverride": "Excepcion de emergencia",
+    "emergencyOverrideDesc": "Alertas de severidad 4+ siempre se muestran",
+    "batchInterval": "Intervalo de agrupacion",
+    "escalation": "Escalacion",
+    "escalationDesc": "Escalar alertas criticas no leidas a SMS",
+    "snoozeHazard": "Silenciar peligro",
+    "minutes": "minutos"
   },
   "Auth": {
     "login": "Iniciar sesion",

@@ -41,7 +41,7 @@ export function MapLegend() {
     return (
       <button
         onClick={() => setCollapsed(false)}
-        className="absolute bottom-4 left-4 z-10 flex h-8 gap-0.5 glass-heavy rounded-xl overflow-hidden border border-border cursor-pointer"
+        className="absolute bottom-4 left-4 lg:left-[296px] z-10 flex h-8 gap-0.5 glass-heavy rounded-xl overflow-hidden border border-border cursor-pointer"
         aria-label={t('showLegend')}
       >
         {levelKeys.map((level) => (
@@ -56,7 +56,7 @@ export function MapLegend() {
   }
 
   return (
-    <div className="absolute bottom-4 left-4 z-10">
+    <div className="absolute bottom-4 left-4 lg:left-[296px] z-10">
       <div className="glass-heavy rounded-2xl p-3">
         <div className="flex items-center justify-between mb-2">
           <span className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-secondary">{title}</span>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { NotificationPrefs } from '@/components/profile/notification-prefs';
+import { AlertIntelligencePrefs } from '@/components/profile/alert-intelligence-prefs';
 
 export default function ProfilePage() {
   const t = useTranslations('Profile');
@@ -29,6 +30,11 @@ export default function ProfilePage() {
         {/* Notification preferences */}
         <div className="mb-6">
           <NotificationPrefs />
+        </div>
+
+        {/* Alert intelligence preferences */}
+        <div className="mb-6">
+          <AlertIntelligencePrefs />
         </div>
 
         {/* Profile form (province, residence, special needs) */}

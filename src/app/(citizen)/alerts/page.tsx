@@ -3,8 +3,10 @@
 import { motion } from 'framer-motion';
 import { useAlerts } from '@/hooks/use-alerts';
 import { useAemetAlerts } from '@/hooks/use-aemet-alerts';
+import { useAlertPreferences } from '@/hooks/use-alert-preferences';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { AlertExplanationToggle } from '@/components/alerts/alert-explanation';
 import { useTranslations } from 'next-intl';
 
 type TranslateFn = (key: string) => string;
@@ -40,6 +42,7 @@ export default function AlertsPage() {
   const t = useTranslations('Alerts');
   const { alerts, isLoading } = useAlerts();
   const { alerts: aemetAlerts, isLoading: aemetLoading } = useAemetAlerts();
+  const { explainAlert } = useAlertPreferences();
 
   const totalCount = alerts.length + aemetAlerts.length;
 
@@ -110,6 +113,7 @@ export default function AlertsPage() {
                           <span className="font-[family-name:var(--font-mono)]">Onset: {formatTime(alert.onset)}</span>
                           <span className="font-[family-name:var(--font-mono)]">Expires: {formatTime(alert.expires)}</span>
                         </div>
+                        <AlertExplanationToggle alertId={alert.id} onExplain={explainAlert} />
                       </div>
                     </div>
                   </Card>

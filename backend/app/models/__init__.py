@@ -8,6 +8,9 @@ from app.models.push_subscription import PushSubscription
 from app.models.community_report import CommunityReport
 from app.models.risk_forecast import RiskForecast
 from app.models.sms_subscription import SmsSubscription
+from app.models.preparedness import PreparednessItem, PreparednessSnapshot
+from app.models.emergency_plan import EmergencyPlan
+from app.models.alert_preference import AlertPreference, AlertDelivery
 
 __all__ = [
     "User",
@@ -20,4 +23,9 @@ __all__ = [
     "CommunityReport",
     "RiskForecast",
     "SmsSubscription",
+    "PreparednessItem",
+    "PreparednessSnapshot",
+    "EmergencyPlan",
+    "AlertPreference",
+    "AlertDelivery",
 ]

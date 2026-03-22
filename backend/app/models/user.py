@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import String, JSON, DateTime, Boolean, Integer, func
+from sqlalchemy import String, JSON, DateTime, Boolean, Integer, Float, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -42,6 +42,9 @@ class User(Base):
     alert_severity_threshold: Mapped[int] = mapped_column(Integer, default=3)
     alert_delivery: Mapped[str] = mapped_column(String(10), default="push")
     hazard_preferences: Mapped[dict] = mapped_column(JSON, default=list)
+
+    # Preparedness
+    preparedness_score: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

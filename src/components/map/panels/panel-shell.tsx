@@ -10,6 +10,7 @@ interface PanelShellProps {
   children: ReactNode;
   collapsedContent?: ReactNode;
   updatedAt?: Date;
+  defaultCollapsed?: boolean;
 }
 
 export function PanelShell({
@@ -19,8 +20,9 @@ export function PanelShell({
   children,
   collapsedContent,
   updatedAt,
+  defaultCollapsed = false,
 }: PanelShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [relativeTime, setRelativeTime] = useState<string | null>(null);
 
   useEffect(() => {

@@ -18,6 +18,7 @@
     "alerts": "Alerts",
     "sos": "SOS",
     "dashboard": "Dashboard",
+    "preparedness": "Preparedness",
     "settings": "Settings",
     "admin": "Admin"
   },
@@ -600,6 +601,31 @@
     "generating": "Generating...",
     "description": "Get personalized safety recommendations based on your profile and current risk conditions.",
     "loginRequired": "Sign in to see personalized tips"
+  },
+  "Preparedness": {
+    "title": "Preparedness",
+    "subtitle": "Your personal disaster readiness score and action plan",
+    "scoreLabel": "Your Score",
+    "trendLabel": "Score Trend",
+    "buildPlan": "Build your plan",
+    "configureAlerts": "Configure alerts",
+    "itemsToComplete": "{count} items to complete",
+    "improveScore": "Improve your score"
+  },
+  "AlertIntelligence": {
+    "whyThisAlert": "Why am I seeing this?",
+    "relevance": "Relevance",
+    "factors": "Factors",
+    "quietHours": "Quiet hours",
+    "quietHoursStart": "Start",
+    "quietHoursEnd": "End",
+    "emergencyOverride": "Emergency override",
+    "emergencyOverrideDesc": "Severity 4+ alerts always break through",
+    "batchInterval": "Batch interval",
+    "escalation": "Escalation",
+    "escalationDesc": "Escalate unread critical alerts to SMS",
+    "snoozeHazard": "Snooze hazard",
+    "minutes": "minutes"
   },
   "Auth": {
     "login": "Sign in",

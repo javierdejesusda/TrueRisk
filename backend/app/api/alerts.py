@@ -10,14 +10,23 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
+from app.models.alert import Alert
+from app.models.province import Province
+from app.models.user import User
 from app.schemas.alert import (
     AemetAlertResponse,
     AlertCreate,
     AlertResponse,
     AlertUpdate,
 )
+from app.schemas.alert_preference import (
+    AlertExplanation,
+    AlertPreferenceResponse,
+    AlertPreferenceUpdate,
+)
 from app.services import alert_service
+from app.services import alert_intelligence_service
 
 logger = logging.getLogger(__name__)
 
@@ -102,3 +111,61 @@ async def alert_stream(db: AsyncSession = Depends(get_db)):
             await asyncio.sleep(10)
 
     return EventSourceResponse(event_generator())
+
+
+# --- Alert Intelligence Endpoints ---
+
+
+@router.get("/preferences", response_model=AlertPreferenceResponse)
+async def get_alert_preferences(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Get the user's alert delivery preferences."""
+    prefs = await alert_intelligence_service.get_or_create_preferences(db, user.id)
+    return AlertPreferenceResponse(
+        quiet_hours_start=prefs.quiet_hours_start,
+        quiet_hours_end=prefs.quiet_hours_end,
+        emergency_override=prefs.emergency_override,
+        batch_interval_minutes=prefs.batch_interval_minutes,
+        escalation_enabled=prefs.escalation_enabled,
+        snoozed_hazards=prefs.snoozed_hazards or {},
+    )
+
+
+@router.put("/preferences", response_model=AlertPreferenceResponse)
+async def update_alert_preferences(
+    body: AlertPreferenceUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Update the user's alert delivery preferences."""
+    return await alert_intelligence_service.update_preferences(db, user.id, body)
+
+
+@router.post("/{alert_id}/read", status_code=204)
+async def mark_alert_read(
+    alert_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Mark an alert as read by the current user."""
+    alert = await db.get(Alert, alert_id)
+    if alert is None:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    await alert_intelligence_service.mark_alert_read(db, user.id, alert_id)
+    return None
+
+
+@router.get("/{alert_id}/explain", response_model=AlertExplanation)
+async def explain_alert(
+    alert_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Explain why this alert is relevant to the user."""
+    alert = await db.get(Alert, alert_id)
+    if alert is None:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    province = await db.get(Province, user.province_code) if user.province_code else None
+    return alert_intelligence_service.explain_alert(alert, user, province)

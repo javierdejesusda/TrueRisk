@@ -12,7 +12,7 @@ from app.database import engine, Base
 from app.rate_limit import limiter
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
 from app.api import ai_summary, sms, data_sources
-from app.api import auth, suggestions
+from app.api import auth, suggestions, preparedness, emergency_plan
 
 _start_time = time.time()
 
@@ -114,6 +114,8 @@ app.include_router(data_sources.router, prefix="/api/v1/data", tags=["data-sourc
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(auth.router, prefix="/api/v1/account", tags=["account"])
 app.include_router(suggestions.router, prefix="/api/v1/suggestions", tags=["suggestions"])
+app.include_router(preparedness.router, prefix="/api/v1/preparedness", tags=["preparedness"])
+app.include_router(emergency_plan.router, prefix="/api/v1/emergency-plan", tags=["emergency-plan"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

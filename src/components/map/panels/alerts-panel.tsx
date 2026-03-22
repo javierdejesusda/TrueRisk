@@ -58,6 +58,7 @@ export function AlertsPanel() {
       title={t('panelActiveAlerts')}
       icon={BellIcon}
       collapsedContent={collapsedContent}
+      defaultCollapsed
     >
       {isLoading ? (
         <div className="flex flex-col gap-2">
@@ -74,7 +75,7 @@ export function AlertsPanel() {
           <span className="text-xs text-accent-green font-medium font-[family-name:var(--font-sans)]">{t('allClear')} — {t('allClearDesc')}</span>
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto">
+        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto scrollbar-hide">
           {/* TrueRisk alerts */}
           {alerts.map((alert) => (
             <div
