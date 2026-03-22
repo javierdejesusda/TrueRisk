@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,8 +40,8 @@ class CommunityReportResponse(BaseModel):
     description: str | None
     status: str
     upvotes: int
-    created_at: str
-    expires_at: str
+    created_at: datetime
+    expires_at: datetime
     photo_url: str | None
     urgency: int
     verified_count: int
