@@ -56,7 +56,6 @@ export default function RegisterPage() {
         register,
         handleSubmit,
         formState: { errors },
-        watch,
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
         defaultValues: { province_code: '28' },
