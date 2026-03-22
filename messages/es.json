@@ -667,7 +667,11 @@
     "floodSafety": "Durante inundaciones: Sube a zonas altas. Evita rios y zonas bajas. No conduzcas por agua.",
     "fireSafety": "Durante incendios: Cierra ventanas y puertas. Evacua si te lo indican. Cubre boca con tela humeda.",
     "earthquakeSafety": "Durante terremotos: Agachate, cubrete y agarrate. Alejate de ventanas. No uses ascensores.",
-    "heatSafety": "Durante olas de calor: Mantente hidratado. Evita actividad al aire libre. Comprueba el estado de vecinos mayores."
+    "heatSafety": "Durante olas de calor: Mantente hidratado. Evita actividad al aire libre. Comprueba el estado de vecinos mayores.",
+    "emergency112": "Emergencias generales",
+    "guardiaCivil": "Guardia Civil",
+    "fireDept": "Bomberos",
+    "police": "Policia Nacional"
   },
   "Auth": {
     "login": "Iniciar sesion",

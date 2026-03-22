@@ -669,7 +669,11 @@
     "floodSafety": "During floods: Move to high ground. Avoid rivers and low areas. Do not drive through water.",
     "fireSafety": "During fires: Close windows and doors. Evacuate if instructed. Cover mouth with wet cloth.",
     "earthquakeSafety": "During earthquakes: Drop, cover, and hold on. Stay away from windows. Do not use elevators.",
-    "heatSafety": "During heat waves: Stay hydrated. Avoid outdoor activity. Check on elderly neighbors."
+    "heatSafety": "During heat waves: Stay hydrated. Avoid outdoor activity. Check on elderly neighbors.",
+    "emergency112": "General Emergency",
+    "guardiaCivil": "Guardia Civil",
+    "fireDept": "Fire Department",
+    "police": "National Police"
   },
   "Auth": {
     "login": "Sign in",

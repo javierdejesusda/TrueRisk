@@ -6,10 +6,10 @@ import { get } from '@/lib/offline-storage';
 import { useAppStore } from '@/store/app-store';
 
 const EMERGENCY_CONTACTS = [
-  { name: 'General Emergency', number: '112' },
-  { name: 'Guardia Civil', number: '062' },
-  { name: 'Fire Department', number: '080' },
-  { name: 'National Police', number: '091' },
+  { nameKey: 'emergency112' as const, number: '112' },
+  { nameKey: 'guardiaCivil' as const, number: '062' },
+  { nameKey: 'fireDept' as const, number: '080' },
+  { nameKey: 'police' as const, number: '091' },
 ];
 
 interface CachedRisk {
@@ -19,6 +19,7 @@ interface CachedRisk {
 
 export function OfflineEmergencyView() {
   const t = useTranslations('Offline');
+  const tDisaster = useTranslations('DisasterTypes');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const [lastSyncLabel, setLastSyncLabel] = useState<string | null>(null);
   const [riskData, setRiskData] = useState<CachedRisk | null>(null);
@@ -86,7 +87,7 @@ export function OfflineEmergencyView() {
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
                 </div>
-                <span className="text-sm text-white/80">{contact.name}</span>
+                <span className="text-sm text-white/80">{t(contact.nameKey)}</span>
               </div>
               <span className="text-xl font-bold font-[family-name:var(--font-display)] text-white">
                 {contact.number}
@@ -126,7 +127,7 @@ export function OfflineEmergencyView() {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-blue-400 text-base">&#x1F4A7;</span>
               <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
-                Flood
+                {tDisaster('flood')}
               </span>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">{t('floodSafety')}</p>
@@ -137,7 +138,7 @@ export function OfflineEmergencyView() {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-orange-400 text-base">&#x1F525;</span>
               <span className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
-                Fire
+                {tDisaster('wildfire')}
               </span>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">{t('fireSafety')}</p>
@@ -148,7 +149,7 @@ export function OfflineEmergencyView() {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-amber-400 text-base">&#x1F30D;</span>
               <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                Earthquake
+                {tDisaster('seismic')}
               </span>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">{t('earthquakeSafety')}</p>
@@ -159,7 +160,7 @@ export function OfflineEmergencyView() {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-red-400 text-base">&#x2600;&#xFE0F;</span>
               <span className="text-xs font-semibold text-red-400 uppercase tracking-wider">
-                Heat
+                {tDisaster('heatwave')}
               </span>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">{t('heatSafety')}</p>
