@@ -10,9 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.alert_preference import AlertPreference
 from app.models.push_subscription import PushSubscription
-from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
