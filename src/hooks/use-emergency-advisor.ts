@@ -6,10 +6,11 @@ import { getGuidanceForRisk, type EmergencyGuidance } from '@/lib/constants/emer
 
 export function useEmergencyGuidance() {
   const risk = useAppStore((s) => s.risk);
+  const locale = useAppStore((s) => s.locale);
 
   const guidance = useMemo<EmergencyGuidance | null>(
-    () => getGuidanceForRisk(risk?.dominant_hazard, risk?.composite_score),
-    [risk?.dominant_hazard, risk?.composite_score],
+    () => getGuidanceForRisk(risk?.dominant_hazard, risk?.composite_score, locale),
+    [risk?.dominant_hazard, risk?.composite_score, locale],
   );
 
   return { guidance };

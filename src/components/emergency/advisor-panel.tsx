@@ -19,7 +19,7 @@ export function AdvisorPanel() {
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           <p className="font-[family-name:var(--font-sans)] text-xs text-accent-green">
-            Sin riesgo elevado — no se requiere guia de emergencia en este momento.
+            {t('noRiskGuidance')}
           </p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export function AdvisorPanel() {
       {/* Immediate Actions */}
       <div className="glass rounded-xl p-4 border-l-[3px] border-accent-red">
         <h4 className="font-[family-name:var(--font-display)] text-xs font-bold uppercase tracking-wider text-accent-red mb-3">
-          Acciones inmediatas
+          {t('immediateActions')}
         </h4>
         <ol className="space-y-2">
           {guidance.sections.immediateActions.map((action, i) => (
@@ -57,7 +57,7 @@ export function AdvisorPanel() {
       {/* Preparation */}
       <div className="glass rounded-xl p-4 border-l-[3px] border-accent-blue">
         <h4 className="font-[family-name:var(--font-display)] text-xs font-bold uppercase tracking-wider text-accent-blue mb-3">
-          Preparacion
+          {t('preparation')}
         </h4>
         <ol className="space-y-2">
           {guidance.sections.preparation.map((step, i) => (
@@ -73,7 +73,7 @@ export function AdvisorPanel() {
       {guidance.sections.evacuation && (
         <div className="glass rounded-xl p-4 border-l-[3px] border-accent-orange">
           <h4 className="font-[family-name:var(--font-display)] text-xs font-bold uppercase tracking-wider text-accent-orange mb-3">
-            Evacuacion
+            {t('evacuation')}
           </h4>
           <ol className="space-y-2">
             {guidance.sections.evacuation.map((step, i) => (

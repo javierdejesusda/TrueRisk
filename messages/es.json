@@ -319,7 +319,11 @@
     "guidanceDisability": "Identifique rutas de evacuacion accesibles",
     "guidanceMedical": "Prepare lista de medicamentos y equipo medico esencial",
     "guidanceVehicle": "Tenga el vehiculo preparado con combustible",
-    "guidanceNoVehicle": "Identifique rutas de transporte publico o a pie"
+    "guidanceNoVehicle": "Identifique rutas de transporte publico o a pie",
+    "noRiskGuidance": "Sin riesgo elevado — no se requiere guia de emergencia en este momento.",
+    "immediateActions": "Acciones inmediatas",
+    "preparation": "Preparacion",
+    "evacuation": "Evacuacion"
   },
   "Alerts": {
     "title": "Alertas Activas",
