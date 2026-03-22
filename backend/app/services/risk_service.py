@@ -379,7 +379,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     terrain = get_terrain_features(province_code)
     temporal = compute_temporal_features(history) if history else _empty_temporal()
     weights_data = PROVINCES.get(province_code, {})
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     month = now.month
     season_sin, season_cos = _season_components(month)
 

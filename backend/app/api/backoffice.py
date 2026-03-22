@@ -62,7 +62,7 @@ async def list_weather_records(
     db: AsyncSession = Depends(get_db),
 ):
     """Paginated weather records with optional province and date filters."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
 
     stmt = (
         select(WeatherRecord)

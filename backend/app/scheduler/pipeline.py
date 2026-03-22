@@ -48,7 +48,7 @@ async def run_pipeline():
                 for p in provinces
             ]
             weather_map = await open_meteo.fetch_all_provinces(province_list)
-            now = datetime.now(timezone.utc)
+            now = datetime.utcnow()
             for p in provinces:
                 w = weather_map.get(p.ine_code)
                 if not w:
@@ -177,7 +177,7 @@ async def _check_and_create_alerts(
             ),
             source="auto_detected",
             is_active=True,
-            onset=datetime.now(timezone.utc),
+            onset=datetime.utcnow(),
         )
         db.add(alert)
         await db.flush()
@@ -212,7 +212,7 @@ async def _check_and_create_alerts(
 
 async def _aggregate_daily_summaries(db: AsyncSession):
     """Aggregate yesterday's hourly WeatherRecords into daily summaries."""
-    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date()
+    yesterday = (datetime.utcnow() - timedelta(days=1)).date()
 
     # Check which provinces already have yesterday's summary
     existing = await db.execute(
@@ -284,7 +284,7 @@ async def _aggregate_daily_summaries(db: AsyncSession):
 
 async def _purge_old_records(db: AsyncSession):
     """Delete weather records older than 90 days to prevent unbounded growth."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+    cutoff = datetime.utcnow() - timedelta(days=90)
     result = await db.execute(
         select(func.count()).select_from(WeatherRecord).where(WeatherRecord.recorded_at < cutoff)
     )

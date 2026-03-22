@@ -41,7 +41,7 @@ def _zero_score(province_code: str) -> dict:
         "composite_score": 0.0,
         "dominant_hazard": "none",
         "severity": "low",
-        "computed_at": datetime.now(timezone.utc),
+        "computed_at": datetime.utcnow(),
     }
 
 
@@ -130,7 +130,7 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
 
     return RiskMapResponse(
         provinces=entries,
-        computed_at=datetime.now(timezone.utc),
+        computed_at=datetime.utcnow(),
     )
 
 

@@ -46,7 +46,7 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
     }
 
     province_codes = list(PROVINCES.keys())
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     # Collect per-province predictions for GNN refinement
     province_predictions: dict[str, dict[str, float]] = {}

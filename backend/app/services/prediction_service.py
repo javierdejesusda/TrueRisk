@@ -29,7 +29,7 @@ async def _get_province(db: AsyncSession, province_code: str) -> Province:
 async def _get_history(
     db: AsyncSession, province_code: str, days: int = 30
 ) -> list[WeatherRecord]:
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(WeatherRecord)
         .where(
@@ -44,7 +44,7 @@ async def _get_history(
 async def _get_daily_history(
     db: AsyncSession, province_code: str, years: int = 5
 ) -> list[WeatherDailySummary]:
-    cutoff = datetime.now(timezone.utc) - timedelta(days=years * 365)
+    cutoff = datetime.utcnow() - timedelta(days=years * 365)
     result = await db.execute(
         select(WeatherDailySummary)
         .where(

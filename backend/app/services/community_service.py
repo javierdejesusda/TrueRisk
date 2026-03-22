@@ -18,7 +18,7 @@ async def create_report(
     db: AsyncSession, data: CommunityReportCreate
 ) -> CommunityReport:
     """Create a new community report with auto-expiry."""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     if data.hazard_type == "structural_damage":
         expires_at = now + timedelta(hours=24)
@@ -46,7 +46,7 @@ async def get_reports(
     bbox: tuple | None = None,
 ) -> list[CommunityReport]:
     """Return non-expired community reports, optionally filtered by province or bounding box."""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     stmt = (
         select(CommunityReport)
         .where(CommunityReport.expires_at > now)
