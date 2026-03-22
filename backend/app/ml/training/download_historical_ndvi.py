@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import time
 from datetime import date, timedelta
-from pathlib import Path
 
 import httpx
 import pandas as pd
@@ -147,7 +146,7 @@ def main() -> None:
                 downloaded += 1
                 print(f"    -> {len(df)} daily rows saved")
             else:
-                print(f"    -> NO DATA (WMS may not support TIME param for this layer)")
+                print("    -> NO DATA (WMS may not support TIME param for this layer)")
 
     print(f"\nDone: {downloaded}/{total} provinces saved to {NDVI_DIR}")
 

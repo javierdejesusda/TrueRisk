@@ -17,6 +17,26 @@ from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_forecasting import TemporalFusionTransformer
 from pytorch_forecasting.metrics import QuantileLoss
 
+from app.ml.training.config import (  # noqa: E402
+    RANDOM_SEED,
+    SAVED_MODELS_DIR,
+    TFT_ATTENTION_HEAD_SIZE,
+    TFT_BATCH_SIZE,
+    TFT_DROPOUT,
+    TFT_EPOCHS,
+    TFT_GRADIENT_CLIP,
+    TFT_HIDDEN_CONTINUOUS_SIZE,
+    TFT_HIDDEN_SIZE,
+    TFT_LR,
+    TFT_PATIENCE,
+    TFT_QUANTILES,
+)
+from app.ml.training.prepare_tft_dataset import (  # noqa: E402
+    HAZARD_FEATURES,
+    build_tft_dataset,
+    load_combined_tft_dataframe,
+)
+
 # PyTorch 2.6+ defaults to weights_only=True; allowlist pytorch_forecasting
 # classes that are serialised inside Lightning checkpoints.
 try:
@@ -34,26 +54,6 @@ except Exception:
 
 # Use Tensor Cores for faster matmul on RTX 4070 and similar GPUs
 torch.set_float32_matmul_precision("medium")
-
-from app.ml.training.config import (
-    RANDOM_SEED,
-    SAVED_MODELS_DIR,
-    TFT_ATTENTION_HEAD_SIZE,
-    TFT_BATCH_SIZE,
-    TFT_DROPOUT,
-    TFT_EPOCHS,
-    TFT_GRADIENT_CLIP,
-    TFT_HIDDEN_CONTINUOUS_SIZE,
-    TFT_HIDDEN_SIZE,
-    TFT_LR,
-    TFT_PATIENCE,
-    TFT_QUANTILES,
-)
-from app.ml.training.prepare_tft_dataset import (
-    HAZARD_FEATURES,
-    build_tft_dataset,
-    load_combined_tft_dataframe,
-)
 
 logging.basicConfig(
     level=logging.INFO,
