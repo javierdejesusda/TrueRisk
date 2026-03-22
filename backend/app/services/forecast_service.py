@@ -4,7 +4,7 @@ refinement and stores results in the risk_forecasts table."""
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
