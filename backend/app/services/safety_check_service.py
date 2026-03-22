@@ -3,46 +3,28 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.safety_check import SafetyCheckIn, FamilyLink
 from app.models.user import User
-from app.models.push_subscription import PushSubscription
 from app.schemas.safety_check import SafetyCheckInCreate
-from app.services.push_service import send_push
 
 logger = logging.getLogger(__name__)
-
-
-async def _send_push_to_user(db: AsyncSession, user_id: int, payload: dict) -> None:
-    """Send push notifications to all active subscriptions for a given user's province."""
-    user = await db.get(User, user_id)
-    if not user:
-        return
-    result = await db.execute(
-        select(PushSubscription).where(
-            PushSubscription.province_code == user.province_code,
-            PushSubscription.is_active == True,  # noqa: E712
-        )
-    )
-    subs = list(result.scalars().all())
-    for sub in subs:
-        subscription_info = {
-            "endpoint": sub.endpoint,
-            "keys": {"p256dh": sub.p256dh_key, "auth": sub.auth_key},
-        }
-        await send_push(subscription_info, payload)
 
 
 async def check_in(
     db: AsyncSession, user_id: int, data: SafetyCheckInCreate
 ) -> SafetyCheckIn:
-    """Create a safety check-in and notify linked family members."""
+    """Create a safety check-in record.
+
+    TODO: Notify linked family members via push once PushSubscription has a
+    user_id column for per-user targeting.
+    """
     user = await db.get(User, user_id)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=12)
 
     record = SafetyCheckIn(
@@ -57,30 +39,6 @@ async def check_in(
     db.add(record)
     await db.commit()
     await db.refresh(record)
-
-    # Notify all accepted linked users
-    links_result = await db.execute(
-        select(FamilyLink).where(
-            FamilyLink.status == "accepted",
-            or_(
-                FamilyLink.user_id == user_id,
-                FamilyLink.linked_user_id == user_id,
-            ),
-        )
-    )
-    links = list(links_result.scalars().all())
-
-    nickname = user.nickname if user else "Usuario"
-    payload = {
-        "title": "Estoy a salvo",
-        "body": f"{nickname} se ha marcado como {data.status}",
-        "tag": f"safety-{user_id}",
-        "url": "/safety",
-    }
-
-    for link in links:
-        target_id = link.linked_user_id if link.user_id == user_id else link.user_id
-        await _send_push_to_user(db, target_id, payload)
 
     return record
 
@@ -98,7 +56,7 @@ async def get_family_status(db: AsyncSession, user_id: int) -> list[dict]:
     )
     links = list(links_result.scalars().all())
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     statuses = []
 
     for link in links:
@@ -133,22 +91,39 @@ async def get_family_status(db: AsyncSession, user_id: int) -> list[dict]:
 
 
 async def create_link(
-    db: AsyncSession, user_id: int, target_nickname: str
+    db: AsyncSession,
+    user_id: int,
+    target_nickname: str,
+    relationship: str = "family",
 ) -> FamilyLink:
     """Create a pending family link by target nickname."""
+    from fastapi import HTTPException
+
     result = await db.execute(
         select(User).where(User.nickname == target_nickname)
     )
     target = result.scalar_one_or_none()
     if not target:
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail="User not found")
+
+    if target.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot link to yourself")
+
+    existing = await db.execute(
+        select(FamilyLink).where(
+            or_(
+                and_(FamilyLink.user_id == user_id, FamilyLink.linked_user_id == target.id),
+                and_(FamilyLink.user_id == target.id, FamilyLink.linked_user_id == user_id),
+            )
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Link already exists")
 
     link = FamilyLink(
         user_id=user_id,
         linked_user_id=target.id,
-        relationship="family",
+        relationship=relationship,
         status="pending",
     )
     db.add(link)
@@ -202,7 +177,11 @@ async def delete_link(db: AsyncSession, user_id: int, link_id: int) -> None:
 async def request_check_in(
     db: AsyncSession, user_id: int, target_user_id: int
 ) -> None:
-    """Request a linked user to check in."""
+    """Request a linked user to check in.
+
+    TODO: Send push notification once PushSubscription has a user_id column
+    for per-user targeting.
+    """
     result = await db.execute(
         select(FamilyLink).where(
             FamilyLink.status == "accepted",
@@ -223,14 +202,6 @@ async def request_check_in(
         from fastapi import HTTPException
 
         raise HTTPException(status_code=404, detail="No accepted link with this user")
-
-    payload = {
-        "title": "Tu familia quiere saber que estas bien",
-        "body": "Marca tu estado de seguridad",
-        "tag": "safety-request",
-        "url": "/safety",
-    }
-    await _send_push_to_user(db, target_user_id, payload)
 
 
 async def get_check_in_history(

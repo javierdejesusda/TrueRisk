@@ -63,7 +63,9 @@ async def create_link(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a pending family link."""
-    link = await safety_check_service.create_link(db, user.id, body.nickname)
+    link = await safety_check_service.create_link(
+        db, user.id, body.nickname, body.relationship
+    )
     # Fetch linked user for response enrichment
     linked_user = await db.get(User, link.linked_user_id)
     return FamilyLinkResponse(
@@ -73,7 +75,7 @@ async def create_link(
         relationship=link.relationship,
         status=link.status,
         created_at=link.created_at,
-        linked_user_nickname=linked_user.nickname or "" if linked_user else "",
+        linked_user_nickname=(linked_user.nickname or "") if linked_user else "",
         linked_user_display_name=linked_user.display_name if linked_user else None,
     )
 
@@ -99,7 +101,7 @@ async def accept_link(
         relationship=link.relationship,
         status=link.status,
         created_at=link.created_at,
-        linked_user_nickname=linked_user.nickname or "" if linked_user else "",
+        linked_user_nickname=(linked_user.nickname or "") if linked_user else "",
         linked_user_display_name=linked_user.display_name if linked_user else None,
     )
 

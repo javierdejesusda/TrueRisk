@@ -29,11 +29,10 @@ class SafetyCheckInResponse(BaseModel):
 
 class FamilyLinkCreate(BaseModel):
     nickname: str
+    relationship: Literal["family", "friend", "neighbor"] = "family"
 
 
 class FamilyLinkResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
     user_id: int
     linked_user_id: int
