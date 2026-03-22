@@ -18,16 +18,31 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
     { value: 'road_blocked', label: t('roadBlocked') },
     { value: 'power_outage', label: t('powerOutage') },
     { value: 'structural_damage', label: t('structuralDamage') },
+    { value: 'people_trapped', label: t('peopleTrapped') },
+    { value: 'fire', label: t('fire') },
+    { value: 'landslide', label: t('landslide') },
+    { value: 'missing_person', label: t('missingPerson') },
+    { value: 'medical_emergency', label: t('medicalEmergency') },
     { value: 'other', label: t('other') },
   ] as const;
   const provinceCode = useAppStore((s) => s.provinceCode);
   const [hazardType, setHazardType] = useState<CreateReportData['hazard_type']>('flood');
   const [severity, setSeverity] = useState(3);
+  const [urgency, setUrgency] = useState(3);
   const [description, setDescription] = useState('');
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const getLocation = () => {
     if (!navigator.geolocation) return;
@@ -58,9 +73,11 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         province_code: provinceCode,
         hazard_type: hazardType,
         severity,
+        urgency,
         latitude: coords.lat,
         longitude: coords.lng,
         description: description || undefined,
+        photo_url: photoPreview || undefined,
       });
       onClose();
     } catch (err) {
@@ -107,6 +124,18 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
         </div>
 
         <div className="space-y-1">
+          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">{t('urgency')}: <span className="font-[family-name:var(--font-mono)]">{urgency}/5</span></label>
+          <input
+            type="range"
+            min={1}
+            max={5}
+            value={urgency}
+            onChange={(e) => setUrgency(Number(e.target.value))}
+            className="w-full accent-accent-orange"
+          />
+        </div>
+
+        <div className="space-y-1">
           <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">{t('description')}</label>
           <textarea
             value={description}
@@ -116,6 +145,19 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
             className="w-full font-[family-name:var(--font-sans)] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-text-primary resize-none"
             placeholder={t('descriptionPlaceholder')}
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="font-[family-name:var(--font-sans)] text-xs uppercase tracking-wider text-text-secondary">{t('photo')}</label>
+          <div className="flex items-center gap-2">
+            <label className="flex-1 font-[family-name:var(--font-sans)] text-xs font-medium bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors text-text-secondary text-center cursor-pointer">
+              {photoPreview ? t('photoSelected') : t('addPhoto')}
+              <input type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
+            </label>
+            {photoPreview && (
+              <img src={photoPreview} alt="" className="h-10 w-10 rounded-lg object-cover border border-white/10" />
+            )}
+          </div>
         </div>
 
         <button

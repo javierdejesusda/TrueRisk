@@ -10,6 +10,11 @@ const HAZARD_COLORS: Record<string, string> = {
   power_outage: '#FBBF24',
   structural_damage: '#EF4444',
   other: '#A855F7',
+  people_trapped: '#DC2626',
+  fire: '#EF4444',
+  landslide: '#92400E',
+  missing_person: '#EC4899',
+  medical_emergency: '#DC2626',
 };
 
 interface ReportMarkersProps {
@@ -26,8 +31,11 @@ export function ReportMarkers({ reports }: ReportMarkersProps) {
         id: r.id,
         hazard_type: r.hazard_type,
         severity: r.severity,
+        urgency: r.urgency ?? 3,
         upvotes: r.upvotes,
         color: HAZARD_COLORS[r.hazard_type] || HAZARD_COLORS.other,
+        photo_url: r.photo_url,
+        is_verified: r.is_verified,
         created_at: r.created_at,
       },
     })),
@@ -41,11 +49,11 @@ export function ReportMarkers({ reports }: ReportMarkersProps) {
         id="community-reports-circle"
         type="circle"
         paint={{
-          'circle-radius': ['interpolate', ['linear'], ['get', 'severity'], 1, 4, 5, 10],
+          'circle-radius': ['interpolate', ['linear'], ['get', 'urgency'], 1, 4, 5, 14],
           'circle-color': ['get', 'color'],
           'circle-opacity': 0.8,
-          'circle-stroke-width': 1.5,
-          'circle-stroke-color': '#EEEEF0',
+          'circle-stroke-width': ['case', ['get', 'is_verified'], 2.5, 1.5],
+          'circle-stroke-color': ['case', ['get', 'is_verified'], '#84CC16', '#EEEEF0'],
           'circle-stroke-opacity': 0.6,
         }}
       />

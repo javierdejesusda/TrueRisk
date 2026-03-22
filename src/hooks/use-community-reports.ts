@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { apiFetch } from '@/lib/api-client';
 
 export interface CommunityReport {
   id: number;
@@ -13,17 +14,24 @@ export interface CommunityReport {
   description: string | null;
   status: string;
   upvotes: number;
+  photo_url: string | null;
+  urgency: number;
+  verified_count: number;
+  is_verified: boolean;
+  reporter_user_id: number | null;
   created_at: string;
   expires_at: string;
 }
 
 export interface CreateReportData {
   province_code: string;
-  hazard_type: 'flood' | 'road_blocked' | 'power_outage' | 'structural_damage' | 'other';
+  hazard_type: 'flood' | 'road_blocked' | 'power_outage' | 'structural_damage' | 'other' | 'people_trapped' | 'fire' | 'landslide' | 'missing_person' | 'medical_emergency';
   severity: number;
+  urgency?: number;
   latitude: number;
   longitude: number;
   description?: string;
+  photo_url?: string;
 }
 
 export function useCommunityReports(provinceCode?: string) {
@@ -55,15 +63,21 @@ export function useCommunityReports(provinceCode?: string) {
   }, [fetchReports]);
 
   const submitReport = useCallback(async (data: CreateReportData) => {
-    const res = await fetch('/api/community/reports', {
+    const res = await apiFetch('/api/community/reports', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const report = await res.json() as CommunityReport;
     setReports((prev) => [report, ...prev]);
     return report;
+  }, []);
+
+  const verifyReport = useCallback(async (reportId: number) => {
+    const res = await apiFetch(`/api/community/reports/${reportId}/verify`, { method: 'POST' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const updated = await res.json() as CommunityReport;
+    setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
   }, []);
 
   const upvoteReport = useCallback(async (reportId: number) => {
@@ -73,5 +87,5 @@ export function useCommunityReports(provinceCode?: string) {
     setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
   }, []);
 
-  return { reports, isLoading, error, fetchReports, submitReport, upvoteReport };
+  return { reports, isLoading, error, fetchReports, submitReport, upvoteReport, verifyReport };
 }
