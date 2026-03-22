@@ -42,6 +42,7 @@ export interface ScoreHistoryEntry {
 
 export function usePreparedness() {
   const locale = useAppStore((s) => s.locale);
+  const backendToken = useAppStore((s) => s.backendToken);
   const [score, setScore] = useState<PreparednessScore | null>(null);
   const [checklist, setChecklist] = useState<ChecklistResponse | null>(null);
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
@@ -61,6 +62,8 @@ export function usePreparedness() {
   });
 
   const fetchData = useCallback(async () => {
+    if (!backendToken) return; // Wait for auth token before fetching
+
     try {
       setIsLoading(true);
       setError(null);
@@ -100,7 +103,7 @@ export function usePreparedness() {
     } finally {
       setIsLoading(false);
     }
-  }, [locale]);
+  }, [locale, backendToken]);
 
   useEffect(() => {
     fetchData();
