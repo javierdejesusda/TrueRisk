@@ -237,7 +237,11 @@ async def toggle_item(
 
     await db.commit()
 
-    await compute_score(db, user_id)
+    try:
+        await compute_score(db, user_id)
+    except Exception:
+        logger.exception("Failed to recompute preparedness score after toggle")
+
     return completed
 
 
@@ -273,19 +277,22 @@ async def compute_score(db: AsyncSession, user_id: int) -> float:
         for cat, weight in CATEGORY_WEIGHTS.items()
     )
 
-    snapshot = PreparednessSnapshot(
-        user_id=user_id,
-        total_score=round(total_score, 1),
-        kit_score=round(cat_scores.get("kit", 0.0), 1),
-        plan_score=round(cat_scores.get("plan", 0.0), 1),
-        alerts_score=round(cat_scores.get("alerts", 0.0), 1),
-        community_score=round(cat_scores.get("community", 0.0), 1),
-        knowledge_score=round(cat_scores.get("knowledge", 0.0), 1),
-    )
-    db.add(snapshot)
-
-    user.preparedness_score = round(total_score, 1)
-    await db.commit()
+    try:
+        snapshot = PreparednessSnapshot(
+            user_id=user_id,
+            total_score=round(total_score, 1),
+            kit_score=round(cat_scores.get("kit", 0.0), 1),
+            plan_score=round(cat_scores.get("plan", 0.0), 1),
+            alerts_score=round(cat_scores.get("alerts", 0.0), 1),
+            community_score=round(cat_scores.get("community", 0.0), 1),
+            knowledge_score=round(cat_scores.get("knowledge", 0.0), 1),
+        )
+        db.add(snapshot)
+        user.preparedness_score = round(total_score, 1)
+        await db.commit()
+    except Exception:
+        logger.exception("Failed to save preparedness snapshot")
+        await db.rollback()
 
     return total_score
 

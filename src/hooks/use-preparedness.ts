@@ -123,7 +123,7 @@ export function usePreparedness() {
       // localStorage unavailable
     }
 
-    // Optimistic UI update for server-loaded checklist
+    // Optimistic UI update for server-loaded checklist + score
     setChecklist((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, categories: { ...prev.categories } };
@@ -135,6 +135,21 @@ export function usePreparedness() {
       updated.completed_items = Object.values(updated.categories)
         .flat()
         .filter((i) => i.completed).length;
+      updated.total_items = Object.values(updated.categories).flat().length;
+
+      // Recompute score optimistically
+      setScore((prevScore) => {
+        if (!prevScore) return prevScore;
+        const newCategories = prevScore.categories.map((cat) => {
+          const catItems = updated.categories[cat.category] ?? [];
+          const completedCount = catItems.filter((i) => i.completed).length;
+          return { ...cat, completed_items: completedCount, score: catItems.length > 0 ? (completedCount / catItems.length) * 100 : 0 };
+        });
+        const weights: Record<string, number> = { kit: 0.25, plan: 0.25, alerts: 0.20, community: 0.15, knowledge: 0.15 };
+        const newTotal = newCategories.reduce((sum, c) => sum + (c.score * (weights[c.category] ?? 0)), 0);
+        return { ...prevScore, categories: newCategories, total_score: Math.round(newTotal * 10) / 10 };
+      });
+
       return updated;
     });
 
