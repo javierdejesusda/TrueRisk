@@ -1,5 +1,12 @@
-const CACHE_NAME = 'truerisk-v1';
-const OFFLINE_ASSETS = ['/map', '/emergency', '/icons/icon-192.png'];
+const CACHE_NAME = 'truerisk-v2';
+const OFFLINE_ASSETS = [
+  '/map',
+  '/emergency',
+  '/dashboard',
+  '/safety',
+  '/alerts',
+  '/icons/icon-192.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -49,7 +56,33 @@ self.addEventListener('notificationclick', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // Network-first for API calls — cache responses for offline use
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });

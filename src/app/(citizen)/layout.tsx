@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/ui/toast';
 import { PushBanner } from '@/components/notifications/push-banner';
 import { EmergencyBanner } from '@/components/emergency/emergency-banner';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
+import { useOfflinePack } from '@/hooks/use-offline-pack';
 
 export default function CitizenLayout({
   children,
@@ -18,6 +19,7 @@ export default function CitizenLayout({
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   useAlertStream();
+  useOfflinePack(); // Auto-syncs on mount and every 30min
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

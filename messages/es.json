@@ -655,6 +655,20 @@
     "manageLinks": "Vinculos familiares",
     "imSafe": "Estoy a salvo"
   },
+  "Offline": {
+    "title": "Modo sin conexion",
+    "noConnection": "Sin conexion",
+    "dataFrom": "datos de",
+    "viewEmergencyData": "Datos de emergencia",
+    "lastUpdated": "Ultima actualizacion",
+    "emergencyContacts": "Contactos de emergencia",
+    "riskLevel": "Ultimo nivel de riesgo conocido",
+    "firstAid": "Guia de emergencia",
+    "floodSafety": "Durante inundaciones: Sube a zonas altas. Evita rios y zonas bajas. No conduzcas por agua.",
+    "fireSafety": "Durante incendios: Cierra ventanas y puertas. Evacua si te lo indican. Cubre boca con tela humeda.",
+    "earthquakeSafety": "Durante terremotos: Agachate, cubrete y agarrate. Alejate de ventanas. No uses ascensores.",
+    "heatSafety": "Durante olas de calor: Mantente hidratado. Evita actividad al aire libre. Comprueba el estado de vecinos mayores."
+  },
   "Auth": {
     "login": "Iniciar sesion",
     "register": "Crear cuenta",

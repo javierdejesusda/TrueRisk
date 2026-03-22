@@ -1,6 +1,16 @@
 const DB_NAME = 'truerisk-offline';
-const DB_VERSION = 1;
-const STORES = ['riskScores', 'alerts', 'emergencyGuidance', 'weather'] as const;
+const DB_VERSION = 2;
+const STORES = [
+  'riskScores',
+  'alerts',
+  'emergencyGuidance',
+  'weather',
+  'emergencyContacts',
+  'safetyCheckIns',
+  'shelters',
+  'firstAid',
+  'userProfile',
+] as const;
 type StoreName = (typeof STORES)[number];
 
 function openDB(): Promise<IDBDatabase> {
@@ -8,6 +18,7 @@ function openDB(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
+      // Create only missing stores — preserves existing data on upgrade
       for (const store of STORES) {
         if (!db.objectStoreNames.contains(store)) {
           db.createObjectStore(store);
