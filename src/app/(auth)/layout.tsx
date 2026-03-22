@@ -22,11 +22,5 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         );
     }
 
-    return (
-        <div className="relative flex min-h-screen w-screen items-center justify-center bg-bg-primary grain overflow-auto">
-            <div className="w-full max-w-md px-4 py-12">
-                {children}
-            </div>
-        </div>
-    );
+    return <>{children}</>;
 }
