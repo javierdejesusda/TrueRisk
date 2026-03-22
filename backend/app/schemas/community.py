@@ -24,7 +24,7 @@ class CommunityReportCreate(BaseModel):
     longitude: float = Field(ge=-19.0, le=5.0)
     description: str | None = Field(default=None, max_length=1000)
     urgency: int = Field(default=3, ge=1, le=5)
-    photo_url: str | None = Field(default=None, max_length=500)
+    photo_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
 
 
 class CommunityReportResponse(BaseModel):

@@ -94,6 +94,12 @@ async def verify_report(
     if report is None:
         return None
 
+    # Prevent self-verification
+    if report.reporter_user_id == user_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Cannot verify your own report")
+
+    # TODO: Add report_verifications table to prevent same user verifying twice
     report.verified_count += 1
     if report.verified_count >= 3:
         report.is_verified = True
