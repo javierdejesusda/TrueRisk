@@ -36,8 +36,6 @@ FEATURE_NAMES: list[str] = [
     "elevation_m",
     "month",
     "is_coastal",
-    "ndvi",
-    "ndvi_anomaly",
 ]
 
 _rf_model = None

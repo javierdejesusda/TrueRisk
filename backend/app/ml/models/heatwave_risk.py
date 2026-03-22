@@ -31,7 +31,6 @@ FEATURE_NAMES: list[str] = [
     "elevation_m",
     "is_coastal",
     "cloud_cover",
-    "solar_irradiance",
 ]
 
 _model = None
