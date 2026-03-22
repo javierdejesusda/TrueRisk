@@ -39,13 +39,13 @@ async def get_or_create(db: AsyncSession, user_id: int) -> EmergencyPlan:
 def _plan_to_response(plan: EmergencyPlan) -> EmergencyPlanResponse:
     return EmergencyPlanResponse(
         id=plan.id,
-        household_members=plan.household_members or [],
-        meeting_points=plan.meeting_points or [],
-        communication_plan=plan.communication_plan or [],
+        household_members=plan.household_members or [],  # type: ignore[arg-type]
+        meeting_points=plan.meeting_points or [],  # type: ignore[arg-type]
+        communication_plan=plan.communication_plan or [],  # type: ignore[arg-type]
         evacuation_notes=plan.evacuation_notes,
         insurance_info=plan.insurance_info,
-        pet_info=plan.pet_info,
-        important_documents=plan.important_documents,
+        pet_info=plan.pet_info,  # type: ignore[arg-type]
+        important_documents=plan.important_documents,  # type: ignore[arg-type]
         last_reviewed_at=plan.last_reviewed_at,
         created_at=plan.created_at,
         updated_at=plan.updated_at,
@@ -139,7 +139,7 @@ async def stream_kit_recommendations(
         f"- Medical conditions: {user.medical_conditions or 'none'}\n"
     )
 
-    messages = [
+    messages: list[dict[str, str]] = [
         {"role": "system", "content": KIT_PROMPT},
         {"role": "user", "content": f"Language: {lang}\n\n{province_context}\n{user_context}"},
     ]
@@ -147,7 +147,7 @@ async def stream_kit_recommendations(
     try:
         async with client.chat.completions.stream(
             model=settings.openai_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=800,
             temperature=0.4,
         ) as stream:
@@ -157,11 +157,11 @@ async def stream_kit_recommendations(
     except (AttributeError, TypeError):
         response = await client.chat.completions.create(
             model=settings.openai_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=800,
             temperature=0.4,
             stream=True,
         )
-        async for chunk in response:
+        async for chunk in response:  # type: ignore[union-attr]
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
