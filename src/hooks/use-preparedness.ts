@@ -51,26 +51,38 @@ export function usePreparedness() {
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [scoreRes, checklistRes, historyRes] = await Promise.all([
+      setError(null);
+
+      const results = await Promise.allSettled([
         apiFetch(`/api/preparedness/score?locale=${locale}`),
         apiFetch(`/api/preparedness/checklist?locale=${locale}`),
         apiFetch('/api/preparedness/history'),
       ]);
 
-      if (!scoreRes.ok || !checklistRes.ok || !historyRes.ok) {
-        throw new Error('Failed to fetch preparedness data');
+      const [scoreResult, checklistResult, historyResult] = results;
+
+      let hasAnyData = false;
+
+      if (scoreResult.status === 'fulfilled' && scoreResult.value.ok) {
+        const data = await scoreResult.value.json() as PreparednessScore;
+        setScore(data);
+        hasAnyData = true;
       }
 
-      const [scoreData, checklistData, historyData] = await Promise.all([
-        scoreRes.json() as Promise<PreparednessScore>,
-        checklistRes.json() as Promise<ChecklistResponse>,
-        historyRes.json() as Promise<ScoreHistoryEntry[]>,
-      ]);
+      if (checklistResult.status === 'fulfilled' && checklistResult.value.ok) {
+        const data = await checklistResult.value.json() as ChecklistResponse;
+        setChecklist(data);
+        hasAnyData = true;
+      }
 
-      setScore(scoreData);
-      setChecklist(checklistData);
-      setHistory(historyData);
-      setError(null);
+      if (historyResult.status === 'fulfilled' && historyResult.value.ok) {
+        const data = await historyResult.value.json() as ScoreHistoryEntry[];
+        setHistory(data);
+      }
+
+      if (!hasAnyData) {
+        setError('Failed to fetch preparedness data');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch');
     } finally {
@@ -83,7 +95,6 @@ export function usePreparedness() {
   }, [fetchData]);
 
   const toggleItem = useCallback(async (itemKey: string, completed: boolean) => {
-    // Optimistic UI update
     setChecklist((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, categories: { ...prev.categories } };
@@ -105,14 +116,12 @@ export function usePreparedness() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      // Refresh score after toggle
       const scoreRes = await apiFetch(`/api/preparedness/score?locale=${locale}`);
       if (scoreRes.ok) {
         const scoreData = await scoreRes.json() as PreparednessScore;
         setScore(scoreData);
       }
     } catch {
-      // Revert on error
       fetchData();
     }
   }, [locale, fetchData]);
