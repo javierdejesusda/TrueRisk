@@ -6,6 +6,7 @@ services:
       BACKEND_URL: http://backend:8000
       NEXTAUTH_URL: https://truerisk.cloud
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_TRUST_HOST: "true"
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       backend:
