@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Float, Text, DateTime, func
+from sqlalchemy import String, Integer, Float, Text, DateTime, Boolean, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -20,3 +22,12 @@ class CommunityReport(Base):
     upvotes: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime)
+
+    # Enhanced fields
+    photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    urgency: Mapped[int] = mapped_column(Integer, default=3)  # 1-5
+    reporter_user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
+    verified_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)

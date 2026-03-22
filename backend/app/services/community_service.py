@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 async def create_report(
-    db: AsyncSession, data: CommunityReportCreate
+    db: AsyncSession, data: CommunityReportCreate, user_id: int | None = None
 ) -> CommunityReport:
     """Create a new community report with auto-expiry."""
     now = datetime.utcnow()
@@ -32,6 +32,9 @@ async def create_report(
         latitude=data.latitude,
         longitude=data.longitude,
         description=data.description,
+        urgency=data.urgency,
+        photo_url=data.photo_url,
+        reporter_user_id=user_id,
         expires_at=expires_at,
     )
     db.add(report)
@@ -78,6 +81,23 @@ async def upvote_report(
         return None
 
     report.upvotes += 1
+    await db.commit()
+    await db.refresh(report)
+    return report
+
+
+async def verify_report(
+    db: AsyncSession, report_id: int, user_id: int
+) -> CommunityReport | None:
+    """Increment verified_count for a report. Auto-verifies at 3+. Returns None if not found."""
+    report = await db.get(CommunityReport, report_id)
+    if report is None:
+        return None
+
+    report.verified_count += 1
+    if report.verified_count >= 3:
+        report.is_verified = True
+
     await db.commit()
     await db.refresh(report)
     return report

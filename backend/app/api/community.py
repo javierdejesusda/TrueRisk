@@ -5,7 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_user, get_optional_user
+from app.models.user import User
 from app.schemas.community import CommunityReportCreate, CommunityReportResponse
 from app.services import community_service
 
@@ -23,9 +24,11 @@ async def create_report(
     request: Request,
     body: CommunityReportCreate,
     db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ):
     """Submit a new community hazard report."""
-    report = await community_service.create_report(db, body)
+    user_id = user.id if user else None
+    report = await community_service.create_report(db, body, user_id=user_id)
     return report
 
 
@@ -59,6 +62,19 @@ async def upvote_report(
 ):
     """Upvote a community report."""
     report = await community_service.upvote_report(db, report_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return report
+
+
+@router.post("/reports/{report_id}/verify", response_model=CommunityReportResponse)
+async def verify_report(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Verify a community report. Requires authentication."""
+    report = await community_service.verify_report(db, report_id, user.id)
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
     return report
