@@ -5,7 +5,7 @@ from app.ml.models.heatwave_risk import FEATURE_NAMES
 from app.ml.models.tft_base import HazardTFT
 
 STATIC_FEATURES = ["latitude", "elevation_m", "is_coastal"]
-TIME_VARYING_KNOWN = ["month"]
+TIME_VARYING_KNOWN = ["month", "season_sin", "season_cos"]
 TIME_VARYING_UNKNOWN = [
     f
     for f in FEATURE_NAMES

@@ -58,6 +58,13 @@ def _consecutive_condition(series: pd.Series) -> pd.Series:
     return series.groupby(groups).cumsum().astype(int)
 
 
+def _wind_chill(temp: float, wind_kmh: float) -> float:
+    """NWS wind chill formula. Only applies when temp < 10C and wind > 4.8 km/h."""
+    if temp > 10 or wind_kmh < 4.8:
+        return temp
+    return 13.12 + 0.6215 * temp - 11.37 * (wind_kmh ** 0.16) + 0.3965 * temp * (wind_kmh ** 0.16)
+
+
 def _load_and_enrich(code: str) -> pd.DataFrame | None:
     """Load raw CSV for a province and compute all derived features."""
     path = RAW_DIR / f"{code}.csv"
@@ -108,6 +115,27 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     df["temp_min"] = df["temp_min"].fillna(15.0)
     df["temp_mean"] = df["temp_mean"].fillna((df["temp_max"] + df["temp_min"]) / 2)
 
+    # -- NDVI data (from Copernicus Land historical download) --
+    ndvi_path = RAW_DIR / "ndvi" / f"{code}.csv"
+    if ndvi_path.exists():
+        ndvi_df = pd.read_csv(ndvi_path, parse_dates=["date"])
+        df = df.merge(ndvi_df[["date", "ndvi"]], on="date", how="left")
+        df["ndvi"] = df["ndvi"].interpolate(method="linear").fillna(0.5)
+        ndvi_rolling = df["ndvi"].rolling(30, min_periods=7).mean()
+        df["ndvi_anomaly"] = (df["ndvi"] - ndvi_rolling).fillna(0.0)
+    else:
+        df["ndvi"] = 0.5
+        df["ndvi_anomaly"] = 0.0
+
+    # -- Solar irradiance (from NASA POWER historical download) --
+    solar_path = RAW_DIR / "solar" / f"{code}.csv"
+    if solar_path.exists():
+        solar_df = pd.read_csv(solar_path, parse_dates=["date"])
+        df = df.merge(solar_df[["date", "solar_irradiance"]], on="date", how="left")
+        df["solar_irradiance"] = df["solar_irradiance"].interpolate(method="linear").fillna(200.0)
+    else:
+        df["solar_irradiance"] = 200.0
+
     # -- Temporal features --
     df["month"] = df["date"].dt.month
     df["season_sin"] = np.sin(2 * np.pi * df["month"] / 12)
@@ -146,6 +174,25 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     df["consecutive_dry_days"] = _consecutive_condition(df["is_dry"])
     df["consecutive_hot_days"] = _consecutive_condition(df["is_hot_day"])
     df["consecutive_hot_nights"] = _consecutive_condition(df["is_hot_night"])
+
+    # Cold wave features
+    df["is_cold_day"] = df["temp_max"] < 5.0
+    df["is_cold_night"] = df["temp_min"] < 0.0
+    df["consecutive_cold_days"] = _consecutive_condition(df["is_cold_day"])
+    df["consecutive_cold_nights"] = _consecutive_condition(df["is_cold_night"])
+    df["temperature_min_7d"] = df["temp_min"].rolling(7, min_periods=1).min()
+    df["wind_chill"] = df.apply(
+        lambda r: _wind_chill(_safe(r["temp_mean"], 10.0), _safe(r["wind_speed"], 10.0)),
+        axis=1,
+    )
+
+    # Windstorm features
+    df["wind_gust_max_24h"] = df["wind_gust_max"]
+    df["wind_speed_max_24h"] = df["wind_speed"]
+    df["pressure_change_24h"] = df["pressure"].diff(1).fillna(0.0)
+    df["pressure_min_24h"] = df["pressure"].rolling(1, min_periods=1).min()
+    df["wind_gusts"] = df["wind_gust_max"]
+    df["precipitation_6h"] = df["precip"] / 4
 
     # Max precip intensity ratio
     df["max_precip_intensity_ratio"] = (
@@ -251,14 +298,30 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
             spei_1m_vals.append(0.0)
     df["spei_1m"] = spei_1m_vals
 
+    # 6-month SPEI (longer-term water deficit signal for drought)
+    spei_6m_vals = []
+    for i in range(len(df)):
+        window = precip_list[max(0, i - 179) : i + 1]
+        if len(window) >= 30:
+            spei_6m_vals.append(compute_spi(window))
+        else:
+            spei_6m_vals.append(0.0)
+    df["spei_6m"] = spei_6m_vals
+
     # Also rename some columns to match model feature names exactly
     df["temperature"] = df["temp_mean"]
     df["temperature_max"] = df["temp_max"]
     df["temperature_min"] = df["temp_min"]
     df["precipitation"] = df["precip"]
 
-    df.drop(columns=["year_month", "is_rain", "is_dry", "is_hot_day", "is_hot_night"],
-            inplace=True, errors="ignore")
+    df.drop(
+        columns=[
+            "year_month", "is_rain", "is_dry", "is_hot_day", "is_hot_night",
+            "is_cold_day", "is_cold_night",
+        ],
+        inplace=True,
+        errors="ignore",
+    )
 
     return df
 
@@ -319,7 +382,7 @@ HEATWAVE_FEATURES = [
     "consecutive_hot_days", "consecutive_hot_nights", "heat_wave_day",
     "humidity", "wind_speed", "uv_index", "temperature_anomaly",
     "temperature_forecast_48h_max", "month", "latitude", "elevation_m",
-    "is_coastal", "cloud_cover",
+    "is_coastal", "cloud_cover", "solar_irradiance",
 ]
 
 WILDFIRE_FEATURES = [
@@ -327,7 +390,7 @@ WILDFIRE_FEATURES = [
     "temperature", "temperature_max_7d", "humidity", "humidity_min_7d",
     "wind_speed", "wind_gust_max", "precipitation_7d", "precipitation_30d",
     "consecutive_dry_days", "soil_moisture", "uv_index", "elevation_m",
-    "month", "is_coastal",
+    "month", "is_coastal", "ndvi", "ndvi_anomaly",
 ]
 
 DROUGHT_LSTM_FEATURES = [

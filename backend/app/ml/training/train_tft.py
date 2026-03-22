@@ -11,10 +11,29 @@ import argparse
 import logging
 from pathlib import Path
 
+import torch
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_forecasting import TemporalFusionTransformer
 from pytorch_forecasting.metrics import QuantileLoss
+
+# PyTorch 2.6+ defaults to weights_only=True; allowlist pytorch_forecasting
+# classes that are serialised inside Lightning checkpoints.
+try:
+    from pytorch_forecasting.data.encoders import (
+        EncoderNormalizer,
+        GroupNormalizer,
+        NaNLabelEncoder,
+        TorchNormalizer,
+    )
+    torch.serialization.add_safe_globals(
+        [EncoderNormalizer, GroupNormalizer, NaNLabelEncoder, TorchNormalizer]
+    )
+except Exception:
+    pass  # older pytorch_forecasting versions don't need this
+
+# Use Tensor Cores for faster matmul on RTX 4070 and similar GPUs
+torch.set_float32_matmul_precision("medium")
 
 from app.ml.training.config import (
     RANDOM_SEED,
@@ -78,12 +97,12 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
         total_samples - split_idx,
     )
 
-    # Create dataloaders
+    # Create dataloaders (num_workers=4 for faster batch loading)
     train_dataloader = training_dataset.to_dataloader(
-        train=True, batch_size=TFT_BATCH_SIZE, num_workers=0
+        train=True, batch_size=TFT_BATCH_SIZE, num_workers=4, persistent_workers=True
     )
     val_dataloader = training_dataset.to_dataloader(
-        train=False, batch_size=TFT_BATCH_SIZE, num_workers=0
+        train=False, batch_size=TFT_BATCH_SIZE, num_workers=4, persistent_workers=True
     )
 
     # ------------------------------------------------------------------
@@ -106,6 +125,7 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
         "Model created: %d parameters",
         sum(p.numel() for p in model.parameters()),
     )
+
 
     # ------------------------------------------------------------------
     # 4. Callbacks
@@ -137,6 +157,7 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
         callbacks=[early_stop, checkpoint],
         enable_progress_bar=True,
         accelerator="auto",
+        precision="bf16-mixed",
         devices=1,
     )
 

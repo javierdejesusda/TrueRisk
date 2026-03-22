@@ -137,6 +137,14 @@ def get_model_registry() -> list[dict]:
             "method": "SPEI + LSTM + Temporal Fusion Transformer",
             "architecture": "SPEI mapping + LSTM + TFT quantile regression (multi-horizon)",
         },
+        "coldwave": {
+            "method": "Rule-based + Temporal Fusion Transformer",
+            "architecture": "Rule-based scoring + TFT quantile regression (multi-horizon)",
+        },
+        "windstorm": {
+            "method": "Rule-based + Temporal Fusion Transformer",
+            "architecture": "Rule-based scoring + TFT quantile regression (multi-horizon)",
+        },
     }
 
     registry = []

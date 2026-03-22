@@ -16,12 +16,12 @@ from app.services.risk_service import get_terrain_features, _record_to_dict
 
 logger = logging.getLogger(__name__)
 
-HAZARDS = ["flood", "wildfire", "heatwave", "drought"]
+HAZARDS = ["flood", "wildfire", "heatwave", "drought", "coldwave", "windstorm"]
 FORECAST_HORIZONS = [6, 12, 24, 48, 72, 168]
 
 
 async def compute_all_forecasts(db: AsyncSession) -> None:
-    """Full pipeline: for each province run 4 TFT models, GNN refinement, store."""
+    """Full pipeline: for each province run 6 TFT models, GNN refinement, store."""
     from app.ml.training.config import ENABLE_TFT_FORECASTS
 
     if not ENABLE_TFT_FORECASTS:
@@ -33,12 +33,16 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
     from app.ml.models.tft_wildfire import predict_wildfire_risk_tft
     from app.ml.models.tft_heatwave import predict_heatwave_risk_tft
     from app.ml.models.tft_drought import predict_drought_risk_tft
+    from app.ml.models.tft_coldwave import predict_coldwave_risk_tft
+    from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
 
     tft_predictors = {
         "flood": predict_flood_risk_tft,
         "wildfire": predict_wildfire_risk_tft,
         "heatwave": predict_heatwave_risk_tft,
         "drought": predict_drought_risk_tft,
+        "coldwave": predict_coldwave_risk_tft,
+        "windstorm": predict_windstorm_risk_tft,
     }
 
     province_codes = list(PROVINCES.keys())
@@ -78,7 +82,7 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
             "elevation_m": terrain.get("elevation_m", 200.0),
         }
 
-        # 3. Run 4 TFT models
+        # 3. Run 6 TFT models
         code_preds: dict[str, float] = {}
         for hazard, predictor in tft_predictors.items():
             try:

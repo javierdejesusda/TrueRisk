@@ -19,6 +19,8 @@ FEATURE_NAMES = [
     "is_mediterranean",
     "elevation_m",
     "month",
+    "season_sin",
+    "season_cos",
 ]
 
 _model = None

@@ -4,8 +4,8 @@ from __future__ import annotations
 from app.ml.models.tft_base import HazardTFT
 from app.ml.models.wildfire_risk import FEATURE_NAMES
 
-STATIC_FEATURES = ["elevation_m", "is_coastal", "month"]
-TIME_VARYING_KNOWN = ["month"]
+STATIC_FEATURES = ["elevation_m", "is_coastal"]
+TIME_VARYING_KNOWN = ["month", "season_sin", "season_cos"]
 TIME_VARYING_UNKNOWN = [
     f
     for f in FEATURE_NAMES

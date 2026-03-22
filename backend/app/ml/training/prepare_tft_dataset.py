@@ -54,6 +54,16 @@ from app.ml.models.tft_drought import (
     TIME_VARYING_KNOWN as DROUGHT_KNOWN,
     TIME_VARYING_UNKNOWN as DROUGHT_UNKNOWN,
 )
+from app.ml.models.tft_coldwave import (
+    STATIC_FEATURES as COLDWAVE_STATIC,
+    TIME_VARYING_KNOWN as COLDWAVE_KNOWN,
+    TIME_VARYING_UNKNOWN as COLDWAVE_UNKNOWN,
+)
+from app.ml.models.tft_windstorm import (
+    STATIC_FEATURES as WINDSTORM_STATIC,
+    TIME_VARYING_KNOWN as WINDSTORM_KNOWN,
+    TIME_VARYING_UNKNOWN as WINDSTORM_UNKNOWN,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -85,6 +95,16 @@ HAZARD_FEATURES: dict[str, dict[str, list[str]]] = {
         "known": DROUGHT_KNOWN,
         "unknown": DROUGHT_UNKNOWN,
     },
+    "coldwave": {
+        "static": COLDWAVE_STATIC,
+        "known": COLDWAVE_KNOWN,
+        "unknown": COLDWAVE_UNKNOWN,
+    },
+    "windstorm": {
+        "static": WINDSTORM_STATIC,
+        "known": WINDSTORM_KNOWN,
+        "unknown": WINDSTORM_UNKNOWN,
+    },
 }
 
 TARGET_COLS = {
@@ -92,6 +112,8 @@ TARGET_COLS = {
     "wildfire": "wildfire_score",
     "heatwave": "heatwave_score",
     "drought": "drought_score",
+    "coldwave": "coldwave_score",
+    "windstorm": "windstorm_score",
 }
 
 
@@ -154,11 +176,37 @@ def _compute_drought_score(row: pd.Series) -> float:
     return float(np.clip(combined, 0.0, 100.0))
 
 
+def _compute_coldwave_score(row: pd.Series) -> float:
+    """Continuous cold wave risk score 0-100 from wind chill, temp min, streaks."""
+    wind_chill = row.get("wind_chill", 10.0) or 10.0
+    temp_min = row.get("temperature_min", 5.0) or 5.0
+    cold_days = row.get("consecutive_cold_days", 0) or 0
+    wc_sig = _sigmoid_scale(-wind_chill, 5.0, steepness=0.2)
+    tm_sig = _sigmoid_scale(-temp_min, 0.0, steepness=0.3)
+    cd_sig = _sigmoid_scale(cold_days, 3, steepness=0.5)
+    combined = 0.4 * wc_sig + 0.3 * tm_sig + 0.3 * cd_sig
+    return float(np.clip(combined, 0.0, 100.0))
+
+
+def _compute_windstorm_score(row: pd.Series) -> float:
+    """Continuous windstorm risk score 0-100 from wind gusts, speed, pressure."""
+    gusts = row.get("wind_gusts", 0.0) or row.get("wind_gust_max", 0.0) or 0.0
+    wind = row.get("wind_speed", 0.0) or 0.0
+    p_change = row.get("pressure_change_6h", 0.0) or 0.0
+    gust_sig = _sigmoid_scale(gusts, 80.0, steepness=0.05)
+    wind_sig = _sigmoid_scale(wind, 60.0, steepness=0.06)
+    pres_sig = _sigmoid_scale(-p_change, 6.0, steepness=0.3)
+    combined = 0.5 * gust_sig + 0.25 * wind_sig + 0.25 * pres_sig
+    return float(np.clip(combined, 0.0, 100.0))
+
+
 SCORE_FUNCS = {
     "flood": _compute_flood_score,
     "wildfire": _compute_wildfire_score,
     "heatwave": _compute_heatwave_score,
     "drought": _compute_drought_score,
+    "coldwave": _compute_coldwave_score,
+    "windstorm": _compute_windstorm_score,
 }
 
 

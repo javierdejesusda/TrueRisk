@@ -3,9 +3,9 @@
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Date range (3 years of daily data)
+# Date range (5 years of daily data)
 # ---------------------------------------------------------------------------
-START_DATE = "2023-01-01"
+START_DATE = "2021-01-01"
 END_DATE = "2025-12-31"
 
 # ---------------------------------------------------------------------------
@@ -97,10 +97,10 @@ TFT_ATTENTION_HEAD_SIZE = 4
 TFT_DROPOUT = 0.1
 TFT_HIDDEN_CONTINUOUS_SIZE = 32
 TFT_QUANTILES = [0.1, 0.5, 0.9]
-TFT_BATCH_SIZE = 128
-TFT_EPOCHS = 100
-TFT_LR = 1e-3
-TFT_PATIENCE = 15
+TFT_BATCH_SIZE = 256
+TFT_EPOCHS = 60
+TFT_LR = 2e-3
+TFT_PATIENCE = 6
 TFT_GRADIENT_CLIP = 0.1
 
 # Graph Attention Network (spatial refinement)

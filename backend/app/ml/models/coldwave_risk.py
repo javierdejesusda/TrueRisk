@@ -13,12 +13,14 @@ FEATURE_NAMES = [
     "consecutive_cold_nights",
     "humidity",
     "wind_speed",
-    "precipitation_24h",
+    "precip_24h",
     "month",
     "latitude",
     "elevation_m",
     "is_coastal",
     "cloud_cover",
+    "season_sin",
+    "season_cos",
 ]
 
 _model = None

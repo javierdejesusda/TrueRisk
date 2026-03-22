@@ -56,7 +56,7 @@ def download_province(
             return df
 
         except (httpx.HTTPStatusError, httpx.RequestError) as e:
-            wait = 2 ** attempt
+            wait = 10 * attempt
             print(f"  [RETRY {attempt}/{retries}] Province {code}: {e} — waiting {wait}s")
             time.sleep(wait)
 
@@ -101,8 +101,8 @@ def main() -> None:
                 else:
                     print(f"  [{downloaded}/{total}] Province {code} ({prov['name']}): {len(df)} rows")
 
-            # Rate limit: 1 request/second
-            time.sleep(1.0)
+            # Rate limit: 5 seconds between requests (5-year requests are heavy)
+            time.sleep(5.0)
 
     print(f"\nDone: {downloaded}/{total} provinces saved to {RAW_DIR}")
 
