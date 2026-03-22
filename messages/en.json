@@ -626,7 +626,8 @@
     "buildPlan": "Build your plan",
     "configureAlerts": "Configure alerts",
     "itemsToComplete": "{count} items to complete",
-    "improveScore": "Improve your score"
+    "improveScore": "Improve your score",
+    "retry": "Retry"
   },
   "AlertIntelligence": {
     "whyThisAlert": "Why am I seeing this?",

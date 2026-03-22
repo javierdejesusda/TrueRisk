@@ -624,7 +624,8 @@
     "buildPlan": "Crear tu plan",
     "configureAlerts": "Configurar alertas",
     "itemsToComplete": "{count} elementos por completar",
-    "improveScore": "Mejorar tu puntuacion"
+    "improveScore": "Mejorar tu puntuacion",
+    "retry": "Reintentar"
   },
   "AlertIntelligence": {
     "whyThisAlert": "Por que veo esto?",
