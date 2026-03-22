@@ -59,12 +59,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Network-first for API calls — cache responses for offline use
+  // Network-first for specific API calls — only cache paths useful for offline
+  const CACHEABLE_API = ['/api/risk/', '/api/alerts', '/api/weather/'];
+
   if (url.pathname.startsWith('/api/')) {
+    const shouldCache = CACHEABLE_API.some((p) => url.pathname.startsWith(p));
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          if (response.ok) {
+          if (response.ok && shouldCache) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }

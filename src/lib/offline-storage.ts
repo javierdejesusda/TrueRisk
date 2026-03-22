@@ -6,10 +6,6 @@ const STORES = [
   'emergencyGuidance',
   'weather',
   'emergencyContacts',
-  'safetyCheckIns',
-  'shelters',
-  'firstAid',
-  'userProfile',
 ] as const;
 type StoreName = (typeof STORES)[number];
 

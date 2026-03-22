@@ -5,16 +5,17 @@ import { useTranslations } from 'next-intl';
 import { get } from '@/lib/offline-storage';
 import { useAppStore } from '@/store/app-store';
 
-const EMERGENCY_CONTACTS = [
+const DEFAULT_CONTACTS = [
   { nameKey: 'emergency112' as const, number: '112' },
   { nameKey: 'guardiaCivil' as const, number: '062' },
   { nameKey: 'fireDept' as const, number: '080' },
   { nameKey: 'police' as const, number: '091' },
 ];
 
-interface CachedRisk {
-  composite?: number;
-  dominant_hazard?: string;
+interface CachedRiskEntry {
+  province_code: string;
+  composite_score: number;
+  dominant_hazard: string;
 }
 
 export function OfflineEmergencyView() {
@@ -22,7 +23,8 @@ export function OfflineEmergencyView() {
   const tDisaster = useTranslations('DisasterTypes');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const [lastSyncLabel, setLastSyncLabel] = useState<string | null>(null);
-  const [riskData, setRiskData] = useState<CachedRisk | null>(null);
+  const [riskData, setRiskData] = useState<CachedRiskEntry | null>(null);
+  const [contacts, setContacts] = useState(DEFAULT_CONTACTS);
 
   useEffect(() => {
     const stored = localStorage.getItem('offlinePack:lastSync');
@@ -41,8 +43,16 @@ export function OfflineEmergencyView() {
     }
 
     (async () => {
-      const cached = await get<CachedRisk>('riskScores', 'latest');
-      if (cached) setRiskData(cached);
+      const cached = await get<CachedRiskEntry[]>('riskScores', 'latest');
+      if (cached && Array.isArray(cached)) {
+        const entry = cached.find((r) => r.province_code === provinceCode);
+        if (entry) setRiskData(entry);
+      }
+    })();
+
+    (async () => {
+      const cachedContacts = await get<typeof DEFAULT_CONTACTS>('emergencyContacts', 'default');
+      if (cachedContacts && Array.isArray(cachedContacts)) setContacts(cachedContacts);
     })();
   }, [provinceCode]);
 
@@ -66,7 +76,7 @@ export function OfflineEmergencyView() {
           {t('emergencyContacts')}
         </h2>
         <div className="flex flex-col gap-2">
-          {EMERGENCY_CONTACTS.map((contact) => (
+          {contacts.map((contact) => (
             <a
               key={contact.number}
               href={`tel:${contact.number}`}
@@ -105,7 +115,7 @@ export function OfflineEmergencyView() {
           </h2>
           <div className="flex items-center gap-3">
             <div className="text-3xl font-bold font-[family-name:var(--font-display)] text-accent-orange">
-              {riskData.composite ?? '--'}
+              {riskData.composite_score ?? '--'}
             </div>
             {riskData.dominant_hazard && (
               <span className="text-xs text-white/50 uppercase tracking-wider">
