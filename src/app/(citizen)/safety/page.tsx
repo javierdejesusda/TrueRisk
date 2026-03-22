@@ -12,6 +12,7 @@ export default function SafetyPage() {
   const {
     familyStatus,
     checkIns,
+    pendingLinks,
     checkIn,
     getFamilyStatus: _getFamilyStatus,
     createLink,
@@ -44,6 +45,7 @@ export default function SafetyPage() {
 
           <FamilyLinkManager
             familyStatus={familyStatus}
+            pendingLinks={pendingLinks}
             onCreateLink={createLink}
             onAcceptLink={acceptLink}
             onDeleteLink={deleteLink}

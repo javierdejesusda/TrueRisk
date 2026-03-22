@@ -2,17 +2,20 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { FamilyMemberStatus } from '@/hooks/use-safety-check';
+import { useAppStore } from '@/store/app-store';
+import type { FamilyMemberStatus, FamilyLink } from '@/hooks/use-safety-check';
 
 interface FamilyLinkManagerProps {
   familyStatus: FamilyMemberStatus[];
+  pendingLinks: FamilyLink[];
   onCreateLink: (nickname: string, relationship?: string) => Promise<unknown>;
   onAcceptLink: (linkId: number) => Promise<void>;
   onDeleteLink: (linkId: number) => Promise<void>;
 }
 
-export function FamilyLinkManager({ familyStatus, onCreateLink, onDeleteLink }: FamilyLinkManagerProps) {
+export function FamilyLinkManager({ familyStatus, pendingLinks, onCreateLink, onAcceptLink, onDeleteLink }: FamilyLinkManagerProps) {
   const t = useTranslations('Safety');
+  const authUser = useAppStore((s) => s.authUser);
   const [nickname, setNickname] = useState('');
   const [relationship, setRelationship] = useState('family');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,9 +72,12 @@ export function FamilyLinkManager({ familyStatus, onCreateLink, onDeleteLink }: 
         </div>
       </form>
 
-      {/* Existing links */}
+      {/* Accepted links */}
       {familyStatus.length > 0 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 mb-4">
+          <h3 className="font-[family-name:var(--font-sans)] text-xs font-semibold text-text-secondary uppercase tracking-wider">
+            {t('accepted')}
+          </h3>
           {familyStatus.map((member) => (
             <div
               key={member.user_id}
@@ -96,6 +102,45 @@ export function FamilyLinkManager({ familyStatus, onCreateLink, onDeleteLink }: 
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pending links */}
+      {pendingLinks.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h3 className="font-[family-name:var(--font-sans)] text-xs font-semibold text-text-secondary uppercase tracking-wider">
+            {t('pending')}
+          </h3>
+          {pendingLinks.map((link) => {
+            const isInvitedByOther = authUser && link.linked_user_id === authUser.id;
+            return (
+              <div
+                key={link.id}
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5"
+              >
+                <div className="flex-1 min-w-0">
+                  <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-text-primary truncate block">
+                    {link.linked_user_display_name || link.linked_user_nickname}
+                  </span>
+                  <span className="font-[family-name:var(--font-sans)] text-xs text-text-secondary">
+                    {link.relationship}
+                  </span>
+                </div>
+                {isInvitedByOther ? (
+                  <button
+                    onClick={() => onAcceptLink(link.id)}
+                    className="font-[family-name:var(--font-sans)] text-[10px] px-3 py-1 rounded-lg bg-accent-green/20 text-accent-green hover:bg-accent-green/30 transition-colors cursor-pointer font-semibold"
+                  >
+                    {t('accept')}
+                  </button>
+                ) : (
+                  <span className="font-[family-name:var(--font-sans)] text-[10px] px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400">
+                    {t('pending')}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

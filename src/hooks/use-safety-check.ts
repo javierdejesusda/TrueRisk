@@ -40,6 +40,7 @@ export function useSafetyCheck() {
   const token = useAppStore((s) => s.backendToken);
   const [familyStatus, setFamilyStatus] = useState<FamilyMemberStatus[]>([]);
   const [checkIns, setCheckIns] = useState<SafetyCheckIn[]>([]);
+  const [pendingLinks, setPendingLinks] = useState<FamilyLink[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -97,6 +98,9 @@ export function useSafetyCheck() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as FamilyLink;
+      if (data.status === 'pending') {
+        setPendingLinks((prev) => [...prev, data]);
+      }
       await getFamilyStatus();
       return data;
     } catch (err) {
@@ -112,6 +116,7 @@ export function useSafetyCheck() {
         headers,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setPendingLinks((prev) => prev.filter((link) => link.id !== linkId));
       await getFamilyStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to accept link');
@@ -181,10 +186,12 @@ export function useSafetyCheck() {
   return {
     familyStatus,
     checkIns,
+    pendingLinks,
     isLoading,
     error,
     checkIn,
     getFamilyStatus,
+    fetchCheckIns,
     createLink,
     acceptLink,
     deleteLink,
