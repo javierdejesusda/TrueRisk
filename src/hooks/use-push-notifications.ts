@@ -22,7 +22,7 @@ export function usePushNotifications() {
   const setPushEnabled = useAppStore((s) => s.setPushEnabled);
 
   useEffect(() => {
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window;
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && !!VAPID_PUBLIC_KEY;
     setIsSupported(supported);
     if (supported) {
       navigator.serviceWorker.ready.then((reg) => {

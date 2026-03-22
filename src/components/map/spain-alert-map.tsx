@@ -261,22 +261,15 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     setZoomLevel(zoom);
 
     if (zoom >= 6.5) {
-      // Query only the center region of the viewport to load municipalities
-      // for the province being zoomed into, not all visible provinces
-      const canvas = map.getCanvas();
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const pad = Math.min(canvas.width, canvas.height) * 0.25;
-      const bbox: [maplibregl.PointLike, maplibregl.PointLike] = [
-        [cx - pad, cy - pad],
-        [cx + pad, cy + pad],
-      ];
-      const features = map.queryRenderedFeatures(bbox, { layers: ['province-fill'] });
+      const features = map.queryRenderedFeatures({ layers: ['province-fill'] });
       const ineSet = new Set<string>();
       for (const f of features) {
         const codProv = f.properties?.cod_prov;
         if (codProv) ineSet.add(codProv);
       }
+      // Always include communal territories (province 53) — they have no
+      // province-fill polygon so queryRenderedFeatures never detects them
+      ineSet.add('53');
       const ineCodes = Array.from(ineSet);
 
       const key = ineCodes.sort().join(',');
@@ -316,7 +309,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
   const fillColorExpression = activeMapLayer === 'risk'
     ? [
         'interpolate', ['linear'],
-        ['get', 'riskScore'],
+        ['coalesce', ['get', 'riskScore'], 0],
         0,  '#008000',
         20, '#008000',
         40, '#FBBF24',
@@ -326,7 +319,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       ] as unknown as maplibregl.ExpressionSpecification
     : [
         'match',
-        ['get', 'alertSeverity'],
+        ['coalesce', ['get', 'alertSeverity'], 0],
         5, '#EC4899',
         4, '#EF4444',
         3, '#F97316',

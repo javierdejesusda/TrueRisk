@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { BACKEND_URL } from '@/lib/backend-url';
 
 export function useAiSummary() {
   const [content, setContent] = useState('');
@@ -34,7 +33,7 @@ export function useAiSummary() {
 
       try {
         const res = await fetch(
-          `${BACKEND_URL}/api/v1/ai-summary/stream/${provinceCode}?locale=${locale}`,
+          `/api/ai-summary/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
 

@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { BACKEND_URL } from '@/lib/backend-url';
 
 export function usePersonalizedSuggestions() {
   const [content, setContent] = useState('');
@@ -34,7 +33,7 @@ export function usePersonalizedSuggestions() {
 
       try {
         const res = await fetch(
-          `${BACKEND_URL}/api/v1/suggestions/stream/${provinceCode}?locale=${locale}`,
+          `/api/suggestions/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
 
