@@ -26,6 +26,7 @@ export function NavPill() {
     { href: '/dashboard', label: t('dashboard') },
     { href: '/map', label: t('map') },
     { href: '/preparedness', label: t('preparedness') },
+    { href: '/safety', label: t('safety') },
     { href: '/prediction', label: t('predictions') },
     { href: '/alerts', label: t('alerts') },
     { href: '/emergency', label: t('sos') },
@@ -83,13 +84,17 @@ export function NavPill() {
             href={item.href}
             className={[
               'px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200',
-              item.href === '/emergency' && isHighRisk
+              item.href === '/safety' && isHighRisk
+                ? 'bg-pink-500/20 text-pink-400 animate-[glow-pulse_2s_infinite]'
+                : item.href === '/emergency' && isHighRisk
                 ? 'bg-red-500/20 text-red-400 animate-[glow-pulse_2s_infinite]'
                 : isActive(item.href)
                   ? 'bg-accent-green/15 text-accent-green'
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/5',
             ].join(' ')}
-            {...(item.href === '/emergency' && isHighRisk
+            {...(item.href === '/safety' && isHighRisk
+              ? { style: { '--glow-color': 'rgba(236, 72, 153, 0.3)' } as React.CSSProperties }
+              : item.href === '/emergency' && isHighRisk
               ? { style: { '--glow-color': 'rgba(239, 68, 68, 0.3)' } as React.CSSProperties }
               : {})}
           >

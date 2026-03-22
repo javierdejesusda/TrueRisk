@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { useEmergencyGuidance } from '@/hooks/use-emergency-advisor';
@@ -8,6 +9,7 @@ import { useEmergencyGuidance } from '@/hooks/use-emergency-advisor';
 export function EmergencyBanner() {
   const tCommon = useTranslations('Common');
   const tEmergency = useTranslations('Emergency');
+  const tSafety = useTranslations('Safety');
   const risk = useAppStore((s) => s.risk);
   const provinceCode = useAppStore((s) => s.provinceCode);
   const { guidance } = useEmergencyGuidance();
@@ -50,12 +52,20 @@ export function EmergencyBanner() {
           </div>
           <div className="flex gap-1 shrink-0">
             {!expanded && (
-              <button
-                onClick={() => setExpanded(true)}
-                className="font-[family-name:var(--font-sans)] text-[10px] text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg transition-colors cursor-pointer"
-              >
-                {tEmergency('emergencyGuidance')}
-              </button>
+              <>
+                <Link
+                  href="/safety"
+                  className="font-[family-name:var(--font-sans)] text-[10px] text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  {tSafety('imSafe')}
+                </Link>
+                <button
+                  onClick={() => setExpanded(true)}
+                  className="font-[family-name:var(--font-sans)] text-[10px] text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  {tEmergency('emergencyGuidance')}
+                </button>
+              </>
             )}
             {expanded && (
               <button
