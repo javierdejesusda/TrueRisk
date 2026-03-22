@@ -11,6 +11,7 @@ from app.models.sms_subscription import SmsSubscription
 from app.models.preparedness import PreparednessItem, PreparednessSnapshot
 from app.models.emergency_plan import EmergencyPlan
 from app.models.alert_preference import AlertPreference, AlertDelivery
+from app.models.safety_check import SafetyCheckIn, FamilyLink
 
 __all__ = [
     "User",
@@ -28,4 +29,6 @@ __all__ = [
     "EmergencyPlan",
     "AlertPreference",
     "AlertDelivery",
+    "SafetyCheckIn",
+    "FamilyLink",
 ]
