@@ -63,14 +63,14 @@ const CATEGORY_LABELS: Record<string, { en: string; es: string }> = {
 
 const CATEGORY_ORDER = ['kit', 'plan', 'alerts', 'community', 'knowledge'];
 
-function buildFallbackItems(category: string, isEs: boolean): ChecklistItem[] {
+function buildFallbackItems(category: string, isEs: boolean, completions: Record<string, boolean>): ChecklistItem[] {
   const items = FALLBACK_ITEMS[category] ?? [];
   return items.map((item) => ({
     item_key: item.key,
     label: isEs ? item.es : item.en,
     description: isEs ? item.desc_es : item.desc_en,
     category,
-    completed: false,
+    completed: completions[item.key] ?? false,
     completed_at: null,
     priority: item.priority,
   }));
@@ -79,11 +79,16 @@ function buildFallbackItems(category: string, isEs: boolean): ChecklistItem[] {
 export default function PreparednessPage() {
   const t = useTranslations('Preparedness');
   const locale = useAppStore((s) => s.locale);
-  const { score, checklist, history, isLoading, error, toggleItem, refresh } = usePreparedness();
+  const { score, checklist, history, isLoading, error, toggleItem, refresh, localCompletions } = usePreparedness();
   const isEs = locale === 'es';
 
   const categories = score?.categories ?? [];
   const hasData = categories.length > 0;
+
+  // Compute fallback score from local completions
+  const totalFallbackItems = Object.values(FALLBACK_ITEMS).flat().length;
+  const completedFallbackItems = Object.keys(localCompletions).length;
+  const fallbackScore = totalFallbackItems > 0 ? Math.round((completedFallbackItems / totalFallbackItems) * 100) : 0;
 
   const ctaLabel = (cat: string) => {
     if (cat === 'plan') return isEs ? 'Crear tu plan' : 'Build your plan';
@@ -110,7 +115,7 @@ export default function PreparednessPage() {
       {/* Score + Trend */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <ScoreGauge
-          score={score?.total_score ?? 0}
+          score={score?.total_score ?? fallbackScore}
           isLoading={isLoading}
           label={t('scoreLabel')}
         />
@@ -164,16 +169,17 @@ export default function PreparednessPage() {
           ) : (
             CATEGORY_ORDER.map((catKey) => {
               const label = CATEGORY_LABELS[catKey];
-              const items = buildFallbackItems(catKey, isEs);
+              const items = buildFallbackItems(catKey, isEs, localCompletions);
               const cta = CATEGORY_CTAS[catKey];
+              const completedCount = items.filter((i) => i.completed).length;
               return (
                 <CategoryCard
                   key={catKey}
                   category={catKey}
                   label={label ? (isEs ? label.es : label.en) : catKey}
                   totalItems={items.length}
-                  completedItems={0}
-                  score={0}
+                  completedItems={completedCount}
+                  score={items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0}
                   items={items}
                   onToggle={toggleItem}
                   cta={cta ? { label: ctaLabel(catKey) ?? '', href: cta.href } : undefined}

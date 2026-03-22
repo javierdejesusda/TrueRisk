@@ -47,6 +47,18 @@ export function usePreparedness() {
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [localCompletions, setLocalCompletions] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('preparedness:completed') ?? '{}');
+      const result: Record<string, boolean> = {};
+      for (const key of Object.keys(stored)) {
+        result[key] = true;
+      }
+      return result;
+    } catch {
+      return {};
+    }
+  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -95,6 +107,20 @@ export function usePreparedness() {
   }, [fetchData]);
 
   const toggleItem = useCallback(async (itemKey: string, completed: boolean) => {
+    // Save to localStorage as fallback (works even when API is down)
+    try {
+      const stored = JSON.parse(localStorage.getItem('preparedness:completed') ?? '{}');
+      if (completed) {
+        stored[itemKey] = new Date().toISOString();
+      } else {
+        delete stored[itemKey];
+      }
+      localStorage.setItem('preparedness:completed', JSON.stringify(stored));
+    } catch {
+      // localStorage unavailable
+    }
+
+    // Optimistic UI update for server-loaded checklist
     setChecklist((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, categories: { ...prev.categories } };
@@ -109,12 +135,24 @@ export function usePreparedness() {
       return updated;
     });
 
+    // Notify page of local toggle (for fallback mode)
+    setLocalCompletions((prev) => {
+      const next = { ...prev };
+      if (completed) {
+        next[itemKey] = true;
+      } else {
+        delete next[itemKey];
+      }
+      return next;
+    });
+
+    // Try to sync to backend
     try {
       const res = await apiFetch(`/api/preparedness/items/${itemKey}`, {
         method: 'PATCH',
         body: JSON.stringify({ completed }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) return; // Silently keep local state
 
       const scoreRes = await apiFetch(`/api/preparedness/score?locale=${locale}`);
       if (scoreRes.ok) {
@@ -122,9 +160,9 @@ export function usePreparedness() {
         setScore(scoreData);
       }
     } catch {
-      fetchData();
+      // API down -- local state is already saved
     }
-  }, [locale, fetchData]);
+  }, [locale]);
 
-  return { score, checklist, history, isLoading, error, toggleItem, refresh: fetchData };
+  return { score, checklist, history, isLoading, error, toggleItem, refresh: fetchData, localCompletions };
 }
