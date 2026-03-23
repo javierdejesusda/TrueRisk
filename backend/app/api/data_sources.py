@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -157,3 +158,100 @@ async def get_weather_stations():
     if not settings.aemet_api_key:
         return []
     return await fetch_weather_stations(settings.aemet_api_key)
+
+
+@router.get("/river-gauges")
+async def get_river_gauges(
+    basin: str | None = None,
+    province: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """List all river gauges with latest readings.
+
+    Combines live SAIH data with stored gauge metadata. Filters
+    by basin or province code when provided.
+    """
+    from app.data.saih_realtime import fetch_all_basin_flows, fetch_river_flows
+    from app.models.river_gauge import RiverGauge
+
+    # Fetch live readings
+    if basin:
+        live = await fetch_river_flows(basin)
+    else:
+        live = await fetch_all_basin_flows()
+
+    # Filter by province if requested
+    if province:
+        # Load known gauges for this province from DB
+        stmt = select(RiverGauge).where(
+            RiverGauge.province_code == province,
+            RiverGauge.is_active.is_(True),
+        )
+        if basin:
+            stmt = stmt.where(RiverGauge.basin == basin)
+        result = await db.execute(stmt)
+        db_gauges = {g.gauge_id: g for g in result.scalars().all()}
+
+        # Merge DB metadata with live data
+        gauges = []
+        live_by_id = {r["gauge_id"]: r for r in live}
+        for gid, gauge in db_gauges.items():
+            entry = {
+                "gauge_id": gauge.gauge_id,
+                "name": gauge.name,
+                "basin": gauge.basin,
+                "river": gauge.river_name,
+                "province_code": gauge.province_code,
+                "lat": gauge.latitude,
+                "lon": gauge.longitude,
+                "threshold_p90": gauge.threshold_p90,
+                "threshold_p95": gauge.threshold_p95,
+                "threshold_p99": gauge.threshold_p99,
+            }
+            if gid in live_by_id:
+                entry["flow_m3s"] = live_by_id[gid].get("flow_m3s")
+                entry["level_m"] = live_by_id[gid].get("level_m")
+            gauges.append(entry)
+
+        # Also include live readings not yet in DB
+        for reading in live:
+            if reading["gauge_id"] not in db_gauges:
+                gauges.append(reading)
+        return gauges
+
+    # No province filter — return live data directly
+    return live
+
+
+@router.get("/river-gauges/{gauge_id}/readings")
+async def get_gauge_readings(
+    gauge_id: str,
+    hours: int = Query(default=24, le=168),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """Get recent flow readings for a gauge."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.models.river_gauge import RiverReading
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    stmt = (
+        select(RiverReading)
+        .where(
+            RiverReading.gauge_id == gauge_id,
+            RiverReading.recorded_at >= cutoff,
+        )
+        .order_by(RiverReading.recorded_at.desc())
+    )
+    result = await db.execute(stmt)
+    readings = result.scalars().all()
+    return [
+        {
+            "gauge_id": r.gauge_id,
+            "flow_m3s": r.flow_m3s,
+            "level_m": r.level_m,
+            "recorded_at": r.recorded_at.isoformat(),
+            "source": r.source,
+        }
+        for r in readings
+    ]
