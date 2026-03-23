@@ -97,7 +97,6 @@ async def disaggregate_province_risk(
 
     composite = province_risk.get("composite_score", 0)
     dominant = province_risk.get("dominant_hazard", "flood")
-    severity = province_risk.get("severity", "low")
 
     results = []
     for m in municipalities:
