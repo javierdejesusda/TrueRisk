@@ -133,7 +133,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
     # Wildfire proximity
     wp = data.get("wildfire_proximity", {})
     if isinstance(wp, dict):
-        flat["wildfire_modifier"] = f"{wp.get('modifier', 0.0).2f}"
+        flat["wildfire_modifier"] = f"x{wp.get('modifier', 1.0):.2f}"
         flat["wildfire_explanation"] = str(wp.get("explanation", ""))
     # (already covered by per-hazard above, these are extra aliases)
 
