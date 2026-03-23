@@ -712,5 +712,25 @@
     "logoutButton": "Cerrar sesion",
     "province": "Provincia",
     "registerSuccess": "Cuenta creada con exito"
+  },
+  "PropertyReport": {
+    "title": "Informe de Riesgo Climatico",
+    "subtitle": "Analiza el riesgo climatico de cualquier direccion en Espana",
+    "inputPlaceholder": "Introduce una direccion en Espana...",
+    "analyzeButton": "Analizar Riesgo",
+    "analyzing": "Analizando...",
+    "step1": "Geocodificando direccion...",
+    "step2": "Calculando riesgos climaticos...",
+    "step3": "Generando informe...",
+    "errorNotFound": "No se pudo encontrar la direccion. Intenta con una direccion mas completa.",
+    "errorServer": "Error del servidor. Intentalo de nuevo mas tarde.",
+    "feature1Title": "Cumplimiento ECM/599/2025",
+    "feature1Desc": "Datos de riesgo climatico conformes con la nueva regulacion de valoraciones inmobiliarias",
+    "feature2Title": "7 Riesgos Naturales",
+    "feature2Desc": "Inundaciones, incendios, sequias, olas de calor, seismos, olas de frio y tormentas",
+    "feature3Title": "Zonas Inundables ARPSI",
+    "feature3Desc": "Verificacion oficial contra las 669 zonas de riesgo de inundacion del MITECO",
+    "feature4Title": "Informes Compartibles",
+    "feature4Desc": "Genera un PDF descargable y un enlace compartible para agentes inmobiliarios"
   }
 }

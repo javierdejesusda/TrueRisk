@@ -714,5 +714,25 @@
     "logoutButton": "Sign out",
     "province": "Province",
     "registerSuccess": "Account created successfully"
+  },
+  "PropertyReport": {
+    "title": "Climate Risk Report",
+    "subtitle": "Analyze the climate risk of any address in Spain",
+    "inputPlaceholder": "Enter an address in Spain...",
+    "analyzeButton": "Analyze Risk",
+    "analyzing": "Analyzing...",
+    "step1": "Geocoding address...",
+    "step2": "Computing climate risks...",
+    "step3": "Generating report...",
+    "errorNotFound": "Could not find the address. Try a more complete address.",
+    "errorServer": "Server error. Please try again later.",
+    "feature1Title": "ECM/599/2025 Compliance",
+    "feature1Desc": "Climate risk data compliant with Spain's new property valuation regulation",
+    "feature2Title": "7 Natural Hazards",
+    "feature2Desc": "Floods, wildfires, droughts, heatwaves, earthquakes, cold waves, and windstorms",
+    "feature3Title": "ARPSI Flood Zones",
+    "feature3Desc": "Official verification against MITECO's 669 flood risk zones",
+    "feature4Title": "Shareable Reports",
+    "feature4Desc": "Generate a downloadable PDF and shareable link for real estate agents"
   }
 }
