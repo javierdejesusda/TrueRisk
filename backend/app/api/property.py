@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
@@ -90,7 +90,7 @@ async def create_report(
 
     # 3. Generate report ID and timestamps
     report_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(tz=timezone.utc)
     expires = now + timedelta(days=30)
 
     # 4. Save to database

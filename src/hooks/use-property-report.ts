@@ -42,13 +42,19 @@ export function useCreateReport() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const backendToken = useAppStore((s) => s.backendToken);
+
   const createReport = useCallback(async (address: string): Promise<string> => {
     setIsCreating(true);
     setError(null);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (backendToken) {
+        headers['Authorization'] = `Bearer ${backendToken}`;
+      }
       const res = await fetch('/api/property/report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ address }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -61,7 +67,7 @@ export function useCreateReport() {
     } finally {
       setIsCreating(false);
     }
-  }, []);
+  }, [backendToken]);
 
   return { createReport, isCreating, error };
 }

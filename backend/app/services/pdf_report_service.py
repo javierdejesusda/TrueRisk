@@ -86,7 +86,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
         if isinstance(hazard, dict):
             flat[f"{hazard_key}_score"] = f"{hazard.get('score', 0.0):.1f}"
             flat[f"{hazard_key}_province_score"] = f"{hazard.get('province_score', 0.0):.1f}"
-            flat[f"{hazard_key}_modifier"] = f"{hazard.get('modifier', 0.0):+.2f}"
+            flat[f"{hazard_key}_modifier"] = f"x{hazard.get('modifier', 1.0):.2f}"
             h_severity = str(hazard.get("severity", "low"))
             flat[f"{hazard_key}_severity"] = h_severity.replace("_", " ").title()
             flat[f"{hazard_key}_severity_color"] = _SEVERITY_COLORS.get(h_severity, "#6b7280")
@@ -94,7 +94,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
         else:
             flat[f"{hazard_key}_score"] = "0.0"
             flat[f"{hazard_key}_province_score"] = "0.0"
-            flat[f"{hazard_key}_modifier"] = "+0.00"
+            flat[f"{hazard_key}_modifier"] = "x1.00"
             flat[f"{hazard_key}_severity"] = "Low"
             flat[f"{hazard_key}_severity_color"] = _SEVERITY_COLORS["low"]
             flat[f"{hazard_key}_explanation"] = ""
@@ -133,7 +133,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
     # Wildfire proximity
     wp = data.get("wildfire_proximity", {})
     if isinstance(wp, dict):
-        flat["wildfire_modifier"] = f"{wp.get('modifier', 0.0):+.2f}"
+        flat["wildfire_modifier"] = f"{wp.get('modifier', 0.0).2f}"
         flat["wildfire_explanation"] = str(wp.get("explanation", ""))
     # (already covered by per-hazard above, these are extra aliases)
 
