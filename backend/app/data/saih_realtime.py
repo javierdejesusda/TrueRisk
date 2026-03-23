@@ -189,7 +189,7 @@ async def fetch_all_basin_flows() -> list[dict[str, Any]]:
 
     all_readings: list[dict[str, Any]] = []
     for basin_key, result in zip(SAIH_BASINS, results):
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             logger.error("Basin %s failed: %s", basin_key, result)
             continue
         all_readings.extend(result)
