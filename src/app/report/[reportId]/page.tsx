@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { usePropertyReport } from '@/hooks/use-property-report';
@@ -64,12 +65,12 @@ export default function ReportViewPage() {
           <p className="text-sm text-text-muted mt-2 font-[family-name:var(--font-sans)]">
             {error}
           </p>
-          <a
+          <Link
             href="/report"
             className="inline-block mt-6 px-6 py-2.5 rounded-xl bg-severity-2 text-bg-primary text-sm font-semibold hover:bg-severity-2/90 transition-colors"
           >
             {t('analyzeButton')}
-          </a>
+          </Link>
         </motion.div>
       </div>
     );
