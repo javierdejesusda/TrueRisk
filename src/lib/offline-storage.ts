@@ -1,11 +1,12 @@
 const DB_NAME = 'truerisk-offline';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORES = [
   'riskScores',
   'alerts',
   'emergencyGuidance',
   'weather',
   'emergencyContacts',
+  'propertyReports',
 ] as const;
 type StoreName = (typeof STORES)[number];
 
