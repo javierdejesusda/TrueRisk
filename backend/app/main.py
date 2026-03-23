@@ -13,6 +13,7 @@ from app.rate_limit import limiter
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
 from app.api import ai_summary, sms, data_sources
 from app.api import auth, suggestions, preparedness, emergency_plan, safety
+from app.api import property as property_api
 
 _start_time = time.time()
 
@@ -117,6 +118,7 @@ app.include_router(suggestions.router, prefix="/api/v1/suggestions", tags=["sugg
 app.include_router(preparedness.router, prefix="/api/v1/preparedness", tags=["preparedness"])
 app.include_router(emergency_plan.router, prefix="/api/v1/emergency-plan", tags=["emergency-plan"])
 app.include_router(safety.router, prefix="/api/v1/safety", tags=["safety"])
+app.include_router(property_api.router, prefix="/api/v1/property", tags=["property"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")
