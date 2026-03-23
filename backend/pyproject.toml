@@ -31,6 +31,9 @@ dependencies = [
     "pytorch-forecasting>=1.1",
     "pytorch-lightning>=2.4",
     "torch-geometric>=2.6",
+    "weasyprint>=63",
+    "shapely>=2.0",
+    "pyproj>=3.6",
 ]
 
 [project.optional-dependencies]

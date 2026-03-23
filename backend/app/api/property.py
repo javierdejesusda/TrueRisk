@@ -6,7 +6,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -269,17 +269,135 @@ async def arpsi_check(
 
 
 # ---------------------------------------------------------------------------
-# GET /report/{report_id}/pdf -- stub (501 Not Implemented)
+# GET /report/{report_id}/pdf -- PDF report download
 # ---------------------------------------------------------------------------
 
 
 @router.get("/report/{report_id}/pdf")
-async def get_report_pdf(report_id: str):
-    """Download a PDF report (not yet implemented)."""
-    raise HTTPException(
-        status_code=501,
-        detail="PDF generation is not yet implemented.",
+async def get_report_pdf(report_id: str, db: AsyncSession = Depends(get_db)):
+    """Download a PDF report for a given report ID."""
+    result = await db.execute(
+        select(PropertyReport).where(PropertyReport.report_id == report_id)
     )
+    report = result.scalar_one_or_none()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    try:
+        from app.services.pdf_report_service import generate_pdf
+
+        report_data = _build_report_data_for_pdf(report)
+        pdf_bytes = generate_pdf(report_data)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=truerisk-report-{report_id[:8]}.pdf"
+            },
+        )
+    except ImportError as e:
+        raise HTTPException(status_code=501, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# PDF data builder
+# ---------------------------------------------------------------------------
+
+
+def _build_report_data_for_pdf(report: PropertyReport) -> dict:
+    """Convert a PropertyReport DB row into a flat dict for PDF template rendering."""
+    from app.services.property_risk_service import severity_from_score
+
+    flood_details = report.flood_details or {}
+    wildfire_details = report.wildfire_details or {}
+    terrain_details = report.terrain_details or {}
+
+    elevation_m = terrain_details.get("elevation_m", 0.0)
+    slope_pct = terrain_details.get("slope_pct", 0.0)
+
+    return {
+        "report_id": report.report_id,
+        "address_text": report.address_text,
+        "formatted_address": report.formatted_address,
+        "latitude": report.latitude,
+        "longitude": report.longitude,
+        "province_code": report.province_code,
+        "province_name": PROVINCES.get(report.province_code, {}).get("name", "Desconocida"),
+        "municipality_code": report.municipality_code,
+        "composite_score": report.composite_score,
+        "dominant_hazard": report.dominant_hazard,
+        "severity": report.severity,
+        "flood": {
+            "score": report.flood_score,
+            "severity": severity_from_score(report.flood_score),
+            "province_score": report.province_flood_score,
+            "modifier": 0.0,
+            "explanation": "",
+        },
+        "wildfire": {
+            "score": report.wildfire_score,
+            "severity": severity_from_score(report.wildfire_score),
+            "province_score": report.province_wildfire_score,
+            "modifier": wildfire_details.get("modifier", 0.0),
+            "explanation": wildfire_details.get("explanation", ""),
+        },
+        "heatwave": {
+            "score": report.heatwave_score,
+            "severity": severity_from_score(report.heatwave_score),
+            "province_score": 0.0,
+            "modifier": 0.0,
+            "explanation": "",
+        },
+        "drought": {
+            "score": report.drought_score,
+            "severity": severity_from_score(report.drought_score),
+            "province_score": 0.0,
+            "modifier": 1.0,
+            "explanation": "Drought risk is province-wide",
+        },
+        "coldwave": {
+            "score": report.coldwave_score,
+            "severity": severity_from_score(report.coldwave_score),
+            "province_score": 0.0,
+            "modifier": 0.0,
+            "explanation": "",
+        },
+        "windstorm": {
+            "score": report.windstorm_score,
+            "severity": severity_from_score(report.windstorm_score),
+            "province_score": 0.0,
+            "modifier": 0.0,
+            "explanation": "",
+        },
+        "seismic": {
+            "score": report.seismic_score,
+            "severity": severity_from_score(report.seismic_score),
+            "province_score": 0.0,
+            "modifier": 1.0,
+            "explanation": "Seismic risk is geology-based",
+        },
+        "flood_zone": {
+            "in_arpsi_zone": flood_details.get("in_flood_zone", False),
+            "zone_id": flood_details.get("zone_id"),
+            "zone_name": flood_details.get("zone_name"),
+            "zone_type": flood_details.get("zone_type"),
+            "return_period": flood_details.get("return_period"),
+            "risk_level": flood_details.get("risk_level"),
+            "distance_to_nearest_zone_m": flood_details.get("distance_to_nearest_zone_m"),
+        },
+        "wildfire_proximity": {
+            "elevation_m": elevation_m,
+            "slope_pct": slope_pct,
+            "modifier": wildfire_details.get("modifier", 0.0),
+            "explanation": wildfire_details.get("explanation", ""),
+        },
+        "terrain": {
+            "elevation_m": elevation_m,
+            "slope_pct": slope_pct,
+        },
+        "computed_at": report.computed_at.isoformat() if report.computed_at else "",
+        "expires_at": report.expires_at.isoformat() if report.expires_at else "N/A",
+    }
 
 
 # ---------------------------------------------------------------------------

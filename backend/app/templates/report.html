@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>TrueRisk - Informe de Riesgo Climatico</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 25mm 18mm;
+    @bottom-center {
+      content: "TrueRisk - Informe confidencial | Pagina " counter(page) " de " counter(pages);
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #1e293b;
+    line-height: 1.5;
+    background: #ffffff;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #0f172a;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+
+  .header-left h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+  }
+
+  .header-left p {
+    font-size: 10pt;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  .header-right {
+    text-align: right;
+    font-size: 9pt;
+    color: #64748b;
+  }
+
+  .header-right .report-id {
+    font-family: "Courier New", monospace;
+    font-size: 8pt;
+    color: #94a3b8;
+  }
+
+  /* Address Section */
+  .address-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+
+  .address-section h2 {
+    font-size: 11pt;
+    color: #0f172a;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .address-main {
+    font-size: 13pt;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+
+  .address-meta {
+    font-size: 9pt;
+    color: #64748b;
+  }
+
+  .address-meta span {
+    margin-right: 16px;
+  }
+
+  /* Composite Score */
+  .score-section {
+    text-align: center;
+    margin: 24px 0;
+    page-break-inside: avoid;
+  }
+
+  .score-circle {
+    display: inline-block;
+    width: 110px;
+    height: 110px;
+    border-radius: 55px;
+    border: 5px solid {{severity_color}};
+    line-height: 100px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .score-value {
+    font-size: 32pt;
+    font-weight: 700;
+    color: {{severity_color}};
+  }
+
+  .score-label {
+    font-size: 10pt;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .severity-badge {
+    display: inline-block;
+    background: {{severity_color}};
+    color: #ffffff;
+    padding: 4px 16px;
+    border-radius: 12px;
+    font-size: 10pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 6px;
+  }
+
+  .dominant-hazard {
+    font-size: 9pt;
+    color: #64748b;
+    margin-top: 6px;
+  }
+
+  /* Hazard Table */
+  .section-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 4px;
+    margin: 20px 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 9.5pt;
+  }
+
+  table th {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  table tr:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  .score-cell {
+    font-weight: 700;
+    font-size: 10pt;
+  }
+
+  .severity-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Detail Sections */
+  .detail-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+  }
+
+  .detail-section h3 {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .detail-grid {
+    display: table;
+    width: 100%;
+  }
+
+  .detail-row {
+    display: table-row;
+  }
+
+  .detail-label {
+    display: table-cell;
+    font-weight: 600;
+    color: #475569;
+    padding: 3px 12px 3px 0;
+    width: 220px;
+    font-size: 9pt;
+  }
+
+  .detail-value {
+    display: table-cell;
+    color: #1e293b;
+    padding: 3px 0;
+    font-size: 9pt;
+  }
+
+  /* Regulatory Notice */
+  .regulatory-notice {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-left: 4px solid #f59e0b;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+
+  .regulatory-notice h3 {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 4px;
+  }
+
+  .regulatory-notice p {
+    font-size: 8.5pt;
+    color: #78350f;
+    line-height: 1.5;
+  }
+
+  /* Footer */
+  .footer-section {
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+
+  .footer-section p {
+    margin-bottom: 3px;
+  }
+
+  .arpsi-yes {
+    color: #dc2626;
+    font-weight: 700;
+  }
+
+  .arpsi-no {
+    color: #22c55e;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>TrueRisk</h1>
+    <p>Informe de Riesgo Climatico</p>
+  </div>
+  <div class="header-right">
+    <div>Fecha: {{computed_at}}</div>
+    <div class="report-id">ID: {{report_id}}</div>
+  </div>
+</div>
+
+<!-- Address -->
+<div class="address-section">
+  <h2>Ubicacion de la Propiedad</h2>
+  <div class="address-main">{{formatted_address}}</div>
+  <div class="address-meta">
+    <span>Provincia: {{province_name}}</span>
+    <span>Lat: {{latitude}}</span>
+    <span>Lon: {{longitude}}</span>
+  </div>
+</div>
+
+<!-- Composite Score -->
+<div class="score-section">
+  <div class="score-label">Puntuacion de Riesgo Compuesto</div>
+  <div class="score-circle">
+    <span class="score-value">{{composite_score}}</span>
+  </div>
+  <div>
+    <span class="severity-badge">{{severity_label}}</span>
+  </div>
+  <div class="dominant-hazard">Amenaza dominante: {{dominant_hazard}}</div>
+</div>
+
+<!-- Hazard Table -->
+<h2 class="section-title">Desglose por Amenaza</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Amenaza</th>
+      <th>Puntuacion</th>
+      <th>Puntuacion Provincial</th>
+      <th>Modificador</th>
+      <th>Severidad</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Inundacion</td>
+      <td class="score-cell">{{flood_score}}</td>
+      <td>{{flood_province_score}}</td>
+      <td>{{flood_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{flood_severity_color}}"></span>{{flood_severity}}</td>
+    </tr>
+    <tr>
+      <td>Incendio Forestal</td>
+      <td class="score-cell">{{wildfire_score}}</td>
+      <td>{{wildfire_province_score}}</td>
+      <td>{{wildfire_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{wildfire_severity_color}}"></span>{{wildfire_severity}}</td>
+    </tr>
+    <tr>
+      <td>Ola de Calor</td>
+      <td class="score-cell">{{heatwave_score}}</td>
+      <td>{{heatwave_province_score}}</td>
+      <td>{{heatwave_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{heatwave_severity_color}}"></span>{{heatwave_severity}}</td>
+    </tr>
+    <tr>
+      <td>Sequia</td>
+      <td class="score-cell">{{drought_score}}</td>
+      <td>{{drought_province_score}}</td>
+      <td>{{drought_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{drought_severity_color}}"></span>{{drought_severity}}</td>
+    </tr>
+    <tr>
+      <td>Ola de Frio</td>
+      <td class="score-cell">{{coldwave_score}}</td>
+      <td>{{coldwave_province_score}}</td>
+      <td>{{coldwave_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{coldwave_severity_color}}"></span>{{coldwave_severity}}</td>
+    </tr>
+    <tr>
+      <td>Vendaval</td>
+      <td class="score-cell">{{windstorm_score}}</td>
+      <td>{{windstorm_province_score}}</td>
+      <td>{{windstorm_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{windstorm_severity_color}}"></span>{{windstorm_severity}}</td>
+    </tr>
+    <tr>
+      <td>Sismico</td>
+      <td class="score-cell">{{seismic_score}}</td>
+      <td>{{seismic_province_score}}</td>
+      <td>{{seismic_modifier}}</td>
+      <td><span class="severity-dot" style="background:{{seismic_severity_color}}"></span>{{seismic_severity}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Flood Zone Details -->
+<h2 class="section-title">Zona de Inundacion (ARPSI)</h2>
+<div class="detail-section">
+  <h3>Estado ARPSI</h3>
+  <div class="detail-grid">
+    <div class="detail-row">
+      <span class="detail-label">Dentro de zona ARPSI:</span>
+      <span class="detail-value">{{flood_zone_in_arpsi}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Identificador de zona:</span>
+      <span class="detail-value">{{flood_zone_id}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Nombre de zona:</span>
+      <span class="detail-value">{{flood_zone_name}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Tipo de inundacion:</span>
+      <span class="detail-value">{{flood_zone_type}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Periodo de retorno:</span>
+      <span class="detail-value">{{flood_zone_return_period}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Nivel de riesgo:</span>
+      <span class="detail-value">{{flood_zone_risk_level}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Distancia a zona mas cercana:</span>
+      <span class="detail-value">{{flood_zone_distance_m}} m</span>
+    </div>
+  </div>
+</div>
+
+<!-- Wildfire & Terrain Details -->
+<h2 class="section-title">Incendio Forestal y Terreno</h2>
+<div class="detail-section">
+  <h3>Datos del Terreno</h3>
+  <div class="detail-grid">
+    <div class="detail-row">
+      <span class="detail-label">Elevacion:</span>
+      <span class="detail-value">{{elevation_m}} m</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Pendiente:</span>
+      <span class="detail-value">{{slope_pct}}%</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Modificador de incendio:</span>
+      <span class="detail-value">{{wildfire_modifier}}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Explicacion:</span>
+      <span class="detail-value">{{wildfire_explanation}}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Regulatory Notice -->
+<div class="regulatory-notice">
+  <h3>Aviso Regulatorio - ECM/599/2025</h3>
+  <p>
+    Este informe ha sido generado conforme a los criterios establecidos en la Orden ECM/599/2025,
+    que regula la evaluacion de riesgos climaticos para propiedades inmobiliarias en Espana.
+    La informacion proporcionada tiene caracter informativo y no sustituye a una evaluacion
+    profesional completa. Las puntuaciones de riesgo se basan en datos publicos de AEMET,
+    IGN, IGME, y las Confederaciones Hidrograficas. Se recomienda consultar con un profesional
+    cualificado antes de tomar decisiones basadas en este informe.
+  </p>
+</div>
+
+<!-- Footer -->
+<div class="footer-section">
+  <p><strong>Metodologia:</strong> Las puntuaciones de riesgo (0-100) se calculan combinando datos
+  historicos provinciales, modelos de machine learning (XGBoost/LightGBM), analisis geoespacial
+  del terreno, y datos ARPSI de zonas inundables. La puntuacion compuesta es una media ponderada
+  de las siete amenazas climaticas evaluadas.</p>
+  <p><strong>ID del informe:</strong> {{report_id}}</p>
+  <p><strong>Generado:</strong> {{computed_at}} | <strong>Expira:</strong> {{expires_at}}</p>
+  <p>TrueRisk &copy; 2026 - Plataforma de evaluacion de riesgo climatico inmobiliario</p>
+</div>
+
+</body>
+</html>
