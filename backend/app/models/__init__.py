@@ -12,6 +12,9 @@ from app.models.preparedness import PreparednessItem, PreparednessSnapshot
 from app.models.emergency_plan import EmergencyPlan
 from app.models.alert_preference import AlertPreference, AlertDelivery
 from app.models.safety_check import SafetyCheckIn, FamilyLink
+from app.models.property_report import PropertyReport
+from app.models.arpsi_flood_zone import ArpsiFloodZone
+from app.models.geocode_cache import GeocodeCache
 
 __all__ = [
     "User",
@@ -31,4 +34,7 @@ __all__ = [
     "AlertDelivery",
     "SafetyCheckIn",
     "FamilyLink",
+    "PropertyReport",
+    "ArpsiFloodZone",
+    "GeocodeCache",
 ]
