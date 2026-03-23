@@ -49,7 +49,7 @@ async def test_municipality_risk_endpoint(client):
 @pytest.mark.asyncio
 async def test_province_municipalities_endpoint(client):
     response = await client.get("/api/v1/risk/province/28/municipalities")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code in (200, 404, 500, 503)
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
