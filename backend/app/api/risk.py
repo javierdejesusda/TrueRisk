@@ -134,6 +134,38 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/heat-vulnerability/map")
+async def heat_vulnerability_map(db: AsyncSession = Depends(get_db)):
+    """Get heat vulnerability index for all provinces (for map overlay)."""
+    from app.services.heat_vulnerability_service import (
+        compute_vulnerability_index,
+        _PROVINCE_VULNERABILITY,
+    )
+
+    result = await db.execute(select(Province))
+    provinces = result.scalars().all()
+
+    data = []
+    for p in provinces:
+        vuln_index, factors = compute_vulnerability_index(
+            p.ine_code,
+            is_coastal=p.coastal,
+            elevation_m=p.elevation_m or 0,
+        )
+        demo = _PROVINCE_VULNERABILITY.get(p.ine_code, {})
+        data.append({
+            "province_code": p.ine_code,
+            "province_name": p.name,
+            "elderly_pct": demo.get("elderly_pct", 0),
+            "urban_pct": demo.get("urban_pct", 0),
+            "pop_density_km2": demo.get("pop_density_km2", 0),
+            "vulnerability_index": vuln_index,
+            "factors": factors,
+        })
+
+    return data
+
+
 @router.get(
     "/{province_code}/explain",
     response_model=RiskExplainResponse,
@@ -227,6 +259,155 @@ async def get_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
         computed_at=computed_at,
         hazards=hazards,
     )
+
+
+@router.get("/{province_code}/heat-vulnerability")
+async def get_heat_vulnerability(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get heat vulnerability assessment for a province."""
+    from app.services.heat_vulnerability_service import adjust_heatwave_score
+    from app.services.risk_service import compute_province_risk
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    risk = await compute_province_risk(db, province_code)
+    base_score = risk.get("heatwave_score", 0)
+
+    result = adjust_heatwave_score(
+        base_score,
+        province_code,
+        is_coastal=province.coastal,
+        elevation_m=province.elevation_m or 0,
+    )
+
+    return {
+        "province_code": result.province_code,
+        "base_heatwave_score": result.base_heatwave_score,
+        "vulnerability_index": result.vulnerability_index,
+        "adjusted_score": result.adjusted_score,
+        "factors": result.factors,
+    }
+
+
+@router.get("/municipality/{municipality_code}")
+async def get_municipality_risk(
+    municipality_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get risk assessment for a specific municipality."""
+    from app.models.municipality import Municipality
+    from app.services.municipality_risk_service import disaggregate_province_risk
+    from app.services.risk_service import compute_province_risk
+
+    muni = await db.get(Municipality, municipality_code)
+    if not muni:
+        raise HTTPException(status_code=404, detail="Municipality not found")
+
+    province_risk = await compute_province_risk(db, muni.province_code)
+    results = await disaggregate_province_risk(db, muni.province_code, province_risk)
+
+    for r in results:
+        if r.ine_code == municipality_code:
+            return {
+                "ine_code": r.ine_code,
+                "name": r.name,
+                "province_code": r.province_code,
+                "latitude": r.latitude,
+                "longitude": r.longitude,
+                "composite_score": r.composite_score,
+                "dominant_hazard": r.dominant_hazard,
+                "severity": r.severity,
+                "modifiers": r.modifiers,
+            }
+
+    raise HTTPException(status_code=404, detail="Municipality risk not computed")
+
+
+@router.get("/province/{province_code}/municipalities")
+async def get_province_municipalities_risk(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get risk for all municipalities in a province."""
+    from app.services.municipality_risk_service import disaggregate_province_risk
+    from app.services.risk_service import compute_province_risk
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    province_risk = await compute_province_risk(db, province_code)
+    results = await disaggregate_province_risk(db, province_code, province_risk)
+
+    return [
+        {
+            "ine_code": r.ine_code,
+            "name": r.name,
+            "latitude": r.latitude,
+            "longitude": r.longitude,
+            "composite_score": r.composite_score,
+            "dominant_hazard": r.dominant_hazard,
+            "severity": r.severity,
+            "modifiers": r.modifiers,
+        }
+        for r in results
+    ]
+
+
+@router.get("/{province_code}/explain/attention")
+async def get_attention_explanations(
+    province_code: str,
+    hazard: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get TFT attention-based explanations for risk forecasts."""
+    from app.services.tft_explainability_service import get_forecast_explanations
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    return await get_forecast_explanations(db, province_code, hazard)
+
+
+@router.get("/{province_code}/explain/comparison")
+async def get_explanation_comparison(
+    province_code: str,
+    hazard: str = "flood",
+    db: AsyncSession = Depends(get_db),
+):
+    """Compare rule-based vs TFT attention-based explanations."""
+    from app.services.tft_explainability_service import (
+        get_forecast_explanations,
+        explain_rule_vs_attention,
+    )
+    from app.services.risk_service import compute_province_risk
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    # Get rule-based explanation
+    risk = await compute_province_risk(db, province_code)
+    features_snapshot = risk.get("features_snapshot", {})
+    rule_result = explain_risk(features_snapshot)
+    rule_contributions = rule_result.get(hazard, [])
+
+    # Get attention-based explanation
+    attn_explanations = await get_forecast_explanations(db, province_code, hazard)
+    attn_weights = None
+    if attn_explanations:
+        # Reconstruct weights from top features
+        attn_weights = {
+            f["feature"]: f["attention_weight"]
+            for f in attn_explanations[0].get("top_features", [])
+        }
+
+    return explain_rule_vs_attention(rule_contributions, attn_weights)
 
 
 @router.get("/{province_code}", response_model=RiskScoreResponse)

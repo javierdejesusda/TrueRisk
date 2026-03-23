@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Marker } from 'react-map-gl/maplibre';
 import type { FireHotspot } from '@/hooks/use-fire-hotspots';
 import type { Earthquake } from '@/hooks/use-earthquakes';
+import type { RiverGaugeFeature } from '@/hooks/use-river-gauges';
 
 export interface ReservoirPoint {
   name: string;
@@ -17,6 +18,7 @@ interface DataLayersProps {
   fireHotspots: FireHotspot[] | null;
   earthquakes: Earthquake[] | null;
   reservoirs?: ReservoirPoint[] | null;
+  riverGauges?: RiverGaugeFeature[] | null;
   visibleLayers: DataLayerVisibility;
 }
 
@@ -24,6 +26,7 @@ export interface DataLayerVisibility {
   fires: boolean;
   earthquakes: boolean;
   reservoirs: boolean;
+  riverGauges: boolean;
 }
 
 function FireMarker({ fire }: { fire: FireHotspot }) {
@@ -107,7 +110,32 @@ function ReservoirMarker({ reservoir }: { reservoir: ReservoirPoint }) {
   );
 }
 
-export function DataLayers({ fireHotspots, earthquakes, reservoirs, visibleLayers }: DataLayersProps) {
+function RiverGaugeMarker({ gauge }: { gauge: RiverGaugeFeature }) {
+  const { properties: p, geometry: g } = gauge;
+  const color = p.status === 'critical' ? 'rgba(239, 68, 68, 0.85)'
+    : p.status === 'warning' ? 'rgba(249, 115, 22, 0.8)'
+    : p.status === 'alert' ? 'rgba(251, 191, 36, 0.75)'
+    : p.status === 'offline' ? 'rgba(107, 114, 128, 0.6)'
+    : 'rgba(59, 130, 246, 0.7)';
+  const flow = p.flow_m3s != null ? `${p.flow_m3s.toFixed(1)} m³/s` : 'No data';
+
+  return (
+    <Marker longitude={g.coordinates[0]} latitude={g.coordinates[1]} anchor="center">
+      <div
+        className="rounded-sm border border-cyan-400/40"
+        style={{
+          width: 10,
+          height: 10,
+          backgroundColor: color,
+          boxShadow: p.status === 'critical' ? '0 0 8px rgba(239, 68, 68, 0.5)' : '0 0 4px rgba(59, 130, 246, 0.3)',
+        }}
+        title={`${p.name} (${p.river})\n${flow}\nBasin: ${p.basin}\nStatus: ${p.status}`}
+      />
+    </Marker>
+  );
+}
+
+export function DataLayers({ fireHotspots, earthquakes, reservoirs, riverGauges, visibleLayers }: DataLayersProps) {
   // Limit fire markers for performance — show top 200 by FRP
   const topFires = useMemo(() => {
     if (!fireHotspots || !visibleLayers.fires) return [];
@@ -126,6 +154,11 @@ export function DataLayers({ fireHotspots, earthquakes, reservoirs, visibleLayer
     return reservoirs.filter(r => r.lat != null && r.lon != null);
   }, [reservoirs, visibleLayers.reservoirs]);
 
+  const visibleGauges = useMemo(() => {
+    if (!riverGauges || !visibleLayers.riverGauges) return [];
+    return riverGauges;
+  }, [riverGauges, visibleLayers.riverGauges]);
+
   return (
     <>
       {visibleLayers.fires && topFires.map((fire, i) => (
@@ -136,6 +169,9 @@ export function DataLayers({ fireHotspots, earthquakes, reservoirs, visibleLayer
       ))}
       {visibleLayers.reservoirs && visibleReservoirs.map((res, i) => (
         <ReservoirMarker key={`reservoir-${i}`} reservoir={res} />
+      ))}
+      {visibleLayers.riverGauges && visibleGauges.map((gauge, i) => (
+        <RiverGaugeMarker key={`gauge-${i}`} gauge={gauge} />
       ))}
     </>
   );

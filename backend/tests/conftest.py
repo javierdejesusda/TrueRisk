@@ -15,6 +15,7 @@ import app.models.user  # noqa: F401
 import app.models.weather_daily_summary  # noqa: F401
 import app.models.risk_forecast  # noqa: F401
 import app.models.river_gauge  # noqa: F401
+import app.models.municipality  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 

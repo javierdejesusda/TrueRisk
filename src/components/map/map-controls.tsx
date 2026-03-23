@@ -16,6 +16,7 @@ export interface MapControlsProps {
   fireCount?: number;
   quakeCount?: number;
   reservoirCount?: number;
+  gaugeCount?: number;
 }
 
 function formatRelativeTime(dateStr: string, t: (key: string, values?: Record<string, string | number | Date>) => string): string {
@@ -27,7 +28,7 @@ function formatRelativeTime(dateStr: string, t: (key: string, values?: Record<st
   return t('hoursAgo', { hrs: hours });
 }
 
-export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain, dataLayers, onToggleDataLayer, fireCount, quakeCount, reservoirCount }: MapControlsProps) {
+export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, terrainEnabled, onToggleTerrain, dataLayers, onToggleDataLayer, fireCount, quakeCount, reservoirCount, gaugeCount }: MapControlsProps) {
   const t = useTranslations('Map');
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
   const setActiveMapLayer = useAppStore((s) => s.setActiveMapLayer);
@@ -111,6 +112,17 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
             ].join(' ')}
           >
             {t('reservoirs')}{reservoirCount ? ` (${reservoirCount})` : ''}
+          </button>
+          <button
+            onClick={() => onToggleDataLayer('riverGauges')}
+            className={[
+              'px-2.5 py-1 rounded-md font-[family-name:var(--font-sans)] text-[11px] font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5',
+              dataLayers.riverGauges
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/30'
+                : 'text-text-muted hover:text-text-secondary border border-transparent',
+            ].join(' ')}
+          >
+            {t('gauges')}{gaugeCount ? ` (${gaugeCount})` : ''}
           </button>
         </div>
       )}

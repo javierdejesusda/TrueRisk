@@ -20,6 +20,7 @@ import { DataLayers } from './data-layers';
 import type { DataLayerVisibility, ReservoirPoint } from './data-layers';
 import type { FireHotspot } from '@/hooks/use-fire-hotspots';
 import type { Earthquake } from '@/hooks/use-earthquakes';
+import { useRiverGauges } from '@/hooks/use-river-gauges';
 
 export interface SpainAlertMapProps {
   alertData: MapAlertData;
@@ -49,6 +50,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
   const setProvinceCode = useAppStore((s) => s.setProvinceCode);
   const t = useTranslations('Map');
   const { reports, submitReport } = useCommunityReports();
+  const { data: riverGauges } = useRiverGauges();
   const [showReportForm, setShowReportForm] = useState(false);
   const geo = useGeolocation();
   const [hasGeolocated, setHasGeolocated] = useState(false);
@@ -58,6 +60,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     fires: false,
     earthquakes: false,
     reservoirs: false,
+    riverGauges: false,
   });
 
   const toggleDataLayer = useCallback((layer: keyof DataLayerVisibility) => {
@@ -536,6 +539,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
           fireHotspots={fireHotspots ?? null}
           earthquakes={earthquakes ?? null}
           reservoirs={reservoirs ?? null}
+          riverGauges={riverGauges ?? null}
           visibleLayers={dataLayerVisibility}
         />
 
@@ -594,6 +598,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         fireCount={fireHotspots?.length}
         quakeCount={earthquakes?.length}
         reservoirCount={reservoirs?.length}
+        gaugeCount={riverGauges?.length}
       />
 
       {/* Report hazard button — positioned above legend */}

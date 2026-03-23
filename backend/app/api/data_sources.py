@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -223,6 +225,85 @@ async def get_river_gauges(
     return live
 
 
+@router.get("/river-gauges/geojson")
+async def get_river_gauges_geojson(
+    basin: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Return river gauges as GeoJSON FeatureCollection for map markers."""
+    from app.data.saih_realtime import fetch_all_basin_flows, fetch_river_flows
+    from app.models.river_gauge import RiverGauge
+
+    if basin:
+        live = await fetch_river_flows(basin)
+    else:
+        live = await fetch_all_basin_flows()
+
+    # Also get DB gauges for thresholds
+    stmt = select(RiverGauge).where(RiverGauge.is_active.is_(True))
+    if basin:
+        stmt = stmt.where(RiverGauge.basin == basin)
+    result = await db.execute(stmt)
+    db_gauges = {g.gauge_id: g for g in result.scalars().all()}
+
+    features = []
+    seen = set()
+    for r in live:
+        gid = r.get("gauge_id", "")
+        if not gid or gid in seen:
+            continue
+        seen.add(gid)
+        lat = r.get("lat")
+        lon = r.get("lon")
+        if lat is None or lon is None:
+            continue
+        db_g = db_gauges.get(gid)
+        flow = r.get("flow_m3s")
+        status = "normal"
+        if db_g and flow:
+            if db_g.threshold_p99 and flow >= db_g.threshold_p99:
+                status = "critical"
+            elif db_g.threshold_p95 and flow >= db_g.threshold_p95:
+                status = "warning"
+            elif db_g.threshold_p90 and flow >= db_g.threshold_p90:
+                status = "alert"
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [lon, lat]},
+            "properties": {
+                "gauge_id": gid,
+                "name": r.get("name", ""),
+                "river": r.get("river", ""),
+                "basin": r.get("basin", ""),
+                "flow_m3s": flow,
+                "level_m": r.get("level_m"),
+                "status": status,
+            },
+        })
+
+    # Add DB-only gauges not in live data
+    for gid, g in db_gauges.items():
+        if gid not in seen:
+            features.append({
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [g.longitude, g.latitude]},
+                "properties": {
+                    "gauge_id": gid,
+                    "name": g.name,
+                    "river": g.river_name or "",
+                    "basin": g.basin,
+                    "flow_m3s": None,
+                    "level_m": None,
+                    "status": "offline",
+                },
+            })
+
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+    }
+
+
 @router.get("/river-gauges/{gauge_id}/readings")
 async def get_gauge_readings(
     gauge_id: str,
@@ -255,3 +336,94 @@ async def get_gauge_readings(
         }
         for r in readings
     ]
+
+
+@router.get("/fire-grid")
+async def get_fire_grid():
+    """Fire density grid computed from NASA FIRMS hotspots."""
+    from app.data.nasa_firms import fetch_active_fires
+    from app.services.fire_grid_service import build_fire_grid
+
+    hotspots = await fetch_active_fires()
+    cells = build_fire_grid(hotspots)
+    return {
+        "grid_resolution_deg": 0.5,
+        "cell_count": len(cells),
+        "cells": [
+            {
+                "center_lat": c.center_lat,
+                "center_lon": c.center_lon,
+                "fire_count": c.fire_count,
+                "total_frp": c.total_frp,
+                "max_confidence": c.max_confidence,
+                "risk_level": c.risk_level,
+            }
+            for c in cells
+        ],
+    }
+
+
+@router.get("/fire-proximity")
+async def get_fire_proximity(
+    lat: float,
+    lon: float,
+):
+    """Compute fire proximity metrics for a specific location."""
+    from app.data.nasa_firms import fetch_active_fires
+    from app.services.fire_grid_service import compute_fire_proximity
+
+    hotspots = await fetch_active_fires()
+    result = compute_fire_proximity(lat, lon, hotspots)
+    return {
+        "nearest_fire_km": result.nearest_fire_km,
+        "fire_count_50km": result.fire_count_50km,
+        "fire_count_100km": result.fire_count_100km,
+        "total_frp_100km": result.total_frp_100km,
+        "fire_density_score": result.fire_density_score,
+        "proximity_modifier": result.proximity_modifier,
+    }
+
+
+@router.get("/arpsi-zones")
+async def get_arpsi_zones(
+    province: str | None = None,
+    return_period: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Return ARPSI flood zones as GeoJSON FeatureCollection for map overlay."""
+    from app.models.arpsi_flood_zone import ArpsiFloodZone
+
+    stmt = select(ArpsiFloodZone)
+    if province:
+        stmt = stmt.where(ArpsiFloodZone.province_code == province)
+    if return_period:
+        stmt = stmt.where(ArpsiFloodZone.return_period == return_period)
+    stmt = stmt.limit(500)
+
+    result = await db.execute(stmt)
+    zones = result.scalars().all()
+
+    features = []
+    for z in zones:
+        try:
+            geometry = json.loads(z.geometry_geojson)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        features.append({
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {
+                "zone_id": z.zone_id,
+                "zone_name": z.zone_name,
+                "zone_type": z.zone_type,
+                "return_period": z.return_period,
+                "risk_level": z.risk_level,
+                "area_km2": z.area_km2,
+                "province_code": z.province_code,
+            },
+        })
+
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+    }

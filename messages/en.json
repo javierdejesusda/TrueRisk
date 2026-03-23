@@ -113,7 +113,8 @@
     "alerts": "Alerts",
     "fires": "Fires",
     "quakes": "Quakes",
-    "reservoirs": "Reservoirs"
+    "reservoirs": "Reservoirs",
+    "gauges": "Gauges"
   },
   "Predictions": {
     "title": "Risk Predictions",
@@ -759,5 +760,24 @@
     "returnPeriod": "Return period",
     "loading": "Loading report...",
     "notFound": "Report not found"
+  },
+  "HeatVulnerability": {
+    "title": "Heat Vulnerability",
+    "adjustedScore": "Adjusted",
+    "base": "base",
+    "vulnerability": "vulnerability",
+    "elderlyPopulation": "Elderly Population (65+)",
+    "urbanHeatIsland": "Urban Heat Island",
+    "geographic": "Geographic Factor",
+    "populationDensity": "Population Density",
+    "vulnerabilityIndex": "Vulnerability Index"
+  },
+  "Explainability": {
+    "title": "AI Model Attention",
+    "noData": "No TFT model explanations available yet. Forecasts need to run first.",
+    "generatedAt": "Generated",
+    "ruleVsML": "Rule vs ML Comparison",
+    "agreements": "Both Agree",
+    "disagreements": "Divergent Signals"
   }
 }

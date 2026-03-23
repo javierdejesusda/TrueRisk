@@ -113,7 +113,8 @@
     "alerts": "Alertas",
     "fires": "Incendios",
     "quakes": "Sismos",
-    "reservoirs": "Embalses"
+    "reservoirs": "Embalses",
+    "gauges": "Caudalímetros"
   },
   "Predictions": {
     "title": "Predicciones de Riesgo",
@@ -757,5 +758,24 @@
     "returnPeriod": "Periodo de retorno",
     "loading": "Cargando informe...",
     "notFound": "Informe no encontrado"
+  },
+  "HeatVulnerability": {
+    "title": "Vulnerabilidad al Calor",
+    "adjustedScore": "Ajustado",
+    "base": "base",
+    "vulnerability": "vulnerabilidad",
+    "elderlyPopulation": "Población Mayor (65+)",
+    "urbanHeatIsland": "Isla de Calor Urbana",
+    "geographic": "Factor Geográfico",
+    "populationDensity": "Densidad de Población",
+    "vulnerabilityIndex": "Índice de Vulnerabilidad"
+  },
+  "Explainability": {
+    "title": "Atención del Modelo IA",
+    "noData": "Aún no hay explicaciones del modelo TFT disponibles. Los pronósticos deben ejecutarse primero.",
+    "generatedAt": "Generado",
+    "ruleVsML": "Comparación Reglas vs IA",
+    "agreements": "Ambos coinciden",
+    "disagreements": "Señales divergentes"
   }
 }

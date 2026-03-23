@@ -16,6 +16,7 @@ from app.models.property_report import PropertyReport
 from app.models.arpsi_flood_zone import ArpsiFloodZone
 from app.models.geocode_cache import GeocodeCache
 from app.models.river_gauge import RiverGauge, RiverReading
+from app.models.municipality import Municipality
 
 __all__ = [
     "User",
@@ -40,4 +41,5 @@ __all__ = [
     "GeocodeCache",
     "RiverGauge",
     "RiverReading",
+    "Municipality",
 ]
