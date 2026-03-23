@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 HAZARD_TYPES = Literal[
-    "flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"
+    "flood", "flash_flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"
 ]
 
 

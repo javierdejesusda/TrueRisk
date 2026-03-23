@@ -23,6 +23,7 @@ ALERT_THRESHOLD_CRITICAL = 80
 
 HAZARD_LABELS = {
     "flood": "Riesgo de inundaciones",
+    "flash_flood": "Riesgo de inundación súbita",
     "wildfire": "Riesgo de incendios forestales",
     "drought": "Riesgo de sequía",
     "heatwave": "Riesgo de ola de calor",
@@ -128,6 +129,21 @@ async def run_pipeline():
                     logger.info("Forecast computation complete")
                 except Exception as e:
                     logger.error(f"Forecast computation failed: {e}")
+
+            # 6. Flash flood monitoring
+            try:
+                from app.services.flash_flood_service import (
+                    process_flash_flood_alerts,
+                    store_river_readings,
+                )
+                readings_count = await store_river_readings(db)
+                flood_alert_count = await process_flash_flood_alerts(db)
+                logger.info(
+                    "Flash flood check: %d readings stored, %d alerts created",
+                    readings_count, flood_alert_count,
+                )
+            except Exception:
+                logger.exception("Flash flood monitoring failed (non-critical)")
 
             await db.commit()
 
