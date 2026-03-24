@@ -107,7 +107,7 @@ jobs:
         run: |
           HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" \
             -X POST "${DOKPLOY_URL}/api/compose.deploy" \
-            -H "Authorization: Bearer ${DOKPLOY_TOKEN}" \
+            -H "x-api-key: ${DOKPLOY_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "{\"composeId\": \"${DOKPLOY_COMPOSE_ID}\"}")
 
