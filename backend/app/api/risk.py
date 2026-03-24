@@ -439,6 +439,80 @@ async def trigger_pipeline():
     return {"status": "pipeline triggered"}
 
 
+@router.post("/pipeline/test-forecast/{province_code}")
+async def test_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
+    """Run TFT inference for one province and return results or error details."""
+    import traceback
+
+    from app.data.province_data import PROVINCES
+    from app.ml.features.inference_features import enrich_daily_history
+    from app.ml.training.config import TFT_ENCODER_LENGTH_PER_HAZARD
+    from app.models.weather_daily_summary import WeatherDailySummary
+    from app.services.risk_service import get_terrain_features
+
+    if province_code not in PROVINCES:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    terrain = get_terrain_features(province_code)
+    max_days = max(TFT_ENCODER_LENGTH_PER_HAZARD.values())
+
+    daily_stmt = (
+        select(WeatherDailySummary)
+        .where(WeatherDailySummary.province_code == province_code)
+        .order_by(WeatherDailySummary.date.desc())
+        .limit(max_days)
+    )
+    daily_result = await db.execute(daily_stmt)
+    daily_rows = daily_result.scalars().all()
+
+    if not daily_rows:
+        return {"error": "no daily summaries", "count": 0}
+
+    daily_rows = list(reversed(daily_rows))
+    raw_days = []
+    for row in daily_rows:
+        raw_days.append({
+            "temp_max": row.temperature_max,
+            "temp_min": row.temperature_min,
+            "temp_mean": row.temperature_avg,
+            "precip": row.precipitation_sum,
+            "wind_speed": row.wind_speed_max,
+            "wind_gust_max": row.wind_gusts_max or row.wind_speed_max * 1.5,
+            "humidity": row.humidity_avg,
+            "humidity_min": row.humidity_min,
+            "pressure": row.pressure_avg or 1013.0,
+            "soil_moisture": row.soil_moisture_avg or 0.3,
+            "dew_point": row.temperature_avg - 5 if row.temperature_avg else 10.0,
+            "cloud_cover": row.cloud_cover_avg or 50.0,
+            "uv_index": row.uv_index_max or 5.0,
+            "month": row.date.month,
+        })
+
+    try:
+        history = enrich_daily_history(raw_days, terrain)
+    except Exception:
+        return {"error": "enrich_daily_history failed", "traceback": traceback.format_exc()}
+
+    results = {}
+    from app.ml.models.tft_flood import predict_flood_risk_tft
+    from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
+
+    for name, fn in [("flood", predict_flood_risk_tft), ("windstorm", predict_windstorm_risk_tft)]:
+        try:
+            r = fn(history, terrain)
+            results[name] = r if r else "returned None"
+        except Exception:
+            results[name] = {"error": traceback.format_exc()}
+
+    return {
+        "province": province_code,
+        "daily_rows": len(raw_days),
+        "enriched_rows": len(history),
+        "enriched_features": len(history[-1]) if history else 0,
+        "results": results,
+    }
+
+
 @router.get("/pipeline/diagnostics")
 async def pipeline_diagnostics(db: AsyncSession = Depends(get_db)):
     """Check TFT model availability, daily summary counts, and forecast status."""
