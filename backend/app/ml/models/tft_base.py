@@ -29,12 +29,18 @@ class HazardTFT:
 
     def _load(self):
         if self._model is None and self.is_available:
-            from pytorch_forecasting import TemporalFusionTransformer
+            try:
+                import torch
+                from pytorch_forecasting import TemporalFusionTransformer
 
-            self._model = TemporalFusionTransformer.load_from_checkpoint(
-                str(self.model_path)
-            )
-            self._model.train(False)
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                self._model = TemporalFusionTransformer.load_from_checkpoint(
+                    str(self.model_path), map_location=device
+                )
+                self._model.train(False)
+            except Exception:
+                logger.warning("Failed to load TFT checkpoint for %s", self.hazard)
+                self._model = None
 
     def predict(
         self,
@@ -57,14 +63,14 @@ class HazardTFT:
         """
         if not self.is_available:
             return None
+        if not encoder_data or not any(encoder_data.values()):
+            return None
 
         self._load()
         if self._model is None:
             return None
 
         try:
-            if not encoder_data or not any(encoder_data.values()):
-                return None
             seq_len = len(next(iter(encoder_data.values())))
             pred_len = len(FORECAST_HORIZONS)
             params = self._model.dataset_parameters
