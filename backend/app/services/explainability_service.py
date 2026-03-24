@@ -414,6 +414,76 @@ def explain_windstorm(f: dict[str, Any]) -> list[dict]:
 # Main entry point
 # ---------------------------------------------------------------------------
 
+def explain_dana(f: dict[str, Any]) -> list[dict]:
+    contributions: list[dict] = []
+
+    precip_24h = f.get("precip_24h", 0) or 0
+    if precip_24h > 200:
+        contributions.append(_contrib("precip_24h", precip_24h, 20, "Torrential 24h rainfall >200mm (DANA signature)"))
+    elif precip_24h > 100:
+        contributions.append(_contrib("precip_24h", precip_24h, 15, "Extreme 24h rainfall >100mm"))
+    elif precip_24h > 50:
+        contributions.append(_contrib("precip_24h", precip_24h, 10, "Heavy 24h rainfall >50mm"))
+    else:
+        contributions.append(_contrib("precip_24h", precip_24h, 0, "Low 24h rainfall"))
+
+    precip_6h = f.get("precip_6h", 0) or 0
+    if precip_6h > 100:
+        contributions.append(_contrib("precip_6h", precip_6h, 15, "Extreme 6h intensity >100mm"))
+    elif precip_6h > 50:
+        contributions.append(_contrib("precip_6h", precip_6h, 10, "Intense 6h rainfall >50mm"))
+    else:
+        contributions.append(_contrib("precip_6h", precip_6h, 0, "Low 6h rainfall"))
+
+    pressure_change = f.get("pressure_change_6h", 0) or 0
+    if pressure_change < -8:
+        contributions.append(_contrib("pressure_change_6h", pressure_change, 12, "Rapid pressure collapse >8 hPa/6h"))
+    elif pressure_change < -6:
+        contributions.append(_contrib("pressure_change_6h", pressure_change, 8, "Significant pressure drop >6 hPa/6h"))
+    elif pressure_change < -3:
+        contributions.append(_contrib("pressure_change_6h", pressure_change, 4, "Moderate pressure drop"))
+    else:
+        contributions.append(_contrib("pressure_change_6h", pressure_change, 0, "Stable pressure"))
+
+    wind_gusts = f.get("wind_gusts", 0) or 0
+    if wind_gusts > 90:
+        contributions.append(_contrib("wind_gusts", wind_gusts, 12, "Violent gusts >90 km/h"))
+    elif wind_gusts > 70:
+        contributions.append(_contrib("wind_gusts", wind_gusts, 8, "Strong gusts >70 km/h"))
+    elif wind_gusts > 50:
+        contributions.append(_contrib("wind_gusts", wind_gusts, 4, "Moderate gusts >50 km/h"))
+    else:
+        contributions.append(_contrib("wind_gusts", wind_gusts, 0, "Light gusts"))
+
+    humidity = f.get("humidity", 50) or 50
+    if humidity > 90:
+        contributions.append(_contrib("humidity", humidity, 10, "Extreme humidity >90% fuels convection"))
+    elif humidity > 80:
+        contributions.append(_contrib("humidity", humidity, 7, "High humidity >80%"))
+    elif humidity > 75:
+        contributions.append(_contrib("humidity", humidity, 5, "Elevated humidity >75%"))
+    else:
+        contributions.append(_contrib("humidity", humidity, 0, "Normal humidity"))
+
+    is_med = f.get("is_mediterranean", False)
+    if is_med:
+        contributions.append(_contrib("is_mediterranean", 1, 8, "Mediterranean coast (DANA primary target)"))
+
+    is_coastal = f.get("is_coastal", False)
+    if is_coastal:
+        contributions.append(_contrib("is_coastal", 1, 4, "Coastal province (storm surge risk)"))
+
+    month = f.get("month", 6) or 6
+    if month in (9, 10, 11):
+        contributions.append(_contrib("month", month, 5, "Peak DANA season (Sep-Nov)"))
+    elif month in (5, 6, 12):
+        contributions.append(_contrib("month", month, 2, "Extended DANA season"))
+    else:
+        contributions.append(_contrib("month", month, 0, "Off-season for DANA events"))
+
+    return contributions
+
+
 _EXPLAINERS = {
     "flood": explain_flood,
     "wildfire": explain_wildfire,
@@ -422,6 +492,7 @@ _EXPLAINERS = {
     "seismic": explain_seismic,
     "coldwave": explain_coldwave,
     "windstorm": explain_windstorm,
+    "dana": explain_dana,
 }
 
 

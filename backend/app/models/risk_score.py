@@ -18,6 +18,7 @@ class RiskScore(Base):
     seismic_score: Mapped[float] = mapped_column(Float, default=0.0)
     coldwave_score: Mapped[float] = mapped_column(Float, default=0.0)
     windstorm_score: Mapped[float] = mapped_column(Float, default=0.0)
+    dana_score: Mapped[float] = mapped_column(Float, default=0.0)
     composite_score: Mapped[float] = mapped_column(Float, default=0.0)
     dominant_hazard: Mapped[str] = mapped_column(String(20), default="flood")
     severity: Mapped[str] = mapped_column(String(20), default="low")

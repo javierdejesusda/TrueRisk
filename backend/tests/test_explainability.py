@@ -78,10 +78,11 @@ def test_explain_risk_all_hazards():
         "seismic": {"max_magnitude_30d": 2.5},
         "coldwave": {"wind_chill": 5},
         "windstorm": {"wind_gusts": 30},
+        "dana": {"precip_24h": 100, "is_mediterranean": True},
     }
     result = explain_risk(snapshot)
-    assert len(result) == 7
-    for hazard in ["flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"]:
+    assert len(result) == 8
+    for hazard in ["flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm", "dana"]:
         assert hazard in result
         assert isinstance(result[hazard], list)
         assert len(result[hazard]) > 0

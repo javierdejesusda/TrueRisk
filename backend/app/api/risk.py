@@ -39,6 +39,7 @@ def _zero_score(province_code: str) -> dict:
         "seismic_score": 0.0,
         "coldwave_score": 0.0,
         "windstorm_score": 0.0,
+        "dana_score": 0.0,
         "composite_score": 0.0,
         "dominant_hazard": "none",
         "severity": "low",
@@ -74,7 +75,7 @@ async def get_all_risks(db: AsyncSession = Depends(get_db)):
     "/models",
     response_model=ModelRegistryResponse,
     summary="Model registry",
-    description="Return metadata for all 7 ML models in the risk pipeline.",
+    description="Return metadata for all 8 ML models in the risk pipeline.",
 )
 async def get_models():
     """Return the ML model inventory with metadata and accuracy metrics."""
@@ -126,6 +127,7 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
                 seismic_score=score.seismic_score if score else 0.0,
                 coldwave_score=score.coldwave_score if score else 0.0,
                 windstorm_score=score.windstorm_score if score else 0.0,
+                dana_score=score.dana_score if score else 0.0,
             )
         )
 
@@ -199,6 +201,7 @@ async def explain_province_risk(
         "seismic": score.seismic_score,
         "coldwave": score.coldwave_score,
         "windstorm": score.windstorm_score,
+        "dana": score.dana_score,
     }
 
     hazards = [

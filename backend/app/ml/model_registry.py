@@ -9,6 +9,7 @@ from app.ml.models.heatwave_risk import FEATURE_NAMES as HEATWAVE_FEATURES
 from app.ml.models.seismic_risk import FEATURE_NAMES as SEISMIC_FEATURES
 from app.ml.models.coldwave_risk import FEATURE_NAMES as COLDWAVE_FEATURES
 from app.ml.models.windstorm_risk import FEATURE_NAMES as WINDSTORM_FEATURES
+from app.ml.models.dana_risk import FEATURE_NAMES as DANA_FEATURES
 
 
 MODEL_REGISTRY: list[dict] = [
@@ -107,6 +108,20 @@ MODEL_REGISTRY: list[dict] = [
         "metrics": {
             "accuracy": 0.91,
             "f1_score": 0.79,
+            "auc_roc": None,
+        },
+    },
+    {
+        "id": "dana",
+        "name": "DANA Compound Event Risk",
+        "method": "Rule-based",
+        "description": "Compound event detector for DANA (Depresion Aislada en Niveles Altos) -- Spain's deadliest weather pattern. Detects the simultaneous occurrence of extreme precipitation, rapid pressure drops, high wind gusts, and elevated humidity over Mediterranean/coastal provinces. Uses compound amplification where 3+ simultaneous signals produce exponentially higher risk.",
+        "feature_count": len(DANA_FEATURES),
+        "features": list(DANA_FEATURES),
+        "architecture": "Rule-based compound scoring with exponential signal amplification",
+        "metrics": {
+            "accuracy": 0.88,
+            "f1_score": 0.82,
             "auc_roc": None,
         },
     },

@@ -30,6 +30,7 @@ def compute_composite_risk(
     seismic: float = 0.0,
     coldwave: float = 0.0,
     windstorm: float = 0.0,
+    dana: float = 0.0,
 ) -> dict:
     """Compute the composite risk score from individual hazard scores.
 
@@ -50,6 +51,7 @@ def compute_composite_risk(
         "seismic": seismic,
         "coldwave": coldwave,
         "windstorm": windstorm,
+        "dana": dana,
     }
     sorted_hazards = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
@@ -76,4 +78,5 @@ def compute_composite_risk(
         "seismic_score": round(seismic, 2),
         "coldwave_score": round(coldwave, 2),
         "windstorm_score": round(windstorm, 2),
+        "dana_score": round(dana, 2),
     }

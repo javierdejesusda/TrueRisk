@@ -23,6 +23,7 @@ from app.ml.models.heatwave_risk import predict_heatwave_risk
 from app.ml.models.seismic_risk import predict_seismic_risk
 from app.ml.models.wildfire_risk import predict_wildfire_risk
 from app.ml.models.windstorm_risk import predict_windstorm_risk
+from app.ml.models.dana_risk import predict_dana_risk
 from app.ml.features.fwi import compute_fwi_components
 from app.ml.features.spei import compute_spei
 from app.models.province import Province
@@ -60,6 +61,7 @@ def get_hazard_weights(province_code: str) -> dict[str, float]:
         "seismic": data.get("seismic_risk_weight", 0.3),
         "coldwave": data.get("coldwave_risk_weight", 0.3),
         "windstorm": data.get("windstorm_risk_weight", 0.3),
+        "dana": data.get("dana_risk_weight", 0.4),
     }
 
 
@@ -566,6 +568,20 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "month": month,
     }
 
+    # 4e. DANA compound event features (reuses existing weather data)
+    dana_features = {
+        "is_mediterranean": terrain["is_mediterranean"],
+        "is_coastal": terrain["is_coastal"],
+        "month": month,
+        "latitude": terrain["latitude"],
+        "precip_24h": temporal["precip_24h"],
+        "precip_6h": temporal["precip_6h"],
+        "temperature": temperature,
+        "pressure_change_6h": temporal["pressure_change_6h"],
+        "wind_gusts": _safe(weather.get("wind_gusts"), 0.0),
+        "humidity": humidity,
+    }
+
     # 5. Run models
     flood_raw = predict_flood_risk(flood_features)
     wildfire_raw = predict_wildfire_risk(wildfire_features)
@@ -574,6 +590,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     seismic_raw = predict_seismic_risk(seismic_features)
     coldwave_raw = predict_coldwave_risk(coldwave_features)
     windstorm_raw = predict_windstorm_risk(windstorm_features)
+    dana_raw = predict_dana_risk(dana_features)
 
     # 5b. Apply province-specific hazard weights to differentiate risk by geography
     weights = get_hazard_weights(province_code)
@@ -584,10 +601,11 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     seismic = min(100.0, seismic_raw * (0.4 + 0.6 * weights["seismic"]))
     coldwave = min(100.0, coldwave_raw * (0.4 + 0.6 * weights["coldwave"]))
     windstorm = min(100.0, windstorm_raw * (0.4 + 0.6 * weights["windstorm"]))
+    dana = min(100.0, dana_raw * (0.4 + 0.6 * weights["dana"]))
 
     # 6. Composite
     composite = compute_composite_risk(
-        flood, wildfire, drought, heatwave, seismic, coldwave, windstorm
+        flood, wildfire, drought, heatwave, seismic, coldwave, windstorm, dana
     )
 
     # 7. Store in DB
@@ -603,6 +621,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         seismic_score=composite["seismic_score"],
         coldwave_score=composite["coldwave_score"],
         windstorm_score=composite["windstorm_score"],
+        dana_score=composite["dana_score"],
         features_snapshot={
             "flood": flood_features,
             "wildfire": wildfire_features,
@@ -611,6 +630,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
             "seismic": seismic_features,
             "coldwave": coldwave_features,
             "windstorm": windstorm_features,
+            "dana": dana_features,
         },
         computed_at=now,
     )
@@ -684,6 +704,7 @@ async def get_risk_map(db: AsyncSession) -> list[dict]:
                 "seismic_score": score.seismic_score if score else 0.0,
                 "coldwave_score": score.coldwave_score if score else 0.0,
                 "windstorm_score": score.windstorm_score if score else 0.0,
+                "dana_score": score.dana_score if score else 0.0,
             }
         )
 

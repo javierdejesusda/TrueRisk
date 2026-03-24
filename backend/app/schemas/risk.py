@@ -15,6 +15,7 @@ class RiskScoreResponse(BaseModel):
     seismic_score: float = 0.0
     coldwave_score: float = 0.0
     windstorm_score: float = 0.0
+    dana_score: float = 0.0
     composite_score: float
     dominant_hazard: str
     severity: str
@@ -36,6 +37,7 @@ class RiskMapEntry(BaseModel):
     seismic_score: float = 0.0
     coldwave_score: float = 0.0
     windstorm_score: float = 0.0
+    dana_score: float = 0.0
 
 
 class RiskMapResponse(BaseModel):
@@ -54,6 +56,7 @@ class UserRiskResponse(BaseModel):
     seismic_score: float = 0.0
     coldwave_score: float = 0.0
     windstorm_score: float = 0.0
+    dana_score: float = 0.0
     composite_score: float
     dominant_hazard: str
     severity: str
