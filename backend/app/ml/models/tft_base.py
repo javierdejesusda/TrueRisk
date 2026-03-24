@@ -7,6 +7,21 @@ from pathlib import Path
 import pandas as pd
 import torch
 
+# PyTorch 2.6+ defaults to weights_only=True; allowlist pytorch_forecasting
+# serialised classes needed by Lightning checkpoints
+try:
+    from pytorch_forecasting.data.encoders import (
+        EncoderNormalizer,
+        GroupNormalizer,
+        NaNLabelEncoder,
+        TorchNormalizer,
+    )
+    torch.serialization.add_safe_globals(
+        [EncoderNormalizer, GroupNormalizer, NaNLabelEncoder, TorchNormalizer]
+    )
+except Exception:
+    pass
+
 logger = logging.getLogger(__name__)
 
 SAVED_MODELS = Path(__file__).parent.parent / "saved_models"
@@ -82,11 +97,14 @@ class HazardTFT:
             all_static = params.get("static_reals", [])
 
             records = []
+            last_target = 0.0
+            # Lazy import to avoid circular dependency
+            from app.ml.training.prepare_tft_dataset import SCORE_FUNCS
+            score_fn = SCORE_FUNCS.get(self.hazard)
             for t in range(seq_len + pred_len):
                 row: dict = {
                     "time_idx": t,
                     "province_code": "0",
-                    target_name: 0.0,
                 }
                 # Fill from encoder_data (time-varying known + unknown)
                 for feat, vals in encoder_data.items():
@@ -94,6 +112,12 @@ class HazardTFT:
                 # Fill static features
                 for feat, val in static_features.items():
                     row[feat] = val
+                # Compute target for encoder rows so the EncoderNormalizer
+                # gets realistic statistics (mean/std); use last value for
+                # prediction (future) rows.
+                if t < seq_len and score_fn:
+                    last_target = score_fn(pd.Series(row))
+                row[target_name] = last_target
                 # Default any missing required columns to 0.0
                 for feat in all_known + all_unknown + all_static:
                     if feat not in row:
@@ -125,6 +149,16 @@ class HazardTFT:
 
             pred_np = pred_tensor.detach().cpu().numpy()[0]  # (pred_len, n_quantiles)
 
+            logger.info(
+                "TFT %s: pred shape=%s, min=%.4f, max=%.4f",
+                self.hazard, pred_np.shape, pred_np.min(), pred_np.max(),
+            )
+            if (pred_np == 0.0).all():
+                logger.warning(
+                    "TFT %s: all predictions zero -- check encoder target values",
+                    self.hazard,
+                )
+
             # Determine quantile indices based on number of quantiles
             n_q = pred_np.shape[-1]
             if n_q == 5:
@@ -139,6 +173,13 @@ class HazardTFT:
                     "q50": round(float(pred_np[i, q50_idx]), 2),
                     "q90": round(float(pred_np[i, q90_idx]), 2),
                 }
+
+            for h_val, q in horizons.items():
+                if not (q["q10"] <= q["q50"] <= q["q90"]):
+                    logger.warning(
+                        "TFT %s h=%d: quantile order violated q10=%.2f q50=%.2f q90=%.2f",
+                        self.hazard, h_val, q["q10"], q["q50"], q["q90"],
+                    )
 
             # Extract attention weights if available
             attention = {}

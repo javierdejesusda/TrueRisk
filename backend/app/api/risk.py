@@ -484,9 +484,20 @@ async def trigger_forecasts_only(db: AsyncSession = Depends(get_db)):
     stored = 0
 
     from app.ml.models.tft_flood import predict_flood_risk_tft
+    from app.ml.models.tft_wildfire import predict_wildfire_risk_tft
+    from app.ml.models.tft_heatwave import predict_heatwave_risk_tft
+    from app.ml.models.tft_drought import predict_drought_risk_tft
+    from app.ml.models.tft_coldwave import predict_coldwave_risk_tft
     from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
 
-    for hazard, fn in [("flood", predict_flood_risk_tft), ("windstorm", predict_windstorm_risk_tft)]:
+    for hazard, fn in [
+        ("flood", predict_flood_risk_tft),
+        ("wildfire", predict_wildfire_risk_tft),
+        ("heatwave", predict_heatwave_risk_tft),
+        ("drought", predict_drought_risk_tft),
+        ("coldwave", predict_coldwave_risk_tft),
+        ("windstorm", predict_windstorm_risk_tft),
+    ]:
         try:
             r = fn(history, terrain)
             if r and "horizons" in r:
@@ -564,9 +575,20 @@ async def test_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
 
     results = {}
     from app.ml.models.tft_flood import predict_flood_risk_tft
+    from app.ml.models.tft_wildfire import predict_wildfire_risk_tft
+    from app.ml.models.tft_heatwave import predict_heatwave_risk_tft
+    from app.ml.models.tft_drought import predict_drought_risk_tft
+    from app.ml.models.tft_coldwave import predict_coldwave_risk_tft
     from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
 
-    for name, fn in [("flood", predict_flood_risk_tft), ("windstorm", predict_windstorm_risk_tft)]:
+    for name, fn in [
+        ("flood", predict_flood_risk_tft),
+        ("wildfire", predict_wildfire_risk_tft),
+        ("heatwave", predict_heatwave_risk_tft),
+        ("drought", predict_drought_risk_tft),
+        ("coldwave", predict_coldwave_risk_tft),
+        ("windstorm", predict_windstorm_risk_tft),
+    ]:
         try:
             r = fn(history, terrain)
             if r is None:

@@ -134,6 +134,10 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
                 continue
 
             code_preds[hazard] = tft_result.get("point_estimate", 0.0)
+            logger.info(
+                "Province %s %s: point_estimate=%.2f",
+                code, hazard, tft_result.get("point_estimate", 0.0),
+            )
             attention = tft_result.get("attention_weights", {})
 
             for h, quantiles in tft_result.get("horizons", {}).items():
@@ -165,7 +169,7 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
                 hazard = forecast.hazard
                 if code in refined and hazard in refined[code]:
                     original = province_predictions.get(code, {}).get(hazard)
-                    if original and original > 0:
+                    if original is not None and original > 0:
                         ratio = refined[code][hazard] / original
                         forecast.q50 = round(forecast.q50 * ratio, 2)
         except Exception as e:
