@@ -223,7 +223,7 @@ def train_single_hazard(
                 precision="bf16-mixed",
                 gradient_clip_val=TFT_GRADIENT_CLIP,
             )
-            lr_result = trainer_lr.tuner.lr_find(
+            lr_result = trainer_lr.tuner.lr_find(  # type: ignore[attr-defined]
                 model,
                 train_dataloaders=train_dataloader,
                 val_dataloaders=val_dataloader,

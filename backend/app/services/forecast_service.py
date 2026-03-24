@@ -88,7 +88,7 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
                 continue
         else:
             # Convert daily summaries to training-compatible dicts (chronological)
-            daily_rows.reverse()  # oldest first
+            daily_rows = list(reversed(daily_rows))  # oldest first
             raw_days = []
             for row in daily_rows:
                 raw_days.append({
