@@ -15,6 +15,7 @@ from app.api import ai_summary, sms, data_sources
 from app.api import auth, suggestions, preparedness, emergency_plan, safety
 from app.api import flash_flood
 from app.api import property as property_api
+from app.api import location as location_api
 
 _start_time = time.time()
 
@@ -121,6 +122,7 @@ app.include_router(emergency_plan.router, prefix="/api/v1/emergency-plan", tags=
 app.include_router(safety.router, prefix="/api/v1/safety", tags=["safety"])
 app.include_router(property_api.router, prefix="/api/v1/property", tags=["property"])
 app.include_router(flash_flood.router, prefix="/api/v1/flash-flood", tags=["flash-flood"])
+app.include_router(location_api.router, prefix="/api/v1/location", tags=["location"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAppStore } from '@/store/app-store';
 
 interface GeolocationState {
   latitude: number | null;
@@ -22,6 +23,28 @@ export function isInSpain(lat: number, lng: number): boolean {
   );
 }
 
+// Minimum distance (in degrees) before we consider the position "changed enough" to sync.
+const POSITION_CHANGE_THRESHOLD_DEG = 0.01; // ~1 km
+
+// How often (ms) to re-sync position to the backend even if position did not change.
+const SYNC_INTERVAL_MS = 5 * 60 * 1_000; // 5 minutes
+
+function degreeDiff(a: number, b: number): number {
+  return Math.abs(a - b);
+}
+
+/**
+ * useGeolocation
+ *
+ * Exposes the device's current GPS position.  When the user is authenticated
+ * (backendToken is present in the Zustand store) the hook also periodically
+ * POSTs the position to /api/v1/location/update so the backend can derive the
+ * current province for location-based alert delivery.
+ *
+ * Sync rules:
+ *  - On first position fix, always sync.
+ *  - After that, sync if position moved more than ~1 km OR 5 minutes have elapsed.
+ */
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
     latitude: null,
@@ -30,6 +53,61 @@ export function useGeolocation() {
     error: null,
   });
 
+  const backendToken = useAppStore((s) => s.backendToken);
+  const setProvinceCode = useAppStore((s) => s.setProvinceCode);
+
+  // Track last synced position and time so we can decide whether a new sync is needed.
+  const lastSyncedPos = useRef<{ lat: number; lon: number } | null>(null);
+  const lastSyncedAt = useRef<number>(0);
+
+  const syncToBackend = useCallback(
+    async (lat: number, lon: number) => {
+      if (!backendToken) return;
+
+      try {
+        const res = await fetch('/api/v1/location/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${backendToken}`,
+          },
+          body: JSON.stringify({ lat, lon }),
+        });
+
+        if (res.ok) {
+          const data = (await res.json()) as { province_code: string; distance_km: number };
+          // Update the store so UI reflects the GPS-derived province.
+          setProvinceCode(data.province_code);
+          lastSyncedPos.current = { lat, lon };
+          lastSyncedAt.current = Date.now();
+        }
+      } catch {
+        // Network errors are non-fatal; silently ignore.
+      }
+    },
+    [backendToken, setProvinceCode],
+  );
+
+  const maybeSync = useCallback(
+    (lat: number, lon: number) => {
+      const now = Date.now();
+      const prev = lastSyncedPos.current;
+      const timeSinceLastSync = now - lastSyncedAt.current;
+
+      const positionChangedEnough =
+        prev === null ||
+        degreeDiff(lat, prev.lat) > POSITION_CHANGE_THRESHOLD_DEG ||
+        degreeDiff(lon, prev.lon) > POSITION_CHANGE_THRESHOLD_DEG;
+
+      const intervalElapsed = timeSinceLastSync >= SYNC_INTERVAL_MS;
+
+      if (positionChangedEnough || intervalElapsed) {
+        void syncToBackend(lat, lon);
+      }
+    },
+    [syncToBackend],
+  );
+
   useEffect(() => {
     if (!navigator.geolocation) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- checking browser support on mount is intentional
@@ -37,21 +115,22 @@ export function useGeolocation() {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
+    const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        setState({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          isLoading: false,
-          error: null,
-        });
+        const { latitude, longitude } = pos.coords;
+        setState({ latitude, longitude, isLoading: false, error: null });
+        maybeSync(latitude, longitude);
       },
       (err) => {
         setState({ latitude: null, longitude: null, isLoading: false, error: err.message });
       },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 },
+      { enableHighAccuracy: false, timeout: 8_000, maximumAge: 300_000 },
     );
-  }, []);
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [maybeSync]);
 
   return state;
 }
