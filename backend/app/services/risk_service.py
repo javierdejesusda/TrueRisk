@@ -378,13 +378,18 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     result = await db.execute(stmt)
     history = [_record_to_dict(r) for r in result.scalars().all()]
 
-    # 3b. Get daily summaries for SPEI computation (last 180 days)
-    daily_stmt = (
+    # 3b. Get daily summaries for SPEI computation (last 360 days)
+    #     Sub-select the most recent 360 rows, then re-order ascending
+    #     so compute_spei receives chronological input.
+    daily_sub = (
         select(WeatherDailySummary)
         .where(WeatherDailySummary.province_code == province_code)
-        .order_by(WeatherDailySummary.date.asc())
+        .order_by(WeatherDailySummary.date.desc())
         .limit(360)
-    )
+    ).subquery()
+    daily_stmt = select(WeatherDailySummary).join(
+        daily_sub, WeatherDailySummary.id == daily_sub.c.id
+    ).order_by(WeatherDailySummary.date.asc())
     daily_result = await db.execute(daily_stmt)
     daily_summaries = list(daily_result.scalars().all())
 
