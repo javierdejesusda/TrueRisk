@@ -426,3 +426,14 @@ async def get_risk(
     if score is None:
         return _zero_score(province_code)
     return score
+
+
+@router.post("/pipeline/trigger")
+async def trigger_pipeline():
+    """Manually trigger the data pipeline (fetch weather, compute risk, TFT forecasts)."""
+    import asyncio
+
+    from app.scheduler.pipeline import run_pipeline
+
+    asyncio.create_task(run_pipeline())
+    return {"status": "pipeline triggered"}
