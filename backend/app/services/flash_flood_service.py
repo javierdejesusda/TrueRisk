@@ -44,11 +44,21 @@ async def check_flash_flood_conditions(db: AsyncSession) -> list[FloodAlert]:
     # 2. Load gauge thresholds from DB
     gauge_thresholds = await _load_gauge_thresholds(db)
 
-    # 3. Check each flow against thresholds
+    # 3. Check each flow against thresholds + rate-of-change
     alerts: list[FloodAlert] = []
     for flow_data in flows:
         gauge_id = flow_data.get("gauge_id", "")
         current_flow = flow_data.get("flow_m3s", 0)
+
+        # Rate-of-change detection (works even without DB thresholds)
+        if gauge_id and current_flow and current_flow > 0:
+            prev = _previous_readings.get(gauge_id)
+            if prev is not None:
+                rapid_alert = detect_rapid_flow_increase(prev, flow_data)
+                if rapid_alert is not None:
+                    alerts.append(rapid_alert)
+            _previous_readings[gauge_id] = flow_data
+
         if not current_flow or current_flow <= 0:
             continue
 
