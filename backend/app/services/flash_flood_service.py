@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.data.river_network import river_network
 from app.data.saih_realtime import fetch_all_basin_flows
 from app.models.alert import Alert
 from app.models.river_gauge import RiverGauge, RiverReading
@@ -118,6 +119,34 @@ async def check_flash_flood_conditions(db: AsyncSession) -> list[FloodAlert]:
                     f"ALERT: Flow at {gauge_name} has reached "
                     f"{current_flow:.1f} m\u00b3/s, exceeding the P90 threshold. "
                     f"Elevated flood risk."
+                ),
+            ))
+
+    # 4. Propagate threshold exceedances downstream via river network topology
+    threshold_alerts = [a for a in alerts if a.threshold_exceeded in ("P90", "P95", "P99")]
+    for fa in threshold_alerts:
+        downstream_warnings = river_network.propagate_alert(
+            source_gauge=fa.gauge_id,
+            current_flow=fa.flow_m3s,
+            threshold_exceeded=fa.threshold_exceeded,
+        )
+        for w in downstream_warnings:
+            arrival_h = w["estimated_arrival_hours"]
+            severity = fa.severity  # inherit upstream severity
+            alerts.append(FloodAlert(
+                gauge_id=w["target_gauge"],
+                gauge_name=w["target_gauge"],
+                river_name=fa.river_name,
+                basin=fa.basin,
+                province_code=fa.province_code,
+                flow_m3s=fa.flow_m3s,
+                threshold_exceeded=fa.threshold_exceeded,
+                severity=severity,
+                message=(
+                    f"DOWNSTREAM WARNING: Flood wave from {fa.gauge_name} "
+                    f"({fa.flow_m3s:.1f} m\u00b3/s, {fa.threshold_exceeded}) "
+                    f"expected to reach gauge {w['target_gauge']} "
+                    f"in approximately {arrival_h:.1f} hour(s)."
                 ),
             ))
 
