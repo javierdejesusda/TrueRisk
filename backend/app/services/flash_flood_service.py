@@ -15,6 +15,10 @@ from app.models.river_gauge import RiverGauge, RiverReading
 
 logger = logging.getLogger(__name__)
 
+# Cache of previous gauge readings for rate-of-change detection.
+# Keys are gauge_id strings; values are dicts with "flow_m3s".
+_previous_readings: dict[str, dict] = {}
+
 
 @dataclass
 class FloodAlert:
@@ -186,6 +190,51 @@ async def store_river_readings(db: AsyncSession) -> int:
         await db.commit()
 
     return count
+
+
+def detect_rapid_flow_increase(
+    previous: dict, current: dict
+) -> FloodAlert | None:
+    """Detect rapid flow increase between two consecutive readings.
+
+    Args:
+        previous: Dict with "gauge_id" and "flow_m3s" from prior poll.
+        current: Dict with "gauge_id" and "flow_m3s" from current poll.
+
+    Returns:
+        FloodAlert if flow increased >= 50%, else None.
+        Severity 5 if increase >= 100%, severity 4 if >= 50%.
+    """
+    prev_flow = previous.get("flow_m3s", 0)
+    curr_flow = current.get("flow_m3s", 0)
+    gauge_id = current.get("gauge_id", "")
+
+    if prev_flow <= 0 or curr_flow <= prev_flow:
+        return None
+
+    pct_increase = (curr_flow - prev_flow) / prev_flow
+
+    if pct_increase < 0.5:
+        return None
+
+    severity = 5 if pct_increase >= 1.0 else 4
+    threshold_label = "100%" if severity == 5 else "50%"
+
+    return FloodAlert(
+        gauge_id=gauge_id,
+        gauge_name=gauge_id,
+        river_name="",
+        basin="",
+        province_code="",
+        flow_m3s=curr_flow,
+        threshold_exceeded=f"RAPID_RISE_{threshold_label}",
+        severity=severity,
+        message=(
+            f"RAPID RISE: Flow at {gauge_id} surged from "
+            f"{prev_flow:.1f} to {curr_flow:.1f} m\u00b3/s "
+            f"({pct_increase:.0%} increase). Flash flood risk."
+        ),
+    )
 
 
 async def _load_gauge_thresholds(db: AsyncSession) -> dict:
