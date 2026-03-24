@@ -440,22 +440,23 @@ async def trigger_pipeline():
 
 
 @router.post("/pipeline/trigger-forecasts")
-async def trigger_forecasts_only(db: AsyncSession = Depends(get_db)):
-    """Run only the TFT forecast step and return result count or error."""
-    import traceback
+async def trigger_forecasts_only():
+    """Run only the TFT forecast step in background."""
+    import asyncio
 
-    try:
-        from app.services.forecast_service import compute_all_forecasts
-        await compute_all_forecasts(db)
-        await db.commit()
+    async def _run():
+        from app.database import async_session
+        async with async_session() as db:
+            try:
+                from app.services.forecast_service import compute_all_forecasts
+                await compute_all_forecasts(db)
+                await db.commit()
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).exception("Forecast trigger failed: %s", e)
 
-        from sqlalchemy import func
-
-        from app.models.risk_forecast import RiskForecast
-        count = await db.scalar(select(func.count()).select_from(RiskForecast)) or 0
-        return {"status": "ok", "forecasts_in_db": count}
-    except Exception:
-        return {"status": "error", "traceback": traceback.format_exc()[-1000:]}
+    asyncio.create_task(_run())
+    return {"status": "forecasts triggered in background"}
 
 
 @router.post("/pipeline/test-forecast/{province_code}")
