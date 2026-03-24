@@ -440,23 +440,72 @@ async def trigger_pipeline():
 
 
 @router.post("/pipeline/trigger-forecasts")
-async def trigger_forecasts_only():
-    """Run only the TFT forecast step in background."""
-    import asyncio
+async def trigger_forecasts_only(db: AsyncSession = Depends(get_db)):
+    """Run TFT forecast for one province (28/Madrid) and store results."""
+    import traceback
+    from datetime import datetime as dt
 
-    async def _run():
-        from app.database import async_session
-        async with async_session() as db:
-            try:
-                from app.services.forecast_service import compute_all_forecasts
-                await compute_all_forecasts(db)
-                await db.commit()
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).exception("Forecast trigger failed: %s", e)
+    from app.ml.features.inference_features import enrich_daily_history
+    from app.ml.training.config import TFT_ENCODER_LENGTH_PER_HAZARD
+    from app.models.risk_forecast import RiskForecast
+    from app.models.weather_daily_summary import WeatherDailySummary
+    from app.services.risk_service import get_terrain_features
 
-    asyncio.create_task(_run())
-    return {"status": "forecasts triggered in background"}
+    code = "28"
+    terrain = get_terrain_features(code)
+    max_days = max(TFT_ENCODER_LENGTH_PER_HAZARD.values())
+
+    daily_result = await db.execute(
+        select(WeatherDailySummary)
+        .where(WeatherDailySummary.province_code == code)
+        .order_by(WeatherDailySummary.date.desc())
+        .limit(max_days)
+    )
+    daily_rows = list(reversed(daily_result.scalars().all()))
+    if not daily_rows:
+        return {"error": "no daily summaries"}
+
+    raw_days = [{
+        "temp_max": r.temperature_max, "temp_min": r.temperature_min,
+        "temp_mean": r.temperature_avg, "precip": r.precipitation_sum,
+        "wind_speed": r.wind_speed_max,
+        "wind_gust_max": r.wind_gusts_max or r.wind_speed_max * 1.5,
+        "humidity": r.humidity_avg, "humidity_min": r.humidity_min,
+        "pressure": r.pressure_avg or 1013.0,
+        "soil_moisture": r.soil_moisture_avg or 0.3,
+        "dew_point": r.temperature_avg - 5 if r.temperature_avg else 10.0,
+        "cloud_cover": r.cloud_cover_avg or 50.0,
+        "uv_index": r.uv_index_max or 5.0, "month": r.date.month,
+    } for r in daily_rows]
+
+    history = enrich_daily_history(raw_days, terrain)
+    now = dt.utcnow()
+    results = {}
+    stored = 0
+
+    from app.ml.models.tft_flood import predict_flood_risk_tft
+    from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
+
+    for hazard, fn in [("flood", predict_flood_risk_tft), ("windstorm", predict_windstorm_risk_tft)]:
+        try:
+            r = fn(history, terrain)
+            if r and "horizons" in r:
+                results[hazard] = {"point_estimate": r["point_estimate"]}
+                for h, q in r["horizons"].items():
+                    db.add(RiskForecast(
+                        province_code=code, hazard=hazard, horizon_hours=int(h),
+                        q10=q["q10"], q50=q["q50"], q90=q["q90"],
+                        attention_weights=r.get("attention_weights", {}),
+                        computed_at=now,
+                    ))
+                    stored += 1
+            else:
+                results[hazard] = "returned None"
+        except Exception:
+            results[hazard] = traceback.format_exc()[-300:]
+
+    await db.commit()
+    return {"stored": stored, "results": results}
 
 
 @router.post("/pipeline/test-forecast/{province_code}")
@@ -514,10 +563,6 @@ async def test_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
         return {"error": "enrich_daily_history failed", "traceback": traceback.format_exc()}
 
     results = {}
-    from app.ml.models.tft_flood import predict_flood_risk_tft
-    from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
-
-    # Test model loading directly to capture the real error
     from app.ml.models.tft_flood import predict_flood_risk_tft
     from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
 

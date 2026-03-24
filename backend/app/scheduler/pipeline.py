@@ -127,8 +127,8 @@ async def run_pipeline():
                     from app.services.forecast_service import compute_all_forecasts
                     await compute_all_forecasts(db)
                     logger.info("Forecast computation complete")
-                except Exception as e:
-                    logger.error(f"Forecast computation failed: {e}")
+                except Exception:
+                    logger.exception("Forecast computation failed")
 
             # 6. Flash flood monitoring
             try:
