@@ -14,6 +14,7 @@ from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.models.weather_record import WeatherRecord
 from app.schemas.weather import WeatherRecordResponse
+from app.services.data_health_service import health_tracker
 
 router = APIRouter()
 
@@ -77,3 +78,9 @@ async def list_weather_records(
 
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+@router.get("/data-health")
+async def get_data_health():
+    """Return current health status for all tracked external data sources."""
+    return health_tracker.get_all_statuses()

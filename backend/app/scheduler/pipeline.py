@@ -15,6 +15,7 @@ from app.services.risk_service import compute_province_risk
 from app.data.aemet_client import fetch_alerts
 from app.services.push_service import notify_province
 from app.config import settings
+from app.services.data_health_service import health_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,13 @@ async def run_pipeline():
                 {"code": p.ine_code, "lat": p.latitude, "lon": p.longitude}
                 for p in provinces
             ]
-            weather_map = await open_meteo.fetch_all_provinces(province_list)
+            try:
+                weather_map = await open_meteo.fetch_all_provinces(province_list)
+                health_tracker.record_success("open_meteo", records_count=len(weather_map))
+            except Exception as e:
+                health_tracker.record_failure("open_meteo", str(e))
+                logger.error(f"Open-Meteo fetch failed: {e}")
+                weather_map = {}
             now = datetime.utcnow()
             for p in provinces:
                 w = weather_map.get(p.ine_code)
@@ -80,22 +87,28 @@ async def run_pipeline():
                 try:
                     from app.data.nasa_firms import fetch_active_fires
                     fires = await fetch_active_fires()
+                    health_tracker.record_success("nasa_firms", records_count=len(fires))
                     logger.info(f"Fetched {len(fires)} active fire hotspots")
                 except Exception as e:
+                    health_tracker.record_failure("nasa_firms", str(e))
                     logger.error(f"NASA FIRMS fetch failed: {e}")
 
             try:
                 from app.data.usgs_earthquake import fetch_recent_quakes as usgs_quakes
                 quakes = await usgs_quakes()
+                health_tracker.record_success("usgs", records_count=len(quakes))
                 logger.info(f"Fetched {len(quakes)} USGS earthquakes")
             except Exception as e:
+                health_tracker.record_failure("usgs", str(e))
                 logger.error(f"USGS fetch failed: {e}")
 
             try:
                 from app.data.ree_energy import fetch_demand
                 energy = await fetch_demand()
+                health_tracker.record_success("ree", records_count=1)
                 logger.info(f"Fetched REE demand: {energy.get('current_demand_mw')} MW")
             except Exception as e:
+                health_tracker.record_failure("ree", str(e))
                 logger.error(f"REE fetch failed: {e}")
 
             # 2. Compute risk for each province
@@ -116,8 +129,10 @@ async def run_pipeline():
             if settings.aemet_api_key:
                 try:
                     aemet_alerts = await fetch_alerts(settings.aemet_api_key)
+                    health_tracker.record_success("aemet", records_count=len(aemet_alerts))
                     logger.info(f"Fetched {len(aemet_alerts)} AEMET alerts")
                 except Exception as e:
+                    health_tracker.record_failure("aemet", str(e))
                     logger.error(f"AEMET alert sync failed: {e}")
 
             # 5. Compute TFT + GNN forecasts
@@ -138,11 +153,13 @@ async def run_pipeline():
                 )
                 readings_count = await store_river_readings(db)
                 flood_alert_count = await process_flash_flood_alerts(db)
+                health_tracker.record_success("flash_flood", records_count=readings_count)
                 logger.info(
                     "Flash flood check: %d readings stored, %d alerts created",
                     readings_count, flood_alert_count,
                 )
-            except Exception:
+            except Exception as e:
+                health_tracker.record_failure("flash_flood", str(e))
                 logger.exception("Flash flood monitoring failed (non-critical)")
 
             await db.commit()
