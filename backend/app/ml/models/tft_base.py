@@ -33,9 +33,9 @@ class HazardTFT:
                 import torch
                 from pytorch_forecasting import TemporalFusionTransformer
 
-                device = "cuda" if torch.cuda.is_available() else "cpu"
+                # Force all tensors to CPU to avoid CUDA errors on CPU-only servers
                 self._model = TemporalFusionTransformer.load_from_checkpoint(
-                    str(self.model_path), map_location=device
+                    str(self.model_path), map_location=torch.device("cpu")
                 )
                 self._model.train(False)
             except Exception:
