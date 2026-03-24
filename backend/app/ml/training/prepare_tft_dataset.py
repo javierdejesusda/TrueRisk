@@ -18,9 +18,7 @@ import pandas as pd
 from app.data.province_data import PROVINCES
 from app.ml.training.config import (
     DROUGHT_SPEI_THRESHOLD,
-    FLOOD_PRECIP_HEAVY,
     FLOOD_PRECIP_MODERATE,
-    FLOOD_SOIL_SATURATED,
     HEATWAVE_CONSECUTIVE_DAYS,
     HEATWAVE_MAX_THRESHOLD,
     HEATWAVE_MIN_THRESHOLD,

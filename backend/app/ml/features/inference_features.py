@@ -11,8 +11,6 @@ from __future__ import annotations
 import math
 from typing import Any
 
-import numpy as np
-
 from app.ml.features.weather_indices import (
     compute_fwi_system,
     compute_heat_index,
@@ -74,8 +72,7 @@ def enrich_daily_history(
     pressure = [_safe(d.get("pressure", 1013.0), 1013.0) for d in days]
     soil_moisture = [_safe(d.get("soil_moisture", 0.3), 0.3) for d in days]
     dew_point = [_safe(d.get("dew_point", temp_mean[i] - 5)) for i, d in enumerate(days)]
-    cloud_cover = [_safe(d.get("cloud_cover", 50.0), 50.0) for d in days]
-    uv_index = [_safe(d.get("uv_index", 5.0), 5.0) for d in days]
+    # cloud_cover and uv_index are passed through from raw dicts, not pre-extracted
 
     # --- Helper: rolling window ops ----------------------------------------
     def _rolling_sum(arr, window):

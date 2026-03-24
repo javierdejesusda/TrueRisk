@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import shutil
 import sys
 import time
@@ -43,7 +42,6 @@ from app.ml.training.config import (
 from app.ml.training.prepare_tft_dataset import (
     HAZARD_FEATURES,
     TARGET_COLS,
-    build_tft_dataset,
     load_combined_tft_dataframe,
 )
 
