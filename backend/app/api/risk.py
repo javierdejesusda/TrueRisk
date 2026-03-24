@@ -497,12 +497,20 @@ async def test_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
     from app.ml.models.tft_flood import predict_flood_risk_tft
     from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
 
-    for name, fn in [("flood", predict_flood_risk_tft), ("windstorm", predict_windstorm_risk_tft)]:
+    # Test model loading directly to capture the real error
+    from app.ml.models.tft_base import HazardTFT
+    for name in ["flood", "windstorm"]:
+        tft = HazardTFT(name)
+        results[name] = {"is_available": tft.is_available, "model_path": str(tft.model_path)}
         try:
-            r = fn(history, terrain)
-            results[name] = r if r else "returned None"
+            tft._load()
+            if tft._model is None:
+                results[name]["load"] = "model is None after _load"
+            else:
+                results[name]["load"] = "OK"
+                results[name]["params"] = len(list(tft._model.parameters()))
         except Exception:
-            results[name] = {"error": traceback.format_exc()}
+            results[name]["load_error"] = traceback.format_exc()
 
     return {
         "province": province_code,
