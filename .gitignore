@@ -40,7 +40,6 @@ __pycache__/
 backend/dev.db
 backend/test.db
 backend/lightning_logs/
-backend/app/ml/saved_models/*.ckpt
 *.egg-info/
 
 # playwright
