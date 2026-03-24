@@ -85,6 +85,6 @@ class TestWindstormTFT:
         assert "elevation_m" in STATIC_FEATURES
         assert "month" in TIME_VARYING_KNOWN
         assert "wind_speed" in TIME_VARYING_UNKNOWN
-        assert "pressure_change_6h" in TIME_VARYING_UNKNOWN
+        assert "pressure_tendency_1d" in TIME_VARYING_UNKNOWN
         all_feats = set(STATIC_FEATURES + TIME_VARYING_KNOWN + TIME_VARYING_UNKNOWN)
         assert len(all_feats) == len(STATIC_FEATURES) + len(TIME_VARYING_KNOWN) + len(TIME_VARYING_UNKNOWN)
