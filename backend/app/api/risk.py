@@ -498,19 +498,20 @@ async def test_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
     from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
 
     # Test model loading directly to capture the real error
-    from app.ml.models.tft_base import HazardTFT
+    import torch
     for name in ["flood", "windstorm"]:
-        tft = HazardTFT(name)
-        results[name] = {"is_available": tft.is_available, "model_path": str(tft.model_path)}
+        ckpt_path = f"/app/app/ml/saved_models/{name}_tft.ckpt"
+        results[name] = {}
         try:
-            tft._load()
-            if tft._model is None:
-                results[name]["load"] = "model is None after _load"
-            else:
-                results[name]["load"] = "OK"
-                results[name]["params"] = len(list(tft._model.parameters()))
+            from pytorch_forecasting import TemporalFusionTransformer
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = TemporalFusionTransformer.load_from_checkpoint(
+                ckpt_path, map_location=device
+            )
+            results[name]["load"] = "OK"
+            results[name]["params"] = sum(p.numel() for p in model.parameters())
         except Exception:
-            results[name]["load_error"] = traceback.format_exc()
+            results[name]["load_error"] = traceback.format_exc()[-500:]
 
     return {
         "province": province_code,

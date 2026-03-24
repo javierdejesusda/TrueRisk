@@ -39,7 +39,7 @@ class HazardTFT:
                 )
                 self._model.train(False)
             except Exception:
-                logger.warning("Failed to load TFT checkpoint for %s", self.hazard)
+                logger.exception("Failed to load TFT checkpoint for %s", self.hazard)
                 self._model = None
 
     def predict(
