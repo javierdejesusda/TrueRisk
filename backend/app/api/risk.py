@@ -414,6 +414,58 @@ async def get_explanation_comparison(
     return explain_rule_vs_attention(rule_contributions, attn_weights)
 
 
+@router.get("/{province_code}/impact")
+async def get_risk_impact(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return human-interpretable impact assessments for a province.
+
+    For each hazard with a score above 20 (i.e. beyond 'minor'), returns a
+    structured impact object with impact level, estimated population affected,
+    recommended actions for citizens and authorities, and expected disruptions.
+    """
+    from app.services.impact_assessment_service import assess_impact
+
+    result = await db.execute(
+        select(RiskScore)
+        .where(RiskScore.province_code == province_code)
+        .order_by(RiskScore.computed_at.desc())
+        .limit(1)
+    )
+    score = result.scalar_one_or_none()
+
+    hazard_scores: dict[str, float] = {}
+    if score is not None:
+        hazard_scores = {
+            "flood": score.flood_score,
+            "wildfire": score.wildfire_score,
+            "drought": score.drought_score,
+            "heatwave": score.heatwave_score,
+            "seismic": score.seismic_score,
+            "coldwave": score.coldwave_score,
+            "windstorm": score.windstorm_score,
+            "dana": score.dana_score,
+        }
+
+    impacts = []
+    for hazard, hazard_score in hazard_scores.items():
+        if hazard_score > 20:
+            impact = assess_impact(
+                hazard_type=hazard,
+                score=float(hazard_score),
+                province_code=province_code,
+            )
+            impact["hazard"] = hazard
+            impact["score"] = round(float(hazard_score), 1)
+            impacts.append(impact)
+
+    # Sort by score descending so highest-risk hazards appear first
+    impacts.sort(key=lambda x: x["score"], reverse=True)
+
+    return impacts
+
+
 @router.get("/{province_code}", response_model=RiskScoreResponse)
 async def get_risk(
     province_code: str,
