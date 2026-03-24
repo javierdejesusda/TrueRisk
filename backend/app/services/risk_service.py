@@ -23,6 +23,7 @@ from app.ml.models.heatwave_risk import predict_heatwave_risk
 from app.ml.models.seismic_risk import predict_seismic_risk
 from app.ml.models.wildfire_risk import predict_wildfire_risk
 from app.ml.models.windstorm_risk import predict_windstorm_risk
+from app.ml.features.fwi import compute_fwi_components
 from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.models.weather_record import WeatherRecord
@@ -429,13 +430,22 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "max_precip_intensity_ratio": temporal["max_precip_intensity_ratio"],
     }
 
+    # Compute FWI components from current weather data
+    fwi_components = compute_fwi_components(
+        temp_c=temperature,
+        humidity_pct=humidity,
+        wind_kmh=wind_speed * 3.6,  # m/s -> km/h
+        rain_mm=temporal["precip_24h"],
+        month=month,
+    )
+
     wildfire_features = {
-        "ffmc": 0.0,   # FWI system components -- populated when AEMET/EFFIS data is available
-        "dmc": 0.0,
-        "dc": 0.0,
-        "isi": 0.0,
-        "bui": 0.0,
-        "fwi": 0.0,
+        "ffmc": fwi_components["ffmc"],
+        "dmc": fwi_components["dmc"],
+        "dc": fwi_components["dc"],
+        "isi": fwi_components["isi"],
+        "bui": fwi_components["bui"],
+        "fwi": fwi_components["fwi"],
         "temperature": temperature,
         "temperature_max_7d": temporal["temperature_max_7d"],
         "humidity": humidity,
