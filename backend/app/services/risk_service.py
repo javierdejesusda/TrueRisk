@@ -24,8 +24,10 @@ from app.ml.models.seismic_risk import predict_seismic_risk
 from app.ml.models.wildfire_risk import predict_wildfire_risk
 from app.ml.models.windstorm_risk import predict_windstorm_risk
 from app.ml.features.fwi import compute_fwi_components
+from app.ml.features.spei import compute_spei
 from app.models.province import Province
 from app.models.risk_score import RiskScore
+from app.models.weather_daily_summary import WeatherDailySummary
 from app.models.weather_record import WeatherRecord
 
 logger = logging.getLogger(__name__)
@@ -376,6 +378,24 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     result = await db.execute(stmt)
     history = [_record_to_dict(r) for r in result.scalars().all()]
 
+    # 3b. Get daily summaries for SPEI computation (last 180 days)
+    daily_stmt = (
+        select(WeatherDailySummary)
+        .where(WeatherDailySummary.province_code == province_code)
+        .order_by(WeatherDailySummary.date.asc())
+        .limit(360)
+    )
+    daily_result = await db.execute(daily_stmt)
+    daily_summaries = list(daily_result.scalars().all())
+
+    # Compute SPEI from daily summaries
+    if daily_summaries:
+        spei_precip = [s.precipitation_sum for s in daily_summaries]
+        spei_temp = [s.temperature_avg for s in daily_summaries]
+        spei_values = compute_spei(spei_precip, spei_temp, latitude=province.latitude)
+    else:
+        spei_values = {"spei_1m": None, "spei_3m": None, "spei_6m": None}
+
     # 4. Compute features
     terrain = get_terrain_features(province_code)
     temporal = compute_temporal_features(history) if history else _empty_temporal()
@@ -463,10 +483,9 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     }
 
     drought_features = {
-        # SPEI values are None until the SPEI computation pipeline is wired up
-        "spei_1m": None,
-        "spei_3m": None,
-        "spei_6m": None,
+        "spei_1m": spei_values["spei_1m"],
+        "spei_3m": spei_values["spei_3m"],
+        "spei_6m": spei_values["spei_6m"],
         "soil_moisture": soil_moisture,
         "consecutive_dry_days": temporal["consecutive_dry_days"],
         "temperature": temperature,
