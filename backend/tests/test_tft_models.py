@@ -2,9 +2,10 @@
 
 
 class TestFloodTFT:
-    def test_returns_none_without_checkpoint(self):
+    def test_graceful_on_empty_input(self):
         from app.ml.models.tft_flood import predict_flood_risk_tft
         result = predict_flood_risk_tft([], {})
+        # Should return None gracefully (empty history or model load failure)
         assert result is None
 
     def test_feature_split(self):
@@ -18,7 +19,7 @@ class TestFloodTFT:
 
 
 class TestWildfireTFT:
-    def test_returns_none_without_checkpoint(self):
+    def test_graceful_on_empty_input(self):
         from app.ml.models.tft_wildfire import predict_wildfire_risk_tft
         result = predict_wildfire_risk_tft([], {})
         assert result is None
@@ -30,7 +31,7 @@ class TestWildfireTFT:
 
 
 class TestHeatwaveTFT:
-    def test_returns_none_without_checkpoint(self):
+    def test_graceful_on_empty_input(self):
         from app.ml.models.tft_heatwave import predict_heatwave_risk_tft
         result = predict_heatwave_risk_tft([], {})
         assert result is None
@@ -42,7 +43,7 @@ class TestHeatwaveTFT:
 
 
 class TestDroughtTFT:
-    def test_returns_none_without_checkpoint(self):
+    def test_graceful_on_empty_input(self):
         from app.ml.models.tft_drought import predict_drought_risk_tft
         result = predict_drought_risk_tft([], {})
         assert result is None
@@ -59,7 +60,7 @@ class TestDroughtTFT:
 
 
 class TestColdwaveTFT:
-    def test_returns_none_without_checkpoint(self):
+    def test_graceful_on_empty_input(self):
         from app.ml.models.tft_coldwave import predict_coldwave_risk_tft
         result = predict_coldwave_risk_tft([], {})
         assert result is None
@@ -75,7 +76,7 @@ class TestColdwaveTFT:
 
 
 class TestWindstormTFT:
-    def test_returns_none_without_checkpoint(self):
+    def test_graceful_on_empty_input(self):
         from app.ml.models.tft_windstorm import predict_windstorm_risk_tft
         result = predict_windstorm_risk_tft([], {})
         assert result is None

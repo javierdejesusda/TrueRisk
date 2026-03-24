@@ -63,6 +63,8 @@ class HazardTFT:
             return None
 
         try:
+            if not encoder_data or not any(encoder_data.values()):
+                return None
             seq_len = len(next(iter(encoder_data.values())))
             pred_len = len(FORECAST_HORIZONS)
             params = self._model.dataset_parameters
