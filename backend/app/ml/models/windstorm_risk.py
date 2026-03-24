@@ -7,14 +7,18 @@ from typing import Any
 FEATURE_NAMES = [
     "wind_speed",
     "wind_gusts",
-    "wind_gust_max_24h",
-    "wind_speed_max_24h",
+    "gust_factor",
+    "wind_variability_3d",
     "pressure",
-    "pressure_change_6h",
-    "pressure_change_24h",
-    "pressure_min_24h",
+    "pressure_tendency_1d",
+    "pressure_tendency_3d",
+    "pressure_min_3d",
     "humidity",
     "precipitation_6h",
+    "gust_speed_ratio_7d",
+    "pressure_tendency_7d",
+    "storm_energy_proxy",
+    "pressure_anomaly_30d",
     "is_coastal",
     "is_mediterranean",
     "elevation_m",
@@ -35,46 +39,40 @@ def _rule_based_windstorm(f: dict[str, Any]) -> float:
     score = 0.0
     gusts = f.get("wind_gusts", 0.0) or 0.0
     wind = f.get("wind_speed", 0.0) or 0.0
-    gust_max_24h = f.get("wind_gust_max_24h", 0.0) or 0.0
-    pressure_change_6h = f.get("pressure_change_6h", 0.0) or 0.0
+    pressure_tendency = f.get("pressure_tendency_1d", 0.0) or 0.0
     pressure = f.get("pressure", 1013.0) or 1013.0
     is_coastal = f.get("is_coastal", 0.0) or 0.0
     is_med = f.get("is_mediterranean", 0.0) or 0.0
     month = f.get("month", 6) or 6
 
-    # Use the larger of current gusts and 24h max
-    effective_gusts = max(gusts, gust_max_24h)
-
     # Wind gusts (primary driver)
-    if effective_gusts > 120:
+    if gusts > 120:
         score += 50
-    elif effective_gusts > 100:
+    elif gusts > 100:
         score += 40
-    elif effective_gusts > 80:
+    elif gusts > 80:
         score += 30
-    elif effective_gusts > 60:
+    elif gusts > 60:
         score += 20
-    elif effective_gusts > 40:
+    elif gusts > 40:
         score += 10
 
     # Sustained wind
-    wind_max_24h = f.get("wind_speed_max_24h", wind) or wind
-    effective_wind = max(wind, wind_max_24h)
-    if effective_wind > 80:
+    if wind > 80:
         score += 20
-    elif effective_wind > 60:
+    elif wind > 60:
         score += 15
-    elif effective_wind > 40:
+    elif wind > 40:
         score += 10
-    elif effective_wind > 25:
+    elif wind > 25:
         score += 5
 
-    # Pressure drop over 6h (negative = dropping)
-    if pressure_change_6h < -10:
+    # Pressure drop (1-day tendency, negative = dropping)
+    if pressure_tendency < -10:
         score += 15
-    elif pressure_change_6h < -6:
+    elif pressure_tendency < -6:
         score += 10
-    elif pressure_change_6h < -3:
+    elif pressure_tendency < -3:
         score += 5
 
     # Low pressure

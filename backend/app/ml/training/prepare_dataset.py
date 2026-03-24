@@ -148,10 +148,17 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     df["precip_48h"] = df["precip"].rolling(2, min_periods=1).sum()
     df["precip_7d"] = df["precip"].rolling(7, min_periods=1).sum()
     df["precip_30d"] = df["precip"].rolling(30, min_periods=1).sum()
-    df["precip_forecast_24h"] = df["precip"].shift(-1).fillna(0.0)
+    df["precip_momentum"] = df["precip"].rolling(3, min_periods=1).mean().fillna(0.0)
 
-    # Pressure change
-    df["pressure_change_6h"] = df["pressure"].diff(1).fillna(0.0)
+    # Flood: Antecedent Precipitation Index (exponential decay, K=0.85)
+    precip_vals = df["precip"].tolist()
+    api_values = [precip_vals[0] if precip_vals else 0.0]
+    for i in range(1, len(df)):
+        api_values.append(0.85 * api_values[-1] + precip_vals[i])
+    df["antecedent_precip_index"] = api_values
+
+    # Pressure tendency (daily data, so diff(1) = 1-day change)
+    df["pressure_tendency_1d"] = df["pressure"].diff(1).fillna(0.0)
 
     # Soil moisture change
     df["soil_moisture_change_24h"] = df["soil_moisture"].diff(1).fillna(0.0)
@@ -163,6 +170,11 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     rolling_mean = df["precip"].rolling(30, min_periods=7).mean().fillna(df["precip"].mean())
     df["precip_7day_anomaly"] = df["precip_7d"] / 7 - rolling_mean
     df["precip_7day_anomaly"] = df["precip_7day_anomaly"].fillna(0.0)
+
+    # Flood: soil saturation excess (interaction of wet soil + recent rain)
+    df["soil_saturation_excess"] = (
+        df["soil_moisture"] * df["precip_7d"] / 7.0
+    ).fillna(0.0)
 
     # Consecutive streak features
     df["is_rain"] = df["precip"] > 1.0
@@ -186,13 +198,31 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
         axis=1,
     )
 
+    # Coldwave: temperature trend and persistence
+    df["temp_trend_7d"] = df["temp_mean"].rolling(7, min_periods=2).apply(
+        lambda x: np.polyfit(range(len(x)), x, 1)[0], raw=False
+    ).fillna(0.0)
+    df["is_cold_mean"] = df["temp_mean"] < 5.0
+    df["cold_persistence"] = _consecutive_condition(df["is_cold_mean"])
+    df.drop(columns=["is_cold_mean"], inplace=True, errors="ignore")
+    df["temp_drop_7d"] = df["temp_max"].rolling(7, min_periods=1).max() - df["temp_min"]
+
     # Windstorm features
-    df["wind_gust_max_24h"] = df["wind_gust_max"]
-    df["wind_speed_max_24h"] = df["wind_speed"]
-    df["pressure_change_24h"] = df["pressure"].diff(1).fillna(0.0)
-    df["pressure_min_24h"] = df["pressure"].rolling(1, min_periods=1).min()
     df["wind_gusts"] = df["wind_gust_max"]
     df["precipitation_6h"] = df["precip"] / 4
+    df["gust_factor"] = (df["wind_gust_max"] / df["wind_speed"].clip(lower=1.0)).fillna(1.0)
+    df["wind_variability_3d"] = df["wind_speed"].rolling(3, min_periods=1).std().fillna(0.0)
+    df["pressure_tendency_3d"] = df["pressure"].diff(3).fillna(0.0)
+    df["pressure_min_3d"] = df["pressure"].rolling(3, min_periods=1).min()
+    df["gust_speed_ratio_7d"] = (
+        df["wind_gust_max"] / df["wind_speed"].clip(lower=1.0)
+    ).rolling(7, min_periods=1).mean().fillna(1.0)
+    df["pressure_tendency_7d"] = df["pressure"].diff(7).fillna(0.0)
+    df["storm_energy_proxy"] = (
+        df["gust_factor"] * df["pressure_tendency_1d"].abs().clip(upper=20.0)
+    ).fillna(0.0)
+    pressure_clim = df["pressure"].rolling(30, min_periods=7).mean()
+    df["pressure_anomaly_30d"] = (df["pressure"] - pressure_clim).fillna(0.0)
 
     # Max precip intensity ratio
     df["max_precip_intensity_ratio"] = (
@@ -254,8 +284,8 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     df["temperature_anomaly"] = df["temp_mean"] - temp_rolling
     df["temperature_anomaly"] = df["temperature_anomaly"].fillna(0.0)
 
-    # Temperature forecast proxy (next-day max)
-    df["temperature_forecast_48h_max"] = df["temp_max"].shift(-2).fillna(df["temp_max"])
+    # Temperature trend proxy (backward-looking, no data leakage)
+    df["temp_max_trend"] = df["temp_max"].rolling(3, min_periods=1).mean().fillna(df["temp_max"])
 
     # Rolling max/min for wildfire
     df["temperature_max_7d"] = df["temp_max"].rolling(7, min_periods=1).max()
@@ -369,19 +399,20 @@ def _load_event_labels(event_file: str, combined: pd.DataFrame) -> pd.Series:
 
 FLOOD_FEATURES = [
     "precip_1h", "precip_6h", "precip_24h", "precip_48h",
-    "precip_forecast_24h", "humidity", "soil_moisture",
+    "precip_momentum", "humidity", "soil_moisture",
     "soil_moisture_change_24h", "wind_speed", "pressure",
-    "pressure_change_6h", "dew_point_depression", "cloud_cover",
+    "pressure_tendency_1d", "dew_point_depression", "cloud_cover",
     "elevation_m", "is_coastal", "is_mediterranean", "river_basin_risk",
     "month", "season_sin", "season_cos", "precip_7day_anomaly",
     "consecutive_rain_days", "max_precip_intensity_ratio",
+    "antecedent_precip_index", "soil_saturation_excess",
 ]
 
 HEATWAVE_FEATURES = [
     "temperature", "temperature_max", "temperature_min", "heat_index", "wbgt",
     "consecutive_hot_days", "consecutive_hot_nights", "heat_wave_day",
     "humidity", "wind_speed", "uv_index", "temperature_anomaly",
-    "temperature_forecast_48h_max", "month", "latitude", "elevation_m",
+    "temp_max_trend", "month", "latitude", "elevation_m",
     "is_coastal", "cloud_cover", "solar_irradiance",
 ]
 

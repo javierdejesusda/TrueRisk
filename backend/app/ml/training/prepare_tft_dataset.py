@@ -133,10 +133,10 @@ def _compute_flood_score(row: pd.Series) -> float:
     """Continuous flood risk score 0-100 from precipitation & soil moisture."""
     precip = row.get("precip_24h", 0.0) or 0.0
     soil = row.get("soil_moisture", 0.3) or 0.3
-    # Combine heavy-precip signal and saturated-soil signal
-    precip_signal = _sigmoid_scale(precip, FLOOD_PRECIP_HEAVY, steepness=0.12)
-    soil_signal = _sigmoid_scale(soil, FLOOD_SOIL_SATURATED, steepness=8.0)
-    moderate_boost = _sigmoid_scale(precip, FLOOD_PRECIP_MODERATE, steepness=0.15)
+    # Lower midpoints to spread target distribution (was 30/0.5/15)
+    precip_signal = _sigmoid_scale(precip, FLOOD_PRECIP_MODERATE, steepness=0.15)
+    soil_signal = _sigmoid_scale(soil, 0.35, steepness=10.0)
+    moderate_boost = _sigmoid_scale(precip, 5.0, steepness=0.20)
     combined = 0.5 * precip_signal + 0.3 * soil_signal + 0.2 * moderate_boost
     return float(np.clip(combined, 0.0, 100.0))
 
@@ -182,7 +182,7 @@ def _compute_coldwave_score(row: pd.Series) -> float:
     temp_min = row.get("temperature_min", 5.0) or 5.0
     cold_days = row.get("consecutive_cold_days", 0) or 0
     wc_sig = _sigmoid_scale(-wind_chill, 5.0, steepness=0.2)
-    tm_sig = _sigmoid_scale(-temp_min, 0.0, steepness=0.3)
+    tm_sig = _sigmoid_scale(-temp_min, -2.0, steepness=0.25)
     cd_sig = _sigmoid_scale(cold_days, 3, steepness=0.5)
     combined = 0.4 * wc_sig + 0.3 * tm_sig + 0.3 * cd_sig
     return float(np.clip(combined, 0.0, 100.0))
@@ -192,10 +192,11 @@ def _compute_windstorm_score(row: pd.Series) -> float:
     """Continuous windstorm risk score 0-100 from wind gusts, speed, pressure."""
     gusts = row.get("wind_gusts", 0.0) or row.get("wind_gust_max", 0.0) or 0.0
     wind = row.get("wind_speed", 0.0) or 0.0
-    p_change = row.get("pressure_change_6h", 0.0) or 0.0
-    gust_sig = _sigmoid_scale(gusts, 80.0, steepness=0.05)
-    wind_sig = _sigmoid_scale(wind, 60.0, steepness=0.06)
-    pres_sig = _sigmoid_scale(-p_change, 6.0, steepness=0.3)
+    p_change = row.get("pressure_tendency_1d", 0.0) or 0.0
+    # Lower midpoints to spread target distribution (was 80/60/6)
+    gust_sig = _sigmoid_scale(gusts, 45.0, steepness=0.08)
+    wind_sig = _sigmoid_scale(wind, 30.0, steepness=0.10)
+    pres_sig = _sigmoid_scale(-p_change, 3.0, steepness=0.5)
     combined = 0.5 * gust_sig + 0.25 * wind_sig + 0.25 * pres_sig
     return float(np.clip(combined, 0.0, 100.0))
 

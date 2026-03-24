@@ -22,6 +22,7 @@ def predict_wildfire_risk_tft(
     if not _tft.is_available:
         return None
     encoder_data = {
-        f: [h.get(f, 0.0) for h in history_sequence] for f in TIME_VARYING_UNKNOWN
+        f: [h.get(f, 0.0) for h in history_sequence]
+        for f in TIME_VARYING_KNOWN + TIME_VARYING_UNKNOWN
     }
     return _tft.predict(encoder_data, static_features)

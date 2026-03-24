@@ -98,7 +98,7 @@ def compute_temporal_features(
         precip_6h, precip_24h, precip_48h, precip_7d, precip_30d,
         consecutive_dry_days, consecutive_wet_days,
         consecutive_hot_days, consecutive_hot_nights,
-        pressure_change_6h, pressure_change_24h,
+        pressure_tendency_1d, pressure_tendency_3d,
         soil_moisture_trend, temperature_anomaly,
         month_sin, month_cos
     """
@@ -136,18 +136,17 @@ def compute_temporal_features(
     )
 
     # ------------------------------------------------------------------
-    # Pressure changes
+    # Pressure tendencies
     # ------------------------------------------------------------------
-    pressure_change_6h = 0.0
-    pressure_change_24h = 0.0
+    pressure_tendency_1d = 0.0
+    pressure_tendency_3d = 0.0
     if n >= 2:
         p_now = _safe_get(weather_records[0], "pressure")
-        if n >= 7:
-            p_6h = _safe_get(weather_records[6], "pressure")
-            pressure_change_6h = round(p_now - p_6h, 2)
-        if n >= 25:
-            p_24h = _safe_get(weather_records[24], "pressure")
-            pressure_change_24h = round(p_now - p_24h, 2)
+        p_prev = _safe_get(weather_records[1], "pressure")
+        pressure_tendency_1d = round(p_now - p_prev, 2)
+        if n >= 4:
+            p_3d = _safe_get(weather_records[3], "pressure")
+            pressure_tendency_3d = round(p_now - p_3d, 2)
 
     # ------------------------------------------------------------------
     # Soil moisture trend (linear slope over last 7 records, oldest-first)
@@ -188,8 +187,8 @@ def compute_temporal_features(
         "consecutive_wet_days": float(consecutive_wet),
         "consecutive_hot_days": float(consecutive_hot),
         "consecutive_hot_nights": float(consecutive_hot_nights),
-        "pressure_change_6h": pressure_change_6h,
-        "pressure_change_24h": pressure_change_24h,
+        "pressure_tendency_1d": pressure_tendency_1d,
+        "pressure_tendency_3d": pressure_tendency_3d,
         "soil_moisture_trend": soil_moisture_trend,
         "temperature_anomaly": temperature_anomaly,
         "month_sin": month_sin,
@@ -233,8 +232,8 @@ def _empty_features() -> dict[str, float]:
         "consecutive_wet_days": 0.0,
         "consecutive_hot_days": 0.0,
         "consecutive_hot_nights": 0.0,
-        "pressure_change_6h": 0.0,
-        "pressure_change_24h": 0.0,
+        "pressure_tendency_1d": 0.0,
+        "pressure_tendency_3d": 0.0,
         "soil_moisture_trend": 0.0,
         "temperature_anomaly": 0.0,
         "month_sin": 0.0,

@@ -10,7 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data.province_data import PROVINCES
+from app.ml.features.inference_features import enrich_daily_history
 from app.models.risk_forecast import RiskForecast
+from app.models.weather_daily_summary import WeatherDailySummary
 from app.models.weather_record import WeatherRecord
 from app.services.risk_service import get_terrain_features, _record_to_dict
 
@@ -53,26 +55,63 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
     weather_context: dict[str, dict[str, float]] = {}
     all_forecasts: list[RiskForecast] = []
 
+    # Max encoder length across all hazards (for daily summary query)
+    from app.ml.training.config import TFT_ENCODER_LENGTH_PER_HAZARD
+    max_days = max(TFT_ENCODER_LENGTH_PER_HAZARD.values())
+
     for code in province_codes:
         # 1. Terrain features
         terrain = get_terrain_features(code)
 
-        # 2. Fetch 168h weather history from DB
-        stmt = (
-            select(WeatherRecord)
-            .where(WeatherRecord.province_code == code)
-            .order_by(WeatherRecord.recorded_at.desc())
-            .limit(168)
+        # 2. Fetch daily summaries for derived feature computation
+        daily_stmt = (
+            select(WeatherDailySummary)
+            .where(WeatherDailySummary.province_code == code)
+            .order_by(WeatherDailySummary.date.desc())
+            .limit(max_days)
         )
-        result = await db.execute(stmt)
-        records = result.scalars().all()
-        history = [_record_to_dict(r) for r in records]
+        daily_result = await db.execute(daily_stmt)
+        daily_rows = daily_result.scalars().all()
 
-        if not history:
-            continue
+        if not daily_rows:
+            # Fallback: use raw hourly records if no daily summaries
+            stmt = (
+                select(WeatherRecord)
+                .where(WeatherRecord.province_code == code)
+                .order_by(WeatherRecord.recorded_at.desc())
+                .limit(168)
+            )
+            result = await db.execute(stmt)
+            records = result.scalars().all()
+            history = [_record_to_dict(r) for r in records]
+            if not history:
+                continue
+        else:
+            # Convert daily summaries to training-compatible dicts (chronological)
+            daily_rows.reverse()  # oldest first
+            raw_days = []
+            for row in daily_rows:
+                raw_days.append({
+                    "temp_max": row.temperature_max,
+                    "temp_min": row.temperature_min,
+                    "temp_mean": row.temperature_avg,
+                    "precip": row.precipitation_sum,
+                    "wind_speed": row.wind_speed_max,
+                    "wind_gust_max": row.wind_gusts_max or row.wind_speed_max * 1.5,
+                    "humidity": row.humidity_avg,
+                    "humidity_min": row.humidity_min,
+                    "pressure": row.pressure_avg or 1013.0,
+                    "soil_moisture": row.soil_moisture_avg or 0.3,
+                    "dew_point": row.temperature_avg - 5 if row.temperature_avg else 10.0,
+                    "cloud_cover": row.cloud_cover_avg or 50.0,
+                    "uv_index": row.uv_index_max or 5.0,
+                    "month": row.date.month,
+                })
+            # Enrich with all derived features
+            history = enrich_daily_history(raw_days, terrain)
 
         # Build weather context for GNN
-        latest = history[0] if history else {}
+        latest = history[-1] if history else {}
         weather_context[code] = {
             "temperature": latest.get("temperature", 20.0) or 20.0,
             "humidity": latest.get("humidity", 50.0) or 50.0,

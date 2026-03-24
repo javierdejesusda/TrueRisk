@@ -34,7 +34,6 @@ class HazardTFT:
             self._model = TemporalFusionTransformer.load_from_checkpoint(
                 str(self.model_path)
             )
-            # Switch to evaluation mode (disables dropout, etc.)
             self._model.train(False)
 
     def predict(
@@ -44,15 +43,17 @@ class HazardTFT:
     ) -> dict | None:
         """Run TFT inference. Returns None if model unavailable.
 
-        Returns: {
-            "point_estimate": float,       # q50 at first horizon
-            "horizons": {
-                6:   {"q10": float, "q50": float, "q90": float},
-                12:  {"q10": float, "q50": float, "q90": float},
-                ...
-            },
-            "attention_weights": {"feature_name": float, ...}
-        }
+        Parameters
+        ----------
+        encoder_data : dict[str, list[float]]
+            Time-varying features (both known and unknown).
+            Each key maps to a list of values (one per timestep).
+        static_features : dict[str, float]
+            Static features (constant across time).
+
+        Returns
+        -------
+        dict with point_estimate, horizons, and attention_weights.
         """
         if not self.is_available:
             return None
@@ -62,53 +63,81 @@ class HazardTFT:
             return None
 
         try:
-            # Build encoder DataFrame
             seq_len = len(next(iter(encoder_data.values())))
             pred_len = len(FORECAST_HORIZONS)
+            params = self._model.dataset_parameters
+            target_name = params.get("target", f"{self.hazard}_score")
+
+            # Collect all feature names the model expects
+            all_known = params.get("time_varying_known_reals", [])
+            all_unknown = params.get("time_varying_unknown_reals", [])
+            all_static = params.get("static_reals", [])
 
             records = []
             for t in range(seq_len + pred_len):
-                row: dict = {"time_idx": t, "group": "0"}
+                row: dict = {
+                    "time_idx": t,
+                    "province_code": "0",
+                    target_name: 0.0,
+                }
+                # Fill from encoder_data (time-varying known + unknown)
                 for feat, vals in encoder_data.items():
                     row[feat] = vals[t] if t < seq_len else vals[-1]
+                # Fill static features
                 for feat, val in static_features.items():
                     row[feat] = val
+                # Default any missing required columns to 0.0
+                for feat in all_known + all_unknown + all_static:
+                    if feat not in row:
+                        row[feat] = 0.0
                 records.append(row)
 
             df = pd.DataFrame(records)
 
-            # Predict using the model's own dataset creation
             from pytorch_forecasting import TimeSeriesDataSet
 
             dataset = TimeSeriesDataSet.from_parameters(
-                self._model.dataset_parameters, df, predict=True
+                params, df, predict=True
             )
             dataloader = dataset.to_dataloader(batch_size=1, train=False)
 
             raw = self._model.predict(dataloader, return_x=True, mode="raw")
-            prediction = raw.output
-            # prediction shape: (1, pred_len, 3) for 3 quantiles
 
-            if isinstance(prediction, dict):
+            if hasattr(raw, "output"):
+                prediction = raw.output
+            else:
+                prediction = raw
+
+            if hasattr(prediction, "prediction"):
+                pred_tensor = prediction.prediction
+            elif isinstance(prediction, dict):
                 pred_tensor = prediction["prediction"]
             else:
                 pred_tensor = prediction
 
-            pred_np = pred_tensor.detach().cpu().numpy()[0]  # (pred_len, 3)
+            pred_np = pred_tensor.detach().cpu().numpy()[0]  # (pred_len, n_quantiles)
+
+            # Determine quantile indices based on number of quantiles
+            n_q = pred_np.shape[-1]
+            if n_q == 5:
+                q10_idx, q50_idx, q90_idx = 0, 2, 4
+            else:
+                q10_idx, q50_idx, q90_idx = 0, 1, 2
 
             horizons = {}
             for i, h in enumerate(FORECAST_HORIZONS):
                 horizons[h] = {
-                    "q10": round(float(pred_np[i, 0]), 2),
-                    "q50": round(float(pred_np[i, 1]), 2),
-                    "q90": round(float(pred_np[i, 2]), 2),
+                    "q10": round(float(pred_np[i, q10_idx]), 2),
+                    "q50": round(float(pred_np[i, q50_idx]), 2),
+                    "q90": round(float(pred_np[i, q90_idx]), 2),
                 }
 
             # Extract attention weights if available
             attention = {}
             try:
                 interpretation = self._model.interpret_output(
-                    raw.output, reduction="sum"
+                    raw.output if hasattr(raw, "output") else raw,
+                    reduction="sum",
                 )
                 weights = interpretation.get("encoder_variables", {})
                 if hasattr(weights, "items"):

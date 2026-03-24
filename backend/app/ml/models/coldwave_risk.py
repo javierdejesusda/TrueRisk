@@ -21,6 +21,9 @@ FEATURE_NAMES = [
     "cloud_cover",
     "season_sin",
     "season_cos",
+    "temp_trend_7d",
+    "cold_persistence",
+    "temp_drop_7d",
 ]
 
 _model = None

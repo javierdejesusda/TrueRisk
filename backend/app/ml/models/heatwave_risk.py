@@ -25,12 +25,13 @@ FEATURE_NAMES: list[str] = [
     "wind_speed",
     "uv_index",
     "temperature_anomaly",
-    "temperature_forecast_48h_max",
+    "temp_max_trend",
     "month",
     "latitude",
     "elevation_m",
     "is_coastal",
     "cloud_cover",
+    "solar_irradiance",
 ]
 
 _model = None

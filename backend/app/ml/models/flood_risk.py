@@ -17,13 +17,13 @@ FEATURE_NAMES: list[str] = [
     "precip_6h",
     "precip_24h",
     "precip_48h",
-    "precip_forecast_24h",
+    "precip_momentum",
     "humidity",
     "soil_moisture",
     "soil_moisture_change_24h",
     "wind_speed",
     "pressure",
-    "pressure_change_6h",
+    "pressure_tendency_1d",
     "dew_point_depression",
     "cloud_cover",
     "elevation_m",
@@ -36,6 +36,8 @@ FEATURE_NAMES: list[str] = [
     "precip_7day_anomaly",
     "consecutive_rain_days",
     "max_precip_intensity_ratio",
+    "antecedent_precip_index",
+    "soil_saturation_excess",
 ]
 
 _model = None

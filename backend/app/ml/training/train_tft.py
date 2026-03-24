@@ -3,36 +3,46 @@
 Runnable as:
     python -m app.ml.training.train_tft --hazard flood
     python -m app.ml.training.train_tft --hazard all
+    python -m app.ml.training.train_tft --hazard all --optimized
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import os
+import shutil
+import sys
+import time
 from pathlib import Path
 
 import torch
 import lightning.pytorch as pl
-from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
-from pytorch_forecasting import TemporalFusionTransformer
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
+from pytorch_forecasting import TemporalFusionTransformer, TimeSeriesDataSet
 from pytorch_forecasting.metrics import QuantileLoss
 
-from app.ml.training.config import (  # noqa: E402
+from app.ml.training.config import (
     RANDOM_SEED,
     SAVED_MODELS_DIR,
     TFT_ATTENTION_HEAD_SIZE,
     TFT_BATCH_SIZE,
     TFT_DROPOUT,
+    TFT_ENCODER_LENGTH_PER_HAZARD,
     TFT_EPOCHS,
     TFT_GRADIENT_CLIP,
     TFT_HIDDEN_CONTINUOUS_SIZE,
     TFT_HIDDEN_SIZE,
     TFT_LR,
+    TFT_LR_PER_HAZARD,
+    TFT_MAX_ENCODER_LENGTH,
+    TFT_MAX_PREDICTION_LENGTH,
     TFT_PATIENCE,
     TFT_QUANTILES,
 )
-from app.ml.training.prepare_tft_dataset import (  # noqa: E402
+from app.ml.training.prepare_tft_dataset import (
     HAZARD_FEATURES,
+    TARGET_COLS,
     build_tft_dataset,
     load_combined_tft_dataframe,
 )
@@ -50,24 +60,85 @@ try:
         [EncoderNormalizer, GroupNormalizer, NaNLabelEncoder, TorchNormalizer]
     )
 except Exception:
-    pass  # older pytorch_forecasting versions don't need this
+    pass
 
 # Use Tensor Cores for faster matmul on RTX 4070 and similar GPUs
 torch.set_float32_matmul_precision("medium")
 
+# Windows: safe multiprocessing defaults
+_IS_WINDOWS = sys.platform == "win32"
+_NUM_WORKERS = 0 if _IS_WINDOWS else 4
+_PERSISTENT_WORKERS = False if _IS_WINDOWS else True
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(SAVED_MODELS_DIR.parent.parent.parent / "tft_training.log"),
+    ],
 )
 logger = logging.getLogger(__name__)
 
 ALL_HAZARDS = list(HAZARD_FEATURES.keys())
 
 
-def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str | None:
+def _build_train_val_datasets(
+    hazard: str, combined, val_fraction: float = 0.2
+) -> tuple[TimeSeriesDataSet, TimeSeriesDataSet]:
+    """Build proper temporal train/val split using TimeSeriesDataSet."""
+    feat = HAZARD_FEATURES[hazard]
+    target = TARGET_COLS[hazard]
+    encoder_length = TFT_ENCODER_LENGTH_PER_HAZARD.get(hazard, TFT_MAX_ENCODER_LENGTH)
+
+    all_features = list(dict.fromkeys(feat["static"] + feat["known"] + feat["unknown"]))
+    keep_cols = ["time_idx", "province_code", "date", target] + all_features
+    keep_cols = list(dict.fromkeys(keep_cols))
+    df = combined[keep_cols].copy()
+    df["province_code"] = df["province_code"].astype(str)
+
+    max_time = df["time_idx"].max()
+    val_start = int(max_time * (1 - val_fraction))
+    training_cutoff = val_start - TFT_MAX_PREDICTION_LENGTH
+
+    time_varying_known = [c for c in feat["known"] if c not in feat["static"]]
+    time_varying_unknown = [c for c in feat["unknown"] if c not in feat["static"]]
+
+    logger.info("  Encoder length for %s: %d days", hazard, encoder_length)
+
+    train_ds = TimeSeriesDataSet(
+        df[df["time_idx"] <= training_cutoff],
+        time_idx="time_idx",
+        target=target,
+        group_ids=["province_code"],
+        max_encoder_length=encoder_length,
+        max_prediction_length=TFT_MAX_PREDICTION_LENGTH,
+        static_reals=feat["static"] if feat["static"] else [],
+        time_varying_known_reals=time_varying_known if time_varying_known else [],
+        time_varying_unknown_reals=time_varying_unknown + [target],
+        allow_missing_timesteps=True,
+    )
+
+    val_ds = TimeSeriesDataSet.from_dataset(
+        train_ds,
+        df[(df["time_idx"] > training_cutoff) & (df["time_idx"] <= max_time - TFT_MAX_PREDICTION_LENGTH)],
+        stop_randomization=True,
+    )
+
+    return train_ds, val_ds
+
+
+def train_single_hazard(
+    hazard: str,
+    combined=None,
+    resume: bool = False,
+    optimized: bool = False,
+) -> str | None:
     """Train a TFT for one hazard. Returns path to best checkpoint or None on failure."""
+    start_time = time.time()
+    mode = "OPTIMIZED" if optimized else "STANDARD"
     logger.info("=" * 60)
-    logger.info("Training TFT for hazard: %s", hazard)
+    logger.info("Training TFT [%s] for hazard: %s", mode, hazard)
     logger.info("=" * 60)
 
     if hazard not in HAZARD_FEATURES:
@@ -75,34 +146,38 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
         return None
 
     # ------------------------------------------------------------------
-    # 1. Build dataset
+    # 1. Build train/val datasets with proper temporal split
     # ------------------------------------------------------------------
     try:
-        training_dataset = build_tft_dataset(hazard, combined)
+        if combined is None:
+            combined = load_combined_tft_dataframe()
+        train_ds, val_ds = _build_train_val_datasets(hazard, combined)
     except Exception:
         logger.exception("Failed to build dataset for %s", hazard)
         return None
 
-    # ------------------------------------------------------------------
-    # 2. 80/20 temporal split
-    # ------------------------------------------------------------------
-    # TimeSeriesDataSet already filters to training_cutoff; we create a
-    # validation set from the last 20 % of encoder windows.
-    total_samples = len(training_dataset)
-    split_idx = int(total_samples * 0.8)
     logger.info(
-        "Dataset: %d total -> %d train / %d val",
-        total_samples,
-        split_idx,
-        total_samples - split_idx,
+        "Dataset: %d train / %d val samples",
+        len(train_ds),
+        len(val_ds),
     )
 
-    # Create dataloaders (num_workers=4 for faster batch loading)
-    train_dataloader = training_dataset.to_dataloader(
-        train=True, batch_size=TFT_BATCH_SIZE, num_workers=4, persistent_workers=True
+    # ------------------------------------------------------------------
+    # 2. Dataloaders (num_workers=0 on Windows to avoid spawn issues)
+    # ------------------------------------------------------------------
+    batch_size = TFT_BATCH_SIZE if not optimized else min(TFT_BATCH_SIZE, 128)
+
+    train_dataloader = train_ds.to_dataloader(
+        train=True,
+        batch_size=batch_size,
+        num_workers=_NUM_WORKERS,
+        persistent_workers=_PERSISTENT_WORKERS,
     )
-    val_dataloader = training_dataset.to_dataloader(
-        train=False, batch_size=TFT_BATCH_SIZE, num_workers=4, persistent_workers=True
+    val_dataloader = val_ds.to_dataloader(
+        train=False,
+        batch_size=batch_size,
+        num_workers=_NUM_WORKERS,
+        persistent_workers=_PERSISTENT_WORKERS,
     )
 
     # ------------------------------------------------------------------
@@ -110,55 +185,99 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
     # ------------------------------------------------------------------
     pl.seed_everything(RANDOM_SEED)
 
+    hidden_size = TFT_HIDDEN_SIZE if not optimized else 128
+    attention_heads = TFT_ATTENTION_HEAD_SIZE if not optimized else 8
+    hidden_continuous = TFT_HIDDEN_CONTINUOUS_SIZE if not optimized else 64
+    dropout = TFT_DROPOUT if not optimized else 0.15
+    lr = TFT_LR_PER_HAZARD.get(hazard, TFT_LR) if not optimized else 1e-3
+    epochs = TFT_EPOCHS if not optimized else 100
+    patience = TFT_PATIENCE if not optimized else 10
+
+    # More quantiles for low-variance targets to improve supervision signal
+    if hazard in ("windstorm", "flood"):
+        quantiles = [0.1, 0.3, 0.5, 0.7, 0.9]
+    else:
+        quantiles = TFT_QUANTILES
+
     model = TemporalFusionTransformer.from_dataset(
-        training_dataset,
-        learning_rate=TFT_LR,
-        hidden_size=TFT_HIDDEN_SIZE,
-        attention_head_size=TFT_ATTENTION_HEAD_SIZE,
-        dropout=TFT_DROPOUT,
-        hidden_continuous_size=TFT_HIDDEN_CONTINUOUS_SIZE,
-        loss=QuantileLoss(quantiles=TFT_QUANTILES),
-        reduce_on_plateau_patience=TFT_PATIENCE // 2,
+        train_ds,
+        learning_rate=lr,
+        hidden_size=hidden_size,
+        attention_head_size=attention_heads,
+        dropout=dropout,
+        hidden_continuous_size=hidden_continuous,
+        loss=QuantileLoss(quantiles=quantiles),
+        reduce_on_plateau_patience=patience // 2,
     )
 
-    logger.info(
-        "Model created: %d parameters",
-        sum(p.numel() for p in model.parameters()),
-    )
-
+    n_params = sum(p.numel() for p in model.parameters())
+    logger.info("Model: %d parameters (hidden=%d, heads=%d, lr=%.1e)", n_params, hidden_size, attention_heads, lr)
 
     # ------------------------------------------------------------------
-    # 4. Callbacks
+    # 4. Optimal learning rate (optimized mode only)
+    # ------------------------------------------------------------------
+    if optimized:
+        logger.info("Running learning rate finder...")
+        try:
+            trainer_lr = pl.Trainer(
+                accelerator="auto",
+                devices=1,
+                precision="bf16-mixed",
+                gradient_clip_val=TFT_GRADIENT_CLIP,
+            )
+            lr_result = trainer_lr.tuner.lr_find(
+                model,
+                train_dataloaders=train_dataloader,
+                val_dataloaders=val_dataloader,
+                min_lr=1e-6,
+                max_lr=1e-1,
+                num_training=100,
+            )
+            suggested_lr = lr_result.suggestion()
+            if suggested_lr and 1e-6 < suggested_lr < 1e-1:
+                logger.info("LR finder suggested: %.2e (using it)", suggested_lr)
+                model.hparams.learning_rate = suggested_lr
+            else:
+                logger.info("LR finder result (%.2e) out of range, keeping %.2e", suggested_lr or 0, lr)
+        except Exception:
+            logger.warning("LR finder failed, using default lr=%.2e", lr, exc_info=True)
+
+    # ------------------------------------------------------------------
+    # 5. Callbacks
     # ------------------------------------------------------------------
     SAVED_MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    ckpt_path = str(SAVED_MODELS_DIR / f"{hazard}_tft.ckpt")
+    suffix = "_tft_optimized" if optimized else "_tft"
+    ckpt_path = str(SAVED_MODELS_DIR / f"{hazard}{suffix}.ckpt")
 
     early_stop = EarlyStopping(
         monitor="val_loss",
-        patience=TFT_PATIENCE,
+        patience=patience,
         mode="min",
         verbose=True,
     )
     checkpoint = ModelCheckpoint(
         dirpath=str(SAVED_MODELS_DIR),
-        filename=f"{hazard}_tft",
+        filename=f"{hazard}{suffix}",
         monitor="val_loss",
         mode="min",
         save_top_k=1,
         verbose=True,
+        enable_version_counter=False,
     )
+    lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
     # ------------------------------------------------------------------
-    # 5. Train
+    # 6. Train
     # ------------------------------------------------------------------
     trainer = pl.Trainer(
-        max_epochs=TFT_EPOCHS,
+        max_epochs=epochs,
         gradient_clip_val=TFT_GRADIENT_CLIP,
-        callbacks=[early_stop, checkpoint],
+        callbacks=[early_stop, checkpoint, lr_monitor],
         enable_progress_bar=True,
         accelerator="auto",
         precision="bf16-mixed",
         devices=1,
+        log_every_n_steps=50,
     )
 
     resume_path = ckpt_path if resume and Path(ckpt_path).exists() else None
@@ -177,20 +296,31 @@ def train_single_hazard(hazard: str, combined=None, resume: bool = False) -> str
         return None
 
     best_path = checkpoint.best_model_path
-    logger.info("Best checkpoint for %s: %s (val_loss=%.4f)", hazard, best_path, checkpoint.best_model_score or 0.0)
+    best_score = checkpoint.best_model_score
+    logger.info(
+        "Best checkpoint for %s: %s (val_loss=%.4f)",
+        hazard, best_path, best_score or 0.0,
+    )
 
-    # Copy best checkpoint to canonical location (skip if already there)
+    # Copy best checkpoint to canonical location
     if best_path and str(Path(best_path).resolve()) != str(Path(ckpt_path).resolve()):
-        import shutil
-
         try:
             shutil.copy2(best_path, ckpt_path)
             logger.info("Saved final model to %s", ckpt_path)
         except PermissionError:
             logger.warning("Could not copy checkpoint (file locked); using in-place checkpoint")
-    else:
-        logger.info("Checkpoint already at %s", ckpt_path)
 
+    # Also save as the standard _tft.ckpt if optimized is better
+    if optimized:
+        std_ckpt = str(SAVED_MODELS_DIR / f"{hazard}_tft.ckpt")
+        try:
+            shutil.copy2(ckpt_path, std_ckpt)
+            logger.info("Copied optimized model to standard path: %s", std_ckpt)
+        except Exception:
+            logger.warning("Could not copy to standard path", exc_info=True)
+
+    elapsed = time.time() - start_time
+    logger.info("Finished %s [%s] in %.1f min (val_loss=%.4f)", hazard, mode, elapsed / 60, best_score or 0.0)
     return ckpt_path
 
 
@@ -206,16 +336,30 @@ def main() -> None:
         type=str,
         required=True,
         choices=ALL_HAZARDS + ["all"],
-        help="Hazard to train (flood|wildfire|heatwave|drought|all)",
+        help="Hazard to train (flood|wildfire|heatwave|drought|coldwave|windstorm|all)",
     )
     parser.add_argument(
         "--resume",
         action="store_true",
         help="Resume training from existing checkpoint",
     )
+    parser.add_argument(
+        "--optimized",
+        action="store_true",
+        help="Train with larger model, LR finder, and more epochs",
+    )
     args = parser.parse_args()
 
     hazards = ALL_HAZARDS if args.hazard == "all" else [args.hazard]
+
+    logger.info("=" * 60)
+    logger.info("TFT Training Pipeline")
+    logger.info("  Hazards: %s", hazards)
+    logger.info("  Mode: %s", "OPTIMIZED" if args.optimized else "STANDARD")
+    logger.info("  Resume: %s", args.resume)
+    logger.info("  GPU: %s", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
+    logger.info("  Workers: %d (Windows=%s)", _NUM_WORKERS, _IS_WINDOWS)
+    logger.info("=" * 60)
 
     # Load data once if training multiple hazards
     combined = None
@@ -227,16 +371,28 @@ def main() -> None:
             logger.exception("Failed to load combined dataset")
             return
 
+    total_start = time.time()
     results: dict[str, str | None] = {}
-    for h in hazards:
-        results[h] = train_single_hazard(h, combined, resume=args.resume)
 
-    # Summary
+    for i, h in enumerate(hazards):
+        logger.info("[%d/%d] Starting %s...", i + 1, len(hazards), h)
+        results[h] = train_single_hazard(h, combined, resume=args.resume, optimized=args.optimized)
+        # Free GPU memory between hazards
+        torch.cuda.empty_cache()
+
+    total_elapsed = time.time() - total_start
+
     logger.info("=" * 60)
-    logger.info("Training summary:")
+    logger.info("Training summary (%.1f min total):", total_elapsed / 60)
     for h, path in results.items():
         status = f"OK -> {path}" if path else "FAILED"
         logger.info("  %s: %s", h, status)
+
+    failed = [h for h, p in results.items() if p is None]
+    if failed:
+        logger.error("FAILED hazards: %s", failed)
+    else:
+        logger.info("All %d hazards trained successfully!", len(results))
     logger.info("=" * 60)
 
 

@@ -89,7 +89,27 @@ LSTM_PATIENCE = 10
 # ---------------------------------------------------------------------------
 FORECAST_HORIZONS = [6, 12, 24, 48, 72, 168]
 TFT_MAX_PREDICTION_LENGTH = len(FORECAST_HORIZONS)  # 6 steps
-TFT_MAX_ENCODER_LENGTH = 168  # 7 days of hourly lookback
+TFT_MAX_ENCODER_LENGTH = 168  # Default: ~5.5 months of daily lookback
+
+# Per-hazard encoder lengths (daily time steps)
+TFT_ENCODER_LENGTH_PER_HAZARD = {
+    "drought":   168,  # slow-onset, needs long context
+    "wildfire":  120,  # ~4 months, FWI components need seasonal context
+    "heatwave":   90,  # ~3 months, seasonal patterns
+    "coldwave":   60,  # ~2 months, shorter cold persistence
+    "flood":      45,  # ~1.5 months, event-driven
+    "windstorm":  30,  # ~1 month, synoptic-scale events
+}
+
+# Per-hazard learning rates
+TFT_LR_PER_HAZARD = {
+    "drought":   2e-3,
+    "wildfire":  2e-3,
+    "heatwave":  2e-3,
+    "coldwave":  3e-3,
+    "flood":     3e-3,
+    "windstorm": 5e-3,
+}
 
 # Temporal Fusion Transformer
 TFT_HIDDEN_SIZE = 64
