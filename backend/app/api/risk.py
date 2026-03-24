@@ -437,3 +437,41 @@ async def trigger_pipeline():
 
     asyncio.create_task(run_pipeline())
     return {"status": "pipeline triggered"}
+
+
+@router.get("/pipeline/diagnostics")
+async def pipeline_diagnostics(db: AsyncSession = Depends(get_db)):
+    """Check TFT model availability, daily summary counts, and forecast status."""
+    from sqlalchemy import func
+
+    from app.ml.training.config import SAVED_MODELS_DIR
+    from app.models.risk_forecast import RiskForecast
+    from app.models.weather_daily_summary import WeatherDailySummary
+    from app.models.weather_record import WeatherRecord
+
+    hazards = ["flood", "wildfire", "heatwave", "drought", "coldwave", "windstorm"]
+    models = {}
+    for h in hazards:
+        ckpt = SAVED_MODELS_DIR / f"{h}_tft.ckpt"
+        size = ckpt.stat().st_size if ckpt.exists() else 0
+        models[h] = {"exists": ckpt.exists(), "size_bytes": size}
+
+    daily_count = await db.scalar(
+        select(func.count()).select_from(WeatherDailySummary)
+    ) or 0
+    daily_provinces = await db.scalar(
+        select(func.count(func.distinct(WeatherDailySummary.province_code)))
+    ) or 0
+    record_count = await db.scalar(
+        select(func.count()).select_from(WeatherRecord)
+    ) or 0
+    forecast_count = await db.scalar(
+        select(func.count()).select_from(RiskForecast)
+    ) or 0
+
+    return {
+        "models": models,
+        "daily_summaries": {"total_rows": daily_count, "provinces": daily_provinces},
+        "weather_records": record_count,
+        "forecasts": forecast_count,
+    }
