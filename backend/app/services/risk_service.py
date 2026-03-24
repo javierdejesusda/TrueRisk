@@ -434,7 +434,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     fwi_components = compute_fwi_components(
         temp_c=temperature,
         humidity_pct=humidity,
-        wind_kmh=wind_speed * 3.6,  # m/s -> km/h
+        wind_kmh=wind_speed,  # Open-Meteo returns km/h by default
         rain_mm=temporal["precip_24h"],
         month=month,
     )
@@ -506,7 +506,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     }
 
     # 4c. Cold wave features
-    wind_chill = _compute_wind_chill(temperature, wind_speed * 3.6)  # m/s -> km/h
+    wind_chill = _compute_wind_chill(temperature, wind_speed)  # Open-Meteo returns km/h
     coldwave_features = {
         "temperature": temperature,
         "temperature_min": temporal["temperature_min"],
