@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -480,7 +481,7 @@ async def trigger_forecasts_only(db: AsyncSession = Depends(get_db)):
 
     history = enrich_daily_history(raw_days, terrain)
     now = dt.utcnow()
-    results = {}
+    results: dict[str, Any] = {}
     stored = 0
 
     from app.ml.models.tft_flood import predict_flood_risk_tft
@@ -573,7 +574,7 @@ async def test_forecast(province_code: str, db: AsyncSession = Depends(get_db)):
     except Exception:
         return {"error": "enrich_daily_history failed", "traceback": traceback.format_exc()}
 
-    results = {}
+    results: dict[str, Any] = {}
     from app.ml.models.tft_flood import predict_flood_risk_tft
     from app.ml.models.tft_wildfire import predict_wildfire_risk_tft
     from app.ml.models.tft_heatwave import predict_heatwave_risk_tft
