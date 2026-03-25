@@ -10,6 +10,8 @@ import { PushBanner } from '@/components/notifications/push-banner';
 import { EmergencyBanner } from '@/components/emergency/emergency-banner';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { useOfflinePack } from '@/hooks/use-offline-pack';
+import { useAppStore } from '@/store/app-store';
+import { OnboardingFlow } from '@/components/onboarding/onboarding-flow';
 
 export default function CitizenLayout({
   children,
@@ -18,6 +20,7 @@ export default function CitizenLayout({
 }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const hasSeenOnboarding = useAppStore((s) => s.hasSeenOnboarding);
   useAlertStream();
   useOfflinePack(); // Auto-syncs on mount and every 30min
 
@@ -45,6 +48,14 @@ export default function CitizenLayout({
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  if (!hasSeenOnboarding) {
+    return (
+      <div className="relative h-screen w-screen overflow-hidden bg-bg-primary grain">
+        <OnboardingFlow />
+      </div>
+    );
   }
 
   return (
