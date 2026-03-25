@@ -152,15 +152,15 @@ def test_all_hazard_types_handled():
 
 
 @pytest.mark.asyncio
-async def test_impact_endpoint(client):
+async def test_impact_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/risk/28/impact")
-    assert response.status_code in (200, 404, 500, 503)
+    assert response.status_code in (200, 404)
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_impact_endpoint_unknown_province(client):
+async def test_impact_endpoint_unknown_province(client, mock_external_apis):
     response = await client.get("/api/v1/risk/99/impact")
-    assert response.status_code in (200, 404, 500, 503)
+    assert response.status_code in (200, 404)

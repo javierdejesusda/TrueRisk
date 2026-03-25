@@ -1,5 +1,6 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
+import respx
+from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import StaticPool
 
@@ -68,3 +69,91 @@ async def client():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def mock_external_apis():
+    """Opt-in fixture — mocks external HTTP calls so endpoints return 200."""
+    with respx.mock(assert_all_called=False) as respx_mock:
+        # Open-Meteo weather API
+        respx_mock.get(url__startswith="https://api.open-meteo.com/").mock(
+            return_value=Response(200, json={
+                "current": {
+                    "temperature_2m": 22.0, "relative_humidity_2m": 55,
+                    "precipitation": 0.0, "wind_speed_10m": 12.0,
+                    "surface_pressure": 1013.0, "weather_code": 1,
+                    "wind_gusts_10m": 20.0, "is_day": 1,
+                },
+                "current_units": {"temperature_2m": "°C"},
+                "daily": {
+                    "time": ["2024-01-15"],
+                    "temperature_2m_max": [25.0], "temperature_2m_min": [10.0],
+                    "precipitation_sum": [0.0], "wind_speed_10m_max": [20.0],
+                    "wind_gusts_10m_max": [30.0], "et0_fao_evapotranspiration": [3.0],
+                    "soil_moisture_0_to_7cm_mean": [0.3],
+                    "weather_code": [1], "uv_index_max": [5.0],
+                    "sunrise": ["2024-01-15T08:00"], "sunset": ["2024-01-15T18:00"],
+                },
+                "hourly": {
+                    "time": ["2024-01-15T12:00"],
+                    "temperature_2m": [22.0], "precipitation": [0.0],
+                    "wind_speed_10m": [12.0], "relative_humidity_2m": [55],
+                    "surface_pressure": [1013.0], "dew_point_2m": [12.0],
+                    "soil_moisture_0_to_7cm": [0.3], "wind_gusts_10m": [20.0],
+                    "cape": [0.0],
+                },
+            })
+        )
+        # Open-Meteo archive API
+        respx_mock.get(url__startswith="https://archive-api.open-meteo.com/").mock(
+            return_value=Response(200, json={
+                "daily": {
+                    "time": [], "temperature_2m_max": [], "temperature_2m_min": [],
+                    "precipitation_sum": [], "wind_speed_10m_max": [],
+                },
+            })
+        )
+        # AEMET OpenData
+        respx_mock.get(url__startswith="https://opendata.aemet.es/").mock(
+            return_value=Response(200, json={
+                "estado": 200, "datos": "https://opendata.aemet.es/datos",
+                "metadatos": "https://opendata.aemet.es/meta",
+            })
+        )
+        # NASA FIRMS
+        respx_mock.get(url__startswith="https://firms.modaps.eosdis.nasa.gov/").mock(
+            return_value=Response(200, text="latitude,longitude,brightness,frp\n")
+        )
+        # USGS Earthquake
+        respx_mock.get(url__startswith="https://earthquake.usgs.gov/").mock(
+            return_value=Response(200, json={"type": "FeatureCollection", "features": []})
+        )
+        # REE Energy
+        respx_mock.get(url__startswith="https://apidatos.ree.es/").mock(
+            return_value=Response(200, json={"included": []})
+        )
+        # OpenAQ
+        respx_mock.get(url__startswith="https://api.openaq.org/").mock(
+            return_value=Response(200, json={"results": []})
+        )
+        # INE Demographics
+        respx_mock.get(url__startswith="https://servicios.ine.es/").mock(
+            return_value=Response(200, json=[])
+        )
+        # Copernicus EMS
+        respx_mock.get(url__startswith="https://emergency.copernicus.eu/").mock(
+            return_value=Response(200, text="<rss><channel></channel></rss>")
+        )
+        # Copernicus Land (NDVI)
+        respx_mock.get(url__startswith="https://land.copernicus.eu/").mock(
+            return_value=Response(200, json={})
+        )
+        # SAIH basin portals (various)
+        for domain in ["saihtajo", "saihduero", "chcantabrico", "saihguadiana", "chmediterraneo",
+                       "saih.chj.es", "saihebro", "chguadalquivir", "chsegura"]:
+            respx_mock.get(host__regex=rf".*{domain}.*").mock(
+                return_value=Response(200, text="<html></html>")
+            )
+        # Catch-all for any other external HTTP
+        respx_mock.route().mock(return_value=Response(200, json={}))
+        yield respx_mock

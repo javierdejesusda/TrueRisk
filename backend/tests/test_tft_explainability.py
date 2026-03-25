@@ -47,18 +47,18 @@ def test_explain_with_disagreement():
 
 
 @pytest.mark.asyncio
-async def test_attention_endpoint(client):
+async def test_attention_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/risk/28/explain/attention")
-    assert response.status_code in (200, 404, 500, 503)
+    assert response.status_code in (200, 404)
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_comparison_endpoint(client):
+async def test_comparison_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/risk/28/explain/comparison?hazard=flood")
-    assert response.status_code in (200, 404, 500, 503)
+    assert response.status_code in (200, 404)
     if response.status_code == 200:
         data = response.json()
         assert "comparison_available" in data

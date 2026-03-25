@@ -2,9 +2,9 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_risk_province(client):
+async def test_risk_province(client, mock_external_apis):
     response = await client.get("/api/v1/risk/28")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert data["province_code"] == "28"
@@ -22,18 +22,18 @@ async def test_risk_province(client):
 
 
 @pytest.mark.asyncio
-async def test_risk_all(client):
+async def test_risk_all(client, mock_external_apis):
     response = await client.get("/api/v1/risk/all")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_risk_map(client):
+async def test_risk_map(client, mock_external_apis):
     response = await client.get("/api/v1/risk/map")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert "provinces" in data

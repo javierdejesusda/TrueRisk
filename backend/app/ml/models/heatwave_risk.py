@@ -51,6 +51,11 @@ def _load_model():
     return _model
 
 
+def get_trained_model():
+    """Return the loaded XGBoost model or None."""
+    return _load_model()
+
+
 def predict_heatwave_risk(features: dict) -> float:
     """Return a heatwave-risk score in the range 0--100.
 

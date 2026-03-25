@@ -16,9 +16,9 @@ def _mock_db_with_gauges(gauges):
 
 
 @pytest.mark.asyncio
-async def test_flash_flood_status_endpoint(client):
+async def test_flash_flood_status_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/flash-flood/status")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert "basins_configured" in data
@@ -29,45 +29,45 @@ async def test_flash_flood_status_endpoint(client):
 
 
 @pytest.mark.asyncio
-async def test_flash_flood_alerts_endpoint(client):
+async def test_flash_flood_alerts_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/flash-flood/alerts")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_flash_flood_gauges_endpoint(client):
+async def test_flash_flood_gauges_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/flash-flood/gauges")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_flash_flood_gauges_filter_by_basin(client):
+async def test_flash_flood_gauges_filter_by_basin(client, mock_external_apis):
     response = await client.get("/api/v1/flash-flood/gauges?basin=ebro")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_flash_flood_gauge_readings(client):
+async def test_flash_flood_gauge_readings(client, mock_external_apis):
     response = await client.get("/api/v1/flash-flood/gauges/ebro_test/readings")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
-async def test_flash_flood_check_endpoint(client):
+async def test_flash_flood_check_endpoint(client, mock_external_apis):
     response = await client.post("/api/v1/flash-flood/check")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert "readings_stored" in data

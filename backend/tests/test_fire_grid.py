@@ -84,9 +84,9 @@ def test_build_fire_grid_outside_spain():
 
 
 @pytest.mark.asyncio
-async def test_fire_grid_endpoint(client):
+async def test_fire_grid_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/data/fire-grid")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert "grid_resolution_deg" in data
@@ -94,9 +94,9 @@ async def test_fire_grid_endpoint(client):
 
 
 @pytest.mark.asyncio
-async def test_fire_proximity_endpoint(client):
+async def test_fire_proximity_endpoint(client, mock_external_apis):
     response = await client.get("/api/v1/data/fire-proximity?lat=40.4&lon=-3.7")
-    assert response.status_code in (200, 500, 503)
+    assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
         assert "nearest_fire_km" in data

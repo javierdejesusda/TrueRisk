@@ -15,6 +15,7 @@ dependencies = [
     "apscheduler>=3.10,<4",
     "xgboost>=2.1",
     "lightgbm>=4.5",
+    "shap>=0.45",
     "scikit-learn>=1.5",
     "torch>=2.4",
     "numpy>=2.0",
@@ -37,7 +38,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-cov>=6.0", "httpx", "mypy", "ruff"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-cov>=6.0", "httpx", "mypy", "ruff", "respx>=0.21"]
 training = ["matplotlib>=3.9", "tqdm>=4.66", "tensorboard>=2.18"]
 
 [build-system]

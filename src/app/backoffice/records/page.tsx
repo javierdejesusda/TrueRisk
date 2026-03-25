@@ -42,10 +42,12 @@ export default function BackofficeRecordsPage() {
   const [total, setTotal] = useState(0);
   const [sortField, setSortField] = useState<SortField>('recorded_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [error, setError] = useState<string | null>(null);
   const pageSize = 20;
 
   const fetchRecords = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -59,8 +61,9 @@ export default function BackofficeRecordsPage() {
         setRecords(data.items ?? data);
         setTotal(data.total ?? (Array.isArray(data) ? data.length : 0));
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      setError('Failed to load weather records. Please try again.');
+      console.error('fetchRecords:', err);
     } finally {
       setIsLoading(false);
     }
@@ -209,6 +212,18 @@ export default function BackofficeRecordsPage() {
           {t('exportCsv')}
         </Button>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 flex items-center justify-between">
+          <p className="text-sm text-red-400">{error}</p>
+          <button
+            onClick={() => { setError(null); fetchRecords(); }}
+            className="text-sm text-red-300 hover:text-red-200 underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <Card padding="none">

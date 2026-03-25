@@ -79,6 +79,12 @@ def _load_models():
     return _rf_model, _lgbm_model, _calibrator
 
 
+def get_trained_models():
+    """Return (rf_model, lgbm_model, calibrator) tuple. Any may be None."""
+    _load_models()
+    return _rf_model, _lgbm_model, _calibrator
+
+
 def predict_wildfire_risk(features: dict) -> float:
     """Return a wildfire-risk score in the range 0--100.
 

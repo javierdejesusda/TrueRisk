@@ -1,5 +1,7 @@
 """Unit tests for the explainability service."""
 
+from unittest.mock import patch
+
 from app.services.explainability_service import (
     explain_risk,
     explain_flood,
@@ -69,7 +71,8 @@ def test_explain_windstorm():
     assert any(c["feature"] == "pressure_change_6h" and c["contribution"] == 10 for c in contributions)
 
 
-def test_explain_risk_all_hazards():
+@patch("app.services.explainability_service._try_shap", return_value=[])
+def test_explain_risk_all_hazards(_mock_shap):
     snapshot = {
         "flood": {"precip_24h": 50},
         "wildfire": {"fwi": 20},
@@ -88,7 +91,8 @@ def test_explain_risk_all_hazards():
         assert len(result[hazard]) > 0
 
 
-def test_contributions_sorted_descending():
+@patch("app.services.explainability_service._try_shap", return_value=[])
+def test_contributions_sorted_descending(_mock_shap):
     explain_flood({"precip_24h": 70, "precip_6h": 35, "soil_moisture": 0.7})
     result = explain_risk({"flood": {"precip_24h": 70, "precip_6h": 35, "soil_moisture": 0.7}})
     flood = result["flood"]

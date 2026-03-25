@@ -499,13 +499,43 @@ _EXPLAINERS = {
 def explain_risk(features_snapshot: dict[str, Any]) -> dict[str, list[dict]]:
     """Compute feature importance for all hazards from a stored features_snapshot.
 
-    Returns a dict mapping hazard name to a list of feature contributions,
-    sorted by contribution (descending).
+    Uses SHAP TreeExplainer for model-based hazards (flood, wildfire, heatwave)
+    when trained models are available, falling back to rule-based for all others.
     """
+    from app.services.shap_explainer import explain_with_shap
+
     result: dict[str, list[dict]] = {}
+
     for hazard, explainer in _EXPLAINERS.items():
         hazard_features = features_snapshot.get(hazard, {})
-        contributions = explainer(hazard_features)
+        contributions = _try_shap(hazard, hazard_features)
+        if not contributions:
+            contributions = explainer(hazard_features)
         contributions.sort(key=lambda c: c["contribution"], reverse=True)
         result[hazard] = contributions
+
     return result
+
+
+def _try_shap(hazard: str, features: dict[str, Any]) -> list[dict]:
+    """Attempt SHAP explanation for model-based hazards."""
+    from app.services.shap_explainer import explain_with_shap
+
+    if hazard == "flood":
+        from app.ml.models.flood_risk import get_trained_model, FEATURE_NAMES
+        model = get_trained_model()
+        if model is not None:
+            return explain_with_shap(model, features, FEATURE_NAMES, hazard)
+    elif hazard == "wildfire":
+        from app.ml.models.wildfire_risk import get_trained_models, FEATURE_NAMES
+        rf, lgbm, _ = get_trained_models()
+        model = lgbm or rf
+        if model is not None:
+            return explain_with_shap(model, features, FEATURE_NAMES, hazard)
+    elif hazard == "heatwave":
+        from app.ml.models.heatwave_risk import get_trained_model, FEATURE_NAMES
+        model = get_trained_model()
+        if model is not None:
+            return explain_with_shap(model, features, FEATURE_NAMES, hazard)
+
+    return []

@@ -39,6 +39,8 @@ export default function BackofficeAlertsPage() {
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -59,6 +61,7 @@ export default function BackofficeAlertsPage() {
 
   const fetchAlerts = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.set('active', statusFilter);
@@ -69,8 +72,9 @@ export default function BackofficeAlertsPage() {
       if (res.ok) {
         setAlerts(Array.isArray(data) ? data : []);
       }
-    } catch {
-      // Silently fail, alerts remain empty
+    } catch (err) {
+      setError('Failed to load alerts. Please try again.');
+      console.error('fetchAlerts:', err);
     } finally {
       setIsLoading(false);
     }
@@ -99,9 +103,12 @@ export default function BackofficeAlertsPage() {
             a.id === alert.id ? { ...a, is_active: !a.is_active } : a,
           ),
         );
+      } else {
+        setError('Failed to update alert status.');
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      setError('Failed to update alert status.');
+      console.error('toggleActive:', err);
     } finally {
       setTogglingId(null);
     }
@@ -118,10 +125,11 @@ export default function BackofficeAlertsPage() {
       if (res.ok) {
         setAlerts((prev) => prev.filter((a) => a.id !== id));
       } else {
-        await res.json(); // consume body
+        setError('Failed to delete alert.');
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      setError('Failed to delete alert.');
+      console.error('deleteAlert:', err);
     } finally {
       setDeletingId(null);
       setDeleteConfirmId(null);
@@ -181,6 +189,18 @@ export default function BackofficeAlertsPage() {
           </div>
         </div>
       </Card>
+
+      {error && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 flex items-center justify-between">
+          <p className="text-sm text-red-400">{error}</p>
+          <button
+            onClick={() => { setError(null); fetchAlerts(); }}
+            className="text-sm text-red-300 hover:text-red-200 underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <Card padding="none">

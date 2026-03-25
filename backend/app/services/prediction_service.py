@@ -136,7 +136,7 @@ def _gumbel_analysis(values: list[float], current: float) -> dict:
 
 def _linear_regression(values: list[float]) -> dict:
     n = len(values)
-    if n < 2:
+    if n < 10:
         return {
             "slope": 0, "intercept": 0, "rSquared": 0,
             "projected6h": 0, "projected12h": 0, "data": [],
@@ -162,7 +162,7 @@ def _linear_regression(values: list[float]) -> dict:
         step = n - 1 + h
         data.append({"step": step, "fitted": round(slope * step + intercept, 2)})
 
-    return {
+    result = {
         "slope": round(slope, 4),
         "intercept": round(intercept, 2),
         "rSquared": round(max(r_squared, 0), 4),
@@ -170,6 +170,10 @@ def _linear_regression(values: list[float]) -> dict:
         "projected12h": round(slope * (n + 11) + intercept, 2),
         "data": data,
     }
+    if n < 30:
+        result["low_confidence"] = True
+        result["sample_count"] = n
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -576,8 +580,9 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
 
     # Build KNN events from real historical extremes
     knn_events = _build_knn_events_from_summaries(daily_summaries) if has_enough_daily else []
-    if len(knn_events) < 5:
-        knn_events = _HISTORICAL_EVENTS  # fallback to hardcoded
+    if len(knn_events) < 3:
+        fill_count = min(5 - len(knn_events), len(_HISTORICAL_EVENTS))
+        knn_events = knn_events + _HISTORICAL_EVENTS[:fill_count]
 
     return {
         "gumbel": {
