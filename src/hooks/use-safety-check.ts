@@ -31,6 +31,7 @@ export interface FamilyLink {
 
 export interface FamilyMemberStatus {
   user_id: number;
+  link_id: number;
   nickname: string;
   display_name: string | null;
   latest_check_in: SafetyCheckIn | null;
@@ -154,14 +155,25 @@ export function useSafetyCheck() {
     }
   }, []);
 
+  const fetchPendingLinks = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/safety/links');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as FamilyLink[];
+      setPendingLinks(data);
+    } catch {
+      // silent - pending links are supplementary
+    }
+  }, []);
+
   // Initial fetch
   useEffect(() => {
     if (token) {
       getFamilyStatus();
       fetchCheckIns();
-      // TODO: Fetch pending links on mount when backend adds GET /links endpoint
+      fetchPendingLinks();
     }
-  }, [token, getFamilyStatus, fetchCheckIns]);
+  }, [token, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
 
   // Auto-refresh family status every 30 seconds
   useEffect(() => {

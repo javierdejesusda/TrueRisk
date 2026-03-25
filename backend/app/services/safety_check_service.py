@@ -100,6 +100,7 @@ async def get_family_status(db: AsyncSession, user_id: int) -> list[dict]:
         statuses.append(
             {
                 "user_id": other_user.id,
+                "link_id": link.id,
                 "nickname": other_user.nickname or "",
                 "display_name": other_user.display_name,
                 "latest_check_in": latest,
@@ -108,6 +109,34 @@ async def get_family_status(db: AsyncSession, user_id: int) -> list[dict]:
         )
 
     return statuses
+
+
+async def get_pending_links(db: AsyncSession, user_id: int) -> list[dict]:
+    """Return pending family link requests targeting this user."""
+    result = await db.execute(
+        select(FamilyLink).where(
+            FamilyLink.linked_user_id == user_id,
+            FamilyLink.status == "pending",
+        )
+    )
+    links = list(result.scalars().all())
+
+    pending = []
+    for link in links:
+        requester = await db.get(User, link.user_id)
+        pending.append(
+            {
+                "id": link.id,
+                "user_id": link.user_id,
+                "linked_user_id": link.linked_user_id,
+                "relationship": link.relationship,
+                "status": link.status,
+                "created_at": link.created_at,
+                "linked_user_nickname": (requester.nickname or "") if requester else "",
+                "linked_user_display_name": requester.display_name if requester else None,
+            }
+        )
+    return pending
 
 
 async def create_link(

@@ -45,6 +45,7 @@ class FamilyLinkResponse(BaseModel):
 
 class FamilyStatusResponse(BaseModel):
     user_id: int
+    link_id: int
     nickname: str
     display_name: str | None
     latest_check_in: SafetyCheckInResponse | None

@@ -50,6 +50,20 @@ async def family_status(
     return await safety_check_service.get_family_status(db, user.id)
 
 
+@router.get(
+    "/links",
+    response_model=list[FamilyLinkResponse],
+    summary="Get pending family links",
+    description="Return pending family link requests where the current user is the target.",
+)
+async def get_pending_links(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get pending incoming link requests."""
+    return await safety_check_service.get_pending_links(db, user.id)
+
+
 @router.post(
     "/links",
     response_model=FamilyLinkResponse,

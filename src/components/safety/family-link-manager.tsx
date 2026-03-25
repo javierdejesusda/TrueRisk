@@ -95,8 +95,7 @@ export function FamilyLinkManager({ familyStatus, pendingLinks, onCreateLink, on
                 {t('accepted')}
               </span>
               <button
-                // TODO: member.user_id is passed here but the backend expects a link_id. Backend needs to expose link_id in family-status response.
-                onClick={() => onDeleteLink(member.user_id)}
+                onClick={() => onDeleteLink(member.link_id)}
                 className="font-[family-name:var(--font-sans)] text-[10px] px-2 py-1 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
               >
                 {t('remove')}
