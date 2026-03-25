@@ -15,4 +15,5 @@ class PushSubscribeRequest(BaseModel):
 class PushSubscribeResponse(BaseModel):
     id: int
     province_code: str
+    user_id: int | None = None
     is_active: bool

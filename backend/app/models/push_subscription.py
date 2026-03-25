@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, DateTime, func
+from sqlalchemy import ForeignKey, Integer, String, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -10,6 +10,9 @@ class PushSubscription(Base):
     __tablename__ = "push_subscriptions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True, index=True
+    )
     province_code: Mapped[str] = mapped_column(String(2), index=True)
     endpoint: Mapped[str] = mapped_column(String(500))
     p256dh_key: Mapped[str] = mapped_column(String(200))

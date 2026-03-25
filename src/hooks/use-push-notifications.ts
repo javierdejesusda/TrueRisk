@@ -19,6 +19,7 @@ export function usePushNotifications() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const provinceCode = useAppStore((s) => s.provinceCode);
+  const backendToken = useAppStore((s) => s.backendToken);
   const setPushEnabled = useAppStore((s) => s.setPushEnabled);
 
   useEffect(() => {
@@ -48,9 +49,14 @@ export function usePushNotifications() {
       const auth = sub.getKey('auth');
       if (!key || !auth) return false;
 
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (backendToken) {
+        headers['Authorization'] = `Bearer ${backendToken}`;
+      }
+
       await fetch('/api/push/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           endpoint: sub.endpoint,
           keys: {
@@ -69,7 +75,7 @@ export function usePushNotifications() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, provinceCode, setPushEnabled]);
+  }, [isSupported, provinceCode, backendToken, setPushEnabled]);
 
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);

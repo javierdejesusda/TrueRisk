@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.safety_check import SafetyCheckIn, FamilyLink
 from app.models.user import User
 from app.schemas.safety_check import SafetyCheckInCreate
+from app.services.push_service import notify_user
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,7 @@ logger = logging.getLogger(__name__)
 async def check_in(
     db: AsyncSession, user_id: int, data: SafetyCheckInCreate
 ) -> SafetyCheckIn:
-    """Create a safety check-in record.
-
-    TODO: Notify linked family members via push once PushSubscription has a
-    user_id column for per-user targeting.
-    """
+    """Create a safety check-in record and notify linked family members."""
     user = await db.get(User, user_id)
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=12)
@@ -39,6 +36,29 @@ async def check_in(
     db.add(record)
     await db.commit()
     await db.refresh(record)
+
+    # Notify linked family members via push
+    display = (user.display_name or user.nickname or "A family member") if user else "A family member"
+    links_result = await db.execute(
+        select(FamilyLink).where(
+            FamilyLink.status == "accepted",
+            or_(
+                FamilyLink.user_id == user_id,
+                FamilyLink.linked_user_id == user_id,
+            ),
+        )
+    )
+    for link in links_result.scalars().all():
+        other_id = link.linked_user_id if link.user_id == user_id else link.user_id
+        try:
+            await notify_user(
+                db,
+                other_id,
+                "Family Check-In",
+                f"{display} checked in as {record.status}.",
+            )
+        except Exception:
+            logger.exception("Failed to notify user %s about check-in", other_id)
 
     return record
 
@@ -177,11 +197,7 @@ async def delete_link(db: AsyncSession, user_id: int, link_id: int) -> None:
 async def request_check_in(
     db: AsyncSession, user_id: int, target_user_id: int
 ) -> None:
-    """Request a linked user to check in.
-
-    TODO: Send push notification once PushSubscription has a user_id column
-    for per-user targeting.
-    """
+    """Request a linked user to check in via push notification."""
     result = await db.execute(
         select(FamilyLink).where(
             FamilyLink.status == "accepted",
@@ -202,6 +218,18 @@ async def request_check_in(
         from fastapi import HTTPException
 
         raise HTTPException(status_code=404, detail="No accepted link with this user")
+
+    requester = await db.get(User, user_id)
+    display = (requester.display_name or requester.nickname or "A family member") if requester else "A family member"
+    try:
+        await notify_user(
+            db,
+            target_user_id,
+            "Check-In Request",
+            f"{display} is asking you to check in.",
+        )
+    except Exception:
+        logger.exception("Failed to send check-in request push to user %s", target_user_id)
 
 
 async def get_check_in_history(

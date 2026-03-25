@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_optional_user
 from app.models.push_subscription import PushSubscription
+from app.models.user import User
 from app.schemas.push import PushSubscribeRequest, PushSubscribeResponse
 
 router = APIRouter()
@@ -17,6 +18,7 @@ router = APIRouter()
 async def subscribe(
     body: PushSubscribeRequest,
     db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ):
     """Register a new push subscription."""
     subscription = PushSubscription(
@@ -24,6 +26,7 @@ async def subscribe(
         endpoint=body.endpoint,
         p256dh_key=body.keys.p256dh,
         auth_key=body.keys.auth,
+        user_id=user.id if user else None,
     )
     db.add(subscription)
     await db.commit()

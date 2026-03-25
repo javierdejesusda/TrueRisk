@@ -90,3 +90,33 @@ async def notify_province(
             pass
 
     await db.commit()
+
+
+async def notify_user(
+    db: AsyncSession, user_id: int, title: str, body: str
+) -> int:
+    """Send push notifications to all active subscriptions for a specific user.
+
+    Returns number of notifications sent successfully.
+    """
+    result = await db.execute(
+        select(PushSubscription).where(
+            PushSubscription.user_id == user_id,
+            PushSubscription.is_active == True,  # noqa: E712
+        )
+    )
+    subscriptions = list(result.scalars().all())
+
+    sent = 0
+    for sub in subscriptions:
+        subscription_info = {
+            "endpoint": sub.endpoint,
+            "keys": {"p256dh": sub.p256dh_key, "auth": sub.auth_key},
+        }
+        success = await send_push(subscription_info, {"title": title, "body": body})
+        if success:
+            sent += 1
+        elif not success:
+            pass  # send_push logs the error
+
+    return sent
