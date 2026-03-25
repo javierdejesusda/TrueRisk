@@ -326,6 +326,14 @@ async def get_municipality_risk(
                 "dominant_hazard": r.dominant_hazard,
                 "severity": r.severity,
                 "modifiers": r.modifiers,
+                "flood_score": r.flood_score,
+                "wildfire_score": r.wildfire_score,
+                "drought_score": r.drought_score,
+                "heatwave_score": r.heatwave_score,
+                "seismic_score": r.seismic_score,
+                "coldwave_score": r.coldwave_score,
+                "windstorm_score": r.windstorm_score,
+                "dana_score": r.dana_score,
             }
 
     raise HTTPException(status_code=404, detail="Municipality risk not computed")
@@ -357,6 +365,14 @@ async def get_province_municipalities_risk(
             "dominant_hazard": r.dominant_hazard,
             "severity": r.severity,
             "modifiers": r.modifiers,
+            "flood_score": r.flood_score,
+            "wildfire_score": r.wildfire_score,
+            "drought_score": r.drought_score,
+            "heatwave_score": r.heatwave_score,
+            "seismic_score": r.seismic_score,
+            "coldwave_score": r.coldwave_score,
+            "windstorm_score": r.windstorm_score,
+            "dana_score": r.dana_score,
         }
         for r in results
     ]

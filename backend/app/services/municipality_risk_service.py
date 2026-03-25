@@ -28,6 +28,15 @@ class MunicipalityRisk:
     dominant_hazard: str
     severity: str
     modifiers: dict
+    # Per-hazard scores
+    flood_score: float = 0.0
+    wildfire_score: float = 0.0
+    drought_score: float = 0.0
+    heatwave_score: float = 0.0
+    seismic_score: float = 0.0
+    coldwave_score: float = 0.0
+    windstorm_score: float = 0.0
+    dana_score: float = 0.0
 
 
 def _elevation_modifier(elevation_m: float | None, hazard: str) -> float:
@@ -60,6 +69,13 @@ def _elevation_modifier(elevation_m: float | None, hazard: str) -> float:
     elif hazard == "windstorm":
         if elevation_m > 800:
             return 1.1
+    elif hazard == "dana":
+        if elevation_m < 50:
+            return 1.25  # Low areas flood from DANA rainfall
+        elif elevation_m < 200:
+            return 1.1
+        elif elevation_m > 800:
+            return 0.7
     return 1.0
 
 
@@ -75,7 +91,45 @@ def _coastal_modifier(is_coastal: bool, hazard: str) -> float:
         return 0.95  # Higher humidity near coast
     elif hazard == "windstorm":
         return 1.1  # Coastal wind exposure
+    elif hazard == "dana":
+        return 1.2  # DANA hits coastal areas hardest
     return 1.0
+
+
+def _population_modifier(population: int | None, area_km2: float | None, hazard: str) -> float:
+    """Adjust score based on population density for demand-sensitive hazards."""
+    if population is None or area_km2 is None or area_km2 == 0:
+        return 1.0
+    density = population / area_km2
+    if hazard == "drought":
+        # High population density = more water demand pressure
+        if density > 1000:
+            return 1.15
+        elif density > 500:
+            return 1.05
+    elif hazard == "heatwave":
+        # Urban heat island effect
+        if density > 1000:
+            return 1.1
+        elif density > 500:
+            return 1.05
+    return 1.0
+
+
+def _classify_severity(score: float) -> str:
+    """Classify a risk score into a severity label."""
+    if score >= 80:
+        return "critical"
+    elif score >= 60:
+        return "high"
+    elif score >= 40:
+        return "moderate"
+    elif score >= 20:
+        return "low"
+    return "minimal"
+
+
+HAZARDS = ["flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm", "dana"]
 
 
 async def disaggregate_province_risk(
@@ -85,8 +139,9 @@ async def disaggregate_province_risk(
 ) -> list[MunicipalityRisk]:
     """Disaggregate province-level risk to municipality-level.
 
-    Uses elevation and coastal modifiers to adjust province scores
-    for each municipality.
+    Applies elevation, coastal, and population modifiers to each hazard
+    score individually, then recomputes the composite as the max of the
+    adjusted per-hazard scores.
     """
     stmt = select(Municipality).where(Municipality.province_code == province_code)
     result = await db.execute(stmt)
@@ -95,27 +150,29 @@ async def disaggregate_province_risk(
     if not municipalities:
         return []
 
-    composite = province_risk.get("composite_score", 0)
-    dominant = province_risk.get("dominant_hazard", "flood")
-
     results = []
     for m in municipalities:
-        elev_mod = _elevation_modifier(m.elevation_m, dominant)
-        coast_mod = _coastal_modifier(m.is_coastal, dominant)
-        combined_mod = elev_mod * coast_mod
+        hazard_scores = {}
+        modifiers_detail = {}
 
-        adjusted = round(min(100, composite * combined_mod), 1)
+        for hazard in HAZARDS:
+            raw = province_risk.get(f"{hazard}_score", 0.0) or 0.0
+            elev_mod = _elevation_modifier(m.elevation_m, hazard)
+            coast_mod = _coastal_modifier(m.is_coastal, hazard)
+            pop_mod = _population_modifier(m.population, m.area_km2, hazard)
+            combined = elev_mod * coast_mod * pop_mod
+            hazard_scores[hazard] = round(min(100, max(0, raw * combined)), 1)
+            modifiers_detail[hazard] = {
+                "elevation": round(elev_mod, 2),
+                "coastal": round(coast_mod, 2),
+                "population": round(pop_mod, 2),
+                "combined": round(combined, 2),
+            }
 
-        if adjusted >= 80:
-            sev = "critical"
-        elif adjusted >= 60:
-            sev = "high"
-        elif adjusted >= 40:
-            sev = "moderate"
-        elif adjusted >= 20:
-            sev = "low"
-        else:
-            sev = "minimal"
+        composite = max(hazard_scores.values()) if hazard_scores else 0.0
+        dominant = max(hazard_scores, key=hazard_scores.get) if hazard_scores else "flood"
+
+        severity = _classify_severity(composite)
 
         results.append(MunicipalityRisk(
             ine_code=m.ine_code,
@@ -123,14 +180,18 @@ async def disaggregate_province_risk(
             province_code=province_code,
             latitude=m.latitude,
             longitude=m.longitude,
-            composite_score=adjusted,
+            composite_score=composite,
             dominant_hazard=dominant,
-            severity=sev,
-            modifiers={
-                "elevation": round(elev_mod, 2),
-                "coastal": round(coast_mod, 2),
-                "combined": round(combined_mod, 2),
-            },
+            severity=severity,
+            modifiers=modifiers_detail,
+            flood_score=hazard_scores.get("flood", 0.0),
+            wildfire_score=hazard_scores.get("wildfire", 0.0),
+            drought_score=hazard_scores.get("drought", 0.0),
+            heatwave_score=hazard_scores.get("heatwave", 0.0),
+            seismic_score=hazard_scores.get("seismic", 0.0),
+            coldwave_score=hazard_scores.get("coldwave", 0.0),
+            windstorm_score=hazard_scores.get("windstorm", 0.0),
+            dana_score=hazard_scores.get("dana", 0.0),
         ))
 
     return results
