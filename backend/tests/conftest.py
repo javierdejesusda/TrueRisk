@@ -25,6 +25,7 @@ import app.models.alert_preference  # noqa: F401
 import app.models.property_report  # noqa: F401
 import app.models.arpsi_flood_zone  # noqa: F401
 import app.models.geocode_cache  # noqa: F401
+import app.models.api_key  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite+aiosqlite://"
 

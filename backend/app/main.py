@@ -18,6 +18,7 @@ from app.api import telegram as telegram_api
 from app.api import property as property_api
 from app.api import location as location_api
 from app.api import evacuation as evacuation_api
+from app.api import insurance as insurance_api
 
 _start_time = time.time()
 
@@ -132,6 +133,7 @@ app.include_router(telegram_api.router, prefix="/api/v1/telegram", tags=["telegr
 app.include_router(location_api.router, prefix="/api/v1/location", tags=["location"])
 app.include_router(evacuation_api.router, prefix="/api/v1/evacuation", tags=["evacuation"])
 app.include_router(drought.router, prefix="/api/v1/drought", tags=["drought"])
+app.include_router(insurance_api.router, prefix="/api/v1/insurance", tags=["insurance"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

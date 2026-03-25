@@ -20,6 +20,7 @@ from app.models.municipality import Municipality
 from app.models.evacuation_route import SafePoint
 from app.models.water_restriction import WaterRestriction
 from app.models.risk_narrative import RiskNarrative
+from app.models.api_key import ApiKey
 
 __all__ = [
     "User",
@@ -48,4 +49,5 @@ __all__ = [
     "SafePoint",
     "WaterRestriction",
     "RiskNarrative",
+    "ApiKey",
 ]
