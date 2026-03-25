@@ -54,7 +54,7 @@ export function usePushNotifications() {
         headers['Authorization'] = `Bearer ${backendToken}`;
       }
 
-      await fetch('/api/push/subscribe', {
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -66,6 +66,7 @@ export function usePushNotifications() {
           province_code: provinceCode,
         }),
       });
+      if (!res.ok) throw new Error(`Subscribe failed: ${res.status}`);
       setIsSubscribed(true);
       setPushEnabled(true);
       return true;
@@ -83,12 +84,13 @@ export function usePushNotifications() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
         await fetch('/api/push/unsubscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ endpoint: sub.endpoint }),
+          body: JSON.stringify({ endpoint }),
         });
-        await sub.unsubscribe();
       }
       setIsSubscribed(false);
       setPushEnabled(false);

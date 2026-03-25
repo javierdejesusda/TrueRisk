@@ -21,12 +21,15 @@ async def check_in(
 ) -> SafetyCheckIn:
     """Create a safety check-in record and notify linked family members."""
     user = await db.get(User, user_id)
+    if user is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="User not found")
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=12)
 
     record = SafetyCheckIn(
         user_id=user_id,
-        province_code=user.province_code if user else "28",
+        province_code=user.province_code,
         latitude=data.latitude,
         longitude=data.longitude,
         status=data.status,
@@ -38,7 +41,7 @@ async def check_in(
     await db.refresh(record)
 
     # Notify linked family members via push
-    display = (user.display_name or user.nickname or "A family member") if user else "A family member"
+    display = user.display_name or user.nickname or "A family member"
     links_result = await db.execute(
         select(FamilyLink).where(
             FamilyLink.status == "accepted",

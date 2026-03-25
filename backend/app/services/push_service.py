@@ -98,6 +98,7 @@ async def notify_user(
     """Send push notifications to all active subscriptions for a specific user.
 
     Returns number of notifications sent successfully.
+    Uses concurrent delivery and retires 410-Gone subscriptions.
     """
     result = await db.execute(
         select(PushSubscription).where(
@@ -107,16 +108,39 @@ async def notify_user(
     )
     subscriptions = list(result.scalars().all())
 
-    sent = 0
-    for sub in subscriptions:
+    if not subscriptions:
+        return 0
+
+    payload = {"title": title, "body": body}
+
+    async def _send_one(sub: PushSubscription) -> tuple[PushSubscription, bool | Exception]:
         subscription_info = {
             "endpoint": sub.endpoint,
             "keys": {"p256dh": sub.p256dh_key, "auth": sub.auth_key},
         }
-        success = await send_push(subscription_info, {"title": title, "body": body})
-        if success:
-            sent += 1
-        elif not success:
-            pass  # send_push logs the error
+        try:
+            success = await send_push(subscription_info, payload)
+            return sub, success
+        except Exception as exc:
+            return sub, exc
 
+    results = await asyncio.gather(
+        *[_send_one(sub) for sub in subscriptions],
+        return_exceptions=True,
+    )
+
+    sent = 0
+    for item in results:
+        if isinstance(item, BaseException):
+            logger.error("Unexpected error in notify_user: %s", item)
+            continue
+        sub, outcome = item
+        if isinstance(outcome, Exception):
+            if hasattr(outcome, "response") and getattr(outcome.response, "status_code", None) == 410:
+                sub.is_active = False
+                logger.info("Deactivated gone subscription %s for user %s", sub.id, user_id)
+        elif outcome:
+            sent += 1
+
+    await db.commit()
     return sent

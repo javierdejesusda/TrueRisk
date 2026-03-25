@@ -20,7 +20,23 @@ async def subscribe(
     db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_optional_user),
 ):
-    """Register a new push subscription."""
+    """Register or reactivate a push subscription (upsert by endpoint)."""
+    result = await db.execute(
+        select(PushSubscription).where(PushSubscription.endpoint == body.endpoint)
+    )
+    existing = result.scalar_one_or_none()
+
+    if existing:
+        existing.province_code = body.province_code
+        existing.p256dh_key = body.keys.p256dh
+        existing.auth_key = body.keys.auth
+        existing.is_active = True
+        if user:
+            existing.user_id = user.id
+        await db.commit()
+        await db.refresh(existing)
+        return existing
+
     subscription = PushSubscription(
         province_code=body.province_code,
         endpoint=body.endpoint,
