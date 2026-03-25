@@ -12,6 +12,7 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { Walkthrough } from '@/components/ui/walkthrough';
 import { PersonalizedSuggestions } from '@/components/dashboard/personalized-suggestions';
 import { PreparednessWidget } from '@/components/dashboard/preparedness-widget';
+import { DataQualityPanel } from '@/components/dashboard/data-quality-panel';
 
 const provinceOptions = PROVINCES
   .map((p) => ({ value: p.code, label: p.name }))
@@ -66,9 +67,12 @@ export default function DashboardPage() {
           <AlertFeed />
         </div>
 
-        {/* Bottom spanning 2 columns: Quick actions */}
-        <div className="lg:col-span-2">
+        {/* Bottom spanning 1 column: Quick actions + data quality */}
+        <div>
           <QuickActions />
+        </div>
+        <div>
+          <DataQualityPanel />
         </div>
 
         {/* Full width: Preparedness widget */}

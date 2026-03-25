@@ -94,9 +94,15 @@ export function RiskOverview() {
         </motion.span>
         <span className="font-[family-name:var(--font-mono)] text-xs text-text-muted">/100</span>
       </div>
-      <p className="font-[family-name:var(--font-sans)] text-xs text-text-secondary mb-5">
+      <p className="font-[family-name:var(--font-sans)] text-xs text-text-secondary mb-1">
         {t('dominantHazard')}: {th(risk.dominant_hazard)}
       </p>
+      {risk.confidence != null && (
+        <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted inline-block mb-4">
+          {Math.round(risk.confidence * 100)}% confidence
+        </span>
+      )}
+      {risk.confidence == null && <div className="mb-4" />}
 
       <div className="flex flex-col gap-2.5">
         {HAZARDS.map(({ key, field, tip }) => {

@@ -13,6 +13,14 @@ from app.api.deps import get_db
 router = APIRouter()
 
 
+@router.get("/health")
+async def get_data_health():
+    """Return health status for all tracked data sources."""
+    from app.services.data_health_service import health_tracker
+
+    return health_tracker.get_all_statuses()
+
+
 @router.get("/fire-hotspots")
 async def get_fire_hotspots():
     """Active fire hotspots from NASA FIRMS."""

@@ -6,13 +6,14 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data import open_meteo
+from app.services.data_health_service import health_tracker
 from app.data.ign_seismic import compute_province_seismic_exposure, fetch_recent_quakes
 from app.data.province_data import PROVINCES
 from app.ml.models.coldwave_risk import predict_coldwave_risk
@@ -69,6 +70,13 @@ def _season_components(month: int) -> tuple[float, float]:
     """Return (sin, cos) encoding for the month so seasonal patterns are smooth."""
     angle = 2 * math.pi * (month - 1) / 12
     return round(math.sin(angle), 6), round(math.cos(angle), 6)
+
+
+def _compute_confidence(weather_record_age_hours: float, sources_used: int) -> float:
+    """Compute a 0-1 confidence score based on data freshness and source count."""
+    freshness = max(0.0, 1.0 - (weather_record_age_hours / 12.0))
+    source_coverage = min(1.0, sources_used / 3.0)
+    return round(freshness * 0.6 + source_coverage * 0.4, 2)
 
 
 # ---------------------------------------------------------------------------
@@ -639,6 +647,34 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
 
     composite["province_code"] = province_code
     composite["computed_at"] = now.isoformat()
+
+    # Compute confidence based on data freshness and source availability
+    all_statuses = health_tracker.get_all_statuses()
+    sources_used = sum(
+        1 for s in all_statuses.values()
+        if s.get("last_success") is not None and s.get("consecutive_failures", 0) == 0
+    )
+
+    # Determine weather data age from the most recent WeatherRecord
+    weather_age_hours = 12.0  # pessimistic default
+    if history:
+        latest_stmt = (
+            select(WeatherRecord.recorded_at)
+            .where(WeatherRecord.province_code == province_code)
+            .order_by(WeatherRecord.recorded_at.desc())
+            .limit(1)
+        )
+        latest_result = await db.execute(latest_stmt)
+        latest_ts = latest_result.scalar_one_or_none()
+        if latest_ts:
+            age_delta = datetime.now(timezone.utc) - (
+                latest_ts.replace(tzinfo=timezone.utc) if latest_ts.tzinfo is None else latest_ts
+            )
+            weather_age_hours = age_delta.total_seconds() / 3600.0
+
+    composite["confidence"] = _compute_confidence(weather_age_hours, sources_used)
+    composite["data_sources_used"] = sources_used
+
     return composite
 
 

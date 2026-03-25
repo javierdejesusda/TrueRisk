@@ -14,6 +14,8 @@ export interface CompositeRiskScore {
   dominant_hazard: HazardType;
   severity: RiskSeverity;
   computed_at: string;
+  confidence?: number;
+  data_sources_used?: number;
 }
 
 export interface RiskMapEntry {

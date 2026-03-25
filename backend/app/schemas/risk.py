@@ -20,6 +20,8 @@ class RiskScoreResponse(BaseModel):
     dominant_hazard: str
     severity: str
     computed_at: datetime
+    confidence: float = 1.0
+    data_sources_used: int = 0
 
 
 class RiskMapEntry(BaseModel):
