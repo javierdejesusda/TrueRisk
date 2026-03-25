@@ -20,3 +20,8 @@ class Municipality(Base):
     area_km2: Mapped[float | None] = mapped_column(Float, nullable=True)
     elevation_m: Mapped[float | None] = mapped_column(Float, nullable=True)
     is_coastal: Mapped[bool] = mapped_column(Boolean, default=False)
+    land_use_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    elderly_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    distance_river_km: Mapped[float | None] = mapped_column(Float, nullable=True)
+    is_mediterranean: Mapped[bool] = mapped_column(Boolean, default=False)
+    flood_zone_area_pct: Mapped[float | None] = mapped_column(Float, nullable=True)

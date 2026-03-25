@@ -116,6 +116,41 @@ def _population_modifier(population: int | None, area_km2: float | None, hazard:
     return 1.0
 
 
+def _land_use_modifier(land_use: str | None, hazard: str) -> float:
+    """Land use type risk modifier."""
+    if not land_use:
+        return 1.0
+    if hazard == "wildfire" and land_use == "forest":
+        return 1.3
+    if hazard == "wildfire" and land_use == "mixed":
+        return 1.15
+    if hazard == "heatwave" and land_use == "urban":
+        return 1.15  # Urban heat island effect
+    return 1.0
+
+
+def _river_proximity_modifier(distance_km: float | None, hazard: str) -> float:
+    """River proximity risk modifier for flood hazards."""
+    if hazard != "flood" or distance_km is None:
+        return 1.0
+    if distance_km < 1:
+        return 1.4
+    if distance_km < 5:
+        return 1.15
+    return 1.0
+
+
+def _elderly_modifier(elderly_pct: float | None, hazard: str) -> float:
+    """Elderly population risk modifier."""
+    if elderly_pct is None:
+        return 1.0
+    if hazard in ("heatwave", "coldwave") and elderly_pct > 25:
+        return 1.2
+    if hazard in ("heatwave", "coldwave") and elderly_pct > 20:
+        return 1.1
+    return 1.0
+
+
 def _classify_severity(score: float) -> str:
     """Classify a risk score into a severity label."""
     if score >= 80:
@@ -160,12 +195,18 @@ async def disaggregate_province_risk(
             elev_mod = _elevation_modifier(m.elevation_m, hazard)
             coast_mod = _coastal_modifier(m.is_coastal, hazard)
             pop_mod = _population_modifier(m.population, m.area_km2, hazard)
-            combined = elev_mod * coast_mod * pop_mod
+            land_mod = _land_use_modifier(getattr(m, 'land_use_type', None), hazard)
+            river_mod = _river_proximity_modifier(getattr(m, 'distance_river_km', None), hazard)
+            elder_mod = _elderly_modifier(getattr(m, 'elderly_pct', None), hazard)
+            combined = elev_mod * coast_mod * pop_mod * land_mod * river_mod * elder_mod
             hazard_scores[hazard] = round(min(100, max(0, raw * combined)), 1)
             modifiers_detail[hazard] = {
                 "elevation": round(elev_mod, 2),
                 "coastal": round(coast_mod, 2),
                 "population": round(pop_mod, 2),
+                "land_use": round(land_mod, 2),
+                "river_proximity": round(river_mod, 2),
+                "elderly": round(elder_mod, 2),
                 "combined": round(combined, 2),
             }
 

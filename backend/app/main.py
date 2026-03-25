@@ -20,6 +20,7 @@ from app.api import property as property_api
 from app.api import location as location_api
 from app.api import evacuation as evacuation_api
 from app.api import insurance as insurance_api
+from app.api.municipality import router as municipality_router
 
 _start_time = time.time()
 
@@ -136,6 +137,7 @@ app.include_router(evacuation_api.router, prefix="/api/v1/evacuation", tags=["ev
 app.include_router(drought.router, prefix="/api/v1/drought", tags=["drought"])
 app.include_router(insurance_api.router, prefix="/api/v1/insurance", tags=["insurance"])
 app.include_router(gamification_api.router, prefix="/api/v1/gamification", tags=["gamification"])
+app.include_router(municipality_router)
 
 
 @app.get("/health", tags=["system"], summary="Health check")
