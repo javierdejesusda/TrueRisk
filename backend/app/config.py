@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     twilio_from_phone: str = ""
     twilio_admin_phones: list[str] = []
 
+    # Telegram
+    telegram_bot_token: str = ""
+
     # Data source API keys
     firms_map_key: str = ""
     openaq_api_key: str = ""

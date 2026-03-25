@@ -238,6 +238,45 @@ async def _check_and_create_alerts(
                     logger.info(f"  SMS sent for {province.name}: {len(sids)} messages")
             except Exception as sms_err:
                 logger.error(f"  SMS failed for {province.name}: {sms_err}")
+        # WhatsApp alerts
+        try:
+            from app.services.whatsapp_service import send_whatsapp
+            from app.models.user import User as UserModel
+            wa_result = await db.execute(
+                select(UserModel).where(
+                    UserModel.province_code == province.ine_code,
+                    UserModel.whatsapp_enabled == True,  # noqa: E712
+                    UserModel.phone_number.isnot(None),
+                )
+            )
+            wa_users = wa_result.scalars().all()
+            for wu in wa_users:
+                if wu.alert_severity_threshold <= severity:
+                    await send_whatsapp(
+                        wu.phone_number,
+                        f"ALERTA: {label} en {province.name}. Puntuacion: {score:.0f}/100.",
+                    )
+        except Exception as wa_err:
+            logger.error(f"  WhatsApp dispatch failed for {province.name}: {wa_err}")
+        # Telegram alerts
+        try:
+            from app.services.telegram_service import send_telegram
+            from app.models.user import User as UserModel
+            tg_result = await db.execute(
+                select(UserModel).where(
+                    UserModel.province_code == province.ine_code,
+                    UserModel.telegram_chat_id.isnot(None),
+                )
+            )
+            tg_users = tg_result.scalars().all()
+            for tu in tg_users:
+                if tu.alert_severity_threshold <= severity:
+                    await send_telegram(
+                        tu.telegram_chat_id,
+                        f"<b>ALERTA: {label} en {province.name}</b>\nPuntuacion: {score:.0f}/100.",
+                    )
+        except Exception as tg_err:
+            logger.error(f"  Telegram dispatch failed for {province.name}: {tg_err}")
         logger.warning(
             f"  ALERT: {hazard} severity={severity} for {province.name} (score={score:.1f})"
         )

@@ -32,6 +32,8 @@ class User(Base):
     emergency_contact_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     emergency_contact_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     phone_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    whatsapp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    telegram_chat_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Health & mobility
     medical_conditions: Mapped[str | None] = mapped_column(String(500), nullable=True)

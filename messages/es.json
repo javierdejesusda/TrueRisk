@@ -595,6 +595,20 @@
     "phonePlaceholder": "+34 xxx xxx xxx",
     "phoneDesc": "Tu numero de telefono para recibir alertas por SMS"
   },
+  "NotificationChannels": {
+    "title": "Canales de Notificacion",
+    "push": "Notificaciones Push",
+    "sms": "SMS",
+    "whatsapp": "WhatsApp",
+    "whatsappDesc": "Recibir alertas por WhatsApp",
+    "telegram": "Telegram",
+    "telegramDesc": "Recibir alertas por bot de Telegram",
+    "linkTelegram": "Vincular Telegram",
+    "telegramInstructions": "Envia este codigo al bot de TrueRisk en Telegram",
+    "linked": "Vinculado",
+    "enabled": "Activado",
+    "disabled": "Desactivado"
+  },
   "Language": {
     "es": "ES",
     "en": "EN",

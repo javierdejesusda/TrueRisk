@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { NotificationPrefs } from '@/components/profile/notification-prefs';
+import { NotificationChannels } from '@/components/profile/notification-channels';
 import { AlertIntelligencePrefs } from '@/components/profile/alert-intelligence-prefs';
 
 export default function ProfilePage() {
@@ -30,6 +31,11 @@ export default function ProfilePage() {
         {/* Notification preferences */}
         <div className="mb-6">
           <NotificationPrefs />
+        </div>
+
+        {/* Notification channels (WhatsApp, Telegram) */}
+        <div className="mb-6">
+          <NotificationChannels />
         </div>
 
         {/* Alert intelligence preferences */}
