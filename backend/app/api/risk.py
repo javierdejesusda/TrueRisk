@@ -637,6 +637,28 @@ async def get_dana_nowcast(
     }
 
 
+@router.get("/{province_code}/narrative")
+async def get_narrative(
+    province_code: str,
+    type: str = "morning",
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the latest pre-generated narrative for a province."""
+    from app.services.narrative_service import get_latest_narrative
+
+    narrative = await get_latest_narrative(db, province_code, type)
+    if not narrative:
+        return {"available": False, "province_code": province_code}
+    return {
+        "available": True,
+        "province_code": province_code,
+        "type": narrative.narrative_type,
+        "content_es": narrative.content_es,
+        "content_en": narrative.content_en,
+        "generated_at": narrative.generated_at.isoformat() if narrative.generated_at else None,
+    }
+
+
 @router.get("/{province_code}", response_model=RiskScoreResponse)
 async def get_risk(
     province_code: str,

@@ -19,6 +19,7 @@ from app.models.river_gauge import RiverGauge, RiverReading
 from app.models.municipality import Municipality
 from app.models.evacuation_route import SafePoint
 from app.models.water_restriction import WaterRestriction
+from app.models.risk_narrative import RiskNarrative
 
 __all__ = [
     "User",
@@ -46,4 +47,5 @@ __all__ = [
     "Municipality",
     "SafePoint",
     "WaterRestriction",
+    "RiskNarrative",
 ]

@@ -927,5 +927,12 @@
     "flowChart": "Prevision de Caudal 24h",
     "notAvailable": "Prevision hidrologica no disponible para esta provincia",
     "m3s": "m\u00b3/s"
+  },
+  "Narrative": {
+    "morningBriefing": "Informe Matutino",
+    "emergencyAlert": "Alerta de Emergencia",
+    "generatedAt": "Generado {time}",
+    "aiDisclaimer": "Resumen generado por IA basado en datos de riesgo actuales",
+    "unavailable": "Informe aun no disponible para esta provincia"
   }
 }

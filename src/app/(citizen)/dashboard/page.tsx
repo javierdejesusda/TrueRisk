@@ -13,6 +13,7 @@ import { Walkthrough } from '@/components/ui/walkthrough';
 import { PersonalizedSuggestions } from '@/components/dashboard/personalized-suggestions';
 import { PreparednessWidget } from '@/components/dashboard/preparedness-widget';
 import { DataQualityPanel } from '@/components/dashboard/data-quality-panel';
+import { RiskNarrative } from '@/components/dashboard/risk-narrative';
 import { DanaWarningBanner } from '@/components/alerts/dana-warning-banner';
 
 const provinceOptions = PROVINCES
@@ -54,6 +55,11 @@ export default function DashboardPage() {
       {/* DANA early warning banner (shows when DANA score >= 60) */}
       <div className="mb-4">
         <DanaWarningBanner />
+      </div>
+
+      {/* AI morning briefing */}
+      <div className="mb-4">
+        <RiskNarrative />
       </div>
 
       {/* Bento grid */}

@@ -929,5 +929,12 @@
     "flowChart": "24h Flow Prediction",
     "notAvailable": "Hydrological nowcast not available for this province",
     "m3s": "m\u00b3/s"
+  },
+  "Narrative": {
+    "morningBriefing": "Morning Briefing",
+    "emergencyAlert": "Emergency Alert",
+    "generatedAt": "Generated {time}",
+    "aiDisclaimer": "AI-generated summary based on current risk data",
+    "unavailable": "Briefing not yet available for this province"
   }
 }

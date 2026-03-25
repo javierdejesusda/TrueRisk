@@ -162,6 +162,23 @@ async def run_pipeline():
                 health_tracker.record_failure("flash_flood", str(e))
                 logger.exception("Flash flood monitoring failed (non-critical)")
 
+            # 7. Generate morning narratives (best-effort, non-blocking)
+            if settings.openai_api_key:
+                try:
+                    from app.services.narrative_service import generate_morning_narrative
+                    for province in provinces:
+                        try:
+                            await generate_morning_narrative(
+                                db, province.ine_code, province.name
+                            )
+                        except Exception as e:
+                            logger.error(
+                                f"Narrative generation failed for {province.name}: {e}"
+                            )
+                    logger.info("Morning narratives generated")
+                except Exception:
+                    logger.exception("Narrative generation failed (non-critical)")
+
             await db.commit()
 
             # Aggregate yesterday's hourly data into daily summaries
@@ -214,6 +231,18 @@ async def _check_and_create_alerts(
         )
         db.add(alert)
         await db.flush()
+        # Generate emergency narrative for critical alerts
+        if severity == 5 and settings.openai_api_key:
+            try:
+                from app.services.narrative_service import generate_emergency_narrative
+                await generate_emergency_narrative(
+                    db, province.ine_code, province.name,
+                    hazard, severity, score,
+                )
+            except Exception as narr_err:
+                logger.error(
+                    f"  Emergency narrative failed for {province.name}: {narr_err}"
+                )
         try:
             await notify_province(
                 db,
