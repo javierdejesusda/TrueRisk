@@ -17,6 +17,7 @@ from app.api import flash_flood
 from app.api import telegram as telegram_api
 from app.api import property as property_api
 from app.api import location as location_api
+from app.api import evacuation as evacuation_api
 
 _start_time = time.time()
 
@@ -31,6 +32,10 @@ async def lifespan(app: FastAPI):
     # Seed province data on all database backends
     from app.data.province_data import seed_provinces
     await seed_provinces()
+
+    # Seed safe points for evacuation routing
+    from app.data.safe_points_seed import seed_safe_points
+    await seed_safe_points()
 
     # Start background scheduler
     from app.scheduler.jobs import setup_scheduler, shutdown_scheduler
@@ -125,6 +130,7 @@ app.include_router(property_api.router, prefix="/api/v1/property", tags=["proper
 app.include_router(flash_flood.router, prefix="/api/v1/flash-flood", tags=["flash-flood"])
 app.include_router(telegram_api.router, prefix="/api/v1/telegram", tags=["telegram"])
 app.include_router(location_api.router, prefix="/api/v1/location", tags=["location"])
+app.include_router(evacuation_api.router, prefix="/api/v1/evacuation", tags=["evacuation"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

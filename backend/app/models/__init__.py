@@ -17,6 +17,7 @@ from app.models.arpsi_flood_zone import ArpsiFloodZone
 from app.models.geocode_cache import GeocodeCache
 from app.models.river_gauge import RiverGauge, RiverReading
 from app.models.municipality import Municipality
+from app.models.evacuation_route import SafePoint
 
 __all__ = [
     "User",
@@ -42,4 +43,5 @@ __all__ = [
     "RiverGauge",
     "RiverReading",
     "Municipality",
+    "SafePoint",
 ]

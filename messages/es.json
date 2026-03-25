@@ -20,6 +20,7 @@
     "dashboard": "Panel",
     "preparedness": "Preparacion",
     "safety": "Seguridad",
+    "evacuation": "Evacuar",
     "report": "Informe",
     "settings": "Ajustes",
     "admin": "Admin"
@@ -843,5 +844,23 @@
     "skip": "Saltar",
     "next": "Siguiente",
     "getStarted": "Empezar"
+  },
+  "Evacuation": {
+    "title": "Rutas de Evacuacion",
+    "subtitle": "Encuentra el punto seguro mas cercano",
+    "nearest": "Puntos seguros mas cercanos",
+    "distance": "{km} km de distancia",
+    "walkingTime": "{min} min caminando",
+    "navigate": "Navegar",
+    "call": "Llamar",
+    "hospital": "Hospital",
+    "shelter": "Refugio de Emergencia",
+    "fireStation": "Parque de Bomberos",
+    "highGround": "Zona Alta",
+    "police": "Comisaria de Policia",
+    "allTypes": "Todos los tipos",
+    "noPoints": "No se encontraron puntos seguros cercanos",
+    "useLocation": "Activa el acceso a tu ubicacion para encontrar puntos seguros cerca de ti",
+    "bearing": "Direccion: {dir}"
   }
 }

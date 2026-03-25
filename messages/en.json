@@ -20,6 +20,7 @@
     "dashboard": "Dashboard",
     "preparedness": "Preparedness",
     "safety": "Safety",
+    "evacuation": "Evacuate",
     "report": "Report",
     "settings": "Settings",
     "admin": "Admin"
@@ -845,5 +846,23 @@
     "skip": "Skip",
     "next": "Next",
     "getStarted": "Get started"
+  },
+  "Evacuation": {
+    "title": "Evacuation Routes",
+    "subtitle": "Find the nearest safe point",
+    "nearest": "Nearest safe points",
+    "distance": "{km} km away",
+    "walkingTime": "{min} min walking",
+    "navigate": "Navigate",
+    "call": "Call",
+    "hospital": "Hospital",
+    "shelter": "Emergency Shelter",
+    "fireStation": "Fire Station",
+    "highGround": "High Ground",
+    "police": "Police Station",
+    "allTypes": "All types",
+    "noPoints": "No safe points found nearby",
+    "useLocation": "Enable location access to find safe points near you",
+    "bearing": "Direction: {dir}"
   }
 }

@@ -10,7 +10,7 @@ from app.database import Base
 from app.models import (  # noqa: F401
     User, Province, WeatherRecord, RiskScore, Alert, PushSubscription, CommunityReport,
     PreparednessItem, PreparednessSnapshot, EmergencyPlan, AlertPreference, AlertDelivery,
-    SafetyCheckIn, FamilyLink,
+    SafetyCheckIn, FamilyLink, SafePoint,
 )
 
 config = context.config
