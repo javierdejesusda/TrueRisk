@@ -806,6 +806,17 @@
     "finish": "Empezar",
     "step": "Paso {current} de {total}"
   },
+  "Dana": {
+    "warning": "ALERTA DANA",
+    "active": "Evento DANA detectado",
+    "description": "Se ha detectado una Depresi\u00f3n Aislada en Niveles Altos. Puede causar lluvias extremas, inundaciones repentinas y vientos fuertes.",
+    "nowcast": "Previsi\u00f3n",
+    "in1h": "En 1 hora",
+    "in3h": "En 3 horas",
+    "in6h": "En 6 horas",
+    "seekShelter": "Busque zonas elevadas",
+    "viewEvacuation": "Rutas de evacuaci\u00f3n"
+  },
   "Walkthrough": {
     "step1Title": "Selecciona tu provincia",
     "step1Desc": "Elige cualquiera de las 52 provincias españolas para ver datos de riesgo personalizados.",

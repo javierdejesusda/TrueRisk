@@ -13,6 +13,7 @@ import { Walkthrough } from '@/components/ui/walkthrough';
 import { PersonalizedSuggestions } from '@/components/dashboard/personalized-suggestions';
 import { PreparednessWidget } from '@/components/dashboard/preparedness-widget';
 import { DataQualityPanel } from '@/components/dashboard/data-quality-panel';
+import { DanaWarningBanner } from '@/components/alerts/dana-warning-banner';
 
 const provinceOptions = PROVINCES
   .map((p) => ({ value: p.code, label: p.name }))
@@ -48,6 +49,11 @@ export default function DashboardPage() {
             onChange={(e) => setProvinceCode(e.target.value)}
           />
         </div>
+      </div>
+
+      {/* DANA early warning banner (shows when DANA score >= 60) */}
+      <div className="mb-4">
+        <DanaWarningBanner />
       </div>
 
       {/* Bento grid */}

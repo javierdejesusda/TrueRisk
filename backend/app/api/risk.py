@@ -482,6 +482,94 @@ async def get_risk_impact(
     return impacts
 
 
+@router.get("/{province_code}/dana-nowcast")
+async def get_dana_nowcast(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get DANA nowcast probabilities at T+1h, T+3h, T+6h."""
+    from app.data.open_meteo_upper_air import fetch_upper_air
+    from app.services.dana_nowcast_service import compute_dana_nowcast
+    from app.services.risk_service import (
+        _safe,
+        compute_temporal_features,
+        get_terrain_features,
+    )
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    terrain = get_terrain_features(province_code)
+
+    # Fetch current weather for base features
+    from app.data import open_meteo
+    weather = await open_meteo.fetch_current(province.latitude, province.longitude)
+    if not weather:
+        weather = {}
+
+    # Fetch upper-air data
+    upper_air = await fetch_upper_air(province.latitude, province.longitude)
+
+    # Build DANA features (same as risk_service)
+    from app.models.weather_record import WeatherRecord
+    stmt = (
+        select(WeatherRecord)
+        .where(WeatherRecord.province_code == province_code)
+        .order_by(WeatherRecord.recorded_at.desc())
+        .limit(720)
+    )
+    result = await db.execute(stmt)
+    history = [
+        {
+            "temperature": r.temperature,
+            "humidity": r.humidity,
+            "precipitation": r.precipitation,
+            "wind_speed": r.wind_speed,
+            "wind_gusts": r.wind_gusts,
+            "pressure": r.pressure,
+            "soil_moisture": r.soil_moisture,
+            "dew_point": r.dew_point,
+        }
+        for r in result.scalars().all()
+    ]
+    temporal = compute_temporal_features(history) if history else {}
+
+    now = datetime.utcnow()
+    dana_features = {
+        "is_mediterranean": terrain["is_mediterranean"],
+        "is_coastal": terrain["is_coastal"],
+        "month": now.month,
+        "latitude": terrain["latitude"],
+        "precip_24h": temporal.get("precip_24h", 0.0),
+        "precip_6h": temporal.get("precip_6h", 0.0),
+        "temperature": _safe(weather.get("temperature"), 20.0),
+        "pressure_change_6h": temporal.get("pressure_change_6h", 0.0),
+        "wind_gusts": _safe(weather.get("wind_gusts"), 0.0),
+        "humidity": _safe(weather.get("humidity"), 50.0),
+        "cape_current": upper_air.get("cape_current", 0.0),
+        "precip_forecast_6h": upper_air.get("precip_forecast_6h", 0.0),
+    }
+
+    # Compute current DANA score
+    from app.ml.models.dana_risk import predict_dana_risk
+    current_score = predict_dana_risk(dana_features)
+
+    # Compute nowcast at T+1h, T+3h, T+6h
+    nowcast = compute_dana_nowcast(dana_features, upper_air)
+
+    return {
+        "province_code": province_code,
+        "current_score": round(current_score, 1),
+        "nowcast": nowcast,
+        "cape_current": upper_air.get("cape_current", 0.0),
+        "cape_max_6h": upper_air.get("cape_max_6h", 0.0),
+        "precip_forecast_6h": upper_air.get("precip_forecast_6h", 0.0),
+        "precip_forecast_24h": upper_air.get("precip_forecast_24h", 0.0),
+        "computed_at": now.isoformat(),
+    }
+
+
 @router.get("/{province_code}", response_model=RiskScoreResponse)
 async def get_risk(
     province_code: str,

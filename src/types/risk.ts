@@ -11,6 +11,7 @@ export interface CompositeRiskScore {
   seismic_score: number;
   coldwave_score: number;
   windstorm_score: number;
+  dana_score: number;
   dominant_hazard: HazardType;
   severity: RiskSeverity;
   computed_at: string;
@@ -33,6 +34,7 @@ export interface RiskMapEntry {
   seismic_score: number;
   coldwave_score: number;
   windstorm_score: number;
+  dana_score: number;
 }
 
 export interface RiskMapResponse {

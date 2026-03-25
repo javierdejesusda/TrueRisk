@@ -808,6 +808,17 @@
     "finish": "Get started",
     "step": "Step {current} of {total}"
   },
+  "Dana": {
+    "warning": "DANA WARNING",
+    "active": "DANA event detected",
+    "description": "An isolated depression at high levels has been detected. This can cause extreme rainfall, flash flooding, and strong winds.",
+    "nowcast": "Forecast",
+    "in1h": "In 1 hour",
+    "in3h": "In 3 hours",
+    "in6h": "In 6 hours",
+    "seekShelter": "Seek higher ground",
+    "viewEvacuation": "Evacuation routes"
+  },
   "Walkthrough": {
     "step1Title": "Select your province",
     "step1Desc": "Choose any of the 52 Spanish provinces to see personalized risk data.",

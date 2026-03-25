@@ -36,6 +36,8 @@ FEATURE_NAMES = [
     "pressure_change_6h",
     "wind_gusts",
     "humidity",
+    "cape_current",
+    "precip_forecast_6h",
 ]
 
 _model = None
@@ -133,6 +135,37 @@ def _rule_based_dana(f: dict[str, Any]) -> float:
         humidity_pts = 5.0
     signal_scores.append(humidity_pts)
     if humidity_pts >= 5:
+        active_signals += 1
+
+    # Signal 6: CAPE (Convective Available Potential Energy)
+    # High CAPE indicates strong convective instability -- a key DANA precursor
+    cape = f.get("cape_current", 0.0) or 0.0
+    cape_pts = 0.0
+    if cape > 2500:
+        cape_pts = 15.0
+    elif cape > 1500:
+        cape_pts = 10.0
+    elif cape > 1000:
+        cape_pts = 6.0
+    elif cape > 500:
+        cape_pts = 3.0
+    signal_scores.append(cape_pts)
+    if cape_pts >= 6:
+        active_signals += 1
+
+    # Signal 7: Forecast precipitation next 6h (imminent heavy rain)
+    precip_forecast_6h = f.get("precip_forecast_6h", 0.0) or 0.0
+    precip_forecast_pts = 0.0
+    if precip_forecast_6h > 100:
+        precip_forecast_pts = 15.0
+    elif precip_forecast_6h > 50:
+        precip_forecast_pts = 10.0
+    elif precip_forecast_6h > 25:
+        precip_forecast_pts = 6.0
+    elif precip_forecast_6h > 10:
+        precip_forecast_pts = 3.0
+    signal_scores.append(precip_forecast_pts)
+    if precip_forecast_pts >= 6:
         active_signals += 1
 
     # ------------------------------------------------------------------

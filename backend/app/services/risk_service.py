@@ -576,7 +576,23 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "month": month,
     }
 
-    # 4e. DANA compound event features (reuses existing weather data)
+    # 4e-pre. Fetch upper-air data for DANA detection (CAPE, forecast precip)
+    upper_air: dict[str, Any] = {}
+    try:
+        from app.data.open_meteo_upper_air import fetch_upper_air
+        upper_air = await fetch_upper_air(
+            province.latitude, province.longitude
+        )
+        temporal["precip_forecast_24h"] = upper_air.get(
+            "precip_forecast_24h", 0.0
+        )
+    except Exception:
+        logger.warning(
+            "Failed to fetch upper-air data for %s, using defaults",
+            province_code,
+        )
+
+    # 4e. DANA compound event features (reuses existing weather data + upper-air)
     dana_features = {
         "is_mediterranean": terrain["is_mediterranean"],
         "is_coastal": terrain["is_coastal"],
@@ -588,6 +604,8 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "pressure_change_6h": temporal["pressure_change_6h"],
         "wind_gusts": _safe(weather.get("wind_gusts"), 0.0),
         "humidity": humidity,
+        "cape_current": upper_air.get("cape_current", 0.0),
+        "precip_forecast_6h": upper_air.get("precip_forecast_6h", 0.0),
     }
 
     # 5. Run models
