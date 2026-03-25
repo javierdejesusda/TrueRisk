@@ -21,6 +21,7 @@
     "preparedness": "Preparedness",
     "safety": "Safety",
     "evacuation": "Evacuate",
+    "drought": "Drought",
     "report": "Report",
     "settings": "Settings",
     "admin": "Admin"
@@ -846,6 +847,26 @@
     "skip": "Skip",
     "next": "Next",
     "getStarted": "Get started"
+  },
+  "Drought": {
+    "title": "Drought Monitor",
+    "subtitle": "Water stress and drought conditions for {province}",
+    "classification": "Drought Classification",
+    "spei1m": "SPEI 1-Month",
+    "spei3m": "SPEI 3-Month",
+    "droughtScore": "Drought Risk Score",
+    "normal": "Normal",
+    "abnormallyDry": "Abnormally Dry",
+    "moderate": "Moderate Drought",
+    "severe": "Severe Drought",
+    "extreme": "Extreme Drought",
+    "exceptional": "Exceptional Drought",
+    "restrictions": "Active Water Restrictions",
+    "noRestrictions": "No active water restrictions",
+    "reservoirs": "Reservoir Levels",
+    "noReservoirData": "Reservoir data unavailable",
+    "level": "Level",
+    "capacity": "Capacity"
   },
   "Evacuation": {
     "title": "Evacuation Routes",

@@ -29,6 +29,7 @@ export function NavPill() {
     { href: '/preparedness', label: t('preparedness') },
     { href: '/safety', label: t('safety') },
     { href: '/evacuation', label: t('evacuation') },
+    { href: '/drought', label: t('drought') },
     { href: '/prediction', label: t('predictions') },
     { href: '/alerts', label: t('alerts') },
     { href: '/emergency', label: t('sos') },

@@ -13,7 +13,7 @@ from app.rate_limit import limiter
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
 from app.api import ai_summary, sms, data_sources
 from app.api import auth, suggestions, preparedness, emergency_plan, safety
-from app.api import flash_flood
+from app.api import flash_flood, drought
 from app.api import telegram as telegram_api
 from app.api import property as property_api
 from app.api import location as location_api
@@ -131,6 +131,7 @@ app.include_router(flash_flood.router, prefix="/api/v1/flash-flood", tags=["flas
 app.include_router(telegram_api.router, prefix="/api/v1/telegram", tags=["telegram"])
 app.include_router(location_api.router, prefix="/api/v1/location", tags=["location"])
 app.include_router(evacuation_api.router, prefix="/api/v1/evacuation", tags=["evacuation"])
+app.include_router(drought.router, prefix="/api/v1/drought", tags=["drought"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

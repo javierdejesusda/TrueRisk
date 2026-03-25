@@ -21,6 +21,7 @@
     "preparedness": "Preparacion",
     "safety": "Seguridad",
     "evacuation": "Evacuar",
+    "drought": "Sequia",
     "report": "Informe",
     "settings": "Ajustes",
     "admin": "Admin"
@@ -844,6 +845,26 @@
     "skip": "Saltar",
     "next": "Siguiente",
     "getStarted": "Empezar"
+  },
+  "Drought": {
+    "title": "Monitor de Sequia",
+    "subtitle": "Estres hidrico y condiciones de sequia para {province}",
+    "classification": "Clasificacion de Sequia",
+    "spei1m": "SPEI 1 Mes",
+    "spei3m": "SPEI 3 Meses",
+    "droughtScore": "Puntuacion de Riesgo de Sequia",
+    "normal": "Normal",
+    "abnormallyDry": "Anormalmente Seco",
+    "moderate": "Sequia Moderada",
+    "severe": "Sequia Severa",
+    "extreme": "Sequia Extrema",
+    "exceptional": "Sequia Excepcional",
+    "restrictions": "Restricciones de Agua Activas",
+    "noRestrictions": "Sin restricciones de agua activas",
+    "reservoirs": "Niveles de Embalses",
+    "noReservoirData": "Datos de embalses no disponibles",
+    "level": "Nivel",
+    "capacity": "Capacidad"
   },
   "Evacuation": {
     "title": "Rutas de Evacuacion",

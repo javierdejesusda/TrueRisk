@@ -18,6 +18,7 @@ from app.models.geocode_cache import GeocodeCache
 from app.models.river_gauge import RiverGauge, RiverReading
 from app.models.municipality import Municipality
 from app.models.evacuation_route import SafePoint
+from app.models.water_restriction import WaterRestriction
 
 __all__ = [
     "User",
@@ -44,4 +45,5 @@ __all__ = [
     "RiverReading",
     "Municipality",
     "SafePoint",
+    "WaterRestriction",
 ]
