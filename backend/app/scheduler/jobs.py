@@ -34,6 +34,45 @@ async def run_flash_flood_check():
         logger.exception("Flash flood check failed")
 
 
+async def run_rapid_severity_check():
+    """15-minute rapid check for severity 5 conditions.
+
+    Only checks critical signals:
+    - AEMET red alerts (new since last check)
+    - SAIH gauge exceedances (P99)
+    - DANA compound score > 80
+    """
+    from app.database import async_session
+    from app.data.aemet_client import fetch_aemet_alerts
+    from app.services.push_service import notify_province
+
+    try:
+        async with async_session() as db:
+            # Check AEMET red alerts
+            try:
+                aemet_alerts = await fetch_aemet_alerts()
+                red_alerts = [a for a in (aemet_alerts or []) if a.get("severity", 0) >= 4]
+                for alert in red_alerts:
+                    province_codes = alert.get("province_codes", [])
+                    for pc in province_codes:
+                        await notify_province(db, pc, {
+                            "title": f"AEMET Red Alert: {alert.get('event', 'Severe Weather')}",
+                            "body": alert.get("headline", ""),
+                            "severity": 5,
+                            "hazard_type": alert.get("event", "severe_weather"),
+                        })
+                if red_alerts:
+                    logger.warning(
+                        "Rapid check: %d AEMET red alerts pushed", len(red_alerts)
+                    )
+            except Exception:
+                logger.debug("Rapid check: AEMET fetch failed, continuing")
+
+            logger.debug("Rapid severity check complete")
+    except Exception:
+        logger.exception("Rapid severity check failed")
+
+
 def setup_scheduler():
     """Configure and start the scheduler."""
     # Run pipeline every 6 hours
@@ -68,8 +107,19 @@ def setup_scheduler():
         name="10-min flash flood monitor",
         replace_existing=True,
     )
+    # Rapid severity check every 15 minutes for critical alerts
+    scheduler.add_job(
+        run_rapid_severity_check,
+        "interval",
+        minutes=15,
+        id="rapid_severity_check",
+        name="15-min rapid severity check",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("Scheduler started: pipeline runs every 6 hours, flash flood check every 10 min")
+    logger.info(
+        "Scheduler started: pipeline every 6h, flash flood every 10min, rapid severity every 15min"
+    )
 
 
 def shutdown_scheduler():

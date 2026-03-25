@@ -629,6 +629,23 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     windstorm = min(100.0, windstorm_raw * (0.4 + 0.6 * weights["windstorm"]))
     dana = min(100.0, dana_raw * (0.4 + 0.6 * weights["dana"]))
 
+    # 5c. Apply compound hazard cascading
+    from app.services.compound_risk_service import apply_compound_amplifiers
+    _compound_scores = {
+        "flood": flood, "wildfire": wildfire, "drought": drought,
+        "heatwave": heatwave, "seismic": seismic, "coldwave": coldwave,
+        "windstorm": windstorm, "dana": dana,
+    }
+    _compound_features = {
+        "consecutive_dry_days": temporal.get("consecutive_dry_days", 0),
+        "active_fires_nearby": supplementary.get("active_fires_nearby", False),
+    }
+    _compound_scores, compound_chains = apply_compound_amplifiers(_compound_scores, _compound_features)
+    flood = _compound_scores["flood"]
+    wildfire = _compound_scores["wildfire"]
+    drought = _compound_scores["drought"]
+    heatwave = _compound_scores["heatwave"]
+
     # 6. Composite
     composite = compute_composite_risk(
         flood, wildfire, drought, heatwave, seismic, coldwave, windstorm, dana
@@ -657,6 +674,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
             "coldwave": coldwave_features,
             "windstorm": windstorm_features,
             "dana": dana_features,
+            "compound_chains_active": compound_chains,
         },
         computed_at=now,
     )

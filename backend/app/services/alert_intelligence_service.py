@@ -105,6 +105,22 @@ def compute_relevance(
     # Severity contribution
     score += (alert.severity / 5.0) * 0.25
 
+    # Personal vulnerability boost
+    if hasattr(user, 'age_range') or hasattr(user, 'mobility_level'):
+        from app.services.personal_vulnerability_service import compute_personal_vulnerability
+        user_profile = {
+            "age": getattr(user, 'age_range', '18-64'),
+            "floor_level": getattr(user, 'floor_level', None),
+            "mobility_level": getattr(user, 'mobility_level', 'full'),
+            "has_ac": getattr(user, 'has_ac', True),
+            "medical_conditions": getattr(user, 'medical_conditions', ''),
+        }
+        _, vuln_factors = compute_personal_vulnerability(
+            user_profile, alert.hazard_type or "", alert.severity * 20
+        )
+        if vuln_factors:
+            score += 0.1 * min(len(vuln_factors), 3)
+
     # Active alert bonus
     if alert.is_active:
         score += 0.1
