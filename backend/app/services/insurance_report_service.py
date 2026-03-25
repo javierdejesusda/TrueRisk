@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.location import find_nearest_province
 from app.data.province_data import PROVINCES
-from app.services.property_risk_service import compute_property_risk, severity_from_score
+from app.services.property_risk_service import compute_property_risk
 
 logger = logging.getLogger(__name__)
 
