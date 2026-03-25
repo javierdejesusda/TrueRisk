@@ -23,7 +23,7 @@ async def fetch_upper_air(lat: float, lon: float) -> dict[str, Any]:
     Returns a dict with current and forecast upper-air values useful for
     DANA compound event detection and nowcasting.
     """
-    params = {
+    params: dict[str, str | float | int] = {
         "latitude": lat,
         "longitude": lon,
         "hourly": "cape,precipitation,surface_pressure",

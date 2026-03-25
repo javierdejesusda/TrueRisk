@@ -280,7 +280,7 @@ async def _check_and_create_alerts(
             )
             wa_users = wa_result.scalars().all()
             for wu in wa_users:
-                if wu.alert_severity_threshold <= severity:
+                if wu.alert_severity_threshold <= severity and wu.phone_number:
                     await send_whatsapp(
                         wu.phone_number,
                         f"ALERTA: {label} en {province.name}. Puntuacion: {score:.0f}/100.",
@@ -299,7 +299,7 @@ async def _check_and_create_alerts(
             )
             tg_users = tg_result.scalars().all()
             for tu in tg_users:
-                if tu.alert_severity_threshold <= severity:
+                if tu.alert_severity_threshold <= severity and tu.telegram_chat_id:
                     await send_telegram(
                         tu.telegram_chat_id,
                         f"<b>ALERTA: {label} en {province.name}</b>\nPuntuacion: {score:.0f}/100.",

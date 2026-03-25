@@ -170,7 +170,7 @@ async def disaggregate_province_risk(
             }
 
         composite = max(hazard_scores.values()) if hazard_scores else 0.0
-        dominant = max(hazard_scores, key=hazard_scores.get) if hazard_scores else "flood"
+        dominant = max(hazard_scores, key=lambda h: hazard_scores[h]) if hazard_scores else "flood"
 
         severity = _classify_severity(composite)
 
