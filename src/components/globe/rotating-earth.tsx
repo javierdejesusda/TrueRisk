@@ -107,7 +107,7 @@ export function RotatingEarth({ className, onIntroComplete }: RotatingEarthProps
 
     let rotationTimer: ReturnType<typeof d3.timer> | null = null;
     let introTimer: ReturnType<typeof d3.timer> | null = null;
-    let autoRotationTimeout: ReturnType<typeof setTimeout> | null = null;
+    const autoRotationTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const startAutoRotation = () => {
       rotationTimer?.stop();
@@ -216,7 +216,7 @@ export function RotatingEarth({ className, onIntroComplete }: RotatingEarthProps
       rotationTimer?.stop();
       if (autoRotationTimeout) clearTimeout(autoRotationTimeout);
     };
-  }, [dimensions]);
+  }, [dimensions, onIntroComplete]);
 
   return (
     <div ref={containerRef} className={className} style={{ position: 'relative' }}>
