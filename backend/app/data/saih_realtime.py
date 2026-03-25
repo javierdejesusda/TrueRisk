@@ -396,6 +396,288 @@ def _parse_generic_flow_items(
     return readings
 
 
+def _enrich_with_known_coords(
+    readings: list[dict[str, Any]], known_coords: dict[str, tuple[float, float]]
+) -> list[dict[str, Any]]:
+    """Add coordinates from known stations dict if reading has no coords."""
+    for r in readings:
+        if r.get("lat") is None or r.get("lon") is None:
+            name_lower = (r.get("name") or "").lower().strip()
+            for station, (lat, lon) in known_coords.items():
+                if station in name_lower or name_lower in station:
+                    r["lat"] = lat
+                    r["lon"] = lon
+                    break
+    return readings
+
+
+def _parse_html_table_flows(
+    html: str, basin_key: str, basin_name: str
+) -> list[dict[str, Any]]:
+    """Extract flow data from HTML tables (generic pattern like Guadalquivir)."""
+    table_pattern = re.compile(
+        r"<td[^>]*>\s*([A-ZÁÉÍÓÚÑa-záéíóúñ][A-ZÁÉÍÓÚÑa-záéíóúñ\s\.\(\)]+?)\s*</td>"
+        r"\s*<td[^>]*>\s*([\d.,]+)\s*</td>",
+        re.IGNORECASE,
+    )
+    readings: list[dict[str, Any]] = []
+    for m in table_pattern.finditer(html):
+        name = m.group(1).strip()
+        flow = _safe_float(m.group(2).replace(",", "."))
+        if len(name) < 3 or name.lower() in ("nombre", "estación", "estacion", "caudal"):
+            continue
+        slug = re.sub(r"[^a-z0-9]", "", name.lower())
+        readings.append({
+            "gauge_id": f"{basin_key}_{slug}",
+            "name": name,
+            "river": basin_name,
+            "flow_m3s": flow,
+            "level_m": None,
+            "lat": None, "lon": None,
+            "basin": basin_name,
+        })
+    return readings
+
+
+def _parse_embedded_js_flows(
+    html: str, basin_key: str, basin_name: str
+) -> list[dict[str, Any]]:
+    """Extract flow data from embedded JavaScript arrays (Jucar-like pattern)."""
+    import json
+    for var_name in ["aforos", "estaciones", "datos", "stations"]:
+        pattern = rf"(?:let|var|const)\s+{var_name}\s*=\s*(\[.*?\])\s*;"
+        match = re.search(pattern, html, re.DOTALL)
+        if match:
+            try:
+                items = json.loads(match.group(1))
+                if isinstance(items, list) and items:
+                    return _parse_generic_flow_items(items, basin_key, basin_name)
+            except json.JSONDecodeError:
+                continue
+    return []
+
+
+# ---------------------------------------------------------------------------
+# Basin-specific known coordinates
+# ---------------------------------------------------------------------------
+
+_TAJO_KNOWN_COORDS: dict[str, tuple[float, float]] = {
+    "aranjuez": (40.033, -3.603), "toledo": (39.858, -4.024),
+    "talavera": (39.961, -4.831), "alcantara": (39.718, -6.889),
+    "trillo": (40.700, -2.592), "bolarque": (40.385, -2.780),
+    "castrejon": (39.871, -4.437), "azutan": (39.780, -5.147),
+    "valdecanas": (39.750, -5.464),
+}
+
+_DUERO_KNOWN_COORDS: dict[str, tuple[float, float]] = {
+    "zamora": (41.503, -5.745), "toro": (41.522, -5.395),
+    "salamanca": (40.970, -5.663), "valladolid": (41.652, -4.724),
+    "soria": (41.764, -2.468), "aranda de duero": (41.670, -3.689),
+    "peñafiel": (41.600, -4.117), "tordesillas": (41.504, -5.000),
+    "villachica": (41.533, -5.483),
+}
+
+_NORTE_KNOWN_COORDS: dict[str, tuple[float, float]] = {
+    "oviedo": (43.362, -5.849), "gijon": (43.535, -5.662),
+    "santander": (43.462, -3.810), "bilbao": (43.263, -2.935),
+    "reinosa": (42.998, -4.137), "cabuerniga": (43.233, -4.283),
+    "lugo": (43.009, -7.556), "pontevedra": (42.431, -8.644),
+}
+
+_GUADIANA_KNOWN_COORDS: dict[str, tuple[float, float]] = {
+    "badajoz": (38.878, -6.970), "merida": (38.916, -6.344),
+    "ciudad real": (38.986, -3.927), "puertollano": (38.687, -4.110),
+    "don benito": (38.954, -5.861), "villanueva de la serena": (38.975, -5.798),
+    "zújar": (38.585, -5.281), "orellana": (39.005, -5.542),
+}
+
+_SUR_KNOWN_COORDS: dict[str, tuple[float, float]] = {
+    "malaga": (36.721, -4.421), "granada": (37.177, -3.599),
+    "almeria": (36.834, -2.463), "motril": (36.745, -3.518),
+    "nerja": (36.756, -3.878), "velez malaga": (36.778, -4.100),
+    "antequera": (37.019, -4.561), "loja": (37.169, -4.152),
+}
+
+
+# ---------------------------------------------------------------------------
+# Basin fetchers for previously-stubbed basins
+# ---------------------------------------------------------------------------
+
+async def _fetch_tajo_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
+    """Fetch river flow readings from SAIH Tajo."""
+    base = SAIH_BASINS["tajo"]["url"]
+
+    # Strategy 1: Try REST API endpoints
+    for path in ["/api/datos/caudales", "/saih/rest/aforo/datos", "/api/aforos"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                ct = resp.headers.get("content-type", "")
+                if "json" in ct:
+                    data = resp.json()
+                    items = data if isinstance(data, list) else data.get("data", data.get("datos", []))
+                    if isinstance(items, list) and items:
+                        readings = _parse_generic_flow_items(items, "tajo", "Tajo")
+                        return _enrich_with_known_coords(readings, _TAJO_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    # Strategy 2: Try HTML scraping
+    for path in ["/Informes/CaudalesInstantaneos.aspx", "/saih/caudales.html", "/"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "text/html"})
+            if resp.status_code == 200 and "text/html" in resp.headers.get("content-type", ""):
+                readings = _parse_html_table_flows(resp.text, "tajo", "Tajo")
+                if readings:
+                    return _enrich_with_known_coords(readings, _TAJO_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    logger.debug("SAIH Tajo: no accessible data endpoint found")
+    return []
+
+
+async def _fetch_duero_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
+    """Fetch river flow readings from SAIH Duero."""
+    base = SAIH_BASINS["duero"]["url"]
+
+    for path in ["/risr/datos-tiempo-real", "/risr/caudales", "/api/caudales", "/rest/aforo/datos"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                ct = resp.headers.get("content-type", "")
+                if "json" in ct:
+                    data = resp.json()
+                    items = data if isinstance(data, list) else data.get("data", data.get("datos", []))
+                    if isinstance(items, list) and items:
+                        readings = _parse_generic_flow_items(items, "duero", "Duero")
+                        return _enrich_with_known_coords(readings, _DUERO_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    # HTML fallback
+    for path in ["/Informes/CaudalesInstantaneos.aspx", "/saih/", "/"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "text/html"})
+            if resp.status_code == 200 and "html" in resp.headers.get("content-type", ""):
+                readings = _parse_embedded_js_flows(resp.text, "duero", "Duero")
+                if readings:
+                    return _enrich_with_known_coords(readings, _DUERO_KNOWN_COORDS)
+                readings = _parse_html_table_flows(resp.text, "duero", "Duero")
+                if readings:
+                    return _enrich_with_known_coords(readings, _DUERO_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    logger.debug("SAIH Duero: no accessible data endpoint found")
+    return []
+
+
+async def _fetch_norte_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
+    """Fetch river flow readings from SAIH Norte (Cantabrico)."""
+    base = SAIH_BASINS["norte"]["url"]
+
+    for path in ["/api/datos/caudales", "/rest/aforo/datos", "/api/aforos", "/datos/caudales"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                ct = resp.headers.get("content-type", "")
+                if "json" in ct:
+                    data = resp.json()
+                    items = data if isinstance(data, list) else data.get("data", data.get("datos", []))
+                    if isinstance(items, list) and items:
+                        readings = _parse_generic_flow_items(items, "norte", "Norte (Cantabrico)")
+                        return _enrich_with_known_coords(readings, _NORTE_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    for path in ["/Informes/CaudalesInstantaneos.aspx", "/saih/caudales.html", "/"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "text/html"})
+            if resp.status_code == 200 and "html" in resp.headers.get("content-type", ""):
+                readings = _parse_embedded_js_flows(resp.text, "norte", "Norte (Cantabrico)")
+                if readings:
+                    return _enrich_with_known_coords(readings, _NORTE_KNOWN_COORDS)
+                readings = _parse_html_table_flows(resp.text, "norte", "Norte (Cantabrico)")
+                if readings:
+                    return _enrich_with_known_coords(readings, _NORTE_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    logger.debug("SAIH Norte: no accessible data endpoint found")
+    return []
+
+
+async def _fetch_guadiana_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
+    """Fetch river flow readings from SAIH Guadiana."""
+    base = SAIH_BASINS["guadiana"]["url"]
+
+    for path in ["/api/datos/caudales", "/rest/aforo/datos", "/api/aforos", "/datos/caudales"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                ct = resp.headers.get("content-type", "")
+                if "json" in ct:
+                    data = resp.json()
+                    items = data if isinstance(data, list) else data.get("data", data.get("datos", []))
+                    if isinstance(items, list) and items:
+                        readings = _parse_generic_flow_items(items, "guadiana", "Guadiana")
+                        return _enrich_with_known_coords(readings, _GUADIANA_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    for path in ["/Informes/CaudalesInstantaneos.aspx", "/saih/caudales.html", "/"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "text/html"})
+            if resp.status_code == 200 and "html" in resp.headers.get("content-type", ""):
+                readings = _parse_embedded_js_flows(resp.text, "guadiana", "Guadiana")
+                if readings:
+                    return _enrich_with_known_coords(readings, _GUADIANA_KNOWN_COORDS)
+                readings = _parse_html_table_flows(resp.text, "guadiana", "Guadiana")
+                if readings:
+                    return _enrich_with_known_coords(readings, _GUADIANA_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    logger.debug("SAIH Guadiana: no accessible data endpoint found")
+    return []
+
+
+async def _fetch_sur_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
+    """Fetch river flow readings from SAIH Sur (Mediterraneo Andaluz)."""
+    base = SAIH_BASINS["sur"]["url"]
+
+    for path in ["/api/datos/caudales", "/rest/aforo/datos", "/api/aforos", "/datos/caudales"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                ct = resp.headers.get("content-type", "")
+                if "json" in ct:
+                    data = resp.json()
+                    items = data if isinstance(data, list) else data.get("data", data.get("datos", []))
+                    if isinstance(items, list) and items:
+                        readings = _parse_generic_flow_items(items, "sur", "Sur (Mediterraneo Andaluz)")
+                        return _enrich_with_known_coords(readings, _SUR_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    for path in ["/Informes/CaudalesInstantaneos.aspx", "/saih/caudales.html", "/"]:
+        try:
+            resp = await client.get(f"{base}{path}", headers={"Accept": "text/html"})
+            if resp.status_code == 200 and "html" in resp.headers.get("content-type", ""):
+                readings = _parse_embedded_js_flows(resp.text, "sur", "Sur (Mediterraneo Andaluz)")
+                if readings:
+                    return _enrich_with_known_coords(readings, _SUR_KNOWN_COORDS)
+                readings = _parse_html_table_flows(resp.text, "sur", "Sur (Mediterraneo Andaluz)")
+                if readings:
+                    return _enrich_with_known_coords(readings, _SUR_KNOWN_COORDS)
+        except (httpx.HTTPError, Exception):
+            continue
+
+    logger.debug("SAIH Sur: no accessible data endpoint found")
+    return []
+
+
 async def _fetch_stub_flows(basin_key: str) -> list[dict[str, Any]]:
     """Stub fetcher for basins whose API format is not yet implemented.
 
@@ -414,12 +696,11 @@ _BASIN_FETCHERS = {
     "jucar": _fetch_jucar_flows,
     "guadalquivir": _fetch_guadalquivir_flows,
     "segura": _fetch_segura_flows,
-    # Other basins use stub until their API format is implemented:
-    "tajo": lambda _client: _fetch_stub_flows("tajo"),
-    "duero": lambda _client: _fetch_stub_flows("duero"),
-    "norte": lambda _client: _fetch_stub_flows("norte"),
-    "guadiana": lambda _client: _fetch_stub_flows("guadiana"),
-    "sur": lambda _client: _fetch_stub_flows("sur"),
+    "tajo": _fetch_tajo_flows,
+    "duero": _fetch_duero_flows,
+    "norte": _fetch_norte_flows,
+    "guadiana": _fetch_guadiana_flows,
+    "sur": _fetch_sur_flows,
 }
 
 
