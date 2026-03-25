@@ -40,6 +40,14 @@ async def check_in(
     await db.commit()
     await db.refresh(record)
 
+    # Award gamification points for safety check-in
+    try:
+        from app.services.gamification_service import award_points
+        await award_points(db, user_id, "safety_checkin")
+        await db.commit()
+    except Exception:
+        logger.exception("Failed to award gamification points for safety check-in")
+
     # Notify linked family members via push
     display = user.display_name or user.nickname or "A family member"
     links_result = await db.execute(

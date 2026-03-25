@@ -934,5 +934,16 @@
     "generatedAt": "Generado {time}",
     "aiDisclaimer": "Resumen generado por IA basado en datos de riesgo actuales",
     "unavailable": "Informe aun no disponible para esta provincia"
+  },
+  "Gamification": {
+    "points": "Puntos",
+    "streak": "Racha Diaria",
+    "longestStreak": "Mejor Racha",
+    "badges": "Insignias",
+    "earned": "Conseguida",
+    "locked": "Bloqueada",
+    "totalPoints": "{points} pts",
+    "days": "{count} dias",
+    "keepItUp": "Sigue asi!"
   }
 }

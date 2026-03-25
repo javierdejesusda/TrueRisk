@@ -40,6 +40,16 @@ async def create_report(
     db.add(report)
     await db.commit()
     await db.refresh(report)
+
+    # Award gamification points for submitting a report
+    if user_id is not None:
+        try:
+            from app.services.gamification_service import award_points
+            await award_points(db, user_id, "community_report")
+            await db.commit()
+        except Exception:
+            logger.exception("Failed to award gamification points for community report")
+
     return report
 
 
@@ -119,4 +129,13 @@ async def verify_report(
 
     await db.commit()
     await db.refresh(report)
+
+    # Award gamification points for verifying a report
+    try:
+        from app.services.gamification_service import award_points
+        await award_points(db, user_id, "report_verification")
+        await db.commit()
+    except Exception:
+        logger.exception("Failed to award gamification points for report verification")
+
     return report

@@ -936,5 +936,16 @@
     "generatedAt": "Generated {time}",
     "aiDisclaimer": "AI-generated summary based on current risk data",
     "unavailable": "Briefing not yet available for this province"
+  },
+  "Gamification": {
+    "points": "Points",
+    "streak": "Day Streak",
+    "longestStreak": "Longest Streak",
+    "badges": "Badges",
+    "earned": "Earned",
+    "locked": "Locked",
+    "totalPoints": "{points} pts",
+    "days": "{count} days",
+    "keepItUp": "Keep it up!"
   }
 }

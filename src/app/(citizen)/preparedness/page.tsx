@@ -7,6 +7,9 @@ import { useAppStore } from '@/store/app-store';
 import { ScoreGauge } from '@/components/preparedness/score-gauge';
 import { ScoreTrend } from '@/components/preparedness/score-trend';
 import { CategoryCard } from '@/components/preparedness/category-card';
+import { StreakWidget } from '@/components/preparedness/streak-widget';
+import { BadgesPanel } from '@/components/preparedness/badges-panel';
+import { useGamification } from '@/hooks/use-gamification';
 import type { ChecklistItem } from '@/hooks/use-preparedness';
 
 const CATEGORY_CTAS: Record<string, { href: string }> = {
@@ -80,6 +83,7 @@ export default function PreparednessPage() {
   const t = useTranslations('Preparedness');
   const locale = useAppStore((s) => s.locale);
   const { score, checklist, history, isLoading, error, toggleItem, refresh, localCompletions } = usePreparedness();
+  const { status: gamification, isLoading: gamificationLoading } = useGamification();
   const isEs = locale === 'es';
 
   const categories = score?.categories ?? [];
@@ -122,6 +126,20 @@ export default function PreparednessPage() {
         <ScoreTrend
           history={history}
           label={t('trendLabel')}
+        />
+      </div>
+
+      {/* Gamification — streak + badges */}
+      <div className="flex flex-col gap-4 mb-6">
+        <StreakWidget
+          totalPoints={gamification?.total_points ?? 0}
+          currentStreak={gamification?.current_streak_days ?? 0}
+          longestStreak={gamification?.longest_streak_days ?? 0}
+          isLoading={gamificationLoading}
+        />
+        <BadgesPanel
+          badges={gamification?.badges ?? []}
+          isLoading={gamificationLoading}
         />
       </div>
 

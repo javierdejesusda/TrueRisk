@@ -14,6 +14,7 @@ from app.api import provinces, weather, alerts, risk, backoffice, analysis, push
 from app.api import ai_summary, sms, data_sources
 from app.api import auth, suggestions, preparedness, emergency_plan, safety
 from app.api import flash_flood, drought
+from app.api import gamification as gamification_api
 from app.api import telegram as telegram_api
 from app.api import property as property_api
 from app.api import location as location_api
@@ -134,6 +135,7 @@ app.include_router(location_api.router, prefix="/api/v1/location", tags=["locati
 app.include_router(evacuation_api.router, prefix="/api/v1/evacuation", tags=["evacuation"])
 app.include_router(drought.router, prefix="/api/v1/drought", tags=["drought"])
 app.include_router(insurance_api.router, prefix="/api/v1/insurance", tags=["insurance"])
+app.include_router(gamification_api.router, prefix="/api/v1/gamification", tags=["gamification"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")
