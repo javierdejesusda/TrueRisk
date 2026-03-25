@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column('key_hash', sa.String(length=128), nullable=False),
         sa.Column('name', sa.String(length=100), nullable=False),
         sa.Column('partner_email', sa.String(length=255), nullable=False),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
         sa.Column('rate_limit_per_hour', sa.Integer(), nullable=False, server_default=sa.text('100')),
         sa.Column('request_count', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
