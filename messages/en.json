@@ -597,7 +597,17 @@
     "phoneTitle": "Phone number",
     "phoneNumber": "Mobile phone",
     "phonePlaceholder": "+34 xxx xxx xxx",
-    "phoneDesc": "Your phone number to receive SMS alerts"
+    "phoneDesc": "Your phone number to receive SMS alerts",
+    "heatProfileTitle": "Heat vulnerability profile",
+    "ageRange": "Age group",
+    "age_0-5": "0-5 years",
+    "age_6-17": "6-17 years",
+    "age_18-64": "18-64 years",
+    "age_65+": "65+ years",
+    "acLabel": "Air conditioning",
+    "hasAc": "I have air conditioning at home",
+    "floorLevel": "Floor level",
+    "floorLevelPlaceholder": "e.g. 4"
   },
   "NotificationChannels": {
     "title": "Notification Channels",
@@ -787,6 +797,20 @@
     "geographic": "Geographic Factor",
     "populationDensity": "Population Density",
     "vulnerabilityIndex": "Vulnerability Index"
+  },
+  "HeatPersonal": {
+    "personalRisk": "Your Personal Heat Risk",
+    "basedOnProfile": "Based on your profile",
+    "personalMultiplier": "Personal risk multiplier",
+    "recommendations": "Recommendations",
+    "ageFactor": "Age group",
+    "acFactor": "No air conditioning",
+    "floorFactor": "High floor",
+    "mobilityFactor": "Limited mobility",
+    "medicalFactor": "Medical conditions",
+    "hasAc": "Air conditioning",
+    "floorLevel": "Floor level",
+    "ageRange": "Age group"
   },
   "Explainability": {
     "title": "AI Model Attention",

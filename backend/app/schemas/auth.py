@@ -34,6 +34,9 @@ class ProfileUpdateRequest(BaseModel):
     medical_conditions: str | None = None
     mobility_level: str | None = None
     has_vehicle: bool | None = None
+    has_ac: bool | None = None
+    floor_level: int | None = None
+    age_range: str | None = None
     alert_severity_threshold: int | None = None
     alert_delivery: str | None = None
     hazard_preferences: list[str] | None = None
@@ -58,6 +61,9 @@ class UserResponse(BaseModel):
     medical_conditions: str | None = None
     mobility_level: str
     has_vehicle: bool
+    has_ac: bool
+    floor_level: int | None = None
+    age_range: str | None = None
     alert_severity_threshold: int
     alert_delivery: str
     hazard_preferences: list | dict

@@ -595,7 +595,17 @@
     "phoneTitle": "Numero de telefono",
     "phoneNumber": "Telefono movil",
     "phonePlaceholder": "+34 xxx xxx xxx",
-    "phoneDesc": "Tu numero de telefono para recibir alertas por SMS"
+    "phoneDesc": "Tu numero de telefono para recibir alertas por SMS",
+    "heatProfileTitle": "Perfil de vulnerabilidad al calor",
+    "ageRange": "Grupo de edad",
+    "age_0-5": "0-5 anos",
+    "age_6-17": "6-17 anos",
+    "age_18-64": "18-64 anos",
+    "age_65+": "65+ anos",
+    "acLabel": "Aire acondicionado",
+    "hasAc": "Tengo aire acondicionado en casa",
+    "floorLevel": "Planta del edificio",
+    "floorLevelPlaceholder": "ej. 4"
   },
   "NotificationChannels": {
     "title": "Canales de Notificacion",
@@ -785,6 +795,20 @@
     "geographic": "Factor Geográfico",
     "populationDensity": "Densidad de Población",
     "vulnerabilityIndex": "Índice de Vulnerabilidad"
+  },
+  "HeatPersonal": {
+    "personalRisk": "Tu Riesgo Personal por Calor",
+    "basedOnProfile": "Basado en tu perfil",
+    "personalMultiplier": "Multiplicador de riesgo personal",
+    "recommendations": "Recomendaciones",
+    "ageFactor": "Grupo de edad",
+    "acFactor": "Sin aire acondicionado",
+    "floorFactor": "Piso alto",
+    "mobilityFactor": "Movilidad limitada",
+    "medicalFactor": "Condiciones medicas",
+    "hasAc": "Aire acondicionado",
+    "floorLevel": "Nivel de planta",
+    "ageRange": "Grupo de edad"
   },
   "Explainability": {
     "title": "Atención del Modelo IA",

@@ -39,6 +39,9 @@ class User(Base):
     medical_conditions: Mapped[str | None] = mapped_column(String(500), nullable=True)
     mobility_level: Mapped[str] = mapped_column(String(20), default="full")
     has_vehicle: Mapped[bool] = mapped_column(Boolean, default=False)
+    has_ac: Mapped[bool] = mapped_column(Boolean, default=True)
+    floor_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    age_range: Mapped[str | None] = mapped_column(String(10), nullable=True)  # "0-5", "6-17", "18-64", "65+"
 
     # Alert preferences
     alert_severity_threshold: Mapped[int] = mapped_column(Integer, default=3)

@@ -21,6 +21,7 @@ const SPECIAL_NEEDS = ['elderly', 'children', 'pets', 'disability', 'medical'] a
 const MOBILITY_LEVELS = ['full', 'limited', 'wheelchair'] as const;
 const ALERT_DELIVERY_OPTIONS = ['push', 'sms', 'both'] as const;
 const HAZARD_TYPES = ['flood', 'wildfire', 'drought', 'heatwave', 'seismic', 'coldwave', 'windstorm'] as const;
+const AGE_RANGES = ['0-5', '6-17', '18-64', '65+'] as const;
 
 // ── Schema ──────────────────────────────────────────────────────────────
 
@@ -34,6 +35,9 @@ const profileSchema = z.object({
   medicalConditions: z.string().default(''),
   mobilityLevel: z.string().default('full'),
   hasVehicle: z.boolean().default(false),
+  hasAc: z.boolean().default(true),
+  floorLevel: z.union([z.number().int().min(0), z.literal('')]).default(''),
+  ageRange: z.string().default('18-64'),
   alertSeverityThreshold: z.number().min(1).max(5).default(3),
   alertDelivery: z.string().default('push'),
   hazardPreferences: z.array(z.string()).default([]),
@@ -52,6 +56,10 @@ function toSnakeCasePayload(data: ProfileFormData): Record<string, unknown> {
   for (const [key, value] of Object.entries(data)) {
     result[toSnakeCase(key)] = value;
   }
+  // Convert empty string floor_level to null for backend
+  if (result.floor_level === '' || result.floor_level === undefined) {
+    result.floor_level = null;
+  }
   return result;
 }
 
@@ -66,6 +74,9 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
     medical_conditions: 'medicalConditions',
     mobility_level: 'mobilityLevel',
     has_vehicle: 'hasVehicle',
+    has_ac: 'hasAc',
+    floor_level: 'floorLevel',
+    age_range: 'ageRange',
     alert_severity_threshold: 'alertSeverityThreshold',
     alert_delivery: 'alertDelivery',
     hazard_preferences: 'hazardPreferences',
@@ -119,6 +130,9 @@ export function ProfileForm() {
       medicalConditions: '',
       mobilityLevel: 'full',
       hasVehicle: false,
+      hasAc: true,
+      floorLevel: '',
+      ageRange: '18-64',
       alertSeverityThreshold: 3,
       alertDelivery: 'push',
       hazardPreferences: [],
@@ -145,6 +159,9 @@ export function ProfileForm() {
           medicalConditions: (mapped.medicalConditions as string) || '',
           mobilityLevel: (mapped.mobilityLevel as string) || 'full',
           hasVehicle: (mapped.hasVehicle as boolean) || false,
+          hasAc: mapped.hasAc !== undefined ? (mapped.hasAc as boolean) : true,
+          floorLevel: mapped.floorLevel != null ? (mapped.floorLevel as number) : '',
+          ageRange: (mapped.ageRange as string) || '18-64',
           alertSeverityThreshold: (mapped.alertSeverityThreshold as number) || 3,
           alertDelivery: (mapped.alertDelivery as string) || 'push',
           hazardPreferences: (mapped.hazardPreferences as string[]) || [],
@@ -467,6 +484,101 @@ export function ProfileForm() {
               )}
             />
           </div>
+        </div>
+      </Card>
+
+      {/* Heat Vulnerability Profile */}
+      <Card variant="glass">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
+          {t('heatProfileTitle')}
+        </h2>
+        <div className="flex flex-col gap-5">
+          {/* Age range radio cards */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
+              {t('ageRange')}
+            </label>
+            <Controller
+              name="ageRange"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-2 gap-3">
+                  {AGE_RANGES.map((range) => {
+                    const isActive = field.value === range;
+                    return (
+                      <div
+                        key={range}
+                        role="radio"
+                        aria-checked={isActive}
+                        tabIndex={0}
+                        onClick={() => field.onChange(range)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            field.onChange(range);
+                          }
+                        }}
+                        className={[
+                          'relative flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200',
+                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-green/50',
+                          isActive
+                            ? 'border-accent-green/60 bg-accent-green/5 shadow-[0_0_12px_rgba(255,255,255,0.04)]'
+                            : 'border-border bg-bg-secondary/50 hover:border-border-hover',
+                        ].join(' ')}
+                      >
+                        <RadioIndicator active={isActive} />
+                        <span
+                          className={[
+                            'text-sm font-medium transition-colors',
+                            isActive ? 'text-text-primary' : 'text-text-secondary',
+                          ].join(' ')}
+                        >
+                          {t(`age_${range}` as 'age_0-5' | 'age_6-17' | 'age_18-64' | 'age_65+')}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            />
+          </div>
+
+          {/* AC checkbox */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
+              {t('acLabel')}
+            </label>
+            <Controller
+              name="hasAc"
+              control={control}
+              render={({ field }) => (
+                <CheckboxItem
+                  checked={field.value}
+                  label={t('hasAc')}
+                  onToggle={() => field.onChange(!field.value)}
+                />
+              )}
+            />
+          </div>
+
+          {/* Floor level */}
+          <Controller
+            name="floorLevel"
+            control={control}
+            render={({ field }) => (
+              <Input
+                label={t('floorLevel')}
+                type="number"
+                value={field.value === '' ? '' : String(field.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  field.onChange(val === '' ? '' : Number(val));
+                }}
+                onBlur={field.onBlur}
+                placeholder={t('floorLevelPlaceholder')}
+              />
+            )}
+          />
         </div>
       </Card>
 

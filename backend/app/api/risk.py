@@ -9,7 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
+from app.models.user import User
 from app.ml.model_registry import get_model_registry
 from app.models.province import Province
 from app.models.risk_score import RiskScore
@@ -295,6 +296,41 @@ async def get_heat_vulnerability(
         "adjusted_score": result.adjusted_score,
         "factors": result.factors,
     }
+
+
+@router.get("/{province_code}/heat-vulnerability/personal")
+async def get_personal_heat_vulnerability(
+    province_code: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get personalized heat vulnerability based on user profile."""
+    from app.services.heat_vulnerability_service import compute_personal_heat_vulnerability
+    from app.services.risk_service import compute_province_risk
+
+    province = await db.get(Province, province_code)
+    if not province:
+        raise HTTPException(status_code=404, detail="Province not found")
+
+    risk = await compute_province_risk(db, province_code)
+    base_score = risk.get("heatwave_score", 0)
+
+    user_profile = {
+        "age_range": user.age_range or "18-64",
+        "has_ac": user.has_ac,
+        "floor_level": user.floor_level,
+        "mobility_level": user.mobility_level,
+        "medical_conditions": user.medical_conditions or "",
+        "residence_type": user.residence_type,
+    }
+
+    return compute_personal_heat_vulnerability(
+        user_profile=user_profile,
+        province_code=province_code,
+        base_heatwave_score=base_score,
+        is_coastal=province.coastal,
+        elevation_m=province.elevation_m or 0,
+    )
 
 
 @router.get("/municipality/{municipality_code}")
