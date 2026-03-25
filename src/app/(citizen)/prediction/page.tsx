@@ -23,6 +23,7 @@ import { useForecast } from '@/hooks/use-forecast';
 import { ForecastChart } from '@/components/predictions/forecast-chart';
 import { AttentionWeightsChart } from '@/components/predictions/attention-weights-chart';
 import { AiWeatherSummary } from '@/components/predictions/ai-weather-summary';
+import { HydroNowcastCard } from '@/components/predictions/hydro-nowcast-card';
 import { PROVINCES } from '@/lib/provinces';
 import { useTranslations } from 'next-intl';
 
@@ -107,6 +108,11 @@ export default function PredictionPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <ForecastChart data={forecastData} isLoading={forecastLoading} />
         <AttentionWeightsChart data={forecastData} />
+      </div>
+
+      {/* Hydrological Nowcast */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+        <HydroNowcastCard />
       </div>
 
       {/* Hazard ML Models */}

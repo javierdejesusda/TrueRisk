@@ -907,5 +907,25 @@
     "noPoints": "No se encontraron puntos seguros cercanos",
     "useLocation": "Activa el acceso a tu ubicacion para encontrar puntos seguros cerca de ti",
     "bearing": "Direccion: {dir}"
+  },
+  "HydroNowcast": {
+    "title": "Prevision de Caudal Fluvial",
+    "subtitle": "Caudal previsto para {catchment}",
+    "catchment": "Cuenca",
+    "area": "Superficie",
+    "baseFlow": "Caudal base",
+    "predictedFlow": "Caudal previsto",
+    "riskLevel": "Nivel de riesgo",
+    "normal": "Normal",
+    "elevated": "Elevado",
+    "moderate": "Moderado",
+    "high": "Alto",
+    "critical": "Critico",
+    "in1h": "En 1 hora",
+    "in3h": "En 3 horas",
+    "in6h": "En 6 horas",
+    "flowChart": "Prevision de Caudal 24h",
+    "notAvailable": "Prevision hidrologica no disponible para esta provincia",
+    "m3s": "m\u00b3/s"
   }
 }

@@ -518,6 +518,37 @@ async def get_risk_impact(
     return impacts
 
 
+@router.get("/{province_code}/hydro-nowcast")
+async def get_hydro_nowcast(
+    province_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get hydrological nowcast -- predicted river flow 0-6h ahead."""
+    from app.data.open_meteo_upper_air import fetch_upper_air
+    from app.data.province_data import PROVINCES
+    from app.services.hydro_nowcast_service import compute_hydro_nowcast
+
+    data = PROVINCES.get(province_code, {})
+    lat = data.get("latitude", 40.0)
+    lon = data.get("longitude", -3.7)
+
+    try:
+        upper_air = await fetch_upper_air(lat, lon)
+        precip_hourly = upper_air.get("precip_hourly", [])
+    except Exception:
+        precip_hourly = []
+
+    result = await compute_hydro_nowcast(province_code, precip_hourly)
+    if result is None:
+        return {
+            "province_code": province_code,
+            "available": False,
+            "message": "No catchment data for this province",
+        }
+    result["available"] = True
+    return result
+
+
 @router.get("/{province_code}/dana-nowcast")
 async def get_dana_nowcast(
     province_code: str,

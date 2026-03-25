@@ -909,5 +909,25 @@
     "noPoints": "No safe points found nearby",
     "useLocation": "Enable location access to find safe points near you",
     "bearing": "Direction: {dir}"
+  },
+  "HydroNowcast": {
+    "title": "River Flow Forecast",
+    "subtitle": "Predicted flow for {catchment}",
+    "catchment": "Catchment",
+    "area": "Area",
+    "baseFlow": "Base flow",
+    "predictedFlow": "Predicted flow",
+    "riskLevel": "Risk level",
+    "normal": "Normal",
+    "elevated": "Elevated",
+    "moderate": "Moderate",
+    "high": "High",
+    "critical": "Critical",
+    "in1h": "In 1 hour",
+    "in3h": "In 3 hours",
+    "in6h": "In 6 hours",
+    "flowChart": "24h Flow Prediction",
+    "notAvailable": "Hydrological nowcast not available for this province",
+    "m3s": "m\u00b3/s"
   }
 }
