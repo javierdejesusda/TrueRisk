@@ -81,7 +81,7 @@ export default function LoginPage() {
                     >
                         <h2 className="text-2xl font-bold font-[family-name:var(--font-display)] tracking-tight">
                             <span className="text-text-primary">True</span>
-                            <span className="text-accent-blue">Risk</span>
+                            <span className="text-text-primary">Risk</span>
                         </h2>
                     </motion.div>
                     <motion.p

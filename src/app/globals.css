@@ -195,6 +195,15 @@ body {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes star-btn {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+
+.animate-star-btn {
+  animation: star-btn calc(var(--duration) * 1s) linear infinite;
+}
+
 .animate-panel-enter {
   animation: panel-enter 0.3s ease-out both;
 }
