@@ -24,7 +24,8 @@
     "drought": "Sequia",
     "report": "Informe",
     "settings": "Ajustes",
-    "admin": "Admin"
+    "admin": "Admin",
+    "phrases": "Frases"
   },
   "Home": {
     "subtitle": "Plataforma de Gestion de Emergencias Climaticas",
@@ -945,5 +946,18 @@
     "totalPoints": "{points} pts",
     "days": "{count} dias",
     "keepItUp": "Sigue asi!"
+  },
+  "Phrases": {
+    "title": "Frases de Emergencia",
+    "subtitle": "Frases esenciales en 10 idiomas para emergencias",
+    "selectLanguage": "Seleccionar idioma",
+    "speak": "Escuchar",
+    "medical": "Médico",
+    "disaster": "Desastre Natural",
+    "location": "Ubicación",
+    "transport": "Transporte",
+    "general": "General",
+    "offlineReady": "Disponible sin conexión",
+    "tapToSpeak": "Toca para escuchar la pronunciación"
   }
 }

@@ -24,7 +24,8 @@
     "drought": "Drought",
     "report": "Report",
     "settings": "Settings",
-    "admin": "Admin"
+    "admin": "Admin",
+    "phrases": "Phrases"
   },
   "Home": {
     "subtitle": "Climate Emergency Management Platform",
@@ -947,5 +948,18 @@
     "totalPoints": "{points} pts",
     "days": "{count} days",
     "keepItUp": "Keep it up!"
+  },
+  "Phrases": {
+    "title": "Emergency Phrases",
+    "subtitle": "Essential phrases in 10 languages for emergencies",
+    "selectLanguage": "Select language",
+    "speak": "Speak",
+    "medical": "Medical",
+    "disaster": "Natural Disaster",
+    "location": "Location",
+    "transport": "Transport",
+    "general": "General",
+    "offlineReady": "Available offline",
+    "tapToSpeak": "Tap to hear pronunciation"
   }
 }
