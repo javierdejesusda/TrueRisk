@@ -2,38 +2,40 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 
 interface Step {
   selector: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
 }
 
 const STEPS: Step[] = [
   {
     selector: '[data-tour="province-select"]',
-    title: 'Select your province',
-    description: 'Choose any of the 52 Spanish provinces to see personalized risk data.',
+    titleKey: 'step1Title',
+    descKey: 'step1Desc',
   },
   {
     selector: '[data-tour="risk-overview"]',
-    title: 'Risk overview',
-    description: 'Your composite risk score and per-hazard breakdown. Scores range from 0 (safe) to 100 (critical).',
+    titleKey: 'step2Title',
+    descKey: 'step2Desc',
   },
   {
     selector: '[data-tour="weather-card"]',
-    title: 'Live weather',
-    description: 'Current conditions from Open-Meteo, updated every 60 seconds.',
+    titleKey: 'step3Title',
+    descKey: 'step3Desc',
   },
   {
     selector: '[data-tour="alert-feed"]',
-    title: 'Active alerts',
-    description: 'Real-time AEMET weather alerts and community reports via SSE streaming.',
+    titleKey: 'step4Title',
+    descKey: 'step4Desc',
   },
 ];
 
 export function Walkthrough() {
+  const t = useTranslations('Walkthrough');
   const hasSeenOnboarding = useAppStore((s) => s.hasSeenOnboarding);
   const dismissOnboarding = useAppStore((s) => s.dismissOnboarding);
   const [step, setStep] = useState(0);
@@ -127,20 +129,20 @@ export function Walkthrough() {
                 onClick={handleSkip}
                 className="cursor-pointer font-[family-name:var(--font-sans)] text-[10px] text-text-muted hover:text-text-primary transition-colors"
               >
-                Skip
+                {t('skip')}
               </button>
             </div>
             <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary mb-1">
-              {current.title}
+              {t(current.titleKey)}
             </h3>
             <p className="font-[family-name:var(--font-sans)] text-[11px] text-text-secondary leading-relaxed mb-3">
-              {current.description}
+              {t(current.descKey)}
             </p>
             <button
               onClick={handleNext}
               className="cursor-pointer w-full rounded-lg bg-accent-green/15 px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium text-accent-green transition-colors hover:bg-accent-green/25"
             >
-              {isLast ? 'Get started' : 'Next'}
+              {isLast ? t('getStarted') : t('next')}
             </button>
           </div>
         </motion.div>

@@ -777,5 +777,18 @@
     "ruleVsML": "Comparación Reglas vs IA",
     "agreements": "Ambos coinciden",
     "disagreements": "Señales divergentes"
+  },
+  "Walkthrough": {
+    "step1Title": "Selecciona tu provincia",
+    "step1Desc": "Elige cualquiera de las 52 provincias españolas para ver datos de riesgo personalizados.",
+    "step2Title": "Resumen de riesgos",
+    "step2Desc": "Tu puntuación de riesgo compuesto y desglose por amenaza. Las puntuaciones van de 0 (seguro) a 100 (crítico).",
+    "step3Title": "Tiempo en vivo",
+    "step3Desc": "Condiciones actuales de Open-Meteo, actualizadas cada 60 segundos.",
+    "step4Title": "Alertas activas",
+    "step4Desc": "Alertas meteorológicas de AEMET en tiempo real e informes comunitarios vía streaming SSE.",
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "getStarted": "Empezar"
   }
 }

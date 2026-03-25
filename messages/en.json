@@ -779,5 +779,18 @@
     "ruleVsML": "Rule vs ML Comparison",
     "agreements": "Both Agree",
     "disagreements": "Divergent Signals"
+  },
+  "Walkthrough": {
+    "step1Title": "Select your province",
+    "step1Desc": "Choose any of the 52 Spanish provinces to see personalized risk data.",
+    "step2Title": "Risk overview",
+    "step2Desc": "Your composite risk score and per-hazard breakdown. Scores range from 0 (safe) to 100 (critical).",
+    "step3Title": "Live weather",
+    "step3Desc": "Current conditions from Open-Meteo, updated every 60 seconds.",
+    "step4Title": "Active alerts",
+    "step4Desc": "Real-time AEMET weather alerts and community reports via SSE streaming.",
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get started"
   }
 }
