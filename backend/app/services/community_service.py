@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.community_report import CommunityReport
+from app.models.community_report import CommunityReport, ReportVerification
 from app.schemas.community import CommunityReportCreate
 
 logger = logging.getLogger(__name__)
@@ -99,7 +99,20 @@ async def verify_report(
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Cannot verify your own report")
 
-    # TODO: Add report_verifications table to prevent same user verifying twice
+    # Prevent duplicate verification by the same user
+    existing = (
+        await db.execute(
+            select(ReportVerification).where(
+                ReportVerification.report_id == report_id,
+                ReportVerification.user_id == user_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=409, detail="Already verified by this user")
+
+    db.add(ReportVerification(report_id=report_id, user_id=user_id))
     report.verified_count += 1
     if report.verified_count >= 3:
         report.is_verified = True

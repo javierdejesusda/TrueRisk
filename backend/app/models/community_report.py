@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Float, Text, DateTime, Boolean, ForeignKey, func
+from sqlalchemy import String, Integer, Float, Text, DateTime, Boolean, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -31,3 +31,15 @@ class CommunityReport(Base):
     )
     verified_count: Mapped[int] = mapped_column(Integer, default=0)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ReportVerification(Base):
+    __tablename__ = "report_verifications"
+    __table_args__ = (
+        UniqueConstraint("report_id", "user_id", name="uq_report_user_verification"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    report_id: Mapped[int] = mapped_column(ForeignKey("community_reports.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
