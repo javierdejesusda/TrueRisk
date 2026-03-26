@@ -114,7 +114,7 @@ async def create_report(
 
     # 3. Generate report ID and timestamps
     report_id = str(uuid.uuid4())
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     expires = now + timedelta(days=30)
 
     # 4. Save to database
@@ -166,7 +166,7 @@ async def create_report(
         db.add(report)
         await db.commit()
         await db.refresh(report)
-    except Exception as exc:
+    except Exception:
         logger.exception("Failed to save property report for address=%s", body.address)
         try:
             await db.rollback()
@@ -174,7 +174,7 @@ async def create_report(
             pass
         raise HTTPException(
             status_code=500,
-            detail=f"DB save failed: {type(exc).__name__}: {str(exc)[:300]}",
+            detail="Failed to save report. Please try again.",
         )
 
     # 5. Build and return response
