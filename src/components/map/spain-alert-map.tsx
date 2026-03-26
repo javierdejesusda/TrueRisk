@@ -245,7 +245,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     const start = performance.now();
     const id = setInterval(() => {
       const elapsed = (performance.now() - start) % 5000;
-      const opacity = Math.max(0, 0.2 * Math.sin((elapsed / 5000) * Math.PI * 2));
+      const opacity = 0.2 + 0.1 * Math.sin((elapsed / 5000) * Math.PI * 2);
       try {
         const map = mapRef.current?.getMap();
         if (map?.getLayer('province-risk-pulse')) {
