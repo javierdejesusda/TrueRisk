@@ -103,7 +103,7 @@ def explain_with_shap(
                 "description": _FEATURE_DESCRIPTIONS.get(fname, fname.replace("_", " ").title()),
             })
 
-        contributions.sort(key=lambda x: abs(x["contribution"]), reverse=True)
+        contributions.sort(key=lambda x: abs(float(x["contribution"])), reverse=True)
         return contributions[:10]
     except Exception:
         logger.warning("SHAP explanation failed for %s", hazard, exc_info=True)

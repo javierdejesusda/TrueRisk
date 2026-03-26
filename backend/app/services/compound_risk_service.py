@@ -43,8 +43,10 @@ def apply_compound_amplifiers(
     modified = dict(scores)
     active_chains: list[str] = []
     for chain in COMPOUND_CHAINS:
-        if chain["condition"](scores, features):
-            target = chain["target"]
-            modified[target] = min(100.0, modified.get(target, 0) * chain["amplifier"])
-            active_chains.append(chain["name"])
+        condition = chain["condition"]
+        if callable(condition) and condition(scores, features):
+            target = str(chain["target"])
+            amplifier = float(chain["amplifier"])
+            modified[target] = min(100.0, modified.get(target, 0) * amplifier)
+            active_chains.append(str(chain["name"]))
     return modified, active_chains
