@@ -1,4 +1,4 @@
-const CACHE_NAME = 'truerisk-v2';
+const CACHE_NAME = 'truerisk-v3';
 const OFFLINE_ASSETS = [
   '/map',
   '/emergency',

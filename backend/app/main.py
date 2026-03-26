@@ -28,10 +28,9 @@ _start_time = time.time()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables on startup (dev mode with SQLite)
-    if "sqlite" in settings.database_url:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+    # Create any missing tables on startup (idempotent — skips existing tables)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     # Seed province data on all database backends
     from app.data.province_data import seed_provinces
