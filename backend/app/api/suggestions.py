@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from app.api.deps import get_current_user, get_db, get_optional_user
+from app.api.deps import get_db, get_optional_user
 from app.config import settings
 from app.models.user import User
 from app.rate_limit import limiter

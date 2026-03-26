@@ -26,7 +26,7 @@ interface ReservoirChartProps {
 
 export function ReservoirChart({ reservoirs }: ReservoirChartProps) {
   const t = useTranslations('Drought');
-  const isStale = reservoirs?.some((r: any) => r.stale);
+  const isStale = reservoirs?.some((r: ReservoirData & { stale?: boolean }) => r.stale);
 
   if (!reservoirs || reservoirs.length === 0) {
     return (

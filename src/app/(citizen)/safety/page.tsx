@@ -16,7 +16,6 @@ export default function SafetyPage() {
     isLoading,
     error,
     checkIn,
-    getFamilyStatus: _getFamilyStatus,
     createLink,
     acceptLink,
     deleteLink,
