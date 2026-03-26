@@ -35,6 +35,10 @@ async def create_report(
         urgency=data.urgency,
         photo_url=data.photo_url,
         reporter_user_id=user_id,
+        status="pending",
+        upvotes=0,
+        verified_count=0,
+        is_verified=False,
         expires_at=expires_at,
     )
     db.add(report)
@@ -48,6 +52,7 @@ async def create_report(
             await award_points(db, user_id, "community_report")
             await db.commit()
         except Exception:
+            await db.rollback()
             logger.exception("Failed to award gamification points for community report")
 
     return report
@@ -136,6 +141,7 @@ async def verify_report(
         await award_points(db, user_id, "report_verification")
         await db.commit()
     except Exception:
+        await db.rollback()
         logger.exception("Failed to award gamification points for report verification")
 
     return report

@@ -67,7 +67,14 @@ export function useCommunityReports(provinceCode?: string) {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        if (body?.detail) detail = body.detail;
+      } catch { /* body not JSON */ }
+      throw new Error(detail);
+    }
     const report = await res.json() as CommunityReport;
     setReports((prev) => [report, ...prev]);
     return report;
@@ -75,14 +82,22 @@ export function useCommunityReports(provinceCode?: string) {
 
   const verifyReport = useCallback(async (reportId: number) => {
     const res = await apiFetch(`/api/community/reports/${reportId}/verify`, { method: 'POST' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try { const b = await res.json(); if (b?.detail) detail = b.detail; } catch { /* */ }
+      throw new Error(detail);
+    }
     const updated = await res.json() as CommunityReport;
     setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
   }, []);
 
   const upvoteReport = useCallback(async (reportId: number) => {
     const res = await apiFetch(`/api/community/reports/${reportId}/upvote`, { method: 'POST' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try { const b = await res.json(); if (b?.detail) detail = b.detail; } catch { /* */ }
+      throw new Error(detail);
+    }
     const updated = await res.json() as CommunityReport;
     setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
   }, []);

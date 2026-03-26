@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 class ErrorResponse:
@@ -42,10 +45,17 @@ async def validation_exception_handler(
     )
 
 
-async def generic_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception(
+        "Unhandled %s on %s %s: %s",
+        type(exc).__name__,
+        request.method,
+        request.url.path,
+        exc,
+    )
     return JSONResponse(
         status_code=500,
-        content=ErrorResponse.build(500, "InternalServerError", "An unexpected error occurred."),
+        content=ErrorResponse.build(500, "InternalServerError", str(exc)),
     )
 
 
