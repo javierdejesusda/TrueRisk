@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import { PageTransition } from '@/components/layout/page-transition';
 import { useSafetyCheck } from '@/hooks/use-safety-check';
 import { SafetyCheckButton } from '@/components/safety/safety-check-button';
@@ -9,6 +10,7 @@ import { FamilyLinkManager } from '@/components/safety/family-link-manager';
 
 export default function SafetyPage() {
   const t = useTranslations('Safety');
+  const { status: sessionStatus } = useSession();
   const {
     familyStatus,
     checkIns,
@@ -24,7 +26,7 @@ export default function SafetyPage() {
 
   const lastCheckIn = checkIns.length > 0 ? checkIns[0] : null;
 
-  if (isLoading) {
+  if (isLoading || sessionStatus === 'loading') {
     return (
       <PageTransition transitionKey="safety">
         <div className="h-full flex items-center justify-center">

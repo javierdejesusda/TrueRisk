@@ -895,7 +895,10 @@
     "noReservoirData": "Datos de embalses no disponibles",
     "level": "Nivel",
     "capacity": "Capacidad",
-    "dataOutdated": "Mostrando datos aproximados. Datos de embalse en tiempo real temporalmente no disponibles."
+    "dataOutdated": "Mostrando datos aproximados. Datos de embalse en tiempo real temporalmente no disponibles.",
+    "noData": "Los datos de monitoreo de sequia se estan recopilando. Vuelve a consultar pronto.",
+    "noDataTitle": "Sin Datos Disponibles",
+    "loadError": "No se pudieron cargar los datos de sequia. Intentalo de nuevo mas tarde."
   },
   "Evacuation": {
     "title": "Rutas de Evacuacion",
@@ -915,7 +918,8 @@
     "useLocation": "Activa el acceso a tu ubicacion para encontrar puntos seguros cerca de ti",
     "bearing": "Direccion: {dir}",
     "enableLocation": "Activar acceso a ubicacion",
-    "provincePoints": "Puntos seguros en tu provincia"
+    "provincePoints": "Puntos seguros en tu provincia",
+    "locationDenied": "El acceso a la ubicacion fue denegado. Habilita la ubicacion en la configuracion de tu navegador y recarga la pagina."
   },
   "HydroNowcast": {
     "title": "Prevision de Caudal Fluvial",

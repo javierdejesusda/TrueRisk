@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { useAppStore } from '@/store/app-store';
 
@@ -25,12 +26,17 @@ export interface GamificationStatus {
 
 export function useGamification() {
   const backendToken = useAppStore((s) => s.backendToken);
+  const { status: sessionStatus } = useSession();
+  const isAuthResolved = sessionStatus !== 'loading';
   const [status, setStatus] = useState<GamificationStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
-    if (!backendToken) return;
+    if (!backendToken) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -51,8 +57,9 @@ export function useGamification() {
   }, [backendToken]);
 
   useEffect(() => {
+    if (!isAuthResolved) return; // Wait for auth to resolve
     fetchStatus();
-  }, [fetchStatus]);
+  }, [fetchStatus, isAuthResolved]);
 
   return { status, isLoading, error, refresh: fetchStatus };
 }

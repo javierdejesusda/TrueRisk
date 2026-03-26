@@ -63,7 +63,7 @@ export default function DroughtPage() {
         {error && (
           <div className="glass-heavy rounded-2xl p-4 mb-4 border border-red-500/20">
             <p className="font-[family-name:var(--font-sans)] text-xs text-red-400">
-              {error}
+              {t('loadError')}
             </p>
           </div>
         )}
@@ -84,7 +84,74 @@ export default function DroughtPage() {
               <Skeleton height="200px" />
             </Card>
           </div>
-        ) : data ? (
+        ) : !data || error ? (
+          <Card variant="glass" padding="md">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center mb-4">
+                <svg
+                  className="w-8 h-8 text-text-muted"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                  />
+                </svg>
+              </div>
+              <h3 className="font-[family-name:var(--font-display)] text-base font-bold text-text-primary mb-1">
+                {t('noDataTitle')}
+              </h3>
+              <p className="font-[family-name:var(--font-sans)] text-sm text-text-secondary max-w-md">
+                {error ? t('loadError') : t('noData')}
+              </p>
+            </div>
+          </Card>
+        ) : data.data_available === false ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-8">
+            {/* Show the no-data message card */}
+            <Card variant="glass" padding="md" className="lg:col-span-2">
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-4">
+                  <svg
+                    className="w-7 h-7 text-text-muted"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="font-[family-name:var(--font-display)] text-base font-bold text-text-primary mb-1">
+                  {t('noDataTitle')}
+                </h3>
+                <p className="font-[family-name:var(--font-sans)] text-sm text-text-secondary max-w-md">
+                  {t('noData')}
+                </p>
+              </div>
+            </Card>
+
+            {/* Still show reservoir chart independently */}
+            <div className="lg:col-span-2">
+              {reservoirsLoading ? (
+                <Card variant="glass" padding="md">
+                  <Skeleton height="20px" width="140px" className="mb-4" />
+                  <Skeleton height="200px" />
+                </Card>
+              ) : (
+                <ReservoirChart reservoirs={reservoirs ?? []} />
+              )}
+            </div>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-8">
             {/* Left: classification card */}
             <DroughtClassificationCard
@@ -261,7 +328,7 @@ export default function DroughtPage() {
               )}
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </PageTransition>
   );

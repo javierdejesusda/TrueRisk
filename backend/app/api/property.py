@@ -78,7 +78,14 @@ async def create_report(
 ):
     """Geocode an address, compute property-level risk, and save a report."""
     # 1. Geocode the address
-    geo = await geocode_address(body.address, db)
+    try:
+        geo = await geocode_address(body.address, db)
+    except Exception:
+        logger.exception("Geocoding failed for address=%s", body.address)
+        raise HTTPException(
+            status_code=502,
+            detail="Geocoding service temporarily unavailable. Please try again.",
+        )
     if geo is None:
         raise HTTPException(
             status_code=422,
@@ -148,9 +155,16 @@ async def create_report(
         expires_at=expires,
         access_count=0,
     )
-    db.add(report)
-    await db.commit()
-    await db.refresh(report)
+    try:
+        db.add(report)
+        await db.commit()
+        await db.refresh(report)
+    except Exception:
+        logger.exception("Failed to save property report for address=%s", body.address)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to save report. Please try again.",
+        )
 
     # 5. Build and return response
     return _build_report_response(report, risk)

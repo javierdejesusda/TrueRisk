@@ -897,7 +897,10 @@
     "noReservoirData": "Reservoir data unavailable",
     "level": "Level",
     "capacity": "Capacity",
-    "dataOutdated": "Showing approximate data. Live reservoir data temporarily unavailable."
+    "dataOutdated": "Showing approximate data. Live reservoir data temporarily unavailable.",
+    "noData": "Drought monitoring data is being collected. Check back soon.",
+    "noDataTitle": "No Data Available",
+    "loadError": "Unable to load drought data. Please try again later."
   },
   "Evacuation": {
     "title": "Evacuation Routes",
@@ -917,7 +920,8 @@
     "useLocation": "Enable location access to find safe points near you",
     "bearing": "Direction: {dir}",
     "enableLocation": "Enable Location Access",
-    "provincePoints": "Safe points in your province"
+    "provincePoints": "Safe points in your province",
+    "locationDenied": "Location access was denied. Please enable location in your browser settings and reload the page."
   },
   "HydroNowcast": {
     "title": "River Flow Forecast",

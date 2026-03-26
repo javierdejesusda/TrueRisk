@@ -109,7 +109,10 @@ export function useGeolocation() {
   );
 
   const requestPermission = useCallback(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setState((s) => ({ ...s, isLoading: false, error: 'not-supported' }));
+      return;
+    }
     setState((s) => ({ ...s, isLoading: true, error: null }));
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -120,7 +123,7 @@ export function useGeolocation() {
       (err) => {
         setState({ latitude: null, longitude: null, isLoading: false, error: err.message });
       },
-      { enableHighAccuracy: true, timeout: 10_000 },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 0 },
     );
   }, [maybeSync]);
 

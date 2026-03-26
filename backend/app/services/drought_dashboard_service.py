@@ -41,30 +41,36 @@ async def get_drought_overview(db: AsyncSession, province_code: str) -> dict:
     spei_1m = 0.0
     spei_3m = 0.0
     drought_score = 0.0
+    data_available = False
     if latest and latest.features_snapshot:
         features = latest.features_snapshot
         spei_1m = features.get("spei_1m", 0.0)
         spei_3m = features.get("spei_3m", 0.0)
         drought_score = latest.drought_score
+        data_available = True
 
     classification = classify_drought(spei_3m)
 
     # Get active water restrictions
-    restrictions_result = await db.execute(
-        select(WaterRestriction).where(
-            WaterRestriction.province_code == province_code,
-            WaterRestriction.is_active == True,  # noqa: E712
+    restrictions: list[dict] = []
+    try:
+        restrictions_result = await db.execute(
+            select(WaterRestriction).where(
+                WaterRestriction.province_code == province_code,
+                WaterRestriction.is_active == True,  # noqa: E712
+            )
         )
-    )
-    restrictions = [
-        {
-            "level": r.restriction_level,
-            "description": r.description,
-            "source": r.source,
-            "effective_date": r.effective_date.isoformat() if r.effective_date else None,
-        }
-        for r in restrictions_result.scalars().all()
-    ]
+        restrictions = [
+            {
+                "level": r.restriction_level,
+                "description": r.description,
+                "source": r.source,
+                "effective_date": r.effective_date.isoformat() if r.effective_date else None,
+            }
+            for r in restrictions_result.scalars().all()
+        ]
+    except Exception:
+        logger.warning("Could not fetch water restrictions for %s", province_code, exc_info=True)
 
     return {
         "province_code": province_code,
@@ -73,4 +79,5 @@ async def get_drought_overview(db: AsyncSession, province_code: str) -> dict:
         "drought_score": round(drought_score, 1),
         "classification": classification,
         "restrictions": restrictions,
+        "data_available": data_available,
     }

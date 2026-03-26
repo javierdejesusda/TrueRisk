@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { useAppStore } from '@/store/app-store';
 
@@ -43,6 +44,8 @@ export interface ScoreHistoryEntry {
 export function usePreparedness() {
   const locale = useAppStore((s) => s.locale);
   const backendToken = useAppStore((s) => s.backendToken);
+  const { status: sessionStatus } = useSession();
+  const isAuthResolved = sessionStatus !== 'loading';
   const [score, setScore] = useState<PreparednessScore | null>(null);
   const [checklist, setChecklist] = useState<ChecklistResponse | null>(null);
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
@@ -120,8 +123,9 @@ export function usePreparedness() {
   }, [locale, backendToken]);
 
   useEffect(() => {
+    if (!isAuthResolved) return; // Wait for auth to resolve before fetching
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, isAuthResolved]);
 
   const toggleItem = useCallback(async (itemKey: string, completed: boolean) => {
     // Save to localStorage as fallback (works even when API is down)

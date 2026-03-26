@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { useAppStore } from '@/store/app-store';
 import { apiFetch } from '@/lib/api-client';
 
@@ -40,6 +41,8 @@ export interface FamilyMemberStatus {
 
 export function useSafetyCheck() {
   const token = useAppStore((s) => s.backendToken);
+  const { status: sessionStatus } = useSession();
+  const isAuthResolved = sessionStatus !== 'loading';
   const [familyStatus, setFamilyStatus] = useState<FamilyMemberStatus[]>([]);
   const [checkIns, setCheckIns] = useState<SafetyCheckIn[]>([]);
   const [pendingLinks, setPendingLinks] = useState<FamilyLink[]>([]);
@@ -190,14 +193,20 @@ export function useSafetyCheck() {
     }
   }, []);
 
-  // Initial fetch
+  // Initial fetch — wait for auth to resolve before deciding state
   useEffect(() => {
-    if (token) {
-      getFamilyStatus();
-      fetchCheckIns();
-      fetchPendingLinks();
+    if (!isAuthResolved) return; // Auth still loading, wait
+    if (!token) {
+      // Auth resolved but no token — user is genuinely not logged in
+      setError('auth_required');
+      return;
     }
-  }, [token, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
+    // Token is available — clear any stale error and fetch data
+    setError(null);
+    getFamilyStatus();
+    fetchCheckIns();
+    fetchPendingLinks();
+  }, [token, isAuthResolved, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
 
   // Auto-refresh family status every 30 seconds
   useEffect(() => {

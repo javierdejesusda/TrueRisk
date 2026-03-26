@@ -159,13 +159,19 @@ export default function EvacuationPage() {
             <p className="font-[family-name:var(--font-sans)] text-sm text-text-secondary mb-3">
               {t('useLocation')}
             </p>
-            <button
-              type="button"
-              onClick={geo.requestPermission}
-              className="px-5 py-2.5 rounded-xl bg-accent-green text-bg-primary font-[family-name:var(--font-display)] font-semibold text-sm hover:bg-accent-green/90 transition-colors"
-            >
-              {t('enableLocation')}
-            </button>
+            {geo.error.toLowerCase().includes('denied') || geo.error.toLowerCase().includes('permission') ? (
+              <p className="font-[family-name:var(--font-sans)] text-xs text-amber-400 mt-2">
+                {t('locationDenied')}
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={geo.requestPermission}
+                className="px-5 py-2.5 rounded-xl bg-accent-green text-bg-primary font-[family-name:var(--font-display)] font-semibold text-sm hover:bg-accent-green/90 transition-colors"
+              >
+                {t('enableLocation')}
+              </button>
+            )}
           </div>
         )}
 
