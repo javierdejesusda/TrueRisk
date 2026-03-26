@@ -23,7 +23,11 @@ Returns a score 0-100.
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 FEATURE_NAMES = [
     "is_mediterranean",
@@ -42,10 +46,45 @@ FEATURE_NAMES = [
 
 _model = None
 
+_MODEL_PATH = Path(__file__).parent.parent / "saved_models" / "dana_xgboost.joblib"
+
+
+def _load_dana_model():
+    """Lazy-load DANA XGBoost model if available."""
+    global _model
+    if _model is None and _MODEL_PATH.exists():
+        try:
+            import joblib
+            _model = joblib.load(_MODEL_PATH)
+            logger.info("Loaded DANA XGBoost model from %s", _MODEL_PATH)
+        except Exception:
+            logger.warning("Failed to load DANA model, using rule-based only")
+    return _model
+
 
 def predict_dana_risk(features: dict[str, Any]) -> float:
-    """Return DANA compound event risk 0-100.  Uses rule-based heuristic."""
-    return _rule_based_dana(features)
+    """Return DANA compound event risk 0-100.
+
+    Uses 60/40 ensemble of ML model + rule-based when trained model
+    is available. Falls back to pure rule-based otherwise.
+    """
+    rule_score = _rule_based_dana(features)
+    model = _load_dana_model()
+    if model is not None:
+        try:
+            import numpy as np
+            feature_values = np.array([[features.get(f, 0.0) or 0.0 for f in FEATURE_NAMES]])
+            ml_prob = model.predict_proba(feature_values)[0, 1]
+            ml_score = ml_prob * 100
+            return round(0.6 * ml_score + 0.4 * rule_score, 1)
+        except Exception:
+            pass
+    return rule_score
+
+
+def get_trained_model():
+    """Return the loaded DANA model or None."""
+    return _load_dana_model()
 
 
 def _rule_based_dana(f: dict[str, Any]) -> float:

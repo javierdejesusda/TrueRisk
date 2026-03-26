@@ -57,6 +57,84 @@ ADJACENCY: dict[str, list[str]] = {
     "52": [],
 }
 
+# River-based connections: provinces linked by major rivers
+# (travel time in hours estimated from river flow speed)
+RIVER_ADJACENCY: dict[str, list[tuple[str, float]]] = {
+    # Ebro basin: flows NW to SE
+    "09": [("26", 8), ("34", 8)],   # Burgos → La Rioja, Burgos → Palencia (Duero)
+    "26": [("31", 6)],              # La Rioja → Navarra
+    "31": [("50", 8)],              # Navarra → Zaragoza
+    "50": [("44", 10), ("43", 12)], # Zaragoza → Teruel, Zaragoza → Tarragona (delta)
+    # Tajo basin: flows E to W
+    "19": [("28", 6)],   # Guadalajara → Madrid
+    "28": [("45", 8)],   # Madrid → Toledo
+    "45": [("10", 12)],  # Toledo → Caceres
+    # Guadalquivir: flows NE to SW
+    "23": [("14", 8)],   # Jaen → Cordoba
+    "14": [("41", 10)],  # Cordoba → Sevilla
+    "41": [("11", 6)],   # Sevilla → Cadiz
+    # Duero: flows E to W
+    "42": [("09", 10)],  # Soria → Burgos
+    "34": [("47", 6)],   # Palencia → Valladolid
+    "47": [("49", 8)],   # Valladolid → Zamora
+    "49": [("37", 6)],   # Zamora → Salamanca
+    # Jucar: flows NW to SE
+    "16": [("46", 10)],  # Cuenca → Valencia
+    # Segura: flows W to E
+    "02": [("30", 8)],   # Albacete → Murcia
+    "30": [("03", 6)],   # Murcia → Alicante
+    # Guadiana: flows E to W
+    "13": [("06", 12)],  # Ciudad Real → Badajoz
+}
+
+
+def get_edge_index_with_rivers() -> tuple[torch.Tensor, torch.Tensor]:
+    """Build edge index with both geographic and river-based edges.
+
+    Returns:
+        (edge_index, edge_attr) where edge_attr contains:
+          - is_river_edge (0 or 1)
+          - travel_time_hours (0 for geographic, actual for river)
+    """
+    src: list[int] = []
+    dst: list[int] = []
+    attrs: list[list[float]] = []
+
+    # Geographic adjacency edges
+    for code, neighbors in ADJACENCY.items():
+        i = CODE_TO_IDX[code]
+        for nb in neighbors:
+            j = CODE_TO_IDX[nb]
+            src.append(i)
+            dst.append(j)
+            attrs.append([0.0, 0.0])  # is_river=0, travel_time=0
+        # Self-loop
+        src.append(i)
+        dst.append(i)
+        attrs.append([0.0, 0.0])
+
+    # River adjacency edges (directed: upstream → downstream)
+    for code, downstreams in RIVER_ADJACENCY.items():
+        if code not in CODE_TO_IDX:
+            continue
+        i = CODE_TO_IDX[code]
+        for nb_code, travel_hours in downstreams:
+            if nb_code not in CODE_TO_IDX:
+                continue
+            j = CODE_TO_IDX[nb_code]
+            src.append(i)
+            dst.append(j)
+            attrs.append([1.0, travel_hours])
+            # Also add reverse (downstream awareness)
+            src.append(j)
+            dst.append(i)
+            attrs.append([1.0, travel_hours])
+
+    edge_index = torch.tensor([src, dst], dtype=torch.long)
+    edge_attr = torch.tensor(attrs, dtype=torch.float)
+    return edge_index, edge_attr
+
+
 PROVINCE_CODES = sorted(ADJACENCY.keys())
 
 CODE_TO_IDX = {code: i for i, code in enumerate(PROVINCE_CODES)}

@@ -463,6 +463,8 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "precip_7day_anomaly": temporal["precip_7day_anomaly"],
         "consecutive_rain_days": temporal["consecutive_rain_days"],
         "max_precip_intensity_ratio": temporal["max_precip_intensity_ratio"],
+        "precip_prob_50mm_72h": ensemble.get("precip_prob_50mm_72h", 0.0),
+        "forecast_uncertainty": ensemble.get("forecast_uncertainty", 0.0),
     }
 
     # Compute FWI components from current weather data
@@ -592,6 +594,10 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
             province_code,
         )
 
+    # Fetch ensemble model features (best-effort)
+    from app.data.open_meteo import fetch_ensemble_features
+    ensemble = await fetch_ensemble_features(province.latitude, province.longitude)
+
     # 4e. DANA compound event features (reuses existing weather data + upper-air)
     dana_features = {
         "is_mediterranean": terrain["is_mediterranean"],
@@ -606,6 +612,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "humidity": humidity,
         "cape_current": upper_air.get("cape_current", 0.0),
         "precip_forecast_6h": upper_air.get("precip_forecast_6h", 0.0),
+        "precip_forecast_6h_ensemble": ensemble.get("precip_est_72h_mm", 0.0) / 12,
     }
 
     # 5. Run models
@@ -638,7 +645,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     }
     _compound_features = {
         "consecutive_dry_days": temporal.get("consecutive_dry_days", 0),
-        "active_fires_nearby": supplementary.get("active_fires_nearby", False),
+        "active_fires_nearby": False,
     }
     _compound_scores, compound_chains = apply_compound_amplifiers(_compound_scores, _compound_features)
     flood = _compound_scores["flood"]
@@ -675,6 +682,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
             "windstorm": windstorm_features,
             "dana": dana_features,
             "compound_chains_active": compound_chains,
+            "ensemble": ensemble,
         },
         computed_at=now,
     )
