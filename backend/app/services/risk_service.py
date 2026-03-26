@@ -463,8 +463,8 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "precip_7day_anomaly": temporal["precip_7day_anomaly"],
         "consecutive_rain_days": temporal["consecutive_rain_days"],
         "max_precip_intensity_ratio": temporal["max_precip_intensity_ratio"],
-        "precip_prob_50mm_72h": ensemble.get("precip_prob_50mm_72h", 0.0),
-        "forecast_uncertainty": ensemble.get("forecast_uncertainty", 0.0),
+        "precip_prob_50mm_72h": 0.0,
+        "forecast_uncertainty": 0.0,
     }
 
     # Compute FWI components from current weather data

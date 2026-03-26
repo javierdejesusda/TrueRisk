@@ -502,8 +502,6 @@ def explain_risk(features_snapshot: dict[str, Any]) -> dict[str, list[dict]]:
     Uses SHAP TreeExplainer for model-based hazards (flood, wildfire, heatwave)
     when trained models are available, falling back to rule-based for all others.
     """
-    from app.services.shap_explainer import explain_with_shap
-
     result: dict[str, list[dict]] = {}
 
     for hazard, explainer in _EXPLAINERS.items():

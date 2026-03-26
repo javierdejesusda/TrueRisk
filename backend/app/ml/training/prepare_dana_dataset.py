@@ -13,7 +13,6 @@ import asyncio
 import csv
 import logging
 import random
-from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -100,10 +99,8 @@ async def _fetch_day_features(
         hourly = data.get("hourly", {})
         daily = data.get("daily", {})
 
-        temps = hourly.get("temperature_2m", [])
         humidities = hourly.get("relative_humidity_2m", [])
         precips = hourly.get("precipitation", [])
-        gusts = hourly.get("wind_gusts_10m", [])
         pressures = hourly.get("surface_pressure", [])
 
         precip_24h = daily.get("precipitation_sum", [0])[0] or 0
