@@ -11,7 +11,7 @@ const ALERT_LEVEL_KEYS = [
   { key: 'moderate', color: '#FBBF24' },
   { key: 'high', color: '#F97316' },
   { key: 'veryHigh', color: '#EF4444' },
-  { key: 'critical', color: '#EC4899' },
+  { key: 'critical', color: '#e51f1f' },
 ] as const;
 
 const RISK_LEVEL_KEYS = [
