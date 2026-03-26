@@ -118,6 +118,7 @@ export default function EvacuationPage() {
   const needsFallback = !geo.isLoading && geo.latitude == null;
   const { points: fallbackPoints, isLoading: fallbackLoading } = useSafePoints(
     needsFallback ? provinceCode : null,
+    needsFallback,
   );
 
   const filteredRoutes = useMemo(() => {

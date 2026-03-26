@@ -50,7 +50,7 @@ export default function SafetyPage() {
           )}
         </div>
 
-        {error === 'auth_required' ? (
+        {error === 'auth_required' && sessionStatus === 'unauthenticated' ? (
           <div className="glass-heavy rounded-2xl p-6 text-center">
             <p className="text-text-secondary text-sm mb-3">{t('loginRequired')}</p>
             <a
@@ -59,6 +59,11 @@ export default function SafetyPage() {
             >
               {t('loginButton')}
             </a>
+          </div>
+        ) : error === 'auth_required' ? (
+          /* Auth still resolving (token hydrating) — show spinner, not login */
+          <div className="h-full flex items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
           </div>
         ) : (
         <div className="flex flex-col gap-5">

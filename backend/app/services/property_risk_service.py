@@ -357,7 +357,15 @@ async def compute_property_risk(
         6. Return a fully populated :class:`PropertyRiskResult`.
     """
     # 1. Get latest province-level risk scores
-    risk_row = await _get_latest_province_scores(db, province_code)
+    try:
+        risk_row = await _get_latest_province_scores(db, province_code)
+    except Exception:
+        logger.warning(
+            "Failed to fetch province scores for %s; using zero baselines",
+            province_code,
+            exc_info=True,
+        )
+        risk_row = None
 
     if risk_row is None:
         logger.warning(
@@ -377,7 +385,17 @@ async def compute_property_risk(
     terrain_result, flood_zone_result = await asyncio.gather(
         get_elevation_and_slope(lat, lon),
         check_flood_zone(lat, lon, db),
+        return_exceptions=True,
     )
+
+    # Handle exceptions gracefully so individual failures don't crash everything
+    if isinstance(terrain_result, BaseException):
+        logger.warning("Elevation service failed: %s", terrain_result)
+        terrain_result = ElevationResult(elevation_m=0.0, slope_pct=0.0)
+
+    if isinstance(flood_zone_result, BaseException):
+        logger.warning("Flood zone check failed: %s", flood_zone_result)
+        flood_zone_result = FloodZoneResult(in_flood_zone=False)
 
     elevation = terrain_result.elevation_m
     slope = terrain_result.slope_pct

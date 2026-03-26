@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { apiFetch } from '@/lib/api-client';
 import { useAppStore } from '@/store/app-store';
 
 export interface ChecklistItem {
@@ -41,16 +40,32 @@ export interface ScoreHistoryEntry {
   computed_at: string;
 }
 
+/** Helper: fetch with explicit Bearer token (avoids Zustand hydration race) */
+function authFetch(path: string, token: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  headers.set('Authorization', `Bearer ${token}`);
+  if (!headers.has('Content-Type') && options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+  return fetch(path, { ...options, headers });
+}
+
 export function usePreparedness() {
   const locale = useAppStore((s) => s.locale);
-  const backendToken = useAppStore((s) => s.backendToken);
-  const { status: sessionStatus } = useSession();
+  const storeToken = useAppStore((s) => s.backendToken);
+  const { data: session, status: sessionStatus } = useSession();
+  // Use session token as fallback when Zustand store hasn't hydrated yet
+  const backendToken = storeToken || (session as Record<string, unknown> | null)?.backendToken as string | null;
   const isAuthResolved = sessionStatus !== 'loading';
   const [score, setScore] = useState<PreparednessScore | null>(null);
   const [checklist, setChecklist] = useState<ChecklistResponse | null>(null);
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Keep a ref so callback closures always see the latest resolved token
+  const tokenRef = useRef(backendToken);
+  tokenRef.current = backendToken;
+
   const [localCompletions, setLocalCompletions] = useState<Record<string, boolean>>(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('preparedness:completed') ?? '{}');
@@ -69,7 +84,9 @@ export function usePreparedness() {
       setIsLoading(true);
       setError(null);
 
-      if (!backendToken) {
+      const currentToken = tokenRef.current;
+
+      if (!currentToken) {
         // Without auth, only fetch the generic checklist
         try {
           const res = await fetch(`/api/preparedness/checklist?locale=${locale}`);
@@ -86,9 +103,9 @@ export function usePreparedness() {
 
       // Authenticated: fetch all three endpoints in parallel
       const results = await Promise.allSettled([
-        apiFetch(`/api/preparedness/score?locale=${locale}`),
-        apiFetch(`/api/preparedness/checklist?locale=${locale}`),
-        apiFetch('/api/preparedness/history'),
+        authFetch(`/api/preparedness/score?locale=${locale}`, currentToken),
+        authFetch(`/api/preparedness/checklist?locale=${locale}`, currentToken),
+        authFetch('/api/preparedness/history', currentToken),
       ]);
 
       const [scoreResult, checklistResult, historyResult] = results;
@@ -183,14 +200,16 @@ export function usePreparedness() {
     });
 
     // Try to sync to backend
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
-      const res = await apiFetch(`/api/preparedness/items/${itemKey}`, {
+      const res = await authFetch(`/api/preparedness/items/${itemKey}`, currentToken, {
         method: 'PATCH',
         body: JSON.stringify({ completed }),
       });
       if (!res.ok) return; // Silently keep local state
 
-      const scoreRes = await apiFetch(`/api/preparedness/score?locale=${locale}`);
+      const scoreRes = await authFetch(`/api/preparedness/score?locale=${locale}`, currentToken);
       if (scoreRes.ok) {
         const scoreData = await scoreRes.json() as PreparednessScore;
         setScore(scoreData);

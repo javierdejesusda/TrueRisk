@@ -62,19 +62,30 @@ export function useEvacuationRoutes(
   return { routes, isLoading, error, refresh: fetchRoutes };
 }
 
-export function useSafePoints(province?: string | null) {
+export function useSafePoints(province?: string | null, enabled: boolean = true) {
   const [points, setPoints] = useState<SafePointData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPoints = useCallback(async () => {
+    if (!enabled) return;
     try {
       setIsLoading(true);
+      // First try with province filter
       const params = new URLSearchParams();
       if (province) params.set('province', province);
       const res = await fetch(`/api/evacuation/safe-points?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as SafePointData[];
+      let json = (await res.json()) as SafePointData[];
+
+      // If province filter returned no results, fetch all available points
+      if (json.length === 0 && province) {
+        const allRes = await fetch('/api/evacuation/safe-points');
+        if (allRes.ok) {
+          json = (await allRes.json()) as SafePointData[];
+        }
+      }
+
       setPoints(json);
       setError(null);
     } catch (err) {
@@ -82,11 +93,11 @@ export function useSafePoints(province?: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [province]);
+  }, [province, enabled]);
 
   useEffect(() => {
-    fetchPoints();
-  }, [fetchPoints]);
+    if (enabled) fetchPoints();
+  }, [enabled, fetchPoints]);
 
   return { points, isLoading, error, refresh: fetchPoints };
 }

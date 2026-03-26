@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { apiFetch } from '@/lib/api-client';
 import { useAppStore } from '@/store/app-store';
 
 export interface GamificationBadge {
@@ -24,16 +23,33 @@ export interface GamificationStatus {
   badges: GamificationBadge[];
 }
 
+/** Helper: fetch with explicit Bearer token (avoids Zustand hydration race) */
+function authFetch(path: string, token: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  headers.set('Authorization', `Bearer ${token}`);
+  if (!headers.has('Content-Type') && options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+  return fetch(path, { ...options, headers });
+}
+
 export function useGamification() {
-  const backendToken = useAppStore((s) => s.backendToken);
-  const { status: sessionStatus } = useSession();
+  const storeToken = useAppStore((s) => s.backendToken);
+  const { data: session, status: sessionStatus } = useSession();
+  // Use session token as fallback when Zustand store hasn't hydrated yet
+  const backendToken = storeToken || (session as Record<string, unknown> | null)?.backendToken as string | null;
   const isAuthResolved = sessionStatus !== 'loading';
   const [status, setStatus] = useState<GamificationStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep a ref so callback closures always see the latest resolved token
+  const tokenRef = useRef(backendToken);
+  tokenRef.current = backendToken;
+
   const fetchStatus = useCallback(async () => {
-    if (!backendToken) {
+    const currentToken = tokenRef.current;
+    if (!currentToken) {
       setIsLoading(false);
       return;
     }
@@ -42,7 +58,7 @@ export function useGamification() {
       setIsLoading(true);
       setError(null);
 
-      const res = await apiFetch('/api/gamification/status');
+      const res = await authFetch('/api/gamification/status', currentToken);
       if (res.ok) {
         const data = (await res.json()) as GamificationStatus;
         setStatus(data);

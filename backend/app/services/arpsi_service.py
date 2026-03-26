@@ -93,57 +93,60 @@ async def check_flood_zone(
        severe) return period.
     4. If not inside any zone, delegate to :func:`find_nearest_flood_zone`.
     """
+    try:
+        # Step 1: bounding-box filter
+        stmt = (
+            select(ArpsiFloodZone)
+            .where(ArpsiFloodZone.min_lat <= lat)
+            .where(ArpsiFloodZone.max_lat >= lat)
+            .where(ArpsiFloodZone.min_lon <= lon)
+            .where(ArpsiFloodZone.max_lon >= lon)
+        )
+        result = await db.execute(stmt)
+        candidates = result.scalars().all()
 
-    # Step 1: bounding-box filter
-    stmt = (
-        select(ArpsiFloodZone)
-        .where(ArpsiFloodZone.min_lat <= lat)
-        .where(ArpsiFloodZone.max_lat >= lat)
-        .where(ArpsiFloodZone.min_lon <= lon)
-        .where(ArpsiFloodZone.max_lon >= lon)
-    )
-    result = await db.execute(stmt)
-    candidates = result.scalars().all()
+        if not candidates:
+            return await find_nearest_flood_zone(lat, lon, db)
 
-    if not candidates:
-        return await find_nearest_flood_zone(lat, lon, db)
+        # Step 2: precise point-in-polygon
+        point = Point(lon, lat)
+        matching_zones: list[ArpsiFloodZone] = []
 
-    # Step 2: precise point-in-polygon
-    point = Point(lon, lat)
-    matching_zones: list[ArpsiFloodZone] = []
+        for zone in candidates:
+            geom = _parse_geometry(zone.geometry_geojson)
+            if geom is None:
+                continue
+            if geom.contains(point) or point.within(geom):
+                matching_zones.append(zone)
 
-    for zone in candidates:
-        geom = _parse_geometry(zone.geometry_geojson)
-        if geom is None:
-            continue
-        if geom.contains(point) or point.within(geom):
-            matching_zones.append(zone)
+        if not matching_zones:
+            return await find_nearest_flood_zone(lat, lon, db)
 
-    if not matching_zones:
-        return await find_nearest_flood_zone(lat, lon, db)
+        # Step 3: pick the most severe zone (shortest return period)
+        matching_zones.sort(key=lambda z: _return_period_rank(z.return_period))
+        best = matching_zones[0]
 
-    # Step 3: pick the most severe zone (shortest return period)
-    matching_zones.sort(key=lambda z: _return_period_rank(z.return_period))
-    best = matching_zones[0]
+        logger.info(
+            "Point (%.5f, %.5f) is inside flood zone %s (%s, %s)",
+            lat,
+            lon,
+            best.zone_id,
+            best.zone_type,
+            best.return_period,
+        )
 
-    logger.info(
-        "Point (%.5f, %.5f) is inside flood zone %s (%s, %s)",
-        lat,
-        lon,
-        best.zone_id,
-        best.zone_type,
-        best.return_period,
-    )
-
-    return FloodZoneResult(
-        in_flood_zone=True,
-        zone_id=best.zone_id,
-        zone_name=best.zone_name,
-        zone_type=best.zone_type,
-        return_period=best.return_period,
-        risk_level=best.risk_level,
-        distance_to_nearest_zone_m=0.0,
-    )
+        return FloodZoneResult(
+            in_flood_zone=True,
+            zone_id=best.zone_id,
+            zone_name=best.zone_name,
+            zone_type=best.zone_type,
+            return_period=best.return_period,
+            risk_level=best.risk_level,
+            distance_to_nearest_zone_m=0.0,
+        )
+    except Exception:
+        logger.exception("ARPSI flood zone check failed for (%s, %s)", lat, lon)
+        return FloodZoneResult(in_flood_zone=False)
 
 
 async def find_nearest_flood_zone(
@@ -163,58 +166,63 @@ async def find_nearest_flood_zone(
     the distance to the closest zone.  If no zones are found within the
     search radius, distance fields are left as *None*.
     """
+    try:
+        stmt = (
+            select(ArpsiFloodZone)
+            .where(ArpsiFloodZone.min_lat <= lat + search_radius_deg)
+            .where(ArpsiFloodZone.max_lat >= lat - search_radius_deg)
+            .where(ArpsiFloodZone.min_lon <= lon + search_radius_deg)
+            .where(ArpsiFloodZone.max_lon >= lon - search_radius_deg)
+        )
+        result = await db.execute(stmt)
+        candidates = result.scalars().all()
 
-    stmt = (
-        select(ArpsiFloodZone)
-        .where(ArpsiFloodZone.min_lat <= lat + search_radius_deg)
-        .where(ArpsiFloodZone.max_lat >= lat - search_radius_deg)
-        .where(ArpsiFloodZone.min_lon <= lon + search_radius_deg)
-        .where(ArpsiFloodZone.max_lon >= lon - search_radius_deg)
-    )
-    result = await db.execute(stmt)
-    candidates = result.scalars().all()
+        if not candidates:
+            logger.debug(
+                "No flood zones found within %.3f deg of (%.5f, %.5f)",
+                search_radius_deg,
+                lat,
+                lon,
+            )
+            return FloodZoneResult(in_flood_zone=False)
 
-    if not candidates:
-        logger.debug(
-            "No flood zones found within %.3f deg of (%.5f, %.5f)",
-            search_radius_deg,
+        point = Point(lon, lat)
+        nearest_zone: ArpsiFloodZone | None = None
+        nearest_dist_deg: float = float("inf")
+
+        for zone in candidates:
+            geom = _parse_geometry(zone.geometry_geojson)
+            if geom is None:
+                continue
+            dist = point.distance(geom)
+            if dist < nearest_dist_deg:
+                nearest_dist_deg = dist
+                nearest_zone = zone
+
+        if nearest_zone is None:
+            return FloodZoneResult(in_flood_zone=False)
+
+        dist_m = nearest_dist_deg * _DEG_TO_M
+
+        logger.info(
+            "Nearest flood zone to (%.5f, %.5f): %s at ~%.0f m",
             lat,
             lon,
+            nearest_zone.zone_id,
+            dist_m,
+        )
+
+        return FloodZoneResult(
+            in_flood_zone=False,
+            zone_id=nearest_zone.zone_id,
+            zone_name=nearest_zone.zone_name,
+            zone_type=nearest_zone.zone_type,
+            return_period=nearest_zone.return_period,
+            risk_level=nearest_zone.risk_level,
+            distance_to_nearest_zone_m=round(dist_m, 1),
+        )
+    except Exception:
+        logger.exception(
+            "ARPSI nearest flood zone search failed for (%s, %s)", lat, lon
         )
         return FloodZoneResult(in_flood_zone=False)
-
-    point = Point(lon, lat)
-    nearest_zone: ArpsiFloodZone | None = None
-    nearest_dist_deg: float = float("inf")
-
-    for zone in candidates:
-        geom = _parse_geometry(zone.geometry_geojson)
-        if geom is None:
-            continue
-        dist = point.distance(geom)
-        if dist < nearest_dist_deg:
-            nearest_dist_deg = dist
-            nearest_zone = zone
-
-    if nearest_zone is None:
-        return FloodZoneResult(in_flood_zone=False)
-
-    dist_m = nearest_dist_deg * _DEG_TO_M
-
-    logger.info(
-        "Nearest flood zone to (%.5f, %.5f): %s at ~%.0f m",
-        lat,
-        lon,
-        nearest_zone.zone_id,
-        dist_m,
-    )
-
-    return FloodZoneResult(
-        in_flood_zone=False,
-        zone_id=nearest_zone.zone_id,
-        zone_name=nearest_zone.zone_name,
-        zone_type=nearest_zone.zone_type,
-        return_period=nearest_zone.return_period,
-        risk_level=nearest_zone.risk_level,
-        distance_to_nearest_zone_m=round(dist_m, 1),
-    )

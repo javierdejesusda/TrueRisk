@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAppStore } from '@/store/app-store';
-import { apiFetch } from '@/lib/api-client';
 
 export type SafetyStatus = 'safe' | 'need_help' | 'evacuating' | 'sheltering';
 
@@ -39,9 +38,21 @@ export interface FamilyMemberStatus {
   relationship: string;
 }
 
+/** Helper: fetch with explicit Bearer token (avoids Zustand hydration race) */
+function authFetch(path: string, token: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  headers.set('Authorization', `Bearer ${token}`);
+  if (!headers.has('Content-Type') && options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+  return fetch(path, { ...options, headers });
+}
+
 export function useSafetyCheck() {
-  const token = useAppStore((s) => s.backendToken);
-  const { status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
+  const storeToken = useAppStore((s) => s.backendToken);
+  // Use session token as fallback when Zustand store hasn't hydrated yet
+  const token = storeToken || (session as Record<string, unknown> | null)?.backendToken as string | null;
   const isAuthResolved = sessionStatus !== 'loading';
   const [familyStatus, setFamilyStatus] = useState<FamilyMemberStatus[]>([]);
   const [checkIns, setCheckIns] = useState<SafetyCheckIn[]>([]);
@@ -49,15 +60,20 @@ export function useSafetyCheck() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Keep a ref so callback closures always see the latest resolved token
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
 
   const checkIn = useCallback(async (status: SafetyStatus, message?: string, latitude?: number, longitude?: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return undefined as unknown as SafetyCheckIn;
     try {
       const body: Record<string, unknown> = { status };
       if (message) body.message = message;
       if (latitude !== undefined) body.latitude = latitude;
       if (longitude !== undefined) body.longitude = longitude;
 
-      const res = await apiFetch('/api/safety/check-in', {
+      const res = await authFetch('/api/safety/check-in', currentToken, {
         method: 'POST',
         body: JSON.stringify(body),
       });
@@ -75,9 +91,11 @@ export function useSafetyCheck() {
   }, []);
 
   const getFamilyStatus = useCallback(async () => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
       setIsLoading(true);
-      const res = await apiFetch('/api/safety/family-status');
+      const res = await authFetch('/api/safety/family-status', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
         throw new Error(`HTTP ${res.status}`);
@@ -93,11 +111,13 @@ export function useSafetyCheck() {
   }, []);
 
   const createLink = useCallback(async (nickname: string, relationship?: string) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return undefined as unknown as FamilyLink;
     try {
       const body: Record<string, string> = { nickname };
       if (relationship) body.relationship = relationship;
 
-      const res = await apiFetch('/api/safety/links', {
+      const res = await authFetch('/api/safety/links', currentToken, {
         method: 'POST',
         body: JSON.stringify(body),
       });
@@ -118,8 +138,10 @@ export function useSafetyCheck() {
   }, [getFamilyStatus]);
 
   const acceptLink = useCallback(async (linkId: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
-      const res = await apiFetch(`/api/safety/links/${linkId}/accept`, {
+      const res = await authFetch(`/api/safety/links/${linkId}/accept`, currentToken, {
         method: 'PATCH',
       });
       if (!res.ok) {
@@ -135,8 +157,10 @@ export function useSafetyCheck() {
   }, [getFamilyStatus]);
 
   const deleteLink = useCallback(async (linkId: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
-      const res = await apiFetch(`/api/safety/links/${linkId}`, {
+      const res = await authFetch(`/api/safety/links/${linkId}`, currentToken, {
         method: 'DELETE',
       });
       if (!res.ok) {
@@ -151,8 +175,10 @@ export function useSafetyCheck() {
   }, [getFamilyStatus]);
 
   const requestCheckIn = useCallback(async (userId: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
-      const res = await apiFetch(`/api/safety/request/${userId}`, {
+      const res = await authFetch(`/api/safety/request/${userId}`, currentToken, {
         method: 'POST',
       });
       if (!res.ok) {
@@ -166,8 +192,10 @@ export function useSafetyCheck() {
   }, []);
 
   const fetchCheckIns = useCallback(async () => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
-      const res = await apiFetch('/api/safety/check-ins?limit=20');
+      const res = await authFetch('/api/safety/check-ins?limit=20', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
         throw new Error(`HTTP ${res.status}`);
@@ -180,8 +208,10 @@ export function useSafetyCheck() {
   }, []);
 
   const fetchPendingLinks = useCallback(async () => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
     try {
-      const res = await apiFetch('/api/safety/links');
+      const res = await authFetch('/api/safety/links', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
         throw new Error(`HTTP ${res.status}`);
@@ -213,7 +243,9 @@ export function useSafetyCheck() {
     if (!token) return;
 
     intervalRef.current = setInterval(() => {
-      apiFetch('/api/safety/family-status')
+      const currentToken = tokenRef.current;
+      if (!currentToken) return;
+      authFetch('/api/safety/family-status', currentToken)
         .then((res) => {
           if (res.ok) return res.json();
         })
