@@ -19,16 +19,22 @@ export function FamilyLinkManager({ familyStatus, pendingLinks, onCreateLink, on
   const [nickname, setNickname] = useState('');
   const [relationship, setRelationship] = useState('family');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState(false);
 
   async function handleAddLink(e: React.FormEvent) {
     e.preventDefault();
     if (!nickname.trim()) return;
     setIsSubmitting(true);
+    setFormError(null);
+    setFormSuccess(false);
     try {
       await onCreateLink(nickname.trim(), relationship);
       setNickname('');
-    } catch {
-      // error handled in hook
+      setFormSuccess(true);
+      setTimeout(() => setFormSuccess(false), 4000);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to add family member');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,7 +55,7 @@ export function FamilyLinkManager({ familyStatus, pendingLinks, onCreateLink, on
           <input
             type="text"
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => { setNickname(e.target.value); setFormError(null); setFormSuccess(false); }}
             placeholder={t('nickname')}
             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/50 font-[family-name:var(--font-sans)] focus:outline-none focus:ring-1 focus:ring-white/20"
           />
@@ -65,11 +71,24 @@ export function FamilyLinkManager({ familyStatus, pendingLinks, onCreateLink, on
           <button
             type="submit"
             disabled={isSubmitting || !nickname.trim()}
-            className="px-5 py-2.5 rounded-xl bg-accent-green/20 text-accent-green font-[family-name:var(--font-sans)] text-sm font-semibold hover:bg-accent-green/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default"
+            className="px-5 py-2.5 rounded-xl bg-accent-green/20 text-accent-green font-[family-name:var(--font-sans)] text-sm font-semibold hover:bg-accent-green/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default flex items-center justify-center gap-2"
           >
+            {isSubmitting && (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
+            )}
             {t('add')}
           </button>
         </div>
+        {formError && (
+          <p className="mt-2 font-[family-name:var(--font-sans)] text-sm text-red-400">
+            {formError}
+          </p>
+        )}
+        {formSuccess && (
+          <p className="mt-2 font-[family-name:var(--font-sans)] text-sm text-accent-green">
+            {t('linkRequestSent')}
+          </p>
+        )}
       </form>
 
       {/* Accepted links */}
@@ -134,9 +153,17 @@ export function FamilyLinkManager({ familyStatus, pendingLinks, onCreateLink, on
                     {t('accept')}
                   </button>
                 ) : (
-                  <span className="font-[family-name:var(--font-sans)] text-[10px] px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400">
-                    {t('pending')}
-                  </span>
+                  <>
+                    <span className="font-[family-name:var(--font-sans)] text-[10px] px-1.5 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400">
+                      {t('pending')}
+                    </span>
+                    <button
+                      onClick={() => onDeleteLink(link.id)}
+                      className="font-[family-name:var(--font-sans)] text-[10px] px-2 py-1 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                    >
+                      {t('remove')}
+                    </button>
+                  </>
                 )}
               </div>
             );

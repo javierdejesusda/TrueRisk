@@ -48,6 +48,17 @@ function authFetch(path: string, token: string, options: RequestInit = {}): Prom
   return fetch(path, { ...options, headers });
 }
 
+/** Extract error detail from a non-ok backend response. */
+async function extractErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    if (body && typeof body.detail === 'string') return body.detail;
+  } catch {
+    // ignore parse failures
+  }
+  return `HTTP ${res.status}`;
+}
+
 export function useSafetyCheck() {
   const { data: session, status: sessionStatus } = useSession();
   const storeToken = useAppStore((s) => s.backendToken);
@@ -57,7 +68,7 @@ export function useSafetyCheck() {
   const [familyStatus, setFamilyStatus] = useState<FamilyMemberStatus[]>([]);
   const [checkIns, setCheckIns] = useState<SafetyCheckIn[]>([]);
   const [pendingLinks, setPendingLinks] = useState<FamilyLink[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Keep a ref so callback closures always see the latest resolved token
@@ -66,7 +77,10 @@ export function useSafetyCheck() {
 
   const checkIn = useCallback(async (status: SafetyStatus, message?: string, latitude?: number, longitude?: number) => {
     const currentToken = tokenRef.current;
-    if (!currentToken) return undefined as unknown as SafetyCheckIn;
+    if (!currentToken) {
+      setError('auth_required');
+      throw new Error('Not authenticated');
+    }
     try {
       const body: Record<string, unknown> = { status };
       if (message) body.message = message;
@@ -78,8 +92,9 @@ export function useSafetyCheck() {
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        if (res.status === 401) { setError('auth_required'); return undefined as unknown as SafetyCheckIn; }
-        throw new Error(`HTTP ${res.status}`);
+        if (res.status === 401) { setError('auth_required'); throw new Error('Not authenticated'); }
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
       }
       const data = await res.json() as SafetyCheckIn;
       setCheckIns((prev) => [data, ...prev]);
@@ -94,7 +109,6 @@ export function useSafetyCheck() {
     const currentToken = tokenRef.current;
     if (!currentToken) return;
     try {
-      setIsLoading(true);
       const res = await authFetch('/api/safety/family-status', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
@@ -105,89 +119,6 @@ export function useSafetyCheck() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch family status');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const createLink = useCallback(async (nickname: string, relationship?: string) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return undefined as unknown as FamilyLink;
-    try {
-      const body: Record<string, string> = { nickname };
-      if (relationship) body.relationship = relationship;
-
-      const res = await authFetch('/api/safety/links', currentToken, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        if (res.status === 401) { setError('auth_required'); return undefined as unknown as FamilyLink; }
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const data = await res.json() as FamilyLink;
-      if (data.status === 'pending') {
-        setPendingLinks((prev) => [...prev, data]);
-      }
-      await getFamilyStatus();
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create link');
-      throw err;
-    }
-  }, [getFamilyStatus]);
-
-  const acceptLink = useCallback(async (linkId: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return;
-    try {
-      const res = await authFetch(`/api/safety/links/${linkId}/accept`, currentToken, {
-        method: 'PATCH',
-      });
-      if (!res.ok) {
-        if (res.status === 401) { setError('auth_required'); return; }
-        throw new Error(`HTTP ${res.status}`);
-      }
-      setPendingLinks((prev) => prev.filter((link) => link.id !== linkId));
-      await getFamilyStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to accept link');
-      throw err;
-    }
-  }, [getFamilyStatus]);
-
-  const deleteLink = useCallback(async (linkId: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return;
-    try {
-      const res = await authFetch(`/api/safety/links/${linkId}`, currentToken, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-        if (res.status === 401) { setError('auth_required'); return; }
-        throw new Error(`HTTP ${res.status}`);
-      }
-      await getFamilyStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete link');
-      throw err;
-    }
-  }, [getFamilyStatus]);
-
-  const requestCheckIn = useCallback(async (userId: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return;
-    try {
-      const res = await authFetch(`/api/safety/request/${userId}`, currentToken, {
-        method: 'POST',
-      });
-      if (!res.ok) {
-        if (res.status === 401) { setError('auth_required'); return; }
-        throw new Error(`HTTP ${res.status}`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to request check-in');
-      throw err;
     }
   }, []);
 
@@ -223,6 +154,110 @@ export function useSafetyCheck() {
     }
   }, []);
 
+  const createLink = useCallback(async (nickname: string, relationship?: string) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) {
+      setError('auth_required');
+      throw new Error('Not authenticated');
+    }
+    try {
+      const body: Record<string, string> = { nickname };
+      if (relationship) body.relationship = relationship;
+
+      const res = await authFetch('/api/safety/links', currentToken, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError('auth_required');
+          throw new Error('Not authenticated');
+        }
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
+      }
+      const data = await res.json() as FamilyLink;
+      setPendingLinks((prev) => {
+        if (prev.some((l) => l.id === data.id)) return prev;
+        return [...prev, data];
+      });
+      // Refresh in background without blocking — no await, no isLoading flash
+      getFamilyStatus();
+      fetchPendingLinks();
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create link');
+      throw err;
+    }
+  }, [getFamilyStatus, fetchPendingLinks]);
+
+  const acceptLink = useCallback(async (linkId: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) {
+      setError('auth_required');
+      throw new Error('Not authenticated');
+    }
+    try {
+      const res = await authFetch(`/api/safety/links/${linkId}/accept`, currentToken, {
+        method: 'PATCH',
+      });
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); throw new Error('Not authenticated'); }
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
+      }
+      setPendingLinks((prev) => prev.filter((link) => link.id !== linkId));
+      getFamilyStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to accept link');
+      throw err;
+    }
+  }, [getFamilyStatus]);
+
+  const deleteLink = useCallback(async (linkId: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) {
+      setError('auth_required');
+      throw new Error('Not authenticated');
+    }
+    try {
+      const res = await authFetch(`/api/safety/links/${linkId}`, currentToken, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); throw new Error('Not authenticated'); }
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
+      }
+      setPendingLinks((prev) => prev.filter((link) => link.id !== linkId));
+      getFamilyStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete link');
+      throw err;
+    }
+  }, [getFamilyStatus]);
+
+  const requestCheckIn = useCallback(async (userId: number) => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) {
+      setError('auth_required');
+      throw new Error('Not authenticated');
+    }
+    try {
+      const res = await authFetch(`/api/safety/request/${userId}`, currentToken, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); throw new Error('Not authenticated'); }
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to request check-in');
+      throw err;
+    }
+  }, []);
+
   // Initial fetch — wait for auth to resolve before deciding state
   useEffect(() => {
     if (!isAuthResolved) return; // Auth still loading, wait
@@ -234,11 +269,11 @@ export function useSafetyCheck() {
       setIsLoading(false);
       return;
     }
-    // Token is available — clear any stale error and fetch data
+    // Token is available — clear any stale error and fetch all data
     setError(null);
-    getFamilyStatus();
-    fetchCheckIns();
-    fetchPendingLinks();
+    setIsLoading(true);
+    Promise.all([getFamilyStatus(), fetchCheckIns(), fetchPendingLinks()])
+      .finally(() => setIsLoading(false));
   }, [token, isAuthResolved, sessionStatus, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
 
   // Auto-refresh family status every 30 seconds

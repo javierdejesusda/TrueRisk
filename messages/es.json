@@ -611,7 +611,9 @@
   "NotificationChannels": {
     "title": "Canales de Notificacion",
     "push": "Notificaciones Push",
+    "pushDesc": "Recibir notificaciones push del navegador para alertas",
     "sms": "SMS",
+    "smsDesc": "Recibir alertas por mensaje de texto",
     "whatsapp": "WhatsApp",
     "whatsappDesc": "Recibir alertas por WhatsApp",
     "telegram": "Telegram",
@@ -619,8 +621,12 @@
     "linkTelegram": "Vincular Telegram",
     "telegramInstructions": "Envia este codigo al bot de TrueRisk en Telegram",
     "linked": "Vinculado",
+    "notLinked": "Aun no vinculado",
     "enabled": "Activado",
-    "disabled": "Desactivado"
+    "disabled": "Desactivado",
+    "phoneRequired": "Configura tu numero de telefono en el perfil primero",
+    "toggleError": "No se pudo actualizar la preferencia de notificacion",
+    "toggleSuccess": "Preferencia de notificacion actualizada"
   },
   "Language": {
     "es": "ES",
@@ -700,6 +706,7 @@
     "remove": "Eliminar",
     "manageLinks": "Vinculos familiares",
     "imSafe": "Estoy a salvo",
+    "linkRequestSent": "Solicitud de vinculo enviada!",
     "loginRequired": "Inicia sesion para usar Safety Check y compartir tu estado con familiares.",
     "loginButton": "Iniciar sesion"
   },

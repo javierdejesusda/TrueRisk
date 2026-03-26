@@ -613,7 +613,9 @@
   "NotificationChannels": {
     "title": "Notification Channels",
     "push": "Push Notifications",
+    "pushDesc": "Receive browser push notifications for alerts",
     "sms": "SMS",
+    "smsDesc": "Receive alerts via text message",
     "whatsapp": "WhatsApp",
     "whatsappDesc": "Receive alerts via WhatsApp",
     "telegram": "Telegram",
@@ -621,8 +623,12 @@
     "linkTelegram": "Link Telegram",
     "telegramInstructions": "Send this code to the TrueRisk bot on Telegram",
     "linked": "Linked",
+    "notLinked": "Not linked yet",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "phoneRequired": "Set your phone number in the profile below first",
+    "toggleError": "Could not update notification preference",
+    "toggleSuccess": "Notification preference updated"
   },
   "Language": {
     "es": "ES",
@@ -702,6 +708,7 @@
     "remove": "Remove",
     "manageLinks": "Family Links",
     "imSafe": "I'm Safe",
+    "linkRequestSent": "Link request sent!",
     "loginRequired": "Log in to use Safety Check and share your status with family members.",
     "loginButton": "Log in"
   },
