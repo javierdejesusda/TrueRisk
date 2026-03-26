@@ -381,10 +381,21 @@ async def compute_property_risk(
     province_windstorm = risk_row.windstorm_score if risk_row else 0.0
     province_seismic = risk_row.seismic_score if risk_row else 0.0
 
-    # 2. Fetch terrain and flood-zone data concurrently
+    # 2. Fetch terrain and flood-zone data concurrently.
+    #    Flood zone check uses its own DB session to avoid poisoning the
+    #    caller's transaction if the arpsi_flood_zones table is missing.
+    async def _isolated_flood_check() -> FloodZoneResult:
+        from app.database import async_session
+        try:
+            async with async_session() as flood_session:
+                return await check_flood_zone(lat, lon, flood_session)
+        except Exception as exc:
+            logger.warning("Flood zone check failed (isolated): %s", exc)
+            return FloodZoneResult(in_flood_zone=False)
+
     terrain_result, flood_zone_result = await asyncio.gather(
         get_elevation_and_slope(lat, lon),
-        check_flood_zone(lat, lon, db),
+        _isolated_flood_check(),
         return_exceptions=True,
     )
 
