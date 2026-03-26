@@ -231,6 +231,36 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     return () => clearInterval(id);
   }, []);
 
+  // Risk pulse — brightens the risk color on a slow cycle
+  useEffect(() => {
+    if (activeMapLayer !== 'risk') {
+      try {
+        const map = mapRef.current?.getMap();
+        if (map?.getLayer('province-risk-pulse')) {
+          map.setPaintProperty('province-risk-pulse', 'fill-opacity', 0);
+        }
+      } catch { /* */ }
+      return;
+    }
+    const start = performance.now();
+    const id = setInterval(() => {
+      const elapsed = (performance.now() - start) % 5000;
+      const opacity = Math.max(0, 0.2 * Math.sin((elapsed / 5000) * Math.PI * 2));
+      try {
+        const map = mapRef.current?.getMap();
+        if (map?.getLayer('province-risk-pulse')) {
+          map.setPaintProperty('province-risk-pulse', 'fill-opacity', [
+            'case',
+            ['>', ['coalesce', ['get', 'riskScore'], 0], 0],
+            opacity,
+            0,
+          ]);
+        }
+      } catch { /* Layer not ready */ }
+    }, 100);
+    return () => clearInterval(id);
+  }, [activeMapLayer]);
+
   // Hover handling
   const onMouseMove = useCallback((e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
@@ -411,6 +441,15 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
                   6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.45],
                   7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
                 ],
+              }}
+            />
+            {/* Risk pulse — same risk colors layered on top to brighten */}
+            <Layer
+              id="province-risk-pulse"
+              type="fill"
+              paint={{
+                'fill-color': fillColorExpression,
+                'fill-opacity': 0,
               }}
             />
             {/* Alert pulse overlay */}
