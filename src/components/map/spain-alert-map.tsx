@@ -231,6 +231,36 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     return () => clearInterval(id);
   }, []);
 
+  // Risk glow pulse — subtle white flash so at-risk provinces stand out
+  useEffect(() => {
+    if (activeMapLayer !== 'risk') {
+      try {
+        const map = mapRef.current?.getMap();
+        if (map?.getLayer('province-risk-pulse')) {
+          map.setPaintProperty('province-risk-pulse', 'fill-opacity', 0);
+        }
+      } catch { /* */ }
+      return;
+    }
+    const start = performance.now();
+    const id = setInterval(() => {
+      const elapsed = (performance.now() - start) % 2500;
+      const opacity = Math.max(0, 0.15 * Math.sin((elapsed / 2500) * Math.PI * 2));
+      try {
+        const map = mapRef.current?.getMap();
+        if (map?.getLayer('province-risk-pulse')) {
+          map.setPaintProperty('province-risk-pulse', 'fill-opacity', [
+            'case',
+            ['>', ['coalesce', ['get', 'riskScore'], 0], 0],
+            opacity,
+            0,
+          ]);
+        }
+      } catch { /* Layer not ready */ }
+    }, 100);
+    return () => clearInterval(id);
+  }, [activeMapLayer]);
+
   // Hover handling
   const onMouseMove = useCallback((e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
@@ -313,12 +343,12 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     ? [
         'interpolate', ['linear'],
         ['coalesce', ['get', 'riskScore'], 0],
-        0,  '#008000',
-        20, '#008000',
-        40, '#FBBF24',
-        60, '#F97316',
-        80, '#EF4444',
-        100, '#EC4899',
+        0,   '#22C55E',
+        20,  '#84CC16',
+        40,  '#EAB308',
+        60,  '#F97316',
+        80,  '#EF4444',
+        100, '#991B1B',
       ] as unknown as maplibregl.ExpressionSpecification
     : [
         'match',
@@ -411,6 +441,15 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
                   6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.45],
                   7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
                 ],
+              }}
+            />
+            {/* Risk glow pulse — white overlay that breathes on risky provinces */}
+            <Layer
+              id="province-risk-pulse"
+              type="fill"
+              paint={{
+                'fill-color': '#ffffff',
+                'fill-opacity': 0,
               }}
             />
             {/* Alert pulse overlay */}
