@@ -166,12 +166,15 @@ async def create_report(
         db.add(report)
         await db.commit()
         await db.refresh(report)
-    except Exception as exc:
+    except Exception:
         logger.exception("Failed to save property report for address=%s", body.address)
-        await db.rollback()
+        try:
+            await db.rollback()
+        except Exception:
+            pass
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to save report: {type(exc).__name__}: {exc}",
+            detail="Failed to save report. Please try again.",
         )
 
     # 5. Build and return response

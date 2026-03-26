@@ -321,6 +321,10 @@ async def _cache_lookup(
         )
     except Exception:
         logger.warning("Geocode cache lookup failed for hash=%s", addr_hash, exc_info=True)
+        try:
+            await db.rollback()
+        except Exception:
+            pass
         return None
 
 
