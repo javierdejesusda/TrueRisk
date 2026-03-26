@@ -46,7 +46,7 @@ def apply_compound_amplifiers(
         condition = chain["condition"]
         if callable(condition) and condition(scores, features):
             target = str(chain["target"])
-            amplifier = float(chain["amplifier"])
+            amplifier: float = chain["amplifier"]  # type: ignore[assignment]
             modified[target] = min(100.0, modified.get(target, 0) * amplifier)
             active_chains.append(str(chain["name"]))
     return modified, active_chains
