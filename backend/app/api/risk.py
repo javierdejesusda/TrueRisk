@@ -279,23 +279,26 @@ async def get_heat_vulnerability(
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
 
-    risk = await compute_province_risk(db, province_code)
-    base_score = risk.get("heatwave_score", 0)
+    try:
+        risk = await compute_province_risk(db, province_code)
+        base_score = risk.get("heatwave_score", 0)
 
-    result = adjust_heatwave_score(
-        base_score,
-        province_code,
-        is_coastal=province.coastal,
-        elevation_m=province.elevation_m or 0,
-    )
+        result = adjust_heatwave_score(
+            base_score,
+            province_code,
+            is_coastal=province.coastal,
+            elevation_m=province.elevation_m or 0,
+        )
 
-    return {
-        "province_code": result.province_code,
-        "base_heatwave_score": result.base_heatwave_score,
-        "vulnerability_index": result.vulnerability_index,
-        "adjusted_score": result.adjusted_score,
-        "factors": result.factors,
-    }
+        return {
+            "province_code": result.province_code,
+            "base_heatwave_score": result.base_heatwave_score,
+            "vulnerability_index": result.vulnerability_index,
+            "adjusted_score": result.adjusted_score,
+            "factors": result.factors,
+        }
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to compute heat vulnerability")
 
 
 @router.get("/{province_code}/heat-vulnerability/personal")
@@ -389,7 +392,10 @@ async def get_province_municipalities_risk(
         raise HTTPException(status_code=404, detail="Province not found")
 
     province_risk = await compute_province_risk(db, province_code)
-    results = await disaggregate_province_risk(db, province_code, province_risk)
+    try:
+        results = await disaggregate_province_risk(db, province_code, province_risk)
+    except Exception:
+        results = []
 
     return [
         {
@@ -427,7 +433,10 @@ async def get_attention_explanations(
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
 
-    return await get_forecast_explanations(db, province_code, hazard)
+    try:
+        return await get_forecast_explanations(db, province_code, hazard)
+    except Exception:
+        return []
 
 
 @router.get("/{province_code}/explain/comparison")
@@ -447,23 +456,25 @@ async def get_explanation_comparison(
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
 
-    # Get rule-based explanation
-    risk = await compute_province_risk(db, province_code)
-    features_snapshot = risk.get("features_snapshot", {})
-    rule_result = explain_risk(features_snapshot)
-    rule_contributions = rule_result.get(hazard, [])
+    try:
+        # Get rule-based explanation
+        risk = await compute_province_risk(db, province_code)
+        features_snapshot = risk.get("features_snapshot", {})
+        rule_result = explain_risk(features_snapshot)
+        rule_contributions = rule_result.get(hazard, [])
 
-    # Get attention-based explanation
-    attn_explanations = await get_forecast_explanations(db, province_code, hazard)
-    attn_weights = None
-    if attn_explanations:
-        # Reconstruct weights from top features
-        attn_weights = {
-            f["feature"]: f["attention_weight"]
-            for f in attn_explanations[0].get("top_features", [])
-        }
+        # Get attention-based explanation
+        attn_explanations = await get_forecast_explanations(db, province_code, hazard)
+        attn_weights = None
+        if attn_explanations:
+            attn_weights = {
+                f["feature"]: f["attention_weight"]
+                for f in attn_explanations[0].get("top_features", [])
+            }
 
-    return explain_rule_vs_attention(rule_contributions, attn_weights)
+        return explain_rule_vs_attention(rule_contributions, attn_weights)
+    except Exception:
+        return {"comparison_available": False, "error": "Could not compute comparison"}
 
 
 @router.get("/{province_code}/impact")

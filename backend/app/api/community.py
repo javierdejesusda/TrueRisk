@@ -51,7 +51,10 @@ async def list_reports(
     if all(v is not None for v in [min_lat, max_lat, min_lon, max_lon]):
         bbox = (min_lat, max_lat, min_lon, max_lon)
 
-    reports = await community_service.get_reports(db, province_code=province, bbox=bbox)
+    try:
+        reports = await community_service.get_reports(db, province_code=province, bbox=bbox)
+    except Exception:
+        return []
     return reports
 
 

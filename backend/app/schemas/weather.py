@@ -8,7 +8,7 @@ class CurrentWeather(BaseModel):
     temperature: float
     humidity: float
     precipitation: float
-    wind_speed: float
+    wind_speed: float | None = None
     wind_direction: float | None = None
     wind_gusts: float | None = None
     pressure: float | None = None

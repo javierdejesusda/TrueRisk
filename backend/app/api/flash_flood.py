@@ -33,26 +33,31 @@ router = APIRouter()
 @router.get("/status", response_model=MonitoringStatusResponse)
 async def monitoring_status(db: AsyncSession = Depends(get_db)):
     """Overview of the flash flood monitoring system."""
-    # Count DB gauges
-    gauge_count = await db.scalar(
-        select(func.count()).select_from(RiverGauge).where(RiverGauge.is_active.is_(True))
-    ) or 0
+    try:
+        gauge_count = await db.scalar(
+            select(func.count()).select_from(RiverGauge).where(RiverGauge.is_active.is_(True))
+        ) or 0
+    except Exception:
+        gauge_count = 0
 
-    # Active flash flood alerts
-    alert_count = await db.scalar(
-        select(func.count()).select_from(Alert).where(
-            Alert.hazard_type == "flash_flood",
-            Alert.is_active.is_(True),
+    try:
+        alert_count = await db.scalar(
+            select(func.count()).select_from(Alert).where(
+                Alert.hazard_type == "flash_flood",
+                Alert.is_active.is_(True),
+            )
+        ) or 0
+    except Exception:
+        alert_count = 0
+
+    try:
+        last_reading = await db.scalar(
+            select(func.max(RiverReading.recorded_at))
         )
-    ) or 0
+    except Exception:
+        last_reading = None
 
-    # Last reading timestamp
-    last_reading = await db.scalar(
-        select(func.max(RiverReading.recorded_at))
-    )
-
-    # Which basins have fetchers beyond the stub
-    active_basins = [key for key in SAIH_BASINS]
+    active_basins = list(SAIH_BASINS.keys())
 
     return MonitoringStatusResponse(
         basins_configured=len(SAIH_BASINS),
@@ -66,7 +71,11 @@ async def monitoring_status(db: AsyncSession = Depends(get_db)):
 @router.get("/alerts", response_model=list[FloodAlertResponse])
 async def current_flood_alerts(db: AsyncSession = Depends(get_db)):
     """Check current river gauge conditions and return any threshold exceedances."""
-    alerts = await check_flash_flood_conditions(db)
+    try:
+        alerts = await check_flash_flood_conditions(db)
+    except Exception as exc:
+        logger.warning("Flash flood check failed: %s", exc)
+        return []
     return [
         FloodAlertResponse(
             gauge_id=a.gauge_id,
@@ -90,10 +99,14 @@ async def list_gauges(
     db: AsyncSession = Depends(get_db),
 ):
     """List all river gauges with live readings merged from SAIH data."""
-    if basin:
-        live = await fetch_river_flows(basin)
-    else:
-        live = await fetch_all_basin_flows()
+    try:
+        if basin:
+            live = await fetch_river_flows(basin)
+        else:
+            live = await fetch_all_basin_flows()
+    except Exception as exc:
+        logger.warning("Failed to fetch live river flows: %s", exc)
+        live = []
 
     live_by_id = {r["gauge_id"]: r for r in live}
 
@@ -104,8 +117,12 @@ async def list_gauges(
     if province:
         stmt = stmt.where(RiverGauge.province_code == province)
 
-    result = await db.execute(stmt)
-    db_gauges = result.scalars().all()
+    try:
+        result = await db.execute(stmt)
+        db_gauges = result.scalars().all()
+    except Exception as exc:
+        logger.warning("Failed to query river gauges: %s", exc)
+        db_gauges = []
     seen_ids: set[str] = set()
     gauges: list[GaugeStatusResponse] = []
 

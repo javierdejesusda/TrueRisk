@@ -52,7 +52,12 @@ async def weather_history(
     db: AsyncSession = Depends(get_db),
 ):
     """Get historical weather records from the database."""
-    records = await weather_service.get_weather_history(db, province_code, days)
+    try:
+        records = await weather_service.get_weather_history(db, province_code, days)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to fetch weather history")
     return records
 
 

@@ -76,8 +76,11 @@ async def list_weather_records(
 
     stmt = stmt.offset(skip).limit(limit)
 
-    result = await db.execute(stmt)
-    return list(result.scalars().all())
+    try:
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+    except Exception:
+        return []
 
 
 @router.get("/data-health")

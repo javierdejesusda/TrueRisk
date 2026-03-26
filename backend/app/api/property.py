@@ -256,7 +256,18 @@ async def arpsi_check(
     db: AsyncSession = Depends(get_db),
 ):
     """Check whether a coordinate falls inside an ARPSI flood zone."""
-    result = await check_flood_zone(lat, lon, db)
+    try:
+        result = await check_flood_zone(lat, lon, db)
+    except Exception:
+        return FloodZoneDetail(
+            in_arpsi_zone=False,
+            zone_id=None,
+            zone_name=None,
+            zone_type=None,
+            return_period=None,
+            risk_level="unknown",
+            distance_to_nearest_zone_m=None,
+        )
     return FloodZoneDetail(
         in_arpsi_zone=result.in_flood_zone,
         zone_id=result.zone_id,

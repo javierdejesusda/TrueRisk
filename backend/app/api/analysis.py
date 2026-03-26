@@ -21,3 +21,5 @@ async def get_predictions(
         return await compute_predictions(db, province)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")

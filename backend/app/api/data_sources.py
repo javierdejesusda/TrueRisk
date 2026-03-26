@@ -408,8 +408,11 @@ async def get_arpsi_zones(
         stmt = stmt.where(ArpsiFloodZone.return_period == return_period)
     stmt = stmt.limit(500)
 
-    result = await db.execute(stmt)
-    zones = result.scalars().all()
+    try:
+        result = await db.execute(stmt)
+        zones = result.scalars().all()
+    except Exception:
+        zones = []
 
     features = []
     for z in zones:
