@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import statistics
 from typing import Any
 
 import httpx
@@ -295,7 +296,6 @@ async def fetch_ensemble_features(lat: float, lon: float) -> dict[str, Any]:
 
         # Temperature spread as uncertainty indicator
         if isinstance(temp_members, list) and len(temp_members) > 1:
-            import statistics
             try:
                 temp_std = statistics.stdev(t for t in temp_members if isinstance(t, (int, float)))
             except statistics.StatisticsError:

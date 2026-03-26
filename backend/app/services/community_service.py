@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +18,7 @@ async def create_report(
     db: AsyncSession, data: CommunityReportCreate, user_id: int | None = None
 ) -> CommunityReport:
     """Create a new community report with auto-expiry."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     if data.hazard_type == "structural_damage":
         expires_at = now + timedelta(hours=24)
@@ -59,7 +59,7 @@ async def get_reports(
     bbox: tuple | None = None,
 ) -> list[CommunityReport]:
     """Return non-expired community reports, optionally filtered by province or bounding box."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     stmt = (
         select(CommunityReport)
         .where(CommunityReport.expires_at > now)

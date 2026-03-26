@@ -9,6 +9,7 @@ province-level flood model with continental-scale hydrological forecasts.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 import httpx
@@ -52,8 +53,8 @@ async def fetch_efas_flood_indicators() -> dict[str, dict[str, float]]:
     Returns dict mapping province_code to {flood_recurrence, discharge_anomaly}.
     Uses Open-Meteo's flood API as a more accessible alternative to CDS direct.
     """
+    global _cache_ts
     cache_key = "efas_flood"
-    import time
     now = time.time()
     if cache_key in _cache and now - _cache_ts < _CACHE_TTL:
         return _cache[cache_key]
@@ -96,6 +97,7 @@ async def fetch_efas_flood_indicators() -> dict[str, dict[str, float]]:
                     daily = item.get("daily", {})
                     discharges = daily.get("river_discharge", [])
 
+                    max_discharge = 0.0
                     if discharges:
                         valid = [d for d in discharges if d is not None and d > 0]
                         if valid:
@@ -121,7 +123,7 @@ async def fetch_efas_flood_indicators() -> dict[str, dict[str, float]]:
 
         if result:
             _cache[cache_key] = result
-            globals()["_cache_ts"] = now
+            _cache_ts = now
 
     except Exception:
         logger.debug("EFAS/GloFAS fetch failed, returning empty")
