@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.services.data_health_service import health_tracker
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -26,7 +30,13 @@ async def get_fire_hotspots():
     """Active fire hotspots from NASA FIRMS."""
     from app.data.nasa_firms import fetch_active_fires
 
-    return await fetch_active_fires()
+    try:
+        result = await fetch_active_fires()
+        health_tracker.record_success("nasa_firms", records_count=len(result))
+        return result
+    except Exception as e:
+        health_tracker.record_failure("nasa_firms", str(e))
+        raise
 
 
 @router.get("/air-quality/{province_code}")
@@ -38,7 +48,13 @@ async def get_air_quality(province_code: str, db: AsyncSession = Depends(get_db)
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    return await fetch_air_quality(province.latitude, province.longitude)
+    try:
+        result = await fetch_air_quality(province.latitude, province.longitude)
+        health_tracker.record_success("openaq", records_count=len(result) if isinstance(result, list) else 1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("openaq", str(e))
+        raise
 
 
 @router.get("/earthquakes")
@@ -46,7 +62,13 @@ async def get_earthquakes():
     """Recent earthquakes near Spain from USGS."""
     from app.data.usgs_earthquake import fetch_recent_quakes
 
-    return await fetch_recent_quakes()
+    try:
+        result = await fetch_recent_quakes()
+        health_tracker.record_success("usgs", records_count=len(result))
+        return result
+    except Exception as e:
+        health_tracker.record_failure("usgs", str(e))
+        raise
 
 
 @router.get("/energy")
@@ -54,9 +76,14 @@ async def get_energy():
     """Electricity demand and generation mix from REE."""
     from app.data.ree_energy import fetch_demand, fetch_generation_mix
 
-    demand = await fetch_demand()
-    generation = await fetch_generation_mix()
-    return {**demand, **generation}
+    try:
+        demand = await fetch_demand()
+        generation = await fetch_generation_mix()
+        health_tracker.record_success("ree_energy", records_count=1)
+        return {**demand, **generation}
+    except Exception as e:
+        health_tracker.record_failure("ree_energy", str(e))
+        raise
 
 
 @router.get("/reservoirs")
@@ -64,7 +91,13 @@ async def get_reservoirs():
     """Reservoir levels across Spain from SAIH."""
     from app.data.saih import fetch_reservoir_levels
 
-    return await fetch_reservoir_levels()
+    try:
+        result = await fetch_reservoir_levels()
+        health_tracker.record_success("saih", records_count=len(result) if isinstance(result, list) else 1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("saih", str(e))
+        raise
 
 
 @router.get("/emergencies")
@@ -72,7 +105,13 @@ async def get_emergencies():
     """Active emergency activations from Copernicus EMS."""
     from app.data.copernicus_ems import fetch_active_emergencies
 
-    return await fetch_active_emergencies()
+    try:
+        result = await fetch_active_emergencies()
+        health_tracker.record_success("copernicus_ems", records_count=len(result) if isinstance(result, list) else 1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("copernicus_ems", str(e))
+        raise
 
 
 @router.get("/demographics/{province_code}")
@@ -84,7 +123,13 @@ async def get_demographics(province_code: str, db: AsyncSession = Depends(get_db
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    return await fetch_province_demographics(province.name)
+    try:
+        result = await fetch_province_demographics(province.name)
+        health_tracker.record_success("ine_demographics", records_count=1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("ine_demographics", str(e))
+        raise
 
 
 @router.get("/vegetation/{province_code}")
@@ -96,7 +141,13 @@ async def get_vegetation(province_code: str, db: AsyncSession = Depends(get_db))
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    return await fetch_ndvi(province.latitude, province.longitude)
+    try:
+        result = await fetch_ndvi(province.latitude, province.longitude)
+        health_tracker.record_success("copernicus_land", records_count=1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("copernicus_land", str(e))
+        raise
 
 
 @router.get("/solar/{province_code}")
@@ -108,7 +159,13 @@ async def get_solar(province_code: str, db: AsyncSession = Depends(get_db)):
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    return await fetch_solar_and_agmet(province.latitude, province.longitude)
+    try:
+        result = await fetch_solar_and_agmet(province.latitude, province.longitude)
+        health_tracker.record_success("nasa_power", records_count=1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("nasa_power", str(e))
+        raise
 
 
 @router.get("/seismic/{province_code}")
@@ -120,8 +177,14 @@ async def get_seismic(province_code: str, db: AsyncSession = Depends(get_db)):
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    quakes = await fetch_recent_quakes()
-    return compute_province_seismic_exposure(province.latitude, province.longitude, quakes)
+    try:
+        quakes = await fetch_recent_quakes()
+        result = compute_province_seismic_exposure(province.latitude, province.longitude, quakes)
+        health_tracker.record_success("ign_seismic", records_count=len(quakes))
+        return result
+    except Exception as e:
+        health_tracker.record_failure("ign_seismic", str(e))
+        raise
 
 
 @router.get("/air-quality-forecast/{province_code}")
@@ -133,7 +196,13 @@ async def get_air_quality_forecast(province_code: str, db: AsyncSession = Depend
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    return await fetch_air_quality_forecast(province.latitude, province.longitude)
+    try:
+        result = await fetch_air_quality_forecast(province.latitude, province.longitude)
+        health_tracker.record_success("copernicus_cams", records_count=len(result) if isinstance(result, list) else 1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("copernicus_cams", str(e))
+        raise
 
 
 @router.get("/seasonal/{province_code}")
@@ -145,7 +214,13 @@ async def get_seasonal(province_code: str, db: AsyncSession = Depends(get_db)):
     province = await db.get(Province, province_code)
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
-    return await fetch_seasonal_outlook(province.latitude, province.longitude)
+    try:
+        result = await fetch_seasonal_outlook(province.latitude, province.longitude)
+        health_tracker.record_success("ecmwf_seasonal", records_count=1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("ecmwf_seasonal", str(e))
+        raise
 
 
 @router.get("/wildfire-index")
@@ -167,7 +242,13 @@ async def get_weather_stations():
 
     if not settings.aemet_api_key:
         return []
-    return await fetch_weather_stations(settings.aemet_api_key)
+    try:
+        result = await fetch_weather_stations(settings.aemet_api_key)
+        health_tracker.record_success("aemet", records_count=len(result) if isinstance(result, list) else 1)
+        return result
+    except Exception as e:
+        health_tracker.record_failure("aemet", str(e))
+        raise
 
 
 @router.get("/river-gauges")

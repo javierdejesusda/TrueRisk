@@ -244,8 +244,8 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     }
     const start = performance.now();
     const id = setInterval(() => {
-      const elapsed = (performance.now() - start) % 5000;
-      const opacity = Math.max(0, 0.2 * Math.sin((elapsed / 5000) * Math.PI * 2));
+      const elapsed = (performance.now() - start) % 3000;
+      const opacity = Math.max(0, 0.18 * Math.sin((elapsed / 3000) * Math.PI * 2));
       try {
         const map = mapRef.current?.getMap();
         if (map?.getLayer('province-risk-pulse')) {
@@ -343,12 +343,11 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     ? [
         'interpolate', ['linear'],
         ['coalesce', ['get', 'riskScore'], 0],
-        0,   '#008000',
-        20,  '#84CC16',
-        40,  '#EAB308',
-        60,  '#F97316',
-        80,  '#FF5C5C',
-        100, '#FF0000',
+        0,   '#44ce1b',
+        25,  '#bbdb44',
+        50,  '#FFFF00',
+        75,  '#f2a134',
+        100, '#e51f1f',
       ] as unknown as maplibregl.ExpressionSpecification
     : [
         'match',
@@ -359,6 +358,23 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         2, '#FBBF24',
         1, '#84CC16',
         '#008000',
+      ] as unknown as maplibregl.ExpressionSpecification;
+
+  // Province fill opacity — risk mode uses high opacity so colors are vivid and fully visible
+  const fillOpacityExpression = activeMapLayer === 'risk'
+    ? [
+        'interpolate', ['linear'], ['zoom'],
+        5,   ['case', ['boolean', ['feature-state', 'hover'], false], 1, 0.9],
+        6,   ['case', ['boolean', ['feature-state', 'hover'], false], 1, 0.9],
+        6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.9, 0.85],
+        7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.5, 0.35],
+      ] as unknown as maplibregl.ExpressionSpecification
+    : [
+        'interpolate', ['linear'], ['zoom'],
+        5,   ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.7],
+        6,   ['case', ['boolean', ['feature-state', 'hover'], false], 0.8, 0.65],
+        6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.45],
+        7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
       ] as unknown as maplibregl.ExpressionSpecification;
 
   // Alert pulse fill color
@@ -434,13 +450,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
               type="fill"
               paint={{
                 'fill-color': fillColorExpression,
-                'fill-opacity': [
-                  'interpolate', ['linear'], ['zoom'],
-                  5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.7],
-                  6, ['case', ['boolean', ['feature-state', 'hover'], false], 0.8, 0.65],
-                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.45],
-                  7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0.15],
-                ],
+                'fill-opacity': fillOpacityExpression,
               }}
             />
             {/* Risk pulse — same risk colors layered on top to brighten */}
@@ -525,11 +535,17 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
               beforeId="province-outline"
               paint={{
                 'fill-color': fillColorExpression,
-                'fill-opacity': [
-                  'interpolate', ['linear'], ['zoom'],
-                  6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.4, 0.25],
-                  7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.95, 0.85],
-                ],
+                'fill-opacity': activeMapLayer === 'risk'
+                  ? [
+                      'interpolate', ['linear'], ['zoom'],
+                      6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.5],
+                      7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 1, 0.9],
+                    ] as unknown as maplibregl.ExpressionSpecification
+                  : [
+                      'interpolate', ['linear'], ['zoom'],
+                      6.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.4, 0.25],
+                      7.5, ['case', ['boolean', ['feature-state', 'hover'], false], 0.95, 0.85],
+                    ] as unknown as maplibregl.ExpressionSpecification,
               }}
             />
             <Layer

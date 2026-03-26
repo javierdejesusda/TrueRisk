@@ -15,11 +15,11 @@ const ALERT_LEVEL_KEYS = [
 ] as const;
 
 const RISK_LEVEL_KEYS = [
-  { key: 'low', color: '#008000' },
-  { key: 'moderate', color: '#EAB308' },
-  { key: 'high', color: '#F97316' },
-  { key: 'veryHigh', color: '#FF5C5C' },
-  { key: 'critical', color: '#FF0000' },
+  { key: 'low', color: '#44ce1b' },
+  { key: 'moderate', color: '#bbdb44' },
+  { key: 'high', color: '#FFFF00' },
+  { key: 'veryHigh', color: '#f2a134' },
+  { key: 'critical', color: '#e51f1f' },
 ] as const;
 
 export function MapLegend() {

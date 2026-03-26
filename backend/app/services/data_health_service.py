@@ -5,12 +5,35 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+# All known data sources that should always appear in the dashboard.
+KNOWN_SOURCES = [
+    "open_meteo",
+    "nasa_firms",
+    "ign_seismic",
+    "aemet",
+    "copernicus_ems",
+    "copernicus_cams",
+    "copernicus_land",
+    "openaq",
+    "saih",
+    "usgs",
+    "ree_energy",
+    "ine_demographics",
+    "nasa_power",
+    "ecmwf_seasonal",
+]
+
 
 class DataHealthTracker:
     """Tracks success/failure state for each external data source."""
 
     def __init__(self) -> None:
         self._sources: dict[str, dict[str, Any]] = {}
+
+    def register_sources(self, names: list[str]) -> None:
+        """Pre-register sources so they appear even before their first fetch."""
+        for name in names:
+            self._sources.setdefault(name, self._empty_entry())
 
     def record_success(self, source_name: str, records_count: int = 0) -> None:
         """Record a successful fetch for *source_name*."""
@@ -54,3 +77,4 @@ class DataHealthTracker:
 
 # Module-level singleton used throughout the application.
 health_tracker = DataHealthTracker()
+health_tracker.register_sources(KNOWN_SOURCES)

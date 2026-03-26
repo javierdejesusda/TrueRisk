@@ -105,10 +105,10 @@ async def run_pipeline():
             try:
                 from app.data.ree_energy import fetch_demand
                 energy = await fetch_demand()
-                health_tracker.record_success("ree", records_count=1)
+                health_tracker.record_success("ree_energy", records_count=1)
                 logger.info(f"Fetched REE demand: {energy.get('current_demand_mw')} MW")
             except Exception as e:
-                health_tracker.record_failure("ree", str(e))
+                health_tracker.record_failure("ree_energy", str(e))
                 logger.error(f"REE fetch failed: {e}")
 
             # 2. Compute risk for each province
@@ -153,13 +153,13 @@ async def run_pipeline():
                 )
                 readings_count = await store_river_readings(db)
                 flood_alert_count = await process_flash_flood_alerts(db)
-                health_tracker.record_success("flash_flood", records_count=readings_count)
+                health_tracker.record_success("saih", records_count=readings_count)
                 logger.info(
                     "Flash flood check: %d readings stored, %d alerts created",
                     readings_count, flood_alert_count,
                 )
             except Exception as e:
-                health_tracker.record_failure("flash_flood", str(e))
+                health_tracker.record_failure("saih", str(e))
                 logger.exception("Flash flood monitoring failed (non-critical)")
 
             # 7. Generate morning narratives (best-effort, non-blocking)

@@ -70,10 +70,11 @@ const GRID_LAYOUT: (ProvinceTile | null)[][] = [
 
 function getRiskColor(score: number | undefined): string {
   if (score === undefined) return 'var(--color-border)';
-  if (score < 30) return 'var(--color-accent-green)';
-  if (score < 60) return 'var(--color-accent-yellow)';
-  if (score < 80) return 'var(--color-accent-orange)';
-  return 'var(--color-accent-red)';
+  if (score < 20) return '#44ce1b';
+  if (score < 40) return '#bbdb44';
+  if (score < 60) return '#FFFF00';
+  if (score < 80) return '#f2a134';
+  return '#e51f1f';
 }
 
 function getRiskBgClass(score: number | undefined): string {
