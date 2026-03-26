@@ -40,6 +40,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     latitude: number;
     provinceName: string;
     provinceCode: string;
+    anchor: 'top' | 'bottom';
   } | null>(null);
   const [hoveredFeatureId, setHoveredFeatureId] = useState<string | null>(null);
   const [municipalityGeoJSON, setMunicipalityGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
@@ -320,11 +321,22 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       const feature = e.features[0];
       const props = feature.properties;
       const isMuni = feature.layer?.id === 'municipality-fill';
+
+      let anchor: 'top' | 'bottom' = 'bottom';
+      if (mapRef.current) {
+        const point = mapRef.current.project([e.lngLat.lng, e.lngLat.lat]);
+        const container = mapRef.current.getContainer();
+        if (point.y < container.clientHeight * 0.4) {
+          anchor = 'top';
+        }
+      }
+
       setPopupInfo({
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
         provinceName: props?.provinceName || props?.name || '',
         provinceCode: props?.provinceCode || (isMuni ? props?.cod_prov : props?.cod_prov) || '',
+        anchor,
       });
     }
   }, []);
@@ -603,7 +615,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
           <Popup
             longitude={popupInfo.longitude}
             latitude={popupInfo.latitude}
-            anchor={popupInfo.latitude > 41.5 ? 'top' : 'bottom'}
+            anchor={popupInfo.anchor}
             onClose={() => setPopupInfo(null)}
             maxWidth="340px"
             closeOnClick={false}
