@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { PageTransition } from '@/components/layout/page-transition';
 import { useGeolocation } from '@/hooks/use-geolocation';
-import { useEvacuationRoutes, type EvacuationRoute } from '@/hooks/use-evacuation';
+import { useEvacuationRoutes, useSafePoints, type EvacuationRoute } from '@/hooks/use-evacuation';
 import { useAppStore } from '@/store/app-store';
 
 const POINT_TYPE_ICONS: Record<string, string> = {
@@ -114,6 +114,12 @@ export default function EvacuationPage() {
     10,
   );
 
+  // Province-based fallback when GPS is unavailable
+  const needsFallback = !geo.isLoading && geo.latitude == null;
+  const { points: fallbackPoints, isLoading: fallbackLoading } = useSafePoints(
+    needsFallback ? provinceCode : null,
+  );
+
   const filteredRoutes = useMemo(() => {
     if (filterType === 'all') return routes;
     return routes.filter((r) => r.safe_point.type === filterType);
@@ -147,12 +153,19 @@ export default function EvacuationPage() {
           )}
         </div>
 
-        {/* Location status */}
+        {/* Location prompt with enable button */}
         {geo.error && (
-          <div className="glass-heavy rounded-2xl p-4 mb-4 border border-amber-500/20">
-            <p className="font-[family-name:var(--font-sans)] text-xs text-amber-400">
+          <div className="glass-heavy rounded-2xl p-5 mb-4 border border-amber-500/20 text-center">
+            <p className="font-[family-name:var(--font-sans)] text-sm text-text-secondary mb-3">
               {t('useLocation')}
             </p>
+            <button
+              type="button"
+              onClick={geo.requestPermission}
+              className="px-5 py-2.5 rounded-xl bg-accent-green text-bg-primary font-[family-name:var(--font-display)] font-semibold text-sm hover:bg-accent-green/90 transition-colors"
+            >
+              {t('enableLocation')}
+            </button>
           </div>
         )}
 
@@ -188,17 +201,11 @@ export default function EvacuationPage() {
         </div>
 
         {/* Routes list */}
-        {isLoading ? (
+        {isLoading || fallbackLoading ? (
           <div className="flex justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
           </div>
-        ) : filteredRoutes.length === 0 ? (
-          <div className="glass-heavy rounded-2xl p-8 text-center">
-            <p className="font-[family-name:var(--font-sans)] text-sm text-text-muted">
-              {t('noPoints')}
-            </p>
-          </div>
-        ) : (
+        ) : filteredRoutes.length > 0 ? (
           <div className="flex flex-col gap-3">
             <p className="font-[family-name:var(--font-sans)] text-xs text-text-muted uppercase tracking-wider">
               {t('nearest')}
@@ -212,6 +219,38 @@ export default function EvacuationPage() {
                 t={t}
               />
             ))}
+          </div>
+        ) : needsFallback && fallbackPoints.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            <p className="font-[family-name:var(--font-sans)] text-xs text-text-muted uppercase tracking-wider">
+              {t('provincePoints')}
+            </p>
+            {fallbackPoints
+              .filter((p) => filterType === 'all' || p.type === filterType)
+              .map((sp) => (
+                <div key={sp.id} className="glass-heavy rounded-2xl p-4 flex items-center gap-3">
+                  <span className="text-xl">{POINT_TYPE_ICONS[sp.type] || '\u{1F4CD}'}</span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary truncate">
+                      {sp.name}
+                    </h3>
+                    {sp.address && (
+                      <p className="font-[family-name:var(--font-sans)] text-xs text-text-secondary truncate">{sp.address}</p>
+                    )}
+                  </div>
+                  {sp.phone && (
+                    <a href={`tel:${sp.phone}`} className="px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 text-xs font-medium">
+                      {t('call')}
+                    </a>
+                  )}
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="glass-heavy rounded-2xl p-8 text-center">
+            <p className="font-[family-name:var(--font-sans)] text-sm text-text-muted">
+              {t('noPoints')}
+            </p>
           </div>
         )}
       </div>

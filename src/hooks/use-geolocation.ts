@@ -108,6 +108,22 @@ export function useGeolocation() {
     [syncToBackend],
   );
 
+  const requestPermission = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setState((s) => ({ ...s, isLoading: true, error: null }));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setState({ latitude, longitude, isLoading: false, error: null });
+        maybeSync(latitude, longitude);
+      },
+      (err) => {
+        setState({ latitude: null, longitude: null, isLoading: false, error: err.message });
+      },
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  }, [maybeSync]);
+
   useEffect(() => {
     if (!navigator.geolocation) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- checking browser support on mount is intentional
@@ -132,5 +148,5 @@ export function useGeolocation() {
     };
   }, [maybeSync]);
 
-  return state;
+  return { ...state, requestPermission };
 }

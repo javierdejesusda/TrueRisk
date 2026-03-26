@@ -643,7 +643,8 @@
     "generate": "Generar consejos",
     "generating": "Generando...",
     "description": "Obtener recomendaciones de seguridad personalizadas basadas en tu perfil y las condiciones actuales de riesgo.",
-    "loginRequired": "Inicia sesion para ver consejos personalizados"
+    "loginRequired": "Inicia sesion para ver consejos personalizados",
+    "descriptionAnonymous": "Obtiene consejos de seguridad generales para tu provincia. Inicia sesion para recomendaciones personalizadas basadas en tu perfil."
   },
   "Preparedness": {
     "title": "Preparacion",
@@ -698,7 +699,9 @@
     "accept": "Aceptar",
     "remove": "Eliminar",
     "manageLinks": "Vinculos familiares",
-    "imSafe": "Estoy a salvo"
+    "imSafe": "Estoy a salvo",
+    "loginRequired": "Inicia sesion para usar Safety Check y compartir tu estado con familiares.",
+    "loginButton": "Iniciar sesion"
   },
   "Offline": {
     "title": "Modo sin conexion",
@@ -753,6 +756,8 @@
     "step3": "Generando informe...",
     "errorNotFound": "No se pudo encontrar la direccion. Intenta con una direccion mas completa.",
     "errorServer": "Error del servidor. Intentalo de nuevo mas tarde.",
+    "errorRateLimit": "Demasiadas solicitudes. Espera un momento e intenta de nuevo.",
+    "errorServiceUnavailable": "Servicio de analisis de riesgo temporalmente no disponible. Intenta de nuevo en breve.",
     "feature1Title": "Cumplimiento ECM/599/2025",
     "feature1Desc": "Datos de riesgo climatico conformes con la nueva regulacion de valoraciones inmobiliarias",
     "feature2Title": "7 Riesgos Naturales",
@@ -889,7 +894,8 @@
     "reservoirs": "Niveles de Embalses",
     "noReservoirData": "Datos de embalses no disponibles",
     "level": "Nivel",
-    "capacity": "Capacidad"
+    "capacity": "Capacidad",
+    "dataOutdated": "Mostrando datos aproximados. Datos de embalse en tiempo real temporalmente no disponibles."
   },
   "Evacuation": {
     "title": "Rutas de Evacuacion",
@@ -907,7 +913,9 @@
     "allTypes": "Todos los tipos",
     "noPoints": "No se encontraron puntos seguros cercanos",
     "useLocation": "Activa el acceso a tu ubicacion para encontrar puntos seguros cerca de ti",
-    "bearing": "Direccion: {dir}"
+    "bearing": "Direccion: {dir}",
+    "enableLocation": "Activar acceso a ubicacion",
+    "provincePoints": "Puntos seguros en tu provincia"
   },
   "HydroNowcast": {
     "title": "Prevision de Caudal Fluvial",

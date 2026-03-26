@@ -26,6 +26,7 @@ interface ReservoirChartProps {
 
 export function ReservoirChart({ reservoirs }: ReservoirChartProps) {
   const t = useTranslations('Drought');
+  const isStale = reservoirs?.some((r: any) => r.stale);
 
   if (!reservoirs || reservoirs.length === 0) {
     return (
@@ -107,6 +108,10 @@ export function ReservoirChart({ reservoirs }: ReservoirChartProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {isStale && (
+        <p className="text-xs text-amber-400 mt-2">{t('dataOutdated')}</p>
+      )}
     </Card>
   );
 }

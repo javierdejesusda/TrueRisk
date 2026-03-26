@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,9 +30,34 @@ async def get_current_weather(
 
     data = await open_meteo.fetch_current(province.latitude, province.longitude)
     if not data:
+        # Fallback: return most recent DB record for this province
+        result = await db.execute(
+            select(WeatherRecord)
+            .where(WeatherRecord.province_code == province_code)
+            .order_by(WeatherRecord.recorded_at.desc())
+            .limit(1)
+        )
+        record = result.scalar_one_or_none()
+        if record:
+            return {
+                "temperature": record.temperature,
+                "humidity": record.humidity,
+                "precipitation": record.precipitation,
+                "wind_speed": record.wind_speed,
+                "wind_direction": record.wind_direction,
+                "wind_gusts": record.wind_gusts,
+                "pressure": record.pressure,
+                "soil_moisture": record.soil_moisture,
+                "uv_index": record.uv_index,
+                "dew_point": record.dew_point,
+                "cloud_cover": record.cloud_cover,
+                "province_code": province_code,
+                "recorded_at": record.recorded_at.isoformat(),
+                "cached": True,
+            }
         return {}
 
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     record = WeatherRecord(
         province_code=province_code,
         source="open_meteo",
@@ -97,7 +122,7 @@ async def get_weather_history(
     db: AsyncSession, province_code: str, days: int = 30
 ) -> list[WeatherRecord]:
     """Query stored WeatherRecords from the database."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(WeatherRecord)
         .where(

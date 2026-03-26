@@ -645,7 +645,8 @@
     "generate": "Generate tips",
     "generating": "Generating...",
     "description": "Get personalized safety recommendations based on your profile and current risk conditions.",
-    "loginRequired": "Sign in to see personalized tips"
+    "loginRequired": "Sign in to see personalized tips",
+    "descriptionAnonymous": "Get general safety tips for your province. Log in for personalized recommendations based on your profile."
   },
   "Preparedness": {
     "title": "Preparedness",
@@ -700,7 +701,9 @@
     "accept": "Accept",
     "remove": "Remove",
     "manageLinks": "Family Links",
-    "imSafe": "I'm Safe"
+    "imSafe": "I'm Safe",
+    "loginRequired": "Log in to use Safety Check and share your status with family members.",
+    "loginButton": "Log in"
   },
   "Offline": {
     "title": "Offline Mode",
@@ -755,6 +758,8 @@
     "step3": "Generating report...",
     "errorNotFound": "Could not find the address. Try a more complete address.",
     "errorServer": "Server error. Please try again later.",
+    "errorRateLimit": "Too many requests. Please wait a moment and try again.",
+    "errorServiceUnavailable": "Risk analysis service temporarily unavailable. Please try again shortly.",
     "feature1Title": "ECM/599/2025 Compliance",
     "feature1Desc": "Climate risk data compliant with Spain's new property valuation regulation",
     "feature2Title": "7 Natural Hazards",
@@ -891,7 +896,8 @@
     "reservoirs": "Reservoir Levels",
     "noReservoirData": "Reservoir data unavailable",
     "level": "Level",
-    "capacity": "Capacity"
+    "capacity": "Capacity",
+    "dataOutdated": "Showing approximate data. Live reservoir data temporarily unavailable."
   },
   "Evacuation": {
     "title": "Evacuation Routes",
@@ -909,7 +915,9 @@
     "allTypes": "All types",
     "noPoints": "No safe points found nearby",
     "useLocation": "Enable location access to find safe points near you",
-    "bearing": "Direction: {dir}"
+    "bearing": "Direction: {dir}",
+    "enableLocation": "Enable Location Access",
+    "provincePoints": "Safe points in your province"
   },
   "HydroNowcast": {
     "title": "River Flow Forecast",

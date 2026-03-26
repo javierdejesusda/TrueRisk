@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, get_optional_user
 from app.models.user import User
 from app.schemas.preparedness import (
     ChecklistResponse,
@@ -26,7 +26,7 @@ router = APIRouter()
 async def get_checklist(
     locale: str = Query(default="es", pattern="^(es|en)$"),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User | None = Depends(get_optional_user),
 ):
     """Return the user's personalized preparedness checklist based on province and profile."""
     return await preparedness_service.get_personalized_checklist(db, user, locale)

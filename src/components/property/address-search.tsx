@@ -34,8 +34,16 @@ export function AddressSearch() {
       router.push(`/report/${reportId}`);
     } catch (err) {
       clearInterval(stepInterval);
-      if (err instanceof Error && err.message.includes('404')) {
-        setError(t('errorNotFound'));
+      if (err instanceof Error) {
+        if (err.message.includes('422')) {
+          setError(t('errorNotFound'));
+        } else if (err.message.includes('429')) {
+          setError(t('errorRateLimit'));
+        } else if (err.message.includes('502')) {
+          setError(t('errorServiceUnavailable'));
+        } else {
+          setError(t('errorServer'));
+        }
       } else {
         setError(t('errorServer'));
       }

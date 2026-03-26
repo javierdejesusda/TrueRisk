@@ -39,7 +39,7 @@ Rules:
 
 
 async def stream_personalized_suggestions(
-    user: User,
+    user: User | None,
     context: dict,
     locale: str = "es",
 ) -> AsyncIterator[str]:
@@ -47,15 +47,22 @@ async def stream_personalized_suggestions(
     client = _get_client()
     lang = "Spanish" if locale == "es" else "English"
 
-    user_context = (
-        f"User Profile:\n"
-        f"- Province: {context.get('province_name', 'Unknown')}\n"
-        f"- Residence: {user.residence_type}\n"
-        f"- Special needs: {', '.join(user.special_needs) if isinstance(user.special_needs, list) else 'none'}\n"
-        f"- Mobility: {user.mobility_level}\n"
-        f"- Has vehicle: {user.has_vehicle}\n"
-        f"- Medical conditions: {user.medical_conditions or 'none'}\n"
-    )
+    if user:
+        user_context = (
+            f"User Profile:\n"
+            f"- Province: {context.get('province_name', 'Unknown')}\n"
+            f"- Residence: {user.residence_type}\n"
+            f"- Special needs: {', '.join(user.special_needs) if isinstance(user.special_needs, list) else 'none'}\n"
+            f"- Mobility: {user.mobility_level}\n"
+            f"- Has vehicle: {user.has_vehicle}\n"
+            f"- Medical conditions: {user.medical_conditions or 'none'}\n"
+        )
+    else:
+        user_context = (
+            f"User Profile:\n"
+            f"- Province: {context.get('province_name', 'Unknown')}\n"
+            f"- No personal profile available. Provide general safety tips for residents of this province.\n"
+        )
 
     risk_context = (
         f"\nCurrent Conditions:\n"

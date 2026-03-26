@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, get_optional_user
 from app.config import settings
 from app.models.user import User
 from app.rate_limit import limiter
@@ -27,7 +27,7 @@ async def stream_suggestions(
     province_code: str,
     locale: str = Query(default="es", pattern="^(es|en)$"),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User | None = Depends(get_optional_user),
 ):
     """SSE stream of personalized safety suggestions. Requires authentication."""
     if not settings.openai_api_key:

@@ -42,13 +42,24 @@ export default function SafetyPage() {
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-text-primary">
             {t('title')}
           </h1>
-          {error && (
+          {error && error !== 'auth_required' && (
             <p className="mt-2 font-[family-name:var(--font-sans)] text-sm text-red-400">
               {error}
             </p>
           )}
         </div>
 
+        {error === 'auth_required' ? (
+          <div className="glass-heavy rounded-2xl p-6 text-center">
+            <p className="text-text-secondary text-sm mb-3">{t('loginRequired')}</p>
+            <a
+              href="/login"
+              className="inline-block px-4 py-2 rounded-lg bg-accent-green/15 text-accent-green text-sm font-medium hover:bg-accent-green/25 transition-colors"
+            >
+              {t('loginButton')}
+            </a>
+          </div>
+        ) : (
         <div className="flex flex-col gap-5">
           <SafetyCheckButton
             onCheckIn={checkIn}
@@ -68,6 +79,7 @@ export default function SafetyPage() {
             onDeleteLink={deleteLink}
           />
         </div>
+        )}
       </div>
     </PageTransition>
   );

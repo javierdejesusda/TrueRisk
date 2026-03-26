@@ -163,9 +163,30 @@ def _check_auto_items(user: User) -> set[str]:
 
 
 async def get_personalized_checklist(
-    db: AsyncSession, user: User, locale: str = "es"
+    db: AsyncSession, user: User | None, locale: str = "es"
 ) -> ChecklistResponse:
     """Return the user's personalized checklist with completion state."""
+    if user is None:
+        # Return generic checklist without personalization for anonymous users
+        use_es = locale == "es"
+        categories: dict[str, list[ChecklistItem]] = {}
+        total = 0
+        for cat, items in CHECKLIST_CATALOG.items():
+            cat_items = []
+            for item_def in items:
+                cat_items.append(ChecklistItem(
+                    item_key=item_def["key"],
+                    label=item_def.get("label_es", item_def["label"]) if use_es else item_def["label"],
+                    description=item_def.get("desc_es", item_def["desc"]) if use_es else item_def["desc"],
+                    category=cat,
+                    completed=False,
+                    completed_at=None,
+                    priority=item_def.get("priority", "normal"),
+                ))
+                total += 1
+            categories[cat] = cat_items
+        return ChecklistResponse(categories=categories, total_items=total, completed_items=0)
+
     province = await db.get(Province, user.province_code) if user.province_code else None
     catalog = _build_personalized_checklist(user, province)
 

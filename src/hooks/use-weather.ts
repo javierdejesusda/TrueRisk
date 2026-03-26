@@ -25,6 +25,7 @@ export function useWeather(provinceCode?: string) {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch weather');
+      // Don't clear weather -- keep previous data visible
     } finally {
       setIsLoading(false);
     }

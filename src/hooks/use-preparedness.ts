@@ -62,12 +62,26 @@ export function usePreparedness() {
   });
 
   const fetchData = useCallback(async () => {
-    if (!backendToken) return; // Wait for auth token before fetching
-
     try {
       setIsLoading(true);
       setError(null);
 
+      if (!backendToken) {
+        // Without auth, only fetch the generic checklist
+        try {
+          const res = await fetch(`/api/preparedness/checklist?locale=${locale}`);
+          if (res.ok) {
+            const data = await res.json() as ChecklistResponse;
+            setChecklist(data);
+          }
+        } catch {
+          // Silently fall back to local fallback items
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Authenticated: fetch all three endpoints in parallel
       const results = await Promise.allSettled([
         apiFetch(`/api/preparedness/score?locale=${locale}`),
         apiFetch(`/api/preparedness/checklist?locale=${locale}`),

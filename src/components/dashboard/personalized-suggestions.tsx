@@ -22,17 +22,15 @@ export function PersonalizedSuggestions() {
         <h3 className="text-lg font-semibold text-text-primary font-[family-name:var(--font-display)]">
           {t('title')}
         </h3>
-        {isAuthenticated && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => startStream(provinceCode, locale)}
-            disabled={isStreaming}
-            loading={isStreaming}
-          >
-            {isStreaming ? t('generating') : t('generate')}
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => startStream(provinceCode, locale)}
+          disabled={isStreaming}
+          loading={isStreaming}
+        >
+          {isStreaming ? t('generating') : t('generate')}
+        </Button>
       </div>
 
       {error && (
@@ -47,7 +45,7 @@ export function PersonalizedSuggestions() {
         </div>
       ) : !isStreaming && !error ? (
         <p className="text-text-muted text-sm font-[family-name:var(--font-sans)]">
-          {isAuthenticated ? t('description') : t('loginRequired')}
+          {isAuthenticated ? t('description') : t('descriptionAnonymous')}
         </p>
       ) : null}
     </Card>

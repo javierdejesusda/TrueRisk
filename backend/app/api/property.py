@@ -86,7 +86,17 @@ async def create_report(
         )
 
     # 2. Compute property-level risk
-    risk = await compute_property_risk(geo.latitude, geo.longitude, geo.province_code, db)
+    try:
+        risk = await compute_property_risk(geo.latitude, geo.longitude, geo.province_code, db)
+    except Exception:
+        logger.exception(
+            "Risk computation failed for address=%s lat=%s lon=%s province=%s",
+            body.address, geo.latitude, geo.longitude, geo.province_code,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Risk computation temporarily unavailable. Please try again.",
+        )
 
     # 3. Generate report ID and timestamps
     report_id = str(uuid.uuid4())

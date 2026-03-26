@@ -58,7 +58,10 @@ export function useSafetyCheck() {
         method: 'POST',
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return undefined as unknown as SafetyCheckIn; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json() as SafetyCheckIn;
       setCheckIns((prev) => [data, ...prev]);
       return data;
@@ -72,7 +75,10 @@ export function useSafetyCheck() {
     try {
       setIsLoading(true);
       const res = await apiFetch('/api/safety/family-status');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json() as FamilyMemberStatus[];
       setFamilyStatus(data);
       setError(null);
@@ -92,7 +98,10 @@ export function useSafetyCheck() {
         method: 'POST',
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return undefined as unknown as FamilyLink; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json() as FamilyLink;
       if (data.status === 'pending') {
         setPendingLinks((prev) => [...prev, data]);
@@ -110,7 +119,10 @@ export function useSafetyCheck() {
       const res = await apiFetch(`/api/safety/links/${linkId}/accept`, {
         method: 'PATCH',
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       setPendingLinks((prev) => prev.filter((link) => link.id !== linkId));
       await getFamilyStatus();
     } catch (err) {
@@ -124,7 +136,10 @@ export function useSafetyCheck() {
       const res = await apiFetch(`/api/safety/links/${linkId}`, {
         method: 'DELETE',
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       await getFamilyStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete link');
@@ -137,7 +152,10 @@ export function useSafetyCheck() {
       const res = await apiFetch(`/api/safety/request/${userId}`, {
         method: 'POST',
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return; }
+        throw new Error(`HTTP ${res.status}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request check-in');
       throw err;
@@ -147,7 +165,10 @@ export function useSafetyCheck() {
   const fetchCheckIns = useCallback(async () => {
     try {
       const res = await apiFetch('/api/safety/check-ins?limit=20');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json() as SafetyCheckIn[];
       setCheckIns(data);
     } catch (err) {
@@ -158,7 +179,10 @@ export function useSafetyCheck() {
   const fetchPendingLinks = useCallback(async () => {
     try {
       const res = await apiFetch('/api/safety/links');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) { setError('auth_required'); return; }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json() as FamilyLink[];
       setPendingLinks(data);
     } catch {
