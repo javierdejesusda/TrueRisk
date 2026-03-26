@@ -39,6 +39,8 @@ export function AddressSearch() {
           setError(t('errorNotFound'));
         } else if (err.message.includes('429')) {
           setError(t('errorRateLimit'));
+        } else if (err.message.includes('504')) {
+          setError(t('errorTimeout'));
         } else if (err.message.includes('502')) {
           setError(t('errorServiceUnavailable'));
         } else {

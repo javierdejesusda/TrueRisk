@@ -759,6 +759,7 @@
     "errorNotFound": "Could not find the address. Try a more complete address.",
     "errorServer": "Server error. Please try again later.",
     "errorRateLimit": "Too many requests. Please wait a moment and try again.",
+    "errorTimeout": "The geocoding service timed out. Please try again.",
     "errorServiceUnavailable": "Risk analysis service temporarily unavailable. Please try again shortly.",
     "feature1Title": "ECM/599/2025 Compliance",
     "feature1Desc": "Climate risk data compliant with Spain's new property valuation regulation",

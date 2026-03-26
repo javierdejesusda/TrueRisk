@@ -44,8 +44,13 @@ async def get_drought_overview(db: AsyncSession, province_code: str) -> dict:
     data_available = False
     if latest and latest.features_snapshot:
         features = latest.features_snapshot
-        spei_1m = features.get("spei_1m", 0.0)
-        spei_3m = features.get("spei_3m", 0.0)
+        drought_features = features.get("drought", {})
+        if isinstance(drought_features, dict) and ("spei_1m" in drought_features or "spei_3m" in drought_features):
+            spei_1m = drought_features.get("spei_1m", 0.0) or 0.0
+            spei_3m = drought_features.get("spei_3m", 0.0) or 0.0
+        else:
+            spei_1m = features.get("spei_1m", 0.0) or 0.0
+            spei_3m = features.get("spei_3m", 0.0) or 0.0
         drought_score = latest.drought_score
         data_available = True
 

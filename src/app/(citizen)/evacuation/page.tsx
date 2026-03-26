@@ -109,7 +109,7 @@ export default function EvacuationPage() {
   const { routes, isLoading, error } = useEvacuationRoutes(
     geo.latitude,
     geo.longitude,
-    provinceCode,
+    null,
     typeParam,
     10,
   );

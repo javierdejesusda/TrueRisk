@@ -303,21 +303,25 @@ async def _cache_lookup(
     db: AsyncSession, addr_hash: str
 ) -> GeocodingResult | None:
     """Return a cached geocoding result if one exists."""
-    result = await db.execute(
-        select(GeocodeCache).where(GeocodeCache.address_hash == addr_hash)
-    )
-    row = result.scalar_one_or_none()
-    if row is None:
+    try:
+        result = await db.execute(
+            select(GeocodeCache).where(GeocodeCache.address_hash == addr_hash)
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        return GeocodingResult(
+            formatted_address=row.formatted_address,
+            latitude=row.latitude,
+            longitude=row.longitude,
+            province_code=row.province_code,
+            municipality_code=row.municipality_code,
+            confidence=row.confidence,
+            source=row.source,
+        )
+    except Exception:
+        logger.warning("Geocode cache lookup failed for hash=%s", addr_hash, exc_info=True)
         return None
-    return GeocodingResult(
-        formatted_address=row.formatted_address,
-        latitude=row.latitude,
-        longitude=row.longitude,
-        province_code=row.province_code,
-        municipality_code=row.municipality_code,
-        confidence=row.confidence,
-        source=row.source,
-    )
 
 
 async def _cache_store(
@@ -327,19 +331,26 @@ async def _cache_store(
     result: GeocodingResult,
 ) -> None:
     """Persist a geocoding result to the cache table."""
-    entry = GeocodeCache(
-        address_hash=addr_hash,
-        address_text=address_text,
-        formatted_address=result.formatted_address,
-        latitude=result.latitude,
-        longitude=result.longitude,
-        province_code=result.province_code,
-        municipality_code=result.municipality_code,
-        confidence=result.confidence,
-        source=result.source,
-    )
-    db.add(entry)
-    await db.commit()
+    try:
+        entry = GeocodeCache(
+            address_hash=addr_hash,
+            address_text=address_text,
+            formatted_address=result.formatted_address,
+            latitude=result.latitude,
+            longitude=result.longitude,
+            province_code=result.province_code,
+            municipality_code=result.municipality_code,
+            confidence=result.confidence,
+            source=result.source,
+        )
+        db.add(entry)
+        await db.commit()
+    except Exception:
+        logger.warning("Geocode cache store failed for hash=%s", addr_hash, exc_info=True)
+        try:
+            await db.rollback()
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------

@@ -64,7 +64,7 @@ export function useEvacuationRoutes(
 
 export function useSafePoints(province?: string | null, enabled: boolean = true) {
   const [points, setPoints] = useState<SafePointData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPoints = useCallback(async () => {

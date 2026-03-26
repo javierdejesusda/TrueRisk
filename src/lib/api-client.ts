@@ -1,5 +1,15 @@
 import { useAppStore } from '@/store/app-store';
 
+let isRedirecting = false;
+
+function handle401() {
+    if (isRedirecting) return;
+    isRedirecting = true;
+    useAppStore.getState().clearAuth();
+    window.location.href = '/login';
+    setTimeout(() => { isRedirecting = false; }, 3000);
+}
+
 export async function apiFetch(
     path: string,
     options: RequestInit = {},
@@ -12,5 +22,9 @@ export async function apiFetch(
     if (!headers.has('Content-Type') && options.body) {
         headers.set('Content-Type', 'application/json');
     }
-    return fetch(path, { ...options, headers });
+    const response = await fetch(path, { ...options, headers });
+    if (response.status === 401) {
+        handle401();
+    }
+    return response;
 }

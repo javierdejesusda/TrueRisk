@@ -55,26 +55,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.userId = user.id;
             }
             if (account && account.provider !== 'credentials') {
-                try {
-                    const res = await fetch(`${BACKEND_URL}/api/v1/auth/oauth`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            provider: account.provider,
-                            provider_account_id: account.providerAccountId,
-                            email: token.email || '',
-                            display_name: token.name,
-                            avatar_url: token.picture,
-                        }),
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        token.backendToken = data.access_token;
-                        token.role = data.user.role;
-                        token.userId = String(data.user.id);
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        const res = await fetch(`${BACKEND_URL}/api/v1/auth/oauth`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                provider: account.provider,
+                                provider_account_id: account.providerAccountId,
+                                email: token.email || '',
+                                display_name: token.name,
+                                avatar_url: token.picture,
+                            }),
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            token.backendToken = data.access_token;
+                            token.role = data.user.role;
+                            token.userId = String(data.user.id);
+                            break;
+                        }
+                    } catch {
+                        if (attempt === 0) {
+                            await new Promise(r => setTimeout(r, 1000));
+                        }
                     }
-                } catch {
-                    // OAuth backend sync failed, continue without backend token
                 }
             }
             return token;
@@ -93,5 +98,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     pages: {
         signIn: '/login',
+    },
+    session: {
+        strategy: 'jwt' as const,
+        maxAge: 30 * 24 * 60 * 60,
     },
 });

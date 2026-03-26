@@ -757,6 +757,7 @@
     "errorNotFound": "No se pudo encontrar la direccion. Intenta con una direccion mas completa.",
     "errorServer": "Error del servidor. Intentalo de nuevo mas tarde.",
     "errorRateLimit": "Demasiadas solicitudes. Espera un momento e intenta de nuevo.",
+    "errorTimeout": "El servicio de geocodificacion tardo demasiado. Intenta de nuevo.",
     "errorServiceUnavailable": "Servicio de analisis de riesgo temporalmente no disponible. Intenta de nuevo en breve.",
     "feature1Title": "Cumplimiento ECM/599/2025",
     "feature1Desc": "Datos de riesgo climatico conformes con la nueva regulacion de valoraciones inmobiliarias",

@@ -34,7 +34,11 @@ async def get_all_drought(db: AsyncSession = Depends(get_db)):
             )
             spei_3m = 0.0
             if latest and latest.features_snapshot:
-                spei_3m = latest.features_snapshot.get("spei_3m", 0.0)
+                drought_features = latest.features_snapshot.get("drought", {})
+                if isinstance(drought_features, dict) and "spei_3m" in drought_features:
+                    spei_3m = drought_features.get("spei_3m", 0.0) or 0.0
+                else:
+                    spei_3m = latest.features_snapshot.get("spei_3m", 0.0) or 0.0
             classification = classify_drought(spei_3m)
             result.append({
                 "province_code": p.ine_code,

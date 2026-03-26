@@ -57,7 +57,14 @@ export function useCreateReport() {
         headers,
         body: JSON.stringify({ address }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let detail = '';
+        try {
+          const body = await res.json();
+          detail = body.detail || '';
+        } catch { /* ignore parse errors */ }
+        throw new Error(`HTTP ${res.status}${detail ? `: ${detail}` : ''}`);
+      }
       const data = await res.json() as PropertyReportResponse;
       return data.report_id;
     } catch (err) {

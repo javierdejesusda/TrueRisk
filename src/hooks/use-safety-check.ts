@@ -226,9 +226,12 @@ export function useSafetyCheck() {
   // Initial fetch — wait for auth to resolve before deciding state
   useEffect(() => {
     if (!isAuthResolved) return; // Auth still loading, wait
+    // If session is authenticated but token hasn't hydrated to Zustand yet, wait
+    if (sessionStatus === 'authenticated' && !token) return;
     if (!token) {
       // Auth resolved but no token — user is genuinely not logged in
       setError('auth_required');
+      setIsLoading(false);
       return;
     }
     // Token is available — clear any stale error and fetch data
@@ -236,7 +239,7 @@ export function useSafetyCheck() {
     getFamilyStatus();
     fetchCheckIns();
     fetchPendingLinks();
-  }, [token, isAuthResolved, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
+  }, [token, isAuthResolved, sessionStatus, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
 
   // Auto-refresh family status every 30 seconds
   useEffect(() => {

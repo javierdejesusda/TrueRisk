@@ -6,6 +6,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -80,6 +81,12 @@ async def create_report(
     # 1. Geocode the address
     try:
         geo = await geocode_address(body.address, db)
+    except httpx.TimeoutException:
+        logger.warning("Geocoding timeout for address=%s", body.address)
+        raise HTTPException(
+            status_code=504,
+            detail="Geocoding service timed out. Please try again.",
+        )
     except Exception:
         logger.exception("Geocoding failed for address=%s", body.address)
         raise HTTPException(

@@ -47,14 +47,21 @@ export function useAuth() {
         fetch('/api/account/me', {
             headers: { Authorization: `Bearer ${s.backendToken}` },
         })
-            .then((res) => (res.ok ? res.json() : null))
+            .then((res) => {
+                if (res.status === 401) {
+                    setBackendToken(null);
+                    setAuthUser(null);
+                    return null;
+                }
+                return res.ok ? res.json() : null;
+            })
             .then((data: Record<string, unknown> | null) => {
                 if (data?.province_code) {
                     useAppStore.getState().setProvinceCode(data.province_code as string);
                 }
             })
             .catch(() => {});
-    }, [status, session]);
+    }, [status, session, setBackendToken, setAuthUser]);
 
     const ext = session as ExtendedSession | null;
 
