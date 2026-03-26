@@ -1614,12 +1614,20 @@ SAFE_POINTS: list[dict] = [
 
 
 async def seed_safe_points() -> None:
-    """Insert safe points if table is empty."""
+    """Insert safe points, adding any missing provinces."""
     async with async_session() as session:
-        result = await session.execute(select(SafePoint).limit(1))
-        if result.scalars().first() is not None:
-            return  # already seeded
+        # Find which provinces already have safe points
+        result = await session.execute(
+            select(SafePoint.province_code).distinct()
+        )
+        existing_provinces = {row[0] for row in result.all()}
 
+        # Add safe points for any province not yet in the database
+        added = 0
         for sp_data in SAFE_POINTS:
-            session.add(SafePoint(**sp_data, is_active=True))
-        await session.commit()
+            if sp_data["province_code"] not in existing_provinces:
+                session.add(SafePoint(**sp_data, is_active=True))
+                added += 1
+
+        if added > 0:
+            await session.commit()

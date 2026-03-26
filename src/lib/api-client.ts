@@ -23,7 +23,9 @@ export async function apiFetch(
         headers.set('Content-Type', 'application/json');
     }
     const response = await fetch(path, { ...options, headers });
-    if (response.status === 401) {
+    // Only redirect on 401 if we actually sent a token (meaning it's expired/invalid).
+    // A 401 without a token just means auth hasn't hydrated yet — not an error.
+    if (response.status === 401 && token) {
         handle401();
     }
     return response;

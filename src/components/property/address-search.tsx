@@ -41,13 +41,13 @@ export function AddressSearch() {
           setError(t('errorRateLimit'));
         } else if (err.message.includes('504')) {
           setError(t('errorTimeout'));
-        } else if (err.message.includes('502')) {
+        } else if (err.message.includes('502') || err.message.includes('500')) {
           setError(t('errorServiceUnavailable'));
         } else {
-          setError(t('errorServer'));
+          setError(t('errorServiceUnavailable'));
         }
       } else {
-        setError(t('errorServer'));
+        setError(t('errorServiceUnavailable'));
       }
     }
   };
