@@ -33,10 +33,10 @@ async def create_report(
     user_id = user.id if user else None
     try:
         report = await community_service.create_report(db, body, user_id=user_id)
-    except Exception:
+    except Exception as exc:
         await db.rollback()
         logger.exception("Failed to create community report")
-        raise HTTPException(status_code=500, detail="Failed to create report")
+        raise HTTPException(status_code=500, detail=f"Failed to create report: {exc}")
     return report
 
 
