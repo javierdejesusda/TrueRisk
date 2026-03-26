@@ -169,8 +169,8 @@ async def get_personalized_checklist(
     if user is None:
         # Return generic checklist without personalization for anonymous users
         use_es = locale == "es"
-        categories: dict[str, list[ChecklistItem]] = {}
-        total = 0
+        anon_categories: dict[str, list[ChecklistItem]] = {}
+        anon_total = 0
         for cat, items in CHECKLIST_CATALOG.items():
             cat_items = []
             for item_def in items:
@@ -183,9 +183,9 @@ async def get_personalized_checklist(
                     completed_at=None,
                     priority=item_def.get("priority", "normal"),
                 ))
-                total += 1
-            categories[cat] = cat_items
-        return ChecklistResponse(categories=categories, total_items=total, completed_items=0)
+                anon_total += 1
+            anon_categories[cat] = cat_items
+        return ChecklistResponse(categories=anon_categories, total_items=anon_total, completed_items=0)
 
     province = await db.get(Province, user.province_code) if user.province_code else None
     catalog = _build_personalized_checklist(user, province)
