@@ -118,7 +118,7 @@ def _population_modifier(population: int | None, area_km2: float | None, hazard:
 
 def _land_use_modifier(land_use: str | None, hazard: str) -> float:
     """Land use type risk modifier."""
-    if not land_use:
+    if not isinstance(land_use, str):
         return 1.0
     if hazard == "wildfire" and land_use == "forest":
         return 1.3
@@ -131,7 +131,7 @@ def _land_use_modifier(land_use: str | None, hazard: str) -> float:
 
 def _river_proximity_modifier(distance_km: float | None, hazard: str) -> float:
     """River proximity risk modifier for flood hazards."""
-    if hazard != "flood" or distance_km is None:
+    if hazard != "flood" or not isinstance(distance_km, (int, float)):
         return 1.0
     if distance_km < 1:
         return 1.4
@@ -142,7 +142,7 @@ def _river_proximity_modifier(distance_km: float | None, hazard: str) -> float:
 
 def _elderly_modifier(elderly_pct: float | None, hazard: str) -> float:
     """Elderly population risk modifier."""
-    if elderly_pct is None:
+    if not isinstance(elderly_pct, (int, float)):
         return 1.0
     if hazard in ("heatwave", "coldwave") and elderly_pct > 25:
         return 1.2

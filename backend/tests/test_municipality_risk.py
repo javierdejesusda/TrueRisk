@@ -207,6 +207,9 @@ def _make_municipality(
     area_km2=604.0,
     elevation_m=650.0,
     is_coastal=False,
+    land_use_type=None,
+    distance_river_km=None,
+    elderly_pct=None,
 ):
     """Create a mock Municipality object."""
     m = MagicMock()
@@ -219,6 +222,9 @@ def _make_municipality(
     m.area_km2 = area_km2
     m.elevation_m = elevation_m
     m.is_coastal = is_coastal
+    m.land_use_type = land_use_type
+    m.distance_river_km = distance_river_km
+    m.elderly_pct = elderly_pct
     return m
 
 
