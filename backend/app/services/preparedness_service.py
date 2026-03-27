@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
+from app.utils.time import utcnow
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -114,10 +115,6 @@ PROFILE_CONDITIONAL_ITEMS: list[dict] = [
 
 HIGH_HAZARD_THRESHOLD = 0.5
 
-
-def _naive_utcnow() -> datetime:
-    """Return the current UTC time as a naive datetime (no tzinfo)."""    
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _build_personalized_checklist(
@@ -244,7 +241,7 @@ async def toggle_item(
     )
     item = result.scalar_one_or_none()
 
-    now = _naive_utcnow()
+    now = utcnow()
     if item is None:
         item = PreparednessItem(
             user_id=user_id,
@@ -401,7 +398,7 @@ async def get_score_history(
     db: AsyncSession, user_id: int, days: int = 30
 ) -> list[PreparednessHistoryEntry]:
     """Return score snapshots for the last N days."""
-    cutoff = _naive_utcnow() - timedelta(days=days)
+    cutoff = utcnow() - timedelta(days=days)
     result = await db.execute(
         select(PreparednessSnapshot)
         .where(

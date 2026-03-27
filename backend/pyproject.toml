@@ -36,6 +36,7 @@ dependencies = [
     "weasyprint>=63",
     "shapely>=2.0",
     "pyproj>=3.6",
+    "python-json-logger>=3.0",
 ]
 
 [project.optional-dependencies]

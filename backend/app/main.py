@@ -1,8 +1,10 @@
+import logging
 import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pythonjsonlogger.json import JsonFormatter
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -22,6 +24,13 @@ from app.api import evacuation as evacuation_api
 from app.api import insurance as insurance_api
 from app.api.municipality import router as municipality_router
 from app.api.climate import router as climate_router
+
+handler = logging.StreamHandler()
+handler.setFormatter(JsonFormatter(
+    fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
+    rename_fields={"asctime": "timestamp", "levelname": "level"},
+))
+logging.basicConfig(handlers=[handler], level=logging.INFO, force=True)
 
 _start_time = time.time()
 
@@ -148,8 +157,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.backend_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 )
 
 app.include_router(provinces.router, prefix="/api/v1/provinces", tags=["provinces"])

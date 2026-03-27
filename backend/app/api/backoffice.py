@@ -6,11 +6,12 @@ from datetime import timedelta
 
 from app.utils.time import utcnow
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
+from app.models.user import User
 from app.models.alert import Alert
 from app.models.province import Province
 from app.models.risk_score import RiskScore
@@ -23,9 +24,12 @@ router = APIRouter()
 
 @router.get("/stats")
 async def stats(
+    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Dashboard statistics for the backoffice."""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     province_count = await db.scalar(select(func.count()).select_from(Province))
     active_alerts = await db.scalar(
         select(func.count()).select_from(Alert).where(Alert.is_active.is_(True))
@@ -62,9 +66,12 @@ async def list_weather_records(
     days: int = Query(default=7, ge=1, le=365),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
+    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Paginated weather records with optional province and date filters."""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     cutoff = utcnow() - timedelta(days=days)
 
     stmt = (
@@ -86,6 +93,8 @@ async def list_weather_records(
 
 
 @router.get("/data-health")
-async def get_data_health():
+async def get_data_health(user: User = Depends(get_current_user)):
     """Return current health status for all tracked external data sources."""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     return health_tracker.get_all_statuses()

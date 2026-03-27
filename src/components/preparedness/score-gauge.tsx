@@ -25,7 +25,8 @@ function getScoreLabel(score: number): string {
   return 'Excellent';
 }
 
-export function ScoreGauge({ score, isLoading, label, size = 'lg' }: ScoreGaugeProps) {
+export function ScoreGauge({ score: rawScore, isLoading, label, size = 'lg' }: ScoreGaugeProps) {
+  const score = Math.min(rawScore, 100);
   const [animatedScore, setAnimatedScore] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -72,7 +73,7 @@ export function ScoreGauge({ score, isLoading, label, size = 'lg' }: ScoreGaugeP
   const centerY = isSmall ? 50 : 70;
 
   const circumference = Math.PI * radius;
-  const fillPercent = Math.min(score / 100, 1);
+  const fillPercent = score / 100;
   const dashOffset = circumference * (1 - fillPercent);
   const color = getScoreColor(score);
   const scoreLabel = getScoreLabel(score);

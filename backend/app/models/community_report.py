@@ -31,6 +31,7 @@ class CommunityReport(Base):
     )
     verified_count: Mapped[int] = mapped_column(Integer, default=0)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
 
 
 class ReportVerification(Base):

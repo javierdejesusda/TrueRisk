@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from datetime import timedelta
 
 from app.utils.time import utcnow
@@ -14,33 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.data.province_data import PROVINCES
 from app.models.user import User
+from app.services.province_lookup_service import find_province, haversine
 
 router = APIRouter()
 
-# ---------------------------------------------------------------------------
-# Province lookup by nearest centroid (Haversine approximation)
-# ---------------------------------------------------------------------------
-
-def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Return great-circle distance in kilometres between two points."""
-    r = 6_371.0
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
-    return 2 * r * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-
-def find_nearest_province(lat: float, lon: float) -> str:
-    """Return the INE 2-digit province code whose centroid is closest to (lat, lon)."""
-    best_code = "28"  # Madrid as fallback
-    best_dist = float("inf")
-    for code, data in PROVINCES.items():
-        dist = _haversine(lat, lon, data["latitude"], data["longitude"])
-        if dist < best_dist:
-            best_dist = dist
-            best_code = code
-    return best_code
+# Backward-compatible aliases for existing importers
+find_nearest_province = find_province
+_haversine = haversine
 
 
 # ---------------------------------------------------------------------------
@@ -70,13 +49,11 @@ async def update_location(
     """
     Update the authenticated user's last known GPS location.
 
-    Determines which Spanish province the coordinates belong to (nearest-centroid
-    approximation) and returns that province code together with the distance to
-    the centroid.  The user's ``last_latitude``, ``last_longitude`` and
-    ``last_location_at`` fields are persisted so that alert matching can use the
-    physical location rather than the registered home province.
+    Determines which Spanish province the coordinates belong to using
+    point-in-polygon against real province boundaries, and returns that
+    province code together with the distance to the province centroid.
     """
-    province_code = find_nearest_province(body.lat, body.lon)
+    province_code = find_province(body.lat, body.lon)
     province_data = PROVINCES[province_code]
     distance_km = _haversine(
         body.lat, body.lon, province_data["latitude"], province_data["longitude"]
@@ -109,7 +86,7 @@ async def current_province(
         and user.last_location_at is not None
         and user.last_location_at >= one_hour_ago
     ):
-        gps_province = find_nearest_province(user.last_latitude, user.last_longitude)
+        gps_province = find_province(user.last_latitude, user.last_longitude)
         return {
             "province_code": gps_province,
             "source": "gps",

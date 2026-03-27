@@ -181,7 +181,7 @@ export function usePreparedness() {
           return { ...cat, completed_items: completedCount, score: catItems.length > 0 ? (completedCount / catItems.length) * 100 : 0 };
         });
         const weights: Record<string, number> = { kit: 0.25, plan: 0.25, alerts: 0.20, community: 0.15, knowledge: 0.15 };
-        const newTotal = newCategories.reduce((sum, c) => sum + (c.score * (weights[c.category] ?? 0)), 0);
+        const newTotal = Math.min(newCategories.reduce((sum, c) => sum + (c.score * (weights[c.category] ?? 0)), 0), 100);
         return { ...prevScore, categories: newCategories, total_score: Math.round(newTotal * 10) / 10 };
       });
 

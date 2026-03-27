@@ -24,7 +24,7 @@ export function isInSpain(lat: number, lng: number): boolean {
 }
 
 // Minimum distance (in degrees) before we consider the position "changed enough" to sync.
-const POSITION_CHANGE_THRESHOLD_DEG = 0.01; // ~1 km
+const POSITION_CHANGE_THRESHOLD_DEG = 0.002; // ~200 m
 
 // How often (ms) to re-sync position to the backend even if position did not change.
 const SYNC_INTERVAL_MS = 5 * 60 * 1_000; // 5 minutes
@@ -43,7 +43,7 @@ function degreeDiff(a: number, b: number): number {
  *
  * Sync rules:
  *  - On first position fix, always sync.
- *  - After that, sync if position moved more than ~1 km OR 5 minutes have elapsed.
+ *  - After that, sync if position moved more than ~200 m OR 5 minutes have elapsed.
  */
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
@@ -123,7 +123,7 @@ export function useGeolocation() {
       (err) => {
         setState({ latitude: null, longitude: null, isLoading: false, error: err.message });
       },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
     );
   }, [maybeSync]);
 
@@ -143,7 +143,7 @@ export function useGeolocation() {
       (err) => {
         setState({ latitude: null, longitude: null, isLoading: false, error: err.message });
       },
-      { enableHighAccuracy: false, timeout: 8_000, maximumAge: 300_000 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
     );
 
     return () => {
