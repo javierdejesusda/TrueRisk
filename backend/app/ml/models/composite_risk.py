@@ -8,6 +8,17 @@ higher than one under multiple moderate threats.
 
 from __future__ import annotations
 
+import math
+
+
+def _clamp(v: float) -> float:
+    """Clamp a hazard score to [0, 100], treating NaN/Inf as 0/100."""
+    if math.isnan(v):
+        return 0.0
+    if math.isinf(v):
+        return 100.0
+    return max(0.0, min(100.0, v))
+
 
 def score_to_severity(score: float) -> str:
     """Map a 0--100 risk score to a human-readable severity label."""
@@ -43,6 +54,9 @@ def compute_composite_risk(
 
     Returns a dict suitable for persisting as a :class:`RiskScore` row.
     """
+    flood, wildfire, drought, heatwave = _clamp(flood), _clamp(wildfire), _clamp(drought), _clamp(heatwave)
+    seismic, coldwave, windstorm, dana = _clamp(seismic), _clamp(coldwave), _clamp(windstorm), _clamp(dana)
+
     scores = {
         "flood": flood,
         "wildfire": wildfire,
