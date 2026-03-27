@@ -24,14 +24,14 @@ export function PreparednessWidget() {
     );
   }
 
-  const totalScore = score?.total_score ?? 0;
+  const totalScore = Math.min(score?.total_score ?? 0, 100);
   const nextActions = score?.next_actions ?? [];
   const color = getScoreColor(totalScore);
 
   const radius = 28;
   const strokeWidth = 5;
   const circumference = Math.PI * radius;
-  const fillPercent = Math.min(totalScore / 100, 1);
+  const fillPercent = totalScore / 100;
   const dashOffset = circumference * (1 - fillPercent);
 
   return (

@@ -239,7 +239,7 @@ async def toggle_item(
     )
     item = result.scalar_one_or_none()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if item is None:
         item = PreparednessItem(
             user_id=user_id,
@@ -262,6 +262,13 @@ async def toggle_item(
         await compute_score(db, user_id)
     except Exception:
         logger.exception("Failed to recompute preparedness score after toggle")
+
+    if completed:
+        try:
+            from app.services.gamification_service import award_points
+            await award_points(db, user_id, "checklist_item")
+        except Exception:
+            logger.exception("Failed to award gamification points for checklist item")
 
     return completed
 
@@ -293,9 +300,9 @@ async def compute_score(db: AsyncSession, user_id: int) -> float:
         done = sum(1 for item in items if item["key"] in all_completed)
         cat_scores[cat] = (done / total) * 100.0
 
-    total_score = sum(
-        cat_scores.get(cat, 0.0) * weight
-        for cat, weight in CATEGORY_WEIGHTS.items()
+    total_score = min(
+        sum(cat_scores.get(cat, 0.0) * weight for cat, weight in CATEGORY_WEIGHTS.items()),
+        100.0,
     )
 
     try:
@@ -363,6 +370,12 @@ async def get_score(
     next_actions.sort(key=lambda x: (0 if x.priority == "high" else 1))
     next_actions = next_actions[:3]
 
+    total_score = min(
+        sum(cp.score * CATEGORY_WEIGHTS.get(cp.category, 0) for cp in categories),
+        100.0,
+    )
+    total_score = round(total_score, 1)
+
     last_snap = await db.execute(
         select(PreparednessSnapshot)
         .where(PreparednessSnapshot.user_id == user.id)
@@ -372,7 +385,7 @@ async def get_score(
     snap = last_snap.scalar_one_or_none()
 
     return PreparednessScoreResponse(
-        total_score=user.preparedness_score,
+        total_score=total_score,
         categories=categories,
         next_actions=next_actions,
         last_updated=snap.computed_at if snap else None,
@@ -383,7 +396,7 @@ async def get_score_history(
     db: AsyncSession, user_id: int, days: int = 30
 ) -> list[PreparednessHistoryEntry]:
     """Return score snapshots for the last N days."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     result = await db.execute(
         select(PreparednessSnapshot)
         .where(
