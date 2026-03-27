@@ -65,7 +65,7 @@ export function ToastContainer() {
   }, []);
 
   return (
-    <div className="pointer-events-none fixed top-4 right-4 z-50 flex flex-col gap-2 w-80">
+    <div role="status" aria-live="polite" className="pointer-events-none fixed top-4 right-4 z-50 flex flex-col gap-2 w-80">
       <AnimatePresence mode="popLayout">
         {items.map((item) => {
           const colors = severityColors[item.severity] ?? severityColors[1];

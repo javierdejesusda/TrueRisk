@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -9,7 +9,9 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className = '', id, ...props }, ref) => {
-    const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    const autoId = useId();
+    const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : autoId);
+    const errorId = `${inputId}-error`;
 
     return (
       <div className="flex flex-col gap-1.5">
@@ -24,6 +26,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={[
             'w-full rounded-lg border bg-bg-secondary px-3 py-2 text-sm text-text-primary',
             'placeholder:text-text-muted',
@@ -38,7 +42,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p className="text-xs text-accent-red">{error}</p>
+          <p id={errorId} role="alert" className="text-xs text-accent-red">{error}</p>
         )}
       </div>
     );

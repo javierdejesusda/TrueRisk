@@ -40,7 +40,7 @@ export default function MapHomePage() {
       />
 
       {/* Left panels — stacked vertically with constrained height */}
-      <div className="absolute top-16 left-4 z-40 flex flex-col gap-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1 scrollbar-hide w-[240px] lg:w-[280px]">
+      <div className="absolute top-16 left-2 sm:left-4 z-40 flex flex-col gap-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1 scrollbar-hide w-[180px] sm:w-[220px] lg:w-[280px]">
         {panelsVisible.risk && <RiskPanel />}
         {panelsVisible.weather && <WeatherPanel />}
         {panelsVisible.alerts && <AlertsPanel />}

@@ -67,7 +67,7 @@ export function NavPill() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 glass-heavy rounded-2xl h-12 px-5 max-w-3xl w-auto"
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 glass-heavy rounded-2xl h-12 px-3 sm:px-5 max-w-[calc(100vw-2rem)] w-auto"
     >
       {/* Logo */}
       <Link
@@ -114,6 +114,9 @@ export function NavPill() {
       <div className="relative shrink-0" ref={dropdownRef}>
         <button
           type="button"
+          aria-label="User menu"
+          aria-haspopup="true"
+          aria-expanded={dropdownOpen}
           onClick={() => setDropdownOpen((prev) => !prev)}
           className={[
             'flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200 cursor-pointer overflow-hidden',
@@ -126,7 +129,7 @@ export function NavPill() {
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={user.image}
-              alt=""
+              alt={user?.name || ''}
               className="w-full h-full rounded-full object-cover"
             />
           ) : (

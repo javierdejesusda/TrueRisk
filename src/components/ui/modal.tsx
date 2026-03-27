@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface ModalProps {
@@ -11,6 +11,8 @@ export interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const titleId = useId();
+
   /* Lock body scroll while modal is open */
   useEffect(() => {
     if (isOpen) {
@@ -44,6 +46,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            aria-hidden="true"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,7 +57,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label={title}
+            aria-labelledby={title ? titleId : undefined}
             className="relative z-10 w-full max-w-lg glass-heavy rounded-2xl p-6 shadow-xl"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -63,7 +66,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           >
             {title && (
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-text-primary">
+                <h2 id={titleId} className="text-lg font-semibold text-text-primary">
                   {title}
                 </h2>
                 <button

@@ -249,7 +249,7 @@ export function ProfileForm() {
           name="residenceType"
           control={control}
           render={({ field }) => (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label={t('residenceTitle')}>
               {RESIDENCE_TYPES.map((type) => {
                 const isActive = field.value === type;
                 return (
@@ -426,7 +426,7 @@ export function ProfileForm() {
               name="mobilityLevel"
               control={control}
               render={({ field }) => (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="radiogroup" aria-label={t('mobilityLevel')}>
                   {MOBILITY_LEVELS.map((level) => {
                     const isActive = field.value === level;
                     return (
@@ -502,7 +502,7 @@ export function ProfileForm() {
               name="ageRange"
               control={control}
               render={({ field }) => (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label={t('ageRange')}>
                   {AGE_RANGES.map((range) => {
                     const isActive = field.value === range;
                     return (
@@ -635,7 +635,7 @@ export function ProfileForm() {
               name="alertDelivery"
               control={control}
               render={({ field }) => (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="radiogroup" aria-label={t('alertDelivery')}>
                   {ALERT_DELIVERY_OPTIONS.map((option) => {
                     const isActive = field.value === option;
                     return (
