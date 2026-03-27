@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 from typing import Any
 
 from sqlalchemy import func, select

@@ -1,7 +1,7 @@
 """6-hour data pipeline: fetch weather -> compute risk -> generate alerts."""
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from app.utils.time import utcnow
 
@@ -333,7 +333,7 @@ async def _aggregate_daily_summaries(db: AsyncSession):
         if province.ine_code in existing_codes:
             continue
 
-        day_start = datetime.combine(yesterday, datetime.min.time()).replace(tzinfo=timezone.utc)
+        day_start = datetime.combine(yesterday, datetime.min.time())
         day_end = day_start + timedelta(days=1)
         records = await db.execute(
             select(WeatherRecord).where(

@@ -1,7 +1,9 @@
 """Insurance risk report service -- structured risk assessment for B2B partners."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
