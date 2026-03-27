@@ -52,7 +52,7 @@ def _is_hazard_snoozed(prefs: AlertPreference, hazard_type: str) -> bool:
     if not snooze_until:
         return False
     try:
-        until = datetime.fromisoformat(snooze_until)
+        until = datetime.fromisoformat(snooze_until).replace(tzinfo=None)
         return utcnow() < until
     except (ValueError, TypeError):
         return False
