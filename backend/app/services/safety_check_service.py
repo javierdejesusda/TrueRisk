@@ -24,7 +24,7 @@ async def check_in(
     if user is None:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="User not found")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     expires_at = now + timedelta(hours=12)
 
     record = SafetyCheckIn(
@@ -87,7 +87,7 @@ async def get_family_status(db: AsyncSession, user_id: int) -> list[dict]:
     )
     links = list(links_result.scalars().all())
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     statuses = []
 
     for link in links:
