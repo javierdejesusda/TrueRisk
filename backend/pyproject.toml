@@ -27,6 +27,7 @@ dependencies = [
     "python-jose[cryptography]>=3.3",
     "passlib[bcrypt]>=1.7",
     "slowapi>=0.1.9",
+    "tenacity>=8.2",
     "openai>=1.68",
     "twilio>=9.0",
     "pytorch-forecasting>=1.1",

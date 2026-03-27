@@ -11,10 +11,10 @@ from typing import Any
 import httpx
 
 from app.config import settings
+from app.data._http import resilient_get, RetryableHTTPStatusError
 
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
 _cache: list[dict[str, Any]] = []
 _cache_ts: float = 0.0
@@ -37,9 +37,17 @@ async def fetch_active_fires(
         return []
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(f"{_BASE_URL}/{key}/{source}/world/{days}")
-            resp.raise_for_status()
+        resp = await resilient_get(
+            f"{_BASE_URL}/{key}/{source}/world/{days}",
+            source="nasa_firms",
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+
+        first_line = resp.text.split("\n", 1)[0].lower()
+        if "latitude" not in first_line:
+            logger.warning("NASA FIRMS response missing expected CSV headers")
+            return _cache or []
 
         fires = []
         reader = csv.DictReader(io.StringIO(resp.text))
@@ -68,6 +76,13 @@ async def fetch_active_fires(
         _cache = fires
         _cache_ts = now
         return fires
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch NASA FIRMS data")
         return _cache or []

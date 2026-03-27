@@ -14,9 +14,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 60.0
 _cache: dict[str, Any] = {}
 _cache_ts: float = 0.0
 _CACHE_TTL = 43200  # 12 hours — EFAS updates twice daily
@@ -62,19 +63,18 @@ async def fetch_efas_flood_indicators() -> dict[str, dict[str, float]]:
     result: dict[str, dict[str, float]] = {}
 
     try:
-        # Use Open-Meteo flood API which wraps GloFAS/EFAS data
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            # Batch provinces (Open-Meteo supports multi-location)
-            codes = list(_PROVINCE_CENTROIDS.keys())
-            batch_size = 50
+        codes = list(_PROVINCE_CENTROIDS.keys())
+        batch_size = 50
 
-            for start in range(0, len(codes), batch_size):
-                batch_codes = codes[start:start + batch_size]
-                lats = ",".join(str(_PROVINCE_CENTROIDS[c][0]) for c in batch_codes)
-                lons = ",".join(str(_PROVINCE_CENTROIDS[c][1]) for c in batch_codes)
+        for start in range(0, len(codes), batch_size):
+            batch_codes = codes[start:start + batch_size]
+            lats = ",".join(str(_PROVINCE_CENTROIDS[c][0]) for c in batch_codes)
+            lons = ",".join(str(_PROVINCE_CENTROIDS[c][1]) for c in batch_codes)
 
-                resp = await client.get(
+            try:
+                resp = await resilient_get(
                     "https://flood-api.open-meteo.com/v1/flood",
+                    source="copernicus_efas",
                     params={
                         "latitude": lats,
                         "longitude": lons,
@@ -82,50 +82,52 @@ async def fetch_efas_flood_indicators() -> dict[str, dict[str, float]]:
                         "forecast_days": 7,
                     },
                 )
-                if resp.status_code != 200:
-                    logger.warning("EFAS/GloFAS API returned %d", resp.status_code)
-                    continue
+                resp.raise_for_status()
+            except (
+                httpx.HTTPStatusError,
+                RetryableHTTPStatusError,
+                httpx.TransportError,
+                httpx.TimeoutException,
+            ):
+                logger.warning("EFAS/GloFAS API batch failed, skipping batch")
+                continue
 
-                data = resp.json()
-                # Multi-location returns a list
-                items = data if isinstance(data, list) else [data]
+            data = resp.json()
+            items = data if isinstance(data, list) else [data]
 
-                for i, code in enumerate(batch_codes):
-                    if i >= len(items):
-                        break
-                    item = items[i]
-                    daily = item.get("daily", {})
-                    discharges = daily.get("river_discharge", [])
+            for i, code in enumerate(batch_codes):
+                if i >= len(items):
+                    break
+                item = items[i]
+                daily = item.get("daily", {})
+                discharges = daily.get("river_discharge", [])
 
-                    max_discharge = 0.0
-                    if discharges:
-                        valid = [d for d in discharges if d is not None and d > 0]
-                        if valid:
-                            max_discharge = max(valid)
-                            mean_discharge = sum(valid) / len(valid)
-                            # Estimate flood recurrence from discharge magnitude
-                            # Higher discharge relative to mean = higher recurrence
-                            anomaly = (max_discharge / mean_discharge - 1.0) if mean_discharge > 0 else 0.0
-                            # Map to 0-1 scale (anomaly of 2+ is extreme)
-                            flood_recurrence = min(1.0, anomaly / 2.0)
-                        else:
-                            flood_recurrence = 0.0
-                            anomaly = 0.0
+                max_discharge = 0.0
+                if discharges:
+                    valid = [d for d in discharges if d is not None and d > 0]
+                    if valid:
+                        max_discharge = max(valid)
+                        mean_discharge = sum(valid) / len(valid)
+                        anomaly = (max_discharge / mean_discharge - 1.0) if mean_discharge > 0 else 0.0
+                        flood_recurrence = min(1.0, anomaly / 2.0)
                     else:
                         flood_recurrence = 0.0
                         anomaly = 0.0
+                else:
+                    flood_recurrence = 0.0
+                    anomaly = 0.0
 
-                    result[code] = {
-                        "flood_recurrence": round(flood_recurrence, 3),
-                        "discharge_anomaly": round(anomaly, 3),
-                        "max_discharge_m3s": round(max_discharge, 1) if discharges and valid else 0.0,
-                    }
+                result[code] = {
+                    "flood_recurrence": round(flood_recurrence, 3),
+                    "discharge_anomaly": round(anomaly, 3),
+                    "max_discharge_m3s": round(max_discharge, 1) if discharges and valid else 0.0,
+                }
 
         if result:
             _cache[cache_key] = result
             _cache_ts = now
 
-    except Exception:
+    except (ValueError, KeyError):
         logger.debug("EFAS/GloFAS fetch failed, returning empty")
 
     return result

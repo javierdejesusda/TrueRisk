@@ -8,9 +8,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://api.open-meteo.com/v1/forecast"
 _FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood"
 _ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -36,19 +37,19 @@ _DAILY_PARAMS = (
 async def fetch_current(lat: float, lon: float) -> dict[str, Any]:
     """Fetch current weather conditions for a single location."""
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                _BASE_URL,
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "current": _CURRENT_PARAMS,
-                    "hourly": "soil_moisture_0_to_7cm",
-                    "forecast_days": 1,
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            _BASE_URL,
+            source="open_meteo",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "current": _CURRENT_PARAMS,
+                "hourly": "soil_moisture_0_to_7cm",
+                "forecast_days": 1,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         current = data.get("current", {})
         hourly = data.get("hourly", {})
@@ -68,7 +69,14 @@ async def fetch_current(lat: float, lon: float) -> dict[str, Any]:
             "soil_moisture": soil_moisture,
             "time": current.get("time"),
         }
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch current weather for (%s, %s)", lat, lon)
         return {}
 
@@ -78,19 +86,19 @@ async def fetch_forecast(
 ) -> dict[str, Any]:
     """Fetch hourly + daily forecast for a single location."""
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                _BASE_URL,
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "hourly": _HOURLY_PARAMS,
-                    "daily": _DAILY_PARAMS,
-                    "forecast_days": days,
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            _BASE_URL,
+            source="open_meteo",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": _HOURLY_PARAMS,
+                "daily": _DAILY_PARAMS,
+                "forecast_days": days,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         raw_hourly = data.get("hourly", {})
         raw_daily = data.get("daily", {})
@@ -125,7 +133,14 @@ async def fetch_forecast(
             })
 
         return {"hourly": hourly, "daily": daily}
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch forecast for (%s, %s)", lat, lon)
         return {"hourly": [], "daily": []}
 
@@ -142,46 +157,53 @@ async def fetch_all_provinces(
     batch_size = 50
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            for start in range(0, len(provinces), batch_size):
-                batch = provinces[start : start + batch_size]
-                lats = ",".join(str(p["lat"]) for p in batch)
-                lons = ",".join(str(p["lon"]) for p in batch)
+        for start in range(0, len(provinces), batch_size):
+            batch = provinces[start : start + batch_size]
+            lats = ",".join(str(p["lat"]) for p in batch)
+            lons = ",".join(str(p["lon"]) for p in batch)
 
-                resp = await client.get(
-                    _BASE_URL,
-                    params={
-                        "latitude": lats,
-                        "longitude": lons,
-                        "current": _CURRENT_PARAMS,
-                        "hourly": "soil_moisture_0_to_7cm",
-                        "forecast_days": 1,
-                    },
-                )
-                resp.raise_for_status()
-                data = resp.json()
+            resp = await resilient_get(
+                _BASE_URL,
+                source="open_meteo",
+                params={
+                    "latitude": lats,
+                    "longitude": lons,
+                    "current": _CURRENT_PARAMS,
+                    "hourly": "soil_moisture_0_to_7cm",
+                    "forecast_days": 1,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
 
-                # Single location returns a dict; multiple returns a list
-                items = data if isinstance(data, list) else [data]
-                for province, item in zip(batch, items):
-                    current = item.get("current", {})
-                    hourly = item.get("hourly", {})
-                    soil_values = hourly.get("soil_moisture_0_to_7cm", [])
-                    result[province["code"]] = {
-                        "temperature": current.get("temperature_2m"),
-                        "humidity": current.get("relative_humidity_2m"),
-                        "precipitation": current.get("precipitation", 0.0),
-                        "wind_speed": current.get("wind_speed_10m"),
-                        "wind_direction": current.get("wind_direction_10m"),
-                        "wind_gusts": current.get("wind_gusts_10m"),
-                        "pressure": current.get("surface_pressure"),
-                        "cloud_cover": current.get("cloud_cover"),
-                        "uv_index": current.get("uv_index"),
-                        "dew_point": current.get("dew_point_2m"),
-                        "soil_moisture": soil_values[0] if soil_values else None,
-                        "time": current.get("time"),
-                    }
-    except Exception:
+            # Single location returns a dict; multiple returns a list
+            items = data if isinstance(data, list) else [data]
+            for province, item in zip(batch, items):
+                current = item.get("current", {})
+                hourly = item.get("hourly", {})
+                soil_values = hourly.get("soil_moisture_0_to_7cm", [])
+                result[province["code"]] = {
+                    "temperature": current.get("temperature_2m"),
+                    "humidity": current.get("relative_humidity_2m"),
+                    "precipitation": current.get("precipitation", 0.0),
+                    "wind_speed": current.get("wind_speed_10m"),
+                    "wind_direction": current.get("wind_direction_10m"),
+                    "wind_gusts": current.get("wind_gusts_10m"),
+                    "pressure": current.get("surface_pressure"),
+                    "cloud_cover": current.get("cloud_cover"),
+                    "uv_index": current.get("uv_index"),
+                    "dew_point": current.get("dew_point_2m"),
+                    "soil_moisture": soil_values[0] if soil_values else None,
+                    "time": current.get("time"),
+                }
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch weather for province batch")
 
     return result
@@ -190,18 +212,25 @@ async def fetch_all_provinces(
 async def fetch_flood_forecast(lat: float, lon: float) -> dict[str, Any]:
     """Fetch river-discharge based flood forecast."""
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                _FLOOD_URL,
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "daily": "river_discharge",
-                },
-            )
-            resp.raise_for_status()
-            return resp.json()
-    except Exception:
+        resp = await resilient_get(
+            _FLOOD_URL,
+            source="open_meteo",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "daily": "river_discharge",
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch flood forecast for (%s, %s)", lat, lon)
         return {}
 
@@ -210,48 +239,36 @@ async def fetch_historical(
     lat: float, lon: float, start_date: str, end_date: str
 ) -> dict[str, Any]:
     """Fetch historical daily weather data from Open-Meteo archive with retry."""
-    import asyncio
-
-    max_retries = 5
-    for attempt in range(max_retries):
-        try:
-            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-                resp = await client.get(
-                    _ARCHIVE_URL,
-                    params={
-                        "latitude": lat,
-                        "longitude": lon,
-                        "start_date": start_date,
-                        "end_date": end_date,
-                        "daily": _DAILY_PARAMS,
-                    },
-                )
-                if resp.status_code == 429:
-                    wait = 2 ** attempt * 5  # 5s, 10s, 20s, 40s, 80s
-                    logger.warning(
-                        "Rate limited (429) for (%s, %s), retry %d/%d in %ds",
-                        lat, lon, attempt + 1, max_retries, wait,
-                    )
-                    await asyncio.sleep(wait)
-                    continue
-                resp.raise_for_status()
-                return resp.json()
-        except httpx.HTTPStatusError:
-            if attempt < max_retries - 1:
-                await asyncio.sleep(2 ** attempt * 5)
-                continue
-            logger.exception(
-                "Failed to fetch historical data for (%s, %s) %s..%s after %d retries",
-                lat, lon, start_date, end_date, max_retries,
-            )
-            return {}
-        except Exception:
-            logger.exception(
-                "Failed to fetch historical data for (%s, %s) %s..%s",
-                lat, lon, start_date, end_date,
-            )
-            return {}
-    return {}
+    try:
+        resp = await resilient_get(
+            _ARCHIVE_URL,
+            source="open_meteo",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "start_date": start_date,
+                "end_date": end_date,
+                "daily": _DAILY_PARAMS,
+            },
+            max_retries=5,
+            wait_multiplier=5.0,
+            wait_max=80.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
+        logger.exception(
+            "Failed to fetch historical data for (%s, %s) %s..%s",
+            lat, lon, start_date, end_date,
+        )
+        return {}
 
 
 async def fetch_ensemble_features(lat: float, lon: float) -> dict[str, Any]:
@@ -263,19 +280,19 @@ async def fetch_ensemble_features(lat: float, lon: float) -> dict[str, Any]:
     - Forecast uncertainty (ensemble standard deviation)
     """
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                "https://ensemble-api.open-meteo.com/v1/ensemble",
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "hourly": "precipitation,temperature_2m",
-                    "forecast_days": 3,
-                    "models": "icon_seamless",
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            "https://ensemble-api.open-meteo.com/v1/ensemble",
+            source="open_meteo",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": "precipitation,temperature_2m",
+                "forecast_days": 3,
+                "models": "icon_seamless",
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         hourly = data.get("hourly", {})
         precip_members = hourly.get("precipitation", [])
@@ -311,7 +328,14 @@ async def fetch_ensemble_features(lat: float, lon: float) -> dict[str, Any]:
             "temp_forecast_mean": round(temp_mean, 1),
             "forecast_uncertainty": round(temp_std, 2),
         }
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.debug("Ensemble features fetch failed for (%s, %s)", lat, lon)
         return {
             "precip_prob_50mm_72h": 0.0,

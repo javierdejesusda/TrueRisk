@@ -14,9 +14,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _AEMET_BASE = "https://opendata.aemet.es/opendata/api"
 
 # ---- In-memory cache with 5-minute TTL ----
@@ -158,37 +159,45 @@ async def fetch_alerts(
     all_alerts: list[dict[str, Any]] = []
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            # Step 1 -- metadata request
-            meta_resp = await client.get(
-                f"{_AEMET_BASE}/avisos_cap/ultimoelaborado/area/{area}",
-                headers={"api_key": api_key},
-            )
-            meta_resp.raise_for_status()
-            meta = meta_resp.json()
-            datos_url = meta.get("datos")
-            if not datos_url:
-                logger.warning("AEMET metadata has no datos URL: %s", meta)
-                return []
+        # Step 1 -- metadata request
+        meta_resp = await resilient_get(
+            f"{_AEMET_BASE}/avisos_cap/ultimoelaborado/area/{area}",
+            source="aemet",
+            headers={"api_key": api_key},
+        )
+        meta_resp.raise_for_status()
+        meta = meta_resp.json()
+        datos_url = meta.get("datos")
+        if not datos_url:
+            logger.warning("AEMET metadata has no datos URL: %s", meta)
+            return []
 
-            # Step 2 -- fetch TAR archive
-            tar_resp = await client.get(datos_url)
-            tar_resp.raise_for_status()
-            tar_bytes = tar_resp.content
+        # Step 2 -- fetch TAR archive
+        tar_resp = await resilient_get(datos_url, source="aemet")
+        tar_resp.raise_for_status()
+        tar_bytes = tar_resp.content
 
-            # Step 3 -- extract XML from TAR
-            buf = io.BytesIO(tar_bytes)
-            with tarfile.open(fileobj=buf, mode="r:*") as tf:
-                for member in tf.getmembers():
-                    if not member.isfile():
-                        continue
-                    f = tf.extractfile(member)
-                    if f is None:
-                        continue
-                    xml_text = f.read().decode("utf-8", errors="replace")
-                    all_alerts.extend(parse_cap_xml(xml_text))
+        # Step 3 -- extract XML from TAR
+        buf = io.BytesIO(tar_bytes)
+        with tarfile.open(fileobj=buf, mode="r:*") as tf:
+            for member in tf.getmembers():
+                if not member.isfile():
+                    continue
+                f = tf.extractfile(member)
+                if f is None:
+                    continue
+                xml_text = f.read().decode("utf-8", errors="replace")
+                all_alerts.extend(parse_cap_xml(xml_text))
 
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        tarfile.ReadError,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch AEMET alerts for area=%s", area)
         return _alert_cache.get(cache_key, [])
 
@@ -209,21 +218,28 @@ async def fetch_forecast(
     Returns the parsed JSON forecast or None on failure.
     """
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            meta_resp = await client.get(
-                f"{_AEMET_BASE}/prediccion/especifica/municipio/diaria/{municipality_code}",
-                headers={"api_key": api_key},
-            )
-            meta_resp.raise_for_status()
-            meta = meta_resp.json()
-            datos_url = meta.get("datos")
-            if not datos_url:
-                return None
+        meta_resp = await resilient_get(
+            f"{_AEMET_BASE}/prediccion/especifica/municipio/diaria/{municipality_code}",
+            source="aemet",
+            headers={"api_key": api_key},
+        )
+        meta_resp.raise_for_status()
+        meta = meta_resp.json()
+        datos_url = meta.get("datos")
+        if not datos_url:
+            return None
 
-            data_resp = await client.get(datos_url)
-            data_resp.raise_for_status()
-            return data_resp.json()
-    except Exception:
+        data_resp = await resilient_get(datos_url, source="aemet")
+        data_resp.raise_for_status()
+        return data_resp.json()
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception(
             "Failed to fetch AEMET forecast for municipality %s", municipality_code
         )
@@ -239,22 +255,29 @@ async def fetch_hourly_forecast(
     if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
         return _alert_cache[cache_key]
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            meta = await client.get(
-                f"{_AEMET_BASE}/prediccion/especifica/municipio/horaria/{municipality_code}",
-                headers={"api_key": api_key},
-            )
-            meta.raise_for_status()
-            datos_url = meta.json().get("datos")
-            if not datos_url:
-                return []
-            data_resp = await client.get(datos_url)
-            data_resp.raise_for_status()
-            result = data_resp.json()
+        meta_resp = await resilient_get(
+            f"{_AEMET_BASE}/prediccion/especifica/municipio/horaria/{municipality_code}",
+            source="aemet",
+            headers={"api_key": api_key},
+        )
+        meta_resp.raise_for_status()
+        datos_url = meta_resp.json().get("datos")
+        if not datos_url:
+            return []
+        data_resp = await resilient_get(datos_url, source="aemet")
+        data_resp.raise_for_status()
+        result = data_resp.json()
         _alert_cache[cache_key] = result
         _alert_cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch AEMET hourly for %s", municipality_code)
         return _alert_cache.get(cache_key, [])
 
@@ -266,22 +289,29 @@ async def fetch_wildfire_index(api_key: str) -> dict[str, Any] | None:
     if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
         return _alert_cache[cache_key]
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            meta = await client.get(
-                f"{_AEMET_BASE}/incendios/mapas/nivel/diario",
-                headers={"api_key": api_key},
-            )
-            meta.raise_for_status()
-            datos_url = meta.json().get("datos")
-            if not datos_url:
-                return None
-            data_resp = await client.get(datos_url)
-            data_resp.raise_for_status()
-            result = data_resp.json()
+        meta_resp = await resilient_get(
+            f"{_AEMET_BASE}/incendios/mapas/nivel/diario",
+            source="aemet",
+            headers={"api_key": api_key},
+        )
+        meta_resp.raise_for_status()
+        datos_url = meta_resp.json().get("datos")
+        if not datos_url:
+            return None
+        data_resp = await resilient_get(datos_url, source="aemet")
+        data_resp.raise_for_status()
+        result = data_resp.json()
         _alert_cache[cache_key] = result
         _alert_cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch AEMET wildfire index")
         return _alert_cache.get(cache_key)
 
@@ -293,21 +323,28 @@ async def fetch_weather_stations(api_key: str) -> list[dict[str, Any]]:
     if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
         return _alert_cache[cache_key]
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            meta = await client.get(
-                f"{_AEMET_BASE}/observacion/convencional/todas",
-                headers={"api_key": api_key},
-            )
-            meta.raise_for_status()
-            datos_url = meta.json().get("datos")
-            if not datos_url:
-                return []
-            data_resp = await client.get(datos_url)
-            data_resp.raise_for_status()
-            result = data_resp.json()
+        meta_resp = await resilient_get(
+            f"{_AEMET_BASE}/observacion/convencional/todas",
+            source="aemet",
+            headers={"api_key": api_key},
+        )
+        meta_resp.raise_for_status()
+        datos_url = meta_resp.json().get("datos")
+        if not datos_url:
+            return []
+        data_resp = await resilient_get(datos_url, source="aemet")
+        data_resp.raise_for_status()
+        result = data_resp.json()
         _alert_cache[cache_key] = result
         _alert_cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch AEMET stations")
         return _alert_cache.get(cache_key, [])

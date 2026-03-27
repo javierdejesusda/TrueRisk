@@ -13,6 +13,8 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
 _CACHE: dict[str, tuple[float, list[dict]]] = {}
@@ -52,23 +54,30 @@ async def fetch_recent_quakes(days: int = 90) -> list[dict]:
     start_date = end_date - timedelta(days=days)
 
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(
-                IGN_URL,
-                params={
-                    "fechaDesde": start_date.strftime("%Y-%m-%d"),
-                    "fechaHasta": end_date.strftime("%Y-%m-%d"),
-                    "latMin": "27.0",
-                    "latMax": "44.0",
-                    "lonMin": "-19.0",
-                    "lonMax": "5.0",
-                    "magMin": "1.5",
-                    "formato": "json",
-                },
-            )
-            resp.raise_for_status()
-            raw = resp.json()
-    except Exception:
+        resp = await resilient_get(
+            IGN_URL,
+            source="ign_seismic",
+            params={
+                "fechaDesde": start_date.strftime("%Y-%m-%d"),
+                "fechaHasta": end_date.strftime("%Y-%m-%d"),
+                "latMin": "27.0",
+                "latMax": "44.0",
+                "lonMin": "-19.0",
+                "lonMax": "5.0",
+                "magMin": "1.5",
+                "formato": "json",
+            },
+        )
+        resp.raise_for_status()
+        raw = resp.json()
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.warning("IGN seismic fetch failed, returning empty quake list")
         _CACHE[cache_key] = (now, [])
         return []

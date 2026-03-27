@@ -8,9 +8,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://regional.atmosphere.copernicus.eu/api/v1"
 _cache: dict[str, Any] = {}
 _cache_ts: dict[str, float] = {}
@@ -27,17 +28,22 @@ async def fetch_air_quality_forecast(
         return _cache[cache_key]
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(
-                f"{_BASE_URL}/forecast",
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "variables": "pm25,pm10,o3,no2,co",
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            f"{_BASE_URL}/forecast",
+            source="copernicus_cams",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "variables": "pm25,pm10,o3,no2,co",
+            },
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        if not isinstance(data, dict):
+            logger.warning("CAMS response is not a dict")
+            return _cache.get(cache_key, {})
 
         result = {
             "pm25_forecast": data.get("pm25"),
@@ -49,6 +55,13 @@ async def fetch_air_quality_forecast(
         _cache[cache_key] = result
         _cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch CAMS AQ forecast for (%s, %s)", lat, lon)
         return _cache.get(cache_key, {})

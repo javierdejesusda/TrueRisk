@@ -9,9 +9,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://apidatos.ree.es"
 _cache: dict[str, Any] = {}
 _cache_ts: dict[str, float] = {}
@@ -27,18 +28,19 @@ async def fetch_demand(date: str | None = None) -> dict[str, Any]:
 
     today = date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(
-                f"{_BASE_URL}/en/datos/demanda/evolucion",
-                params={
-                    "start_date": f"{today}T00:00",
-                    "end_date": f"{today}T23:59",
-                    "time_trunc": "hour",
-                },
-                headers={"Accept": "application/json"},
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            f"{_BASE_URL}/en/datos/demanda/evolucion",
+            source="ree_energy",
+            params={
+                "start_date": f"{today}T00:00",
+                "end_date": f"{today}T23:59",
+                "time_trunc": "hour",
+            },
+            headers={"Accept": "application/json"},
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         included = data.get("included", [])
         demand_values = []
@@ -58,7 +60,14 @@ async def fetch_demand(date: str | None = None) -> dict[str, Any]:
         _cache[cache_key] = result
         _cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch REE demand data")
         return _cache.get(cache_key, {})
 
@@ -72,18 +81,19 @@ async def fetch_generation_mix(date: str | None = None) -> dict[str, Any]:
 
     today = date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(
-                f"{_BASE_URL}/en/datos/generacion/estructura-generacion",
-                params={
-                    "start_date": f"{today}T00:00",
-                    "end_date": f"{today}T23:59",
-                    "time_trunc": "day",
-                },
-                headers={"Accept": "application/json"},
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            f"{_BASE_URL}/en/datos/generacion/estructura-generacion",
+            source="ree_energy",
+            params={
+                "start_date": f"{today}T00:00",
+                "end_date": f"{today}T23:59",
+                "time_trunc": "day",
+            },
+            headers={"Accept": "application/json"},
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         mix = {}
         for item in data.get("included", []):
@@ -96,6 +106,13 @@ async def fetch_generation_mix(date: str | None = None) -> dict[str, Any]:
         _cache[cache_key] = result
         _cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch REE generation mix")
         return _cache.get(cache_key, {})

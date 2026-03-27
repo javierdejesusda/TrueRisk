@@ -11,9 +11,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 15.0
 _BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
 
@@ -33,27 +34,26 @@ async def fetch_upper_air(lat: float, lon: float) -> dict[str, Any]:
     }
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(_BASE_URL, params=params)
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            _BASE_URL,
+            source="open_meteo_upper_air",
+            params=params,
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         current = data.get("current", {})
         hourly = data.get("hourly", {})
 
-        # Extract hourly arrays
         precip_hourly = hourly.get("precipitation", [])
         cape_hourly = hourly.get("cape", [])
         pressure_hourly = hourly.get("surface_pressure", [])
 
-        # Sum precipitation forecast for next 6h and 24h
         precip_6h = sum(precip_hourly[:6]) if len(precip_hourly) >= 6 else 0.0
         precip_24h = sum(precip_hourly[:24]) if len(precip_hourly) >= 24 else 0.0
 
-        # Max CAPE in next 6h (high CAPE = strong convective potential)
         cape_max_6h = max(cape_hourly[:6]) if len(cape_hourly) >= 6 else 0.0
 
-        # Pressure change over next 6h (falling pressure = approaching low)
         if len(pressure_hourly) >= 7:
             pressure_change_forecast = pressure_hourly[6] - pressure_hourly[0]
         else:
@@ -69,7 +69,14 @@ async def fetch_upper_air(lat: float, lon: float) -> dict[str, Any]:
             "cape_hourly": cape_hourly[:48],
             "pressure_hourly": pressure_hourly[:48],
         }
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception(
             "Failed to fetch upper-air data for (%s, %s)", lat, lon
         )

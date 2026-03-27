@@ -8,9 +8,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://servicios.ine.es/wstempus/js/ES"
 _cache: dict[str, Any] = {}
 _cache_ts: dict[str, float] = {}
@@ -27,18 +28,23 @@ async def fetch_province_demographics(province_name: str) -> dict[str, Any]:
         return _cache[cache_key]
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(
-                f"{_BASE_URL}/DATOS_TABLA/{_POPULATION_TABLE}",
-                params={"tip": "A"},
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            f"{_BASE_URL}/DATOS_TABLA/{_POPULATION_TABLE}",
+            source="ine_demographics",
+            params={"tip": "A"},
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        if not isinstance(data, list):
+            logger.warning("INE response is not a list, returning empty result")
+            return _cache.get(cache_key, {})
 
         total_pop = 0
         male_pop = 0
         female_pop = 0
-        for entry in data if isinstance(data, list) else []:
+        for entry in data:
             name = entry.get("Nombre", "")
             if province_name.lower() not in name.lower():
                 continue
@@ -65,6 +71,13 @@ async def fetch_province_demographics(province_name: str) -> dict[str, Any]:
         _cache[cache_key] = result
         _cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch INE demographics for %s", province_name)
         return _cache.get(cache_key, {})

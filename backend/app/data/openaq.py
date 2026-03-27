@@ -9,10 +9,10 @@ from typing import Any
 import httpx
 
 from app.config import settings
+from app.data._http import resilient_get, RetryableHTTPStatusError
 
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://api.openaq.org/v3"
 _cache: dict[str, Any] = {}
 _cache_ts: dict[str, float] = {}
@@ -32,18 +32,18 @@ async def fetch_air_quality(
     headers = {"X-API-Key": api_key} if api_key else {}
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                f"{_BASE_URL}/locations",
-                headers=headers,
-                params={
-                    "coordinates": f"{lat},{lon}",
-                    "radius": radius_m,
-                    "limit": 1,
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            f"{_BASE_URL}/locations",
+            source="openaq",
+            headers=headers,
+            params={
+                "coordinates": f"{lat},{lon}",
+                "radius": radius_m,
+                "limit": 1,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
 
         results = data.get("results", [])
         if not results:
@@ -60,9 +60,10 @@ async def fetch_air_quality(
 
         measurements: dict[str, float] = {}
         if location_id:
-            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-                resp = await client.get(
+            try:
+                resp = await resilient_get(
                     f"{_BASE_URL}/locations/{location_id}/latest",
+                    source="openaq",
                     headers=headers,
                 )
                 if resp.status_code == 200:
@@ -73,6 +74,13 @@ async def fetch_air_quality(
                         param_name = sensor_id_to_param.get(sensor_id, "")
                         if param_name and value is not None:
                             measurements[param_name] = value
+            except (
+                httpx.HTTPStatusError,
+                RetryableHTTPStatusError,
+                httpx.TransportError,
+                httpx.TimeoutException,
+            ):
+                pass
 
         result = {
             "station_name": station_name,
@@ -90,6 +98,13 @@ async def fetch_air_quality(
         _cache[cache_key] = result
         _cache_ts[cache_key] = now
         return result
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch OpenAQ data for (%s, %s)", lat, lon)
         return _cache.get(cache_key, {})

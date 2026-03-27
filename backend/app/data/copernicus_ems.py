@@ -9,9 +9,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _FEED_URLS = [
     "https://emergency.copernicus.eu/mapping/activations-702/feed",
     "https://emergency.copernicus.eu/mapping/list-of-activations-702/feed",
@@ -30,15 +31,19 @@ async def fetch_active_emergencies() -> list[dict[str, Any]]:
         return _cache
 
     xml = None
-    async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-        for url in _FEED_URLS:
-            try:
-                resp = await client.get(url)
-                if resp.status_code == 200 and "<item>" in resp.text:
-                    xml = resp.text
-                    break
-            except Exception:
-                continue
+    for url in _FEED_URLS:
+        try:
+            resp = await resilient_get(url, source="copernicus_ems", follow_redirects=True)
+            if resp.status_code == 200 and "<item>" in resp.text:
+                xml = resp.text
+                break
+        except (
+            httpx.HTTPStatusError,
+            RetryableHTTPStatusError,
+            httpx.TransportError,
+            httpx.TimeoutException,
+        ):
+            continue
 
     if not xml:
         logger.warning("Copernicus EMS feed unavailable — no working feed URL found")
@@ -73,6 +78,6 @@ async def fetch_active_emergencies() -> list[dict[str, Any]]:
         _cache = emergencies
         _cache_ts = now
         return emergencies
-    except Exception:
+    except (ValueError, KeyError):
         logger.exception("Failed to parse Copernicus EMS feed")
         return _cache or []

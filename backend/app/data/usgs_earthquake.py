@@ -9,9 +9,10 @@ from typing import Any
 
 import httpx
 
+from app.data._http import resilient_get, RetryableHTTPStatusError
+
 logger = logging.getLogger(__name__)
 
-_TIMEOUT = 30.0
 _BASE_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 _cache: list[dict] = []
 _cache_ts: float = 0.0
@@ -29,22 +30,27 @@ async def fetch_recent_quakes(
 
     start = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as client:
-            resp = await client.get(
-                _BASE_URL,
-                params={
-                    "format": "geojson",
-                    "starttime": start,
-                    "minlatitude": 27,
-                    "maxlatitude": 44,
-                    "minlongitude": -19,
-                    "maxlongitude": 5,
-                    "minmagnitude": min_magnitude,
-                    "orderby": "time",
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await resilient_get(
+            _BASE_URL,
+            source="usgs",
+            params={
+                "format": "geojson",
+                "starttime": start,
+                "minlatitude": 27,
+                "maxlatitude": 44,
+                "minlongitude": -19,
+                "maxlongitude": 5,
+                "minmagnitude": min_magnitude,
+                "orderby": "time",
+            },
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        if not isinstance(data, dict) or "features" not in data:
+            logger.warning("USGS response missing 'features' key")
+            return _cache or []
 
         quakes = []
         for feature in data.get("features", []):
@@ -64,6 +70,13 @@ async def fetch_recent_quakes(
         _cache = quakes
         _cache_ts = now
         return quakes
-    except Exception:
+    except (
+        httpx.HTTPStatusError,
+        RetryableHTTPStatusError,
+        httpx.TransportError,
+        httpx.TimeoutException,
+        ValueError,
+        KeyError,
+    ):
         logger.exception("Failed to fetch USGS earthquake data")
         return _cache or []
