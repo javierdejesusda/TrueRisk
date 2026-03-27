@@ -26,3 +26,4 @@ class WeatherRecord(Base):
     raw_data: Mapped[dict] = mapped_column(JSON, default=dict)
     recorded_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
