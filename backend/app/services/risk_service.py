@@ -31,6 +31,7 @@ from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.models.weather_daily_summary import WeatherDailySummary
 from app.models.weather_record import WeatherRecord
+from app.utils.cache import risk_cache
 
 logger = logging.getLogger(__name__)
 
@@ -689,6 +690,12 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     db.add(risk_score)
     await db.commit()
 
+    # Invalidate caches so subsequent reads pick up fresh data
+    risk_cache.invalidate(f"risk:{province_code}")
+    risk_cache.invalidate("risk:all_latest")
+    risk_cache.invalidate("risk:map")
+    risk_cache.invalidate("risk:api_map")
+
     composite["province_code"] = province_code
     composite["computed_at"] = now.isoformat()
 
@@ -728,17 +735,29 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
 
 async def get_latest_risk(db: AsyncSession, province_code: str) -> RiskScore | None:
     """Return the most recently computed RiskScore for a province, or None."""
+    cache_key = f"risk:{province_code}"
+    cached = risk_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     result = await db.execute(
         select(RiskScore)
         .where(RiskScore.province_code == province_code)
         .order_by(RiskScore.computed_at.desc())
         .limit(1)
     )
-    return result.scalar_one_or_none()
+    score = result.scalar_one_or_none()
+    if score is not None:
+        risk_cache.set(cache_key, score)
+    return score
 
 
 async def get_all_latest_risks(db: AsyncSession) -> list[RiskScore]:
     """Return the latest RiskScore for every province that has one."""
+    cached = risk_cache.get("risk:all_latest")
+    if cached is not None:
+        return cached
+
     subq = (
         select(
             RiskScore.province_code,
@@ -754,11 +773,18 @@ async def get_all_latest_risks(db: AsyncSession) -> list[RiskScore]:
             & (RiskScore.computed_at == subq.c.latest),
         )
     )
-    return list(result.scalars().all())
+    scores = list(result.scalars().all())
+    if scores:
+        risk_cache.set("risk:all_latest", scores)
+    return scores
 
 
 async def get_risk_map(db: AsyncSession) -> list[dict]:
     """Return risk map data: province coordinates joined with latest scores."""
+    cached = risk_cache.get("risk:map")
+    if cached is not None:
+        return cached
+
     provinces_result = await db.execute(select(Province))
     provinces = {p.ine_code: p for p in provinces_result.scalars().all()}
 
@@ -788,4 +814,5 @@ async def get_risk_map(db: AsyncSession) -> list[dict]:
             }
         )
 
+    risk_cache.set("risk:map", entries)
     return entries

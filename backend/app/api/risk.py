@@ -25,6 +25,7 @@ from app.schemas.risk import (
     RiskScoreResponse,
 )
 from app.services.explainability_service import explain_risk
+from app.utils.cache import risk_cache
 
 router = APIRouter()
 
@@ -51,6 +52,10 @@ def _zero_score(province_code: str) -> dict:
 @router.get("/all", response_model=list[RiskScoreResponse])
 async def get_all_risks(db: AsyncSession = Depends(get_db)):
     """Return the latest risk scores for all provinces."""
+    cached = risk_cache.get("risk:all_latest")
+    if cached is not None:
+        return cached
+
     from sqlalchemy import func
 
     subq = (
@@ -68,8 +73,10 @@ async def get_all_risks(db: AsyncSession = Depends(get_db)):
             & (RiskScore.computed_at == subq.c.latest),
         )
     )
-    scores = result.scalars().all()
-    return list(scores) if scores else []
+    scores = list(result.scalars().all())
+    if scores:
+        risk_cache.set("risk:all_latest", scores)
+    return scores
 
 
 @router.get(
@@ -87,6 +94,10 @@ async def get_models():
 @router.get("/map", response_model=RiskMapResponse)
 async def get_risk_map(db: AsyncSession = Depends(get_db)):
     """Return risk map data (province coordinates + risk scores)."""
+    cached = risk_cache.get("risk:api_map")
+    if cached is not None:
+        return cached
+
     provinces_result = await db.execute(select(Province))
     provinces = {p.ine_code: p for p in provinces_result.scalars().all()}
 
@@ -132,10 +143,12 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
             )
         )
 
-    return RiskMapResponse(
+    response = RiskMapResponse(
         provinces=entries,
         computed_at=datetime.now(timezone.utc),
     )
+    risk_cache.set("risk:api_map", response)
+    return response
 
 
 @router.get("/heat-vulnerability/map")
@@ -676,6 +689,11 @@ async def get_risk(
     db: AsyncSession = Depends(get_db),
 ):
     """Return the latest risk score for a province."""
+    cache_key = f"risk:{province_code}"
+    cached = risk_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     result = await db.execute(
         select(RiskScore)
         .where(RiskScore.province_code == province_code)
@@ -685,6 +703,7 @@ async def get_risk(
     score = result.scalar_one_or_none()
     if score is None:
         return _zero_score(province_code)
+    risk_cache.set(cache_key, score)
     return score
 
 
