@@ -93,7 +93,7 @@ export default function AlertsPage() {
           </div>
         </Card>
       ) : (
-        <div className="mt-8 flex flex-col gap-3">
+        <div className="mt-8 flex flex-col gap-3" aria-live="polite" aria-atomic="false">
           {alerts.length > 0 && (
             <div>
               <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted border-l-2 border-accent-green pl-3 mb-3">TrueRisk Alerts</h2>

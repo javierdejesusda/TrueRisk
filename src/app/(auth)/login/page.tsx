@@ -111,6 +111,8 @@ export default function LoginPage() {
                                     onChange={(e) => setNickname(e.target.value)}
                                     onFocus={() => setFocusedInput('nickname')}
                                     onBlur={() => setFocusedInput(null)}
+                                    aria-invalid={!!error}
+                                    aria-describedby={error ? 'login-error' : undefined}
                                     className="w-full bg-bg-secondary/60 border-border focus:border-border-hover text-text-primary placeholder:text-text-muted h-10 transition-all duration-300 pl-10 pr-3 focus:bg-bg-secondary"
                                 />
                             </div>
@@ -131,6 +133,8 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     onFocus={() => setFocusedInput('password')}
                                     onBlur={() => setFocusedInput(null)}
+                                    aria-invalid={!!error}
+                                    aria-describedby={error ? 'login-error' : undefined}
                                     className="w-full bg-bg-secondary/60 border-border focus:border-border-hover text-text-primary placeholder:text-text-muted h-10 transition-all duration-300 pl-10 pr-10 focus:bg-bg-secondary"
                                 />
                                 <div onClick={() => setShowPassword(!showPassword)} className="absolute right-3 cursor-pointer">
@@ -145,7 +149,7 @@ export default function LoginPage() {
                     </motion.div>
 
                     {error && (
-                        <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-accent-red text-center">
+                        <motion.p id="login-error" role="alert" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-accent-red text-center">
                             {error}
                         </motion.p>
                     )}

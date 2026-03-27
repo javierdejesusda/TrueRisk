@@ -59,9 +59,14 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black">
+          Skip to content
+        </a>
         <AuthProvider>
           <NextIntlClientProvider messages={messages}>
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
           </NextIntlClientProvider>
         </AuthProvider>
       </body>

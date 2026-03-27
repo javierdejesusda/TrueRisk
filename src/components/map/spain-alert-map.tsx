@@ -22,6 +22,8 @@ import type { FireHotspot } from '@/hooks/use-fire-hotspots';
 import type { Earthquake } from '@/hooks/use-earthquakes';
 import { useRiverGauges } from '@/hooks/use-river-gauges';
 
+type PopupAnchor = 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 export interface SpainAlertMapProps {
   alertData: MapAlertData;
   riskByProvince?: Record<string, RiskMapEntry>;
@@ -40,7 +42,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     latitude: number;
     provinceName: string;
     provinceCode: string;
-    anchor: 'top' | 'bottom';
+    anchor: PopupAnchor;
   } | null>(null);
   const [hoveredFeatureId, setHoveredFeatureId] = useState<string | null>(null);
   const [municipalityGeoJSON, setMunicipalityGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
@@ -315,6 +317,32 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     }
   }, [visibleProvinceINEs]);
 
+  // Compute best popup anchor based on click position relative to viewport edges
+  const computeAnchor = useCallback((point: { x: number; y: number }, container: HTMLElement): PopupAnchor => {
+    const POPUP_W = 360;
+    const POPUP_H = 440;
+    const PAD = 16;
+
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+    const halfW = POPUP_W / 2;
+
+    const nearTop = point.y < POPUP_H + PAD;
+    const nearBottom = point.y > ch - POPUP_H - PAD;
+    const nearLeft = point.x < halfW + PAD;
+    const nearRight = point.x > cw - halfW - PAD;
+
+    if (nearTop && nearLeft) return 'top-left';
+    if (nearTop && nearRight) return 'top-right';
+    if (nearBottom && nearLeft) return 'bottom-left';
+    if (nearBottom && nearRight) return 'bottom-right';
+    if (nearTop) return 'top';
+    if (nearBottom) return 'bottom';
+    if (nearLeft) return 'left';
+    if (nearRight) return 'right';
+    return 'bottom';
+  }, []);
+
   // Click handling
   const onClick = useCallback((e: MapLayerMouseEvent) => {
     if (e.features && e.features.length > 0) {
@@ -322,13 +350,11 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       const props = feature.properties;
       const isMuni = feature.layer?.id === 'municipality-fill';
 
-      let anchor: 'top' | 'bottom' = 'bottom';
+      let anchor: PopupAnchor = 'bottom';
       if (mapRef.current) {
         const point = mapRef.current.project([e.lngLat.lng, e.lngLat.lat]);
         const container = mapRef.current.getContainer();
-        if (point.y < container.clientHeight * 0.4) {
-          anchor = 'top';
-        }
+        anchor = computeAnchor(point, container);
       }
 
       setPopupInfo({
@@ -339,7 +365,46 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         anchor,
       });
     }
-  }, []);
+  }, [computeAnchor]);
+
+  // Auto-pan map to keep popup fully visible after it renders
+  useEffect(() => {
+    if (!popupInfo || !mapRef.current) return;
+
+    const timer = setTimeout(() => {
+      const map = mapRef.current;
+      const container = map?.getContainer();
+      if (!map || !container) return;
+
+      const popupEl = container.querySelector('.maplibregl-popup') as HTMLElement | null;
+      if (!popupEl) return;
+
+      const popupRect = popupEl.getBoundingClientRect();
+      const mapRect = container.getBoundingClientRect();
+      const pad = 16;
+
+      let dx = 0;
+      let dy = 0;
+
+      if (popupRect.right > mapRect.right - pad) {
+        dx = popupRect.right - (mapRect.right - pad);
+      } else if (popupRect.left < mapRect.left + pad) {
+        dx = popupRect.left - (mapRect.left + pad);
+      }
+
+      if (popupRect.bottom > mapRect.bottom - pad) {
+        dy = popupRect.bottom - (mapRect.bottom - pad);
+      } else if (popupRect.top < mapRect.top + pad) {
+        dy = popupRect.top - (mapRect.top + pad);
+      }
+
+      if (dx !== 0 || dy !== 0) {
+        map.panBy([dx, dy], { duration: 300 });
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [popupInfo]);
 
   // Reset view
   const handleResetView = useCallback(() => {
