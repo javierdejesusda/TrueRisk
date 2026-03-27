@@ -164,15 +164,20 @@ export function enrichMunicipalityGeoJSON(
     const codMuni: string = props['cod_muni'] ?? '';
     const codProv: string = props['cod_prov'] ?? codMuni.substring(0, 2);
 
+    // Communal territories (cod_prov "53") carry a `real_cod_prov` that maps
+    // them to the actual province they sit in geographically. Use it for
+    // alert / risk lookups so they inherit the correct province-level data.
+    const effectiveProv: string = props['real_cod_prov'] ?? codProv;
+
     // Municipality-specific alert takes precedence, then province cascade.
     // Use INE codes directly as keys.
     const muniAlert = alertsByMunicipality[codMuni];
-    const provAlert = alertsByProvince[codProv];
+    const provAlert = alertsByProvince[effectiveProv];
 
     const alertSeverity = Math.max(muniAlert?.maxSeverity ?? 0, provAlert?.maxSeverity ?? 0);
     const alertCount = (muniAlert?.alertCount ?? 0) + (provAlert?.alertCount ?? 0);
 
-    const riskData = riskByProvince?.[codProv];
+    const riskData = riskByProvince?.[effectiveProv];
 
     feature.properties = {
       ...props,
@@ -180,7 +185,7 @@ export function enrichMunicipalityGeoJSON(
       alertCount,
       municipalityName: props['name'] ?? '',
       municipalityCode: codMuni,
-      provinceCode: codProv,
+      provinceCode: effectiveProv,
       riskScore: riskData?.compositeScore ?? 0,
       provinceName: props['name'] ?? '',
     };
