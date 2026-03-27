@@ -400,11 +400,13 @@ async def get_gauge_readings(
     db: AsyncSession = Depends(get_db),
 ) -> list[dict]:
     """Get recent flow readings for a gauge."""
-    from datetime import datetime, timedelta
+    from datetime import timedelta
+
+    from app.utils.time import utcnow
 
     from app.models.river_gauge import RiverReading
 
-    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    cutoff = utcnow() - timedelta(hours=hours)
     stmt = (
         select(RiverReading)
         .where(

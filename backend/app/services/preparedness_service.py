@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -239,7 +241,7 @@ async def toggle_item(
     )
     item = result.scalar_one_or_none()
 
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     if item is None:
         item = PreparednessItem(
             user_id=user_id,
@@ -383,7 +385,7 @@ async def get_score_history(
     db: AsyncSession, user_id: int, days: int = 30
 ) -> list[PreparednessHistoryEntry]:
     """Return score snapshots for the last N days."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = utcnow() - timedelta(days=days)
     result = await db.execute(
         select(PreparednessSnapshot)
         .where(

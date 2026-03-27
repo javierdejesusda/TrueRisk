@@ -24,7 +24,7 @@ async def generate_insurance_report(
     # Use existing property risk service
     property_result = await compute_property_risk(lat, lon, province_code, db)
 
-    now = datetime.now(timezone.utc)
+    now = utcnow()
 
     report = {
         "report_type": "insurance_risk_assessment",

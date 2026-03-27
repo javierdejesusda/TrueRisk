@@ -1,7 +1,9 @@
 """Tests for duplicate community report verification prevention."""
 
 import pytest
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy import select
 
@@ -36,7 +38,7 @@ class TestReportVerificationModel:
                 severity=3,
                 latitude=40.0,
                 longitude=-3.5,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=6),
+                expires_at=utcnow() + timedelta(hours=6),
                 reporter_user_id=None,
             )
             db.add(report)
@@ -76,7 +78,7 @@ class TestVerifyReport:
                 severity=3,
                 latitude=40.0,
                 longitude=-3.5,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=6),
+                expires_at=utcnow() + timedelta(hours=6),
                 reporter_user_id=reporter.id,
             )
             db.add(report)
@@ -116,7 +118,7 @@ class TestVerifyReport:
                 severity=3,
                 latitude=40.0,
                 longitude=-3.5,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=6),
+                expires_at=utcnow() + timedelta(hours=6),
                 reporter_user_id=reporter.id,
             )
             db.add(report)
@@ -150,7 +152,7 @@ class TestVerifyReport:
                 severity=4,
                 latitude=40.0,
                 longitude=-3.5,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=6),
+                expires_at=utcnow() + timedelta(hours=6),
                 reporter_user_id=reporter.id,
             )
             db.add(report)
@@ -179,7 +181,7 @@ class TestVerifyReport:
                 severity=3,
                 latitude=40.0,
                 longitude=-3.5,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=6),
+                expires_at=utcnow() + timedelta(hours=6),
                 reporter_user_id=reporter.id,
             )
             db.add(report)

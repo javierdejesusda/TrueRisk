@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
@@ -114,7 +116,7 @@ async def create_report(
 
     # 3. Generate report ID and timestamps
     report_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = utcnow()
     expires = now + timedelta(days=30)
 
     # 4. Save to database

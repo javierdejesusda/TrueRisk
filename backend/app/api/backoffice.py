@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -63,7 +65,7 @@ async def list_weather_records(
     db: AsyncSession = Depends(get_db),
 ):
     """Paginated weather records with optional province and date filters."""
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow() - timedelta(days=days)
 
     stmt = (
         select(WeatherRecord)

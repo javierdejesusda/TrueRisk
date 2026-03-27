@@ -8,7 +8,9 @@ and k-nearest-neighbor matching.
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from app.utils.time import utcnow
 from typing import Any
 
 from sqlalchemy import select
@@ -29,7 +31,7 @@ async def _get_province(db: AsyncSession, province_code: str) -> Province:
 async def _get_history(
     db: AsyncSession, province_code: str, days: int = 30
 ) -> list[WeatherRecord]:
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow() - timedelta(days=days)
     result = await db.execute(
         select(WeatherRecord)
         .where(
@@ -44,7 +46,7 @@ async def _get_history(
 async def _get_daily_history(
     db: AsyncSession, province_code: str, years: int = 5
 ) -> list[WeatherDailySummary]:
-    cutoff = datetime.utcnow() - timedelta(days=years * 365)
+    cutoff = utcnow() - timedelta(days=years * 365)
     result = await db.execute(
         select(WeatherDailySummary)
         .where(
