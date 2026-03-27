@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, type SelectHTMLAttributes } from 'react';
+import { forwardRef, useId, type SelectHTMLAttributes } from 'react';
 
 export interface SelectOption {
   value: string;
@@ -16,7 +16,9 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, options, placeholder, className = '', id, ...props }, ref) => {
-    const selectId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    const autoId = useId();
+    const selectId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : autoId);
+    const errorId = `${selectId}-error`;
 
     return (
       <div className="flex flex-col gap-1.5">
@@ -46,6 +48,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'right 8px center',
           }}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           {...props}
         >
           {placeholder && (
@@ -60,7 +64,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="text-xs text-accent-red">{error}</p>
+          <p id={errorId} role="alert" className="text-xs text-accent-red">{error}</p>
         )}
       </div>
     );
