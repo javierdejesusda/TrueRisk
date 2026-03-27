@@ -135,7 +135,7 @@ export function AlertFeed() {
           <p className="font-[family-name:var(--font-sans)] text-sm text-accent-green">{t('noAlerts')}</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" aria-live="polite" aria-atomic="false">
           {unified.map((alert) => (
             <div
               key={alert.id}

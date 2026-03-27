@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import type { CreateReportData } from '@/hooks/use-community-reports';
@@ -173,7 +174,7 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
               <input type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
             </label>
             {photoPreview && (
-              <img src={photoPreview} alt="" className="h-10 w-10 rounded-lg object-cover border border-white/10" />
+              <NextImage src={photoPreview} alt="" width={40} height={40} className="h-10 w-10 rounded-lg object-cover border border-white/10" unoptimized />
             )}
           </div>
         </div>

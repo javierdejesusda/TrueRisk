@@ -146,10 +146,12 @@ export default function RegisterPage() {
                                 {...register('nickname')}
                                 onFocus={() => setFocusedInput('nickname')}
                                 onBlur={() => setFocusedInput(null)}
+                                aria-invalid={!!errors.nickname}
+                                aria-describedby={errors.nickname ? 'register-nickname-error' : undefined}
                                 className="w-full bg-bg-secondary/60 border-border focus:border-border-hover text-text-primary h-10 pl-10 pr-3 focus:bg-bg-secondary"
                             />
                         </div>
-                        {errors.nickname && <p className="text-xs text-accent-red mt-1">{errors.nickname.message}</p>}
+                        {errors.nickname && <p id="register-nickname-error" role="alert" className="text-xs text-accent-red mt-1">{errors.nickname.message}</p>}
                     </motion.div>
 
                     <motion.div
@@ -166,10 +168,12 @@ export default function RegisterPage() {
                                 {...register('email')}
                                 onFocus={() => setFocusedInput('email')}
                                 onBlur={() => setFocusedInput(null)}
+                                aria-invalid={!!errors.email}
+                                aria-describedby={errors.email ? 'register-email-error' : undefined}
                                 className="w-full bg-bg-secondary/60 border-border focus:border-border-hover text-text-primary h-10 pl-10 pr-3 focus:bg-bg-secondary"
                             />
                         </div>
-                        {errors.email && <p className="text-xs text-accent-red mt-1">{errors.email.message}</p>}
+                        {errors.email && <p id="register-email-error" role="alert" className="text-xs text-accent-red mt-1">{errors.email.message}</p>}
                     </motion.div>
 
                     <motion.div
@@ -186,13 +190,15 @@ export default function RegisterPage() {
                                 {...register('password')}
                                 onFocus={() => setFocusedInput('password')}
                                 onBlur={() => setFocusedInput(null)}
+                                aria-invalid={!!errors.password}
+                                aria-describedby={errors.password ? 'register-password-error' : undefined}
                                 className="w-full bg-bg-secondary/60 border-border focus:border-border-hover text-text-primary h-10 pl-10 pr-10 focus:bg-bg-secondary"
                             />
                             <div onClick={() => setShowPassword(!showPassword)} className="absolute right-3 cursor-pointer">
                                 {showPassword ? <Eye className="w-4 h-4 text-text-muted hover:text-text-primary transition-colors" /> : <EyeClosed className="w-4 h-4 text-text-muted hover:text-text-primary transition-colors" />}
                             </div>
                         </div>
-                        {errors.password && <p className="text-xs text-accent-red mt-1">{errors.password.message}</p>}
+                        {errors.password && <p id="register-password-error" role="alert" className="text-xs text-accent-red mt-1">{errors.password.message}</p>}
                     </motion.div>
 
                     <motion.div
@@ -209,13 +215,15 @@ export default function RegisterPage() {
                                 {...register('confirmPassword')}
                                 onFocus={() => setFocusedInput('confirmPassword')}
                                 onBlur={() => setFocusedInput(null)}
+                                aria-invalid={!!errors.confirmPassword}
+                                aria-describedby={errors.confirmPassword ? 'register-confirm-error' : undefined}
                                 className="w-full bg-bg-secondary/60 border-border focus:border-border-hover text-text-primary h-10 pl-10 pr-10 focus:bg-bg-secondary"
                             />
                             <div onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 cursor-pointer">
                                 {showConfirm ? <Eye className="w-4 h-4 text-text-muted hover:text-text-primary transition-colors" /> : <EyeClosed className="w-4 h-4 text-text-muted hover:text-text-primary transition-colors" />}
                             </div>
                         </div>
-                        {errors.confirmPassword && <p className="text-xs text-accent-red mt-1">{errors.confirmPassword.message}</p>}
+                        {errors.confirmPassword && <p id="register-confirm-error" role="alert" className="text-xs text-accent-red mt-1">{errors.confirmPassword.message}</p>}
                     </motion.div>
 
                     <motion.div
@@ -229,6 +237,8 @@ export default function RegisterPage() {
                                 {...register('province_code')}
                                 onFocus={() => setFocusedInput('province')}
                                 onBlur={() => setFocusedInput(null)}
+                                aria-invalid={!!errors.province_code}
+                                aria-describedby={errors.province_code ? 'register-province-error' : undefined}
                                 className="flex h-10 w-full min-w-0 rounded-md border bg-bg-secondary/60 border-border pl-10 pr-3 py-1 text-sm text-text-primary outline-none transition-[color,box-shadow] focus:border-border-hover focus:bg-bg-secondary focus-visible:ring-border-hover/50 focus-visible:ring-[3px] appearance-none cursor-pointer"
                             >
                                 {PROVINCES.map((p) => (
@@ -243,11 +253,11 @@ export default function RegisterPage() {
                                 </svg>
                             </div>
                         </div>
-                        {errors.province_code && <p className="text-xs text-accent-red mt-1">{errors.province_code.message}</p>}
+                        {errors.province_code && <p id="register-province-error" role="alert" className="text-xs text-accent-red mt-1">{errors.province_code.message}</p>}
                     </motion.div>
 
                     {error && (
-                        <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-accent-red text-center">
+                        <motion.p role="alert" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-accent-red text-center">
                             {error}
                         </motion.p>
                     )}
