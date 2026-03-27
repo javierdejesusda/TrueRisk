@@ -48,7 +48,7 @@ async def test_mark_alert_read(client, mock_external_apis):
     })
     token = r.json()["access_token"]
 
-    r2 = await client.post("/api/v1/alerts/", json={
+    r2 = await client.post("/api/v1/alerts", json={
         "severity": 3, "hazard_type": "flood",
         "province_code": "28", "title": "Flood", "description": "test alert",
     })

@@ -112,7 +112,8 @@ export function useSafetyCheck() {
       const res = await authFetch('/api/safety/family-status', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
-        throw new Error(`HTTP ${res.status}`);
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
       }
       const data = await res.json() as FamilyMemberStatus[];
       setFamilyStatus(data);
@@ -129,7 +130,8 @@ export function useSafetyCheck() {
       const res = await authFetch('/api/safety/check-ins?limit=20', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
-        throw new Error(`HTTP ${res.status}`);
+        const detail = await extractErrorDetail(res);
+        throw new Error(detail);
       }
       const data = await res.json() as SafetyCheckIn[];
       setCheckIns(data);
@@ -145,7 +147,8 @@ export function useSafetyCheck() {
       const res = await authFetch('/api/safety/links', currentToken);
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
-        throw new Error(`HTTP ${res.status}`);
+        // Don't throw — pending links are supplementary
+        return;
       }
       const data = await res.json() as FamilyLink[];
       setPendingLinks(data);
@@ -258,7 +261,9 @@ export function useSafetyCheck() {
     }
   }, []);
 
-  // Initial fetch — wait for auth to resolve before deciding state
+  // Initial fetch — wait for auth to resolve before deciding state.
+  // Retries once after a short delay if the first attempt fails (handles
+  // transient 5xx / network hiccups during deployment).
   useEffect(() => {
     if (!isAuthResolved) return; // Auth still loading, wait
     // If session is authenticated but token hasn't hydrated to Zustand yet, wait
@@ -269,11 +274,29 @@ export function useSafetyCheck() {
       setIsLoading(false);
       return;
     }
-    // Token is available — clear any stale error and fetch all data
-    setError(null);
-    setIsLoading(true);
-    Promise.all([getFamilyStatus(), fetchCheckIns(), fetchPendingLinks()])
-      .finally(() => setIsLoading(false));
+
+    let cancelled = false;
+
+    async function loadWithRetry() {
+      setError(null);
+      setIsLoading(true);
+      try {
+        await Promise.all([getFamilyStatus(), fetchCheckIns(), fetchPendingLinks()]);
+      } catch {
+        // First attempt failed — wait 1.5s and retry once
+        if (!cancelled) {
+          await new Promise((r) => setTimeout(r, 1500));
+          if (!cancelled) {
+            await Promise.all([getFamilyStatus(), fetchCheckIns(), fetchPendingLinks()]).catch(() => {});
+          }
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadWithRetry();
+    return () => { cancelled = true; };
   }, [token, isAuthResolved, sessionStatus, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
 
   // Auto-refresh family status every 30 seconds

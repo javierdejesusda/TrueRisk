@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=list[AlertResponse])
+@router.get("", response_model=list[AlertResponse])
 async def list_alerts(
     active: bool | None = Query(default=None),
     province: str | None = Query(default=None),
@@ -52,7 +52,7 @@ async def aemet_alerts():
     return await alert_service.get_aemet_alerts()
 
 
-@router.post("/", response_model=AlertResponse, status_code=201)
+@router.post("", response_model=AlertResponse, status_code=201)
 async def create_alert(
     body: AlertCreate,
     db: AsyncSession = Depends(get_db),

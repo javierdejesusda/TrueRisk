@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_list_provinces(client):
-    response = await client.get("/api/v1/provinces/")
+    response = await client.get("/api/v1/provinces")
     assert response.status_code == 200
     data = response.json()
     assert "provinces" in data

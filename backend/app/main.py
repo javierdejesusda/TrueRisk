@@ -26,11 +26,51 @@ from app.api.climate import router as climate_router
 _start_time = time.time()
 
 
+def _sync_missing_columns(conn):
+    """Add any columns present in models but missing from the database.
+
+    ``Base.metadata.create_all`` only creates *tables*, not columns added to
+    existing tables.  This helper inspects each mapped table and issues
+    ``ALTER TABLE … ADD COLUMN`` for anything the DB is missing, preventing
+    500 errors when a migration hasn't been deployed yet.  Only nullable /
+    server-defaulted columns are added automatically — others log a warning so
+    the operator knows a migration is required.
+    """
+    import logging
+    from sqlalchemy import inspect as sa_inspect, text
+
+    log = logging.getLogger("truerisk.schema_sync")
+    inspector = sa_inspect(conn)
+
+    for table in Base.metadata.sorted_tables:
+        if not inspector.has_table(table.name):
+            continue
+        db_col_names = {c["name"] for c in inspector.get_columns(table.name)}
+        for col in table.columns:
+            if col.name in db_col_names:
+                continue
+            if col.nullable or col.server_default is not None:
+                col_type = col.type.compile(conn.dialect)
+                default_clause = ""
+                if col.server_default is not None:
+                    default_clause = f" DEFAULT {col.server_default.arg}"
+                ddl = f'ALTER TABLE {table.name} ADD COLUMN {col.name} {col_type}{default_clause}'
+                log.warning("Auto-adding missing column: %s.%s", table.name, col.name)
+                conn.execute(text(ddl))
+            else:
+                log.error(
+                    "Column %s.%s is missing and is NOT nullable — "
+                    "deploy the Alembic migration to add it",
+                    table.name, col.name,
+                )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create any missing tables on startup (idempotent — skips existing tables)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_sync_missing_columns)
 
     # Seed province data on all database backends
     from app.data.province_data import seed_provinces
@@ -50,6 +90,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
+    redirect_slashes=False,
     title="TrueRisk API",
     description=(
         "Multi-hazard climate risk intelligence platform for Spain. "

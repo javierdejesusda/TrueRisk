@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_list_alerts(client, mock_external_apis):
-    response = await client.get("/api/v1/alerts/")
+    response = await client.get("/api/v1/alerts")
     assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()
@@ -12,7 +12,7 @@ async def test_list_alerts(client, mock_external_apis):
 
 @pytest.mark.asyncio
 async def test_list_alerts_with_filters(client, mock_external_apis):
-    response = await client.get("/api/v1/alerts/?active=true&province=28")
+    response = await client.get("/api/v1/alerts?active=true&province=28")
     assert response.status_code == 200
     if response.status_code == 200:
         data = response.json()

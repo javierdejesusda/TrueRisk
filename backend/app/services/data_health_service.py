@@ -23,6 +23,25 @@ KNOWN_SOURCES = [
     "ecmwf_seasonal",
 ]
 
+# Max acceptable age (minutes) per source before considered stale
+STALENESS_THRESHOLDS: dict[str, int] = {
+    "open_meteo": 30,
+    "aemet": 30,
+    "nasa_firms": 60,
+    "usgs": 60,
+    "ign_seismic": 60,
+    "copernicus_cams": 120,
+    "copernicus_ems": 120,
+    "copernicus_land": 2880,
+    "openaq": 60,
+    "saih": 30,
+    "ree_energy": 60,
+    "ine_demographics": 2880,
+    "nasa_power": 2880,
+    "copernicus_efas": 1440,
+    "ecmwf_seasonal": 2880,
+}
+
 
 class DataHealthTracker:
     """Tracks success/failure state for each external data source."""

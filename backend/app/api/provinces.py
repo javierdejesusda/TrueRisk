@@ -9,7 +9,7 @@ from app.schemas.province import ProvinceListResponse, ProvinceResponse
 router = APIRouter()
 
 
-@router.get("/", response_model=ProvinceListResponse)
+@router.get("", response_model=ProvinceListResponse)
 async def list_provinces(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Province).order_by(Province.ine_code))
     provinces = result.scalars().all()

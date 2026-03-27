@@ -21,7 +21,7 @@ def _alert_payload(*, severity=3, hazard_type="flood", province_code="28",
 
 @pytest.mark.asyncio
 async def test_create_alert_happy_path(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload())
+    r = await client.post("/api/v1/alerts", json=_alert_payload())
     assert r.status_code == 201
     data = r.json()
     assert data["severity"] == 3
@@ -32,25 +32,25 @@ async def test_create_alert_happy_path(client, mock_external_apis):
 
 @pytest.mark.asyncio
 async def test_create_alert_severity_zero_rejected(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload(severity=0))
+    r = await client.post("/api/v1/alerts", json=_alert_payload(severity=0))
     assert r.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_create_alert_severity_six_rejected(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload(severity=6))
+    r = await client.post("/api/v1/alerts", json=_alert_payload(severity=6))
     assert r.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_create_alert_invalid_hazard_type(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload(hazard_type="tsunami"))
+    r = await client.post("/api/v1/alerts", json=_alert_payload(hazard_type="tsunami"))
     assert r.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_update_alert_severity(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload())
+    r = await client.post("/api/v1/alerts", json=_alert_payload())
     assert r.status_code == 201
     alert_id = r.json()["id"]
 
@@ -67,7 +67,7 @@ async def test_update_nonexistent_alert(client, mock_external_apis):
 
 @pytest.mark.asyncio
 async def test_delete_alert(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload())
+    r = await client.post("/api/v1/alerts", json=_alert_payload())
     assert r.status_code == 201
     alert_id = r.json()["id"]
 
@@ -84,18 +84,18 @@ async def test_delete_nonexistent_alert(client, mock_external_apis):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("hazard_type", VALID_HAZARD_TYPES)
 async def test_create_all_valid_hazard_types(client, mock_external_apis, hazard_type):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload(hazard_type=hazard_type))
+    r = await client.post("/api/v1/alerts", json=_alert_payload(hazard_type=hazard_type))
     assert r.status_code == 201, f"Failed for hazard_type={hazard_type}: {r.text}"
 
 
 @pytest.mark.asyncio
 async def test_filter_alerts_by_hazard_type(client, mock_external_apis):
     for ht in ("flood", "wildfire"):
-        await client.post("/api/v1/alerts/", json=_alert_payload(
+        await client.post("/api/v1/alerts", json=_alert_payload(
             hazard_type=ht, title=f"{ht} alert",
         ))
 
-    r = await client.get("/api/v1/alerts/?hazard=flood")
+    r = await client.get("/api/v1/alerts?hazard=flood")
     assert r.status_code == 200
     data = r.json()
     assert all(a["hazard_type"] == "flood" for a in data)
@@ -103,11 +103,11 @@ async def test_filter_alerts_by_hazard_type(client, mock_external_apis):
 
 @pytest.mark.asyncio
 async def test_create_alert_severity_minimum_boundary(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload(severity=1))
+    r = await client.post("/api/v1/alerts", json=_alert_payload(severity=1))
     assert r.status_code == 201
 
 
 @pytest.mark.asyncio
 async def test_create_alert_severity_maximum_boundary(client, mock_external_apis):
-    r = await client.post("/api/v1/alerts/", json=_alert_payload(severity=5))
+    r = await client.post("/api/v1/alerts", json=_alert_payload(severity=5))
     assert r.status_code == 201

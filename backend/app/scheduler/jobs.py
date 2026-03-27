@@ -73,6 +73,17 @@ async def run_rapid_severity_check():
         logger.exception("Rapid severity check failed")
 
 
+async def run_staleness_check():
+    """30-minute check for stale data sources."""
+    from app.services.staleness_alert_service import check_and_alert_stale_sources
+    try:
+        count = await check_and_alert_stale_sources()
+        if count:
+            logger.warning("Staleness check: %d source(s) newly stale", count)
+    except Exception:
+        logger.exception("Staleness check failed")
+
+
 def setup_scheduler():
     """Configure and start the scheduler."""
     # Run pipeline every 6 hours
@@ -116,9 +127,18 @@ def setup_scheduler():
         name="15-min rapid severity check",
         replace_existing=True,
     )
+    scheduler.add_job(
+        run_staleness_check,
+        "interval",
+        minutes=30,
+        id="staleness_check",
+        name="30-min data staleness check",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info(
-        "Scheduler started: pipeline every 6h, flash flood every 10min, rapid severity every 15min"
+        "Scheduler started: pipeline every 6h, flash flood every 10min, "
+        "rapid severity every 15min, staleness check every 30min"
     )
 
 
