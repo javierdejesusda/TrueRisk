@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -38,6 +38,12 @@ export const metadata: Metadata = {
     title: "TrueRisk — Multi-Hazard Risk Intelligence",
     description: "AI-powered risk scoring across 7 natural hazards for all 52 Spanish provinces",
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({

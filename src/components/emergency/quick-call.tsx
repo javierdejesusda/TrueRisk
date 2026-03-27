@@ -6,7 +6,7 @@ export function QuickCall({ floating = false }: { floating?: boolean }) {
       <a
         href="tel:112"
         aria-label="Llamar al 112 - Emergencias"
-        className="fixed bottom-6 right-6 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-bold rounded-full transition-all shadow-lg shadow-red-900/30 h-16 w-16 shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-[glow-pulse_2s_infinite]"
+        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] right-[max(1.5rem,env(safe-area-inset-right,1.5rem))] z-50 flex flex-col items-center justify-center bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-bold rounded-full transition-all shadow-lg shadow-red-900/30 h-16 w-16 shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-[glow-pulse_2s_infinite]"
         style={{ '--glow-color': 'rgba(239, 68, 68, 0.3)' } as React.CSSProperties}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
