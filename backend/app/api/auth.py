@@ -117,3 +117,16 @@ async def update_me(
     await db.commit()
     await db.refresh(db_user)
     return UserResponse.model_validate(db_user)
+
+
+@router.delete("/me", status_code=204)
+async def delete_me(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """GDPR account deletion -- permanently removes the authenticated user."""
+    db_user = await db.get(User, user.id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await db.delete(db_user)
+    await db.commit()
