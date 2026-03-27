@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +26,7 @@ async def check_in(
     if user is None:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="User not found")
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = utcnow()
     expires_at = now + timedelta(hours=12)
 
     record = SafetyCheckIn(
@@ -87,7 +89,7 @@ async def get_family_status(db: AsyncSession, user_id: int) -> list[dict]:
     )
     links = list(links_result.scalars().all())
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = utcnow()
     statuses = []
 
     for link in links:

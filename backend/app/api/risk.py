@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -45,7 +45,7 @@ def _zero_score(province_code: str) -> dict:
         "composite_score": 0.0,
         "dominant_hazard": "none",
         "severity": "low",
-        "computed_at": datetime.now(timezone.utc),
+        "computed_at": utcnow(),
     }
 
 
@@ -145,7 +145,7 @@ async def get_risk_map(db: AsyncSession = Depends(get_db)):
 
     response = RiskMapResponse(
         provinces=entries,
-        computed_at=datetime.now(timezone.utc),
+        computed_at=utcnow(),
     )
     risk_cache.set("risk:api_map", response)
     return response
@@ -626,7 +626,7 @@ async def get_dana_nowcast(
     ]
     temporal = compute_temporal_features(history) if history else {}
 
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     dana_features = {
         "is_mediterranean": terrain["is_mediterranean"],
         "is_coastal": terrain["is_coastal"],

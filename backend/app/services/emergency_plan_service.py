@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 from typing import AsyncIterator
 
 from sqlalchemy import select
@@ -68,7 +68,7 @@ async def update_plan(
     for field, value in update_fields.items():
         setattr(plan, field, value)
 
-    plan.last_reviewed_at = datetime.now(timezone.utc)
+    plan.last_reviewed_at = utcnow()
     await db.commit()
     await db.refresh(plan)
 

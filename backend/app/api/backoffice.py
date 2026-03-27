@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
@@ -70,7 +72,7 @@ async def list_weather_records(
     """Paginated weather records with optional province and date filters."""
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow() - timedelta(days=days)
 
     stmt = (
         select(WeatherRecord)

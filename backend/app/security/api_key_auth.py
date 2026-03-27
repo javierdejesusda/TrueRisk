@@ -1,7 +1,7 @@
 """API key authentication dependency for B2B endpoints."""
 
 import hashlib
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
@@ -33,6 +33,6 @@ async def verify_api_key(
 
     # Update usage stats
     result.request_count += 1
-    result.last_used_at = datetime.now(timezone.utc)
+    result.last_used_at = utcnow()
     await db.commit()
     return result

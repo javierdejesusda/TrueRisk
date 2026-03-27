@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 from typing import Any
 
 from sqlalchemy import func, select
@@ -416,7 +416,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     terrain = get_terrain_features(province_code)
     temporal = compute_temporal_features(history) if history else _empty_temporal()
     weights_data = PROVINCES.get(province_code, {})
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     month = now.month
     season_sin, season_cos = _season_components(month)
 
@@ -718,8 +718,8 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         latest_result = await db.execute(latest_stmt)
         latest_ts = latest_result.scalar_one_or_none()
         if latest_ts:
-            age_delta = datetime.now(timezone.utc) - (
-                latest_ts.replace(tzinfo=timezone.utc) if latest_ts.tzinfo is None else latest_ts
+            age_delta = utcnow() - (
+                latest_ts
             )
             weather_age_hours = age_delta.total_seconds() / 3600.0
 

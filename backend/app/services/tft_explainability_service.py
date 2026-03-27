@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,7 +62,7 @@ async def get_forecast_explanations(
 
     Returns per-hazard feature importance from stored attention weights.
     """
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = utcnow() - timedelta(hours=24)
     stmt = (
         select(RiskForecast)
         .where(

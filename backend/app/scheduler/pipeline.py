@@ -1,7 +1,9 @@
 """6-hour data pipeline: fetch weather -> compute risk -> generate alerts."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,7 +58,7 @@ async def run_pipeline():
                 health_tracker.record_failure("open_meteo", str(e))
                 logger.error(f"Open-Meteo fetch failed: {e}")
                 weather_map = {}
-            now = datetime.now(timezone.utc)
+            now = utcnow()
             for p in provinces:
                 w = weather_map.get(p.ine_code)
                 if not w:
@@ -227,7 +229,7 @@ async def _check_and_create_alerts(
             ),
             source="auto_detected",
             is_active=True,
-            onset=datetime.now(timezone.utc),
+            onset=utcnow(),
         )
         db.add(alert)
         await db.flush()
@@ -313,7 +315,7 @@ async def _check_and_create_alerts(
 
 async def _aggregate_daily_summaries(db: AsyncSession):
     """Aggregate yesterday's hourly WeatherRecords into daily summaries."""
-    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date()
+    yesterday = (utcnow() - timedelta(days=1)).date()
 
     # Check which provinces already have yesterday's summary
     existing = await db.execute(
@@ -331,7 +333,7 @@ async def _aggregate_daily_summaries(db: AsyncSession):
         if province.ine_code in existing_codes:
             continue
 
-        day_start = datetime.combine(yesterday, datetime.min.time()).replace(tzinfo=timezone.utc)
+        day_start = datetime.combine(yesterday, datetime.min.time())
         day_end = day_start + timedelta(days=1)
         records = await db.execute(
             select(WeatherRecord).where(
@@ -385,7 +387,7 @@ async def _aggregate_daily_summaries(db: AsyncSession):
 
 async def _purge_old_records(db: AsyncSession):
     """Delete weather records older than 90 days to prevent unbounded growth."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+    cutoff = utcnow() - timedelta(days=90)
     result = await db.execute(
         select(func.count()).select_from(WeatherRecord).where(WeatherRecord.recorded_at < cutoff)
     )

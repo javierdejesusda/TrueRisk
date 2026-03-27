@@ -4,7 +4,7 @@ refinement and stores results in the risk_forecasts table."""
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,7 +48,7 @@ async def compute_all_forecasts(db: AsyncSession) -> None:
     }
 
     province_codes = list(PROVINCES.keys())
-    now = datetime.now(timezone.utc)
+    now = utcnow()
 
     # Collect per-province predictions for GNN refinement
     province_predictions: dict[str, dict[str, float]] = {}

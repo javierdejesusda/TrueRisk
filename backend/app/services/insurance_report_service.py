@@ -1,7 +1,9 @@
 """Insurance risk report service -- structured risk assessment for B2B partners."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,7 +26,7 @@ async def generate_insurance_report(
     # Use existing property risk service
     property_result = await compute_property_risk(lat, lon, province_code, db)
 
-    now = datetime.now(timezone.utc)
+    now = utcnow()
 
     report = {
         "report_type": "insurance_risk_assessment",

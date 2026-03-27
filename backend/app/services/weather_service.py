@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from app.utils.time import utcnow
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,7 +59,7 @@ async def get_current_weather(
             }
         return {}
 
-    now = datetime.utcnow()
+    now = utcnow()
     record = WeatherRecord(
         province_code=province_code,
         source="open_meteo",
@@ -122,7 +124,7 @@ async def get_weather_history(
     db: AsyncSession, province_code: str, days: int = 30
 ) -> list[WeatherRecord]:
     """Query stored WeatherRecords from the database."""
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow() - timedelta(days=days)
     result = await db.execute(
         select(WeatherRecord)
         .where(

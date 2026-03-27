@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
+
+from app.utils.time import utcnow
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +32,7 @@ def _is_in_quiet_hours(prefs: AlertPreference) -> bool:
     if not prefs.quiet_hours_start or not prefs.quiet_hours_end:
         return False
 
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     current_time = now.strftime("%H:%M")
     start = prefs.quiet_hours_start
     end = prefs.quiet_hours_end
@@ -50,8 +52,8 @@ def _is_hazard_snoozed(prefs: AlertPreference, hazard_type: str) -> bool:
     if not snooze_until:
         return False
     try:
-        until = datetime.fromisoformat(snooze_until)
-        return datetime.now(timezone.utc) < until
+        until = datetime.fromisoformat(snooze_until).replace(tzinfo=None)
+        return utcnow() < until
     except (ValueError, TypeError):
         return False
 
@@ -221,7 +223,7 @@ async def mark_alert_read(
     )
     delivery = result.scalar_one_or_none()
 
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     if delivery is None:
         delivery = AlertDelivery(
             user_id=user_id,
