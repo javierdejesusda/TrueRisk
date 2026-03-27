@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -12,7 +12,6 @@ from app.api.deps import get_current_user, get_db
 from app.data.province_data import PROVINCES
 from app.models.user import User
 from app.services.province_lookup_service import find_province, haversine
-from app.utils.time import utcnow
 
 router = APIRouter()
 
@@ -60,7 +59,7 @@ async def update_location(
 
     user.last_latitude = body.lat
     user.last_longitude = body.lon
-    user.last_location_at = utcnow()
+    user.last_location_at = datetime.now(timezone.utc)
     db.add(user)
     await db.commit()
 
@@ -77,13 +76,15 @@ async def current_province(
     Prefers the GPS-derived province when a recent location fix (within 1 hour)
     is available; otherwise falls back to the user's registered home province.
     """
-    one_hour_ago = utcnow() - timedelta(hours=1)
+    from datetime import timedelta
+
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
 
     if (
         user.last_latitude is not None
         and user.last_longitude is not None
         and user.last_location_at is not None
-        and user.last_location_at >= one_hour_ago
+        and user.last_location_at.replace(tzinfo=timezone.utc) >= one_hour_ago
     ):
         gps_province = find_province(user.last_latitude, user.last_longitude)
         return {
