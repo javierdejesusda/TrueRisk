@@ -23,6 +23,10 @@ async def deliver_alert_multi_channel(
     body: str,
     phone: str | None = None,
     telegram_chat_id: str | None = None,
+    *,
+    sms_enabled: bool = False,
+    whatsapp_enabled: bool = False,
+    telegram_enabled: bool = False,
 ) -> str:
     """Try each channel in priority order until delivery succeeds.
 
@@ -38,7 +42,7 @@ async def deliver_alert_multi_channel(
         logger.debug("Push delivery failed for user %d", user_id)
 
     # SMS
-    if phone:
+    if phone and sms_enabled:
         try:
             from app.services.sms_service import send_sms
             sid = await send_sms(phone, f"{title}: {body}")
@@ -48,7 +52,7 @@ async def deliver_alert_multi_channel(
             logger.debug("SMS delivery failed for user %d", user_id)
 
     # Telegram
-    if telegram_chat_id:
+    if telegram_chat_id and telegram_enabled:
         try:
             from app.services.telegram_service import send_telegram
             ok = await send_telegram(telegram_chat_id, f"{title}\n{body}")
@@ -58,7 +62,7 @@ async def deliver_alert_multi_channel(
             logger.debug("Telegram delivery failed for user %d", user_id)
 
     # WhatsApp
-    if phone:
+    if phone and whatsapp_enabled:
         try:
             from app.services.whatsapp_service import send_whatsapp
             sid = await send_whatsapp(phone, f"{title}: {body}")
@@ -87,6 +91,17 @@ def should_escalate(
     return False
 
 
+def _parse_hour(value: str | None, default: int) -> int:
+    """Parse hour from 'HH:MM' or 'HH' string, returning *default* on error."""
+    if not value:
+        return default
+    try:
+        hour = int(value.split(":")[0])
+        return max(0, min(23, hour))
+    except (ValueError, IndexError):
+        return default
+
+
 def determine_delivery_channels(
     severity: int, prefs: dict[str, Any], hour: int
 ) -> list[str]:
@@ -94,8 +109,8 @@ def determine_delivery_channels(
 
     Severity 5 overrides quiet hours (the emergency_override field).
     """
-    quiet_start = int((prefs.get("quiet_hours_start") or "23:00").split(":")[0])
-    quiet_end = int((prefs.get("quiet_hours_end") or "07:00").split(":")[0])
+    quiet_start = _parse_hour(prefs.get("quiet_hours_start"), 23)
+    quiet_end = _parse_hour(prefs.get("quiet_hours_end"), 7)
     emergency_override = prefs.get("emergency_override", True)
 
     is_quiet = (
