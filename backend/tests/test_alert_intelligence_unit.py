@@ -1,6 +1,5 @@
 """Unit tests for alert intelligence service: should_deliver, compute_relevance, explain_alert."""
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 

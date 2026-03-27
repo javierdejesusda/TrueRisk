@@ -1,6 +1,5 @@
 """Tests for RiverNetwork upstream-downstream propagation."""
 
-import pytest
 from app.data.river_network import RiverNetwork
 
 

@@ -1,5 +1,4 @@
 """Tests for ML-based DANA detection."""
-import pytest
 from unittest.mock import patch, MagicMock
 
 from app.ml.models.dana_risk import predict_dana_risk, FEATURE_NAMES

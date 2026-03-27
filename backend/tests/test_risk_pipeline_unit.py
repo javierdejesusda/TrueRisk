@@ -2,7 +2,7 @@
 
 import math
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.services.risk_service import (
     _compute_wind_chill,

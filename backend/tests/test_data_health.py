@@ -1,6 +1,5 @@
 """Tests for DataHealthTracker."""
 
-import pytest
 from app.services.data_health_service import DataHealthTracker
 
 

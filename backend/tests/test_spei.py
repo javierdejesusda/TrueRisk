@@ -4,7 +4,6 @@ multi-scale computation module.
 
 from __future__ import annotations
 
-import pytest
 
 from app.ml.features.spei import compute_spei
 

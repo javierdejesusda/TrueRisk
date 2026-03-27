@@ -11,7 +11,7 @@ import pytest
 
 from app.data.province_data import PROVINCES
 from app.services.risk_service import get_terrain_features, get_hazard_weights
-from app.ml.models.composite_risk import compute_composite_risk, score_to_severity
+from app.ml.models.composite_risk import compute_composite_risk
 from app.ml.models.flood_risk import predict_flood_risk
 from app.ml.models.wildfire_risk import predict_wildfire_risk
 from app.ml.models.drought_risk import predict_drought_risk

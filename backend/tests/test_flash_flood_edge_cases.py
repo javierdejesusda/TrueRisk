@@ -1,5 +1,4 @@
 """Edge case tests for flash flood detection service."""
-import pytest
 from app.services.flash_flood_service import (
     detect_rapid_flow_increase,
     FloodAlert,

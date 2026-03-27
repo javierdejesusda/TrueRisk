@@ -1,6 +1,5 @@
 """Tests for high-frequency flash flood polling and rate-of-change detection."""
 
-import pytest
 from app.services.flash_flood_service import detect_rapid_flow_increase
 
 

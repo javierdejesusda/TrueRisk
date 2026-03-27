@@ -1,8 +1,7 @@
 """Tests for GNN river network topology."""
 import torch
 from app.ml.graph.adjacency import (
-    ADJACENCY, RIVER_ADJACENCY, PROVINCE_CODES,
-    get_edge_index, get_edge_index_with_rivers,
+    ADJACENCY, RIVER_ADJACENCY, get_edge_index, get_edge_index_with_rivers,
 )
 from app.ml.models.gnn_spatial import SpatialRefinementGATv2
 

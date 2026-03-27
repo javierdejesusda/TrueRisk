@@ -1,5 +1,4 @@
 """Tests for alert escalation and multi-channel delivery."""
-import pytest
 from app.services.alert_escalation_service import (
     should_escalate,
     determine_delivery_channels,

@@ -1,5 +1,4 @@
 """Tests for alert delivery channel selection and quiet hours edge cases."""
-import pytest
 from app.services.alert_escalation_service import (
     should_escalate,
     determine_delivery_channels,

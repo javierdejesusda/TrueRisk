@@ -11,7 +11,7 @@ from app.models.province import Province
 from app.models.alert import Alert
 from app.ml.models.composite_risk import compute_composite_risk
 from app.services.risk_service import compute_province_risk, compute_temporal_features
-from app.scheduler.pipeline import ALERT_THRESHOLD_HIGH, _check_and_create_alerts
+from app.scheduler.pipeline import _check_and_create_alerts
 
 from tests.conftest import test_session_factory
 

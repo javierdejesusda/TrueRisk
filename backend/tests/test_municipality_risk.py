@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from app.services.municipality_risk_service import (
-    MunicipalityRisk,
     _classify_severity,
     _coastal_modifier,
     _elevation_modifier,

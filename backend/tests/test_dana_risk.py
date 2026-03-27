@@ -1,6 +1,5 @@
 """Tests for the DANA compound event detection model."""
 
-import pytest
 
 from app.ml.models.dana_risk import predict_dana_risk
 

@@ -1,6 +1,5 @@
 """Tests for the Canadian FWI system wrapper."""
 
-import pytest
 
 from app.ml.features.fwi import compute_fwi_components
 

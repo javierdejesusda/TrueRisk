@@ -6,7 +6,6 @@ for the basin fetchers (tolerant of network failures).
 
 from __future__ import annotations
 
-import math
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -15,7 +14,6 @@ import pytest
 
 from app.data.saih_realtime import (
     _enrich_with_known_coords,
-    _fetch_ebro_flows,
     _fetch_guadalquivir_flows,
     _fetch_guadiana_flows,
     _fetch_jucar_flows,

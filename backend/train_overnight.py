@@ -77,7 +77,7 @@ def main():
     print(f"Python: {sys.executable}")
     print(f"CWD: {os.getcwd()}")
     print(f"Log: {log_path}")
-    print(f"\nTraining schedule:")
+    print("\nTraining schedule:")
     for hazard, opt in TRAINING_SCHEDULE:
         mode = "OPTIMIZED" if opt else "STANDARD"
         print(f"  {hazard:12s} -> {mode}")
@@ -120,7 +120,7 @@ def main():
 
         elapsed_h = (time.time() - start) / 3600
         print(f"\n{'='*60}")
-        print(f"OVERNIGHT TRAINING COMPLETE")
+        print("OVERNIGHT TRAINING COMPLETE")
         print(f"{'='*60}")
         for key, status in results.items():
             print(f"  {key:12s}: {status}")
@@ -128,7 +128,7 @@ def main():
         if failed:
             print(f"\n  FAILURES: {failed}")
         else:
-            print(f"\n  All steps succeeded!")
+            print("\n  All steps succeeded!")
         print(f"  Total time: {elapsed_h:.1f} hours")
         print(f"  Finished: {time.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"{'='*60}")

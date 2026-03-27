@@ -1,5 +1,4 @@
 """Tests for SHAP-based feature importance explanations."""
-import pytest
 import numpy as np
 
 from app.services.shap_explainer import explain_with_shap

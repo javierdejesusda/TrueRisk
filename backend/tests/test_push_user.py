@@ -4,7 +4,6 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.push_subscription import PushSubscription
 from app.models.user import User

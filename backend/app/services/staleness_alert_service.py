@@ -48,7 +48,6 @@ def get_health_summary(tracker=None) -> dict:
     tracker = tracker or health_tracker
     statuses = tracker.get_all_statuses()
     stale_list = get_stale_sources(tracker)
-    stale_names = {s["source"] for s in stale_list}
     never = sum(1 for s in stale_list if s["last_success"] is None)
     return {
         "total": len(statuses),

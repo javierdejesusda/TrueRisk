@@ -7,7 +7,7 @@ from app.services.risk_service import (
     get_hazard_weights,
     compute_temporal_features,
 )
-from app.ml.models.composite_risk import compute_composite_risk, score_to_severity
+from app.ml.models.composite_risk import compute_composite_risk
 from app.ml.models.flood_risk import predict_flood_risk
 from app.ml.models.wildfire_risk import predict_wildfire_risk
 from app.ml.models.drought_risk import predict_drought_risk

@@ -1,7 +1,6 @@
 """Tests for data staleness detection and alerting."""
-import time
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 from datetime import datetime, timezone, timedelta
 
 from app.services.data_health_service import DataHealthTracker, KNOWN_SOURCES
