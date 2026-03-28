@@ -58,15 +58,33 @@ def _is_hazard_snoozed(prefs: AlertPreference, hazard_type: str) -> bool:
         return False
 
 
+def _matches_user_location(alert: Alert, user: User) -> bool:
+    """Return True if the alert's province matches the user's home or work province."""
+    if not alert.province_code:
+        return True
+    if alert.province_code == user.province_code:
+        return True
+    work_province = getattr(user, "work_province_code", None)
+    if work_province and alert.province_code == work_province:
+        return True
+    return False
+
+
 def should_deliver(alert: Alert, user: User, prefs: AlertPreference | None) -> bool:
     """Decide whether an alert should be delivered to this user."""
     if prefs is None:
+        if not _matches_user_location(alert, user):
+            return False
         return alert.severity >= user.alert_severity_threshold
 
     # Emergency override: severity 4+ always breaks through
     is_emergency = alert.severity >= 4 and prefs.emergency_override
     if is_emergency:
         return True
+
+    # Check province match (home or work)
+    if not _matches_user_location(alert, user):
+        return False
 
     # Check severity threshold
     if alert.severity < user.alert_severity_threshold:
