@@ -133,7 +133,7 @@ def _gev_analysis(values: list[float], current: float) -> dict:
     # C10: Bootstrap CI for return levels
     for rl in return_levels:
         if not rl.get("lowConfidence"):
-            period = rl["period"]
+            period = int(rl["period"])
 
             def _rl_stat(vals: list[float], p: int = period) -> float:
                 if len(vals) < 10:
@@ -147,7 +147,7 @@ def _gev_analysis(values: list[float], current: float) -> dict:
                     return rl["value"]
 
             ci_lo, ci_hi = _bootstrap_ci(arr, _rl_stat)
-            rl["ci"] = [ci_lo, ci_hi]
+            rl["ci"] = [ci_lo, ci_hi]  # type: ignore[assignment]
 
     # Backward-compat: mu/beta alongside shape/loc/scale
     mu = loc
