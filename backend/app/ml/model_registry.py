@@ -30,11 +30,11 @@ MODEL_REGISTRY: list[dict] = [
     {
         "id": "wildfire",
         "name": "Wildfire Risk",
-        "method": "RF + LightGBM Ensemble",
-        "description": "Dual-model ensemble combining Random Forest and LightGBM classifiers with optional Platt calibration. Leverages the Canadian Forest Fire Weather Index (FWI) system alongside 20 meteorological and geographic features.",
+        "method": "LightGBM",
+        "description": "LightGBM classifier with Platt sigmoid calibration for wildfire risk prediction. Leverages the Canadian Forest Fire Weather Index (FWI) system alongside 20 meteorological and geographic features.",
         "feature_count": len(WILDFIRE_FEATURES),
         "features": list(WILDFIRE_FEATURES),
-        "architecture": "Random Forest + LightGBM ensemble with Platt sigmoid calibration",
+        "architecture": "LightGBM classifier with Platt sigmoid calibration",
         "metrics": {
             "accuracy": 0.91,
             "f1_score": 0.87,
@@ -44,11 +44,11 @@ MODEL_REGISTRY: list[dict] = [
     {
         "id": "drought",
         "name": "Drought Risk",
-        "method": "SPEI + LSTM",
+        "method": "SPEI + Attention-LSTM",
         "description": "Two-stage model: SPEI (Standardised Precipitation-Evapotranspiration Index) quantifies current drought severity at 1/3/6-month scales, while an LSTM neural network predicts 30-day drought trajectory from 90-day daily sequences of 6 climate features.",
         "feature_count": len(DROUGHT_FEATURES),
         "features": list(DROUGHT_FEATURES),
-        "architecture": "SPEI piecewise-linear mapping + PyTorch LSTM (hidden_size=64, num_layers=2)",
+        "architecture": "SPEI piecewise-linear mapping + PyTorch Attention-LSTM (hidden_size=64, num_layers=2, num_heads=4) with CEEMDAN denoising",
         "metrics": {
             "accuracy": 0.86,
             "f1_score": 0.81,
@@ -86,11 +86,11 @@ MODEL_REGISTRY: list[dict] = [
     {
         "id": "coldwave",
         "name": "Cold Wave Risk",
-        "method": "Rule-based",
-        "description": "Deterministic model for cold wave events using wind chill as the primary driver, supplemented by temperature persistence, geographic exposure, and seasonal damping. Covers 14 meteorological and terrain features.",
+        "method": "XGBoost",
+        "description": "XGBoost binary classifier for cold wave events trained on province-specific P5 Tmin exceedances. Uses 19 features including wind chill, temperature persistence, geographic exposure, and seasonal encoding. Falls back to rule-based scoring when the trained model is unavailable.",
         "feature_count": len(COLDWAVE_FEATURES),
         "features": list(COLDWAVE_FEATURES),
-        "architecture": "Rule-based scoring with seasonal damping multiplier",
+        "architecture": "XGBoost binary classifier with scale_pos_weight",
         "metrics": {
             "accuracy": 0.90,
             "f1_score": 0.76,
@@ -100,11 +100,11 @@ MODEL_REGISTRY: list[dict] = [
     {
         "id": "windstorm",
         "name": "Windstorm Risk",
-        "method": "Rule-based",
-        "description": "Deterministic model for windstorm events driven by effective gust speed, sustained wind, and pressure dynamics. Includes coastal exposure and Mediterranean DANA season bonuses across 14 features.",
+        "method": "LightGBM",
+        "description": "LightGBM binary classifier for windstorm events trained on province-specific P99 gust exceedances with pressure dynamics. Uses 20 features including gust factor, pressure tendencies, storm energy proxy, and geographic exposure. Falls back to rule-based scoring when the trained model is unavailable.",
         "feature_count": len(WINDSTORM_FEATURES),
         "features": list(WINDSTORM_FEATURES),
-        "architecture": "Rule-based scoring with pressure-dynamics tracking",
+        "architecture": "LightGBM binary classifier with is_unbalance=True",
         "metrics": {
             "accuracy": 0.91,
             "f1_score": 0.79,
@@ -141,24 +141,24 @@ def get_model_registry() -> list[dict]:
             "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
         },
         "wildfire": {
-            "method": "RF + LightGBM + Temporal Fusion Transformer",
-            "architecture": "Ensemble classifier + TFT quantile regression (multi-horizon)",
+            "method": "LightGBM + Temporal Fusion Transformer",
+            "architecture": "LightGBM classifier + TFT quantile regression (multi-horizon)",
         },
         "heatwave": {
             "method": "XGBoost + Temporal Fusion Transformer",
             "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
         },
         "drought": {
-            "method": "SPEI + LSTM + Temporal Fusion Transformer",
-            "architecture": "SPEI mapping + LSTM + TFT quantile regression (multi-horizon)",
+            "method": "SPEI + Attention-LSTM + Temporal Fusion Transformer",
+            "architecture": "SPEI mapping + Attention-LSTM + TFT quantile regression (multi-horizon)",
         },
         "coldwave": {
-            "method": "Rule-based + Temporal Fusion Transformer",
-            "architecture": "Rule-based scoring + TFT quantile regression (multi-horizon)",
+            "method": "XGBoost + Temporal Fusion Transformer",
+            "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
         },
         "windstorm": {
-            "method": "Rule-based + Temporal Fusion Transformer",
-            "architecture": "Rule-based scoring + TFT quantile regression (multi-horizon)",
+            "method": "LightGBM + Temporal Fusion Transformer",
+            "architecture": "LightGBM binary classifier + TFT quantile regression (multi-horizon)",
         },
     }
 

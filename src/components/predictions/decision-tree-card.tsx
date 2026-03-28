@@ -15,7 +15,7 @@ export function DecisionTreeCard({ data }: Props) {
   return (
     <ModelCard
       title="Emergency Classification"
-      subtitle="Rules-based decision tree"
+      subtitle="Rule-based weather classifier"
       methodology="Evaluates current conditions against a decision tree of weather thresholds to classify the most likely emergency type and confidence level."
       confidence={data.confidence}
       index={5}

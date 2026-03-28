@@ -335,6 +335,104 @@ def download_drought_events() -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# 5. COLD WAVE: Province-specific P5 Tmin exceedances
+# ---------------------------------------------------------------------------
+
+def download_coldwave_events() -> pd.DataFrame:
+    """Identify cold wave events from province-specific P5 Tmin exceedances.
+
+    Cold wave = 3+ consecutive days where daily Tmin drops below the
+    province-specific 5th percentile of all historical Tmin values.
+    """
+    print("Detecting cold wave events (province-specific P5 Tmin)...")
+    raw_dir = DATA_DIR / "raw"
+    all_events = []
+
+    for code in sorted(PROVINCES.keys()):
+        path = raw_dir / f"{code}.csv"
+        if not path.exists():
+            continue
+
+        df = pd.read_csv(path, parse_dates=["date"])
+        tmin = df["temperature_2m_min"].dropna()
+        if len(tmin) < 30:
+            continue
+
+        # Province-specific 5th percentile
+        p5 = tmin.quantile(0.05)
+
+        # Identify cold days (Tmin < P5)
+        cold_day = df["temperature_2m_min"] < p5
+
+        # Count consecutive cold days
+        groups = (~cold_day).cumsum()
+        streaks = cold_day.groupby(groups).cumsum()
+
+        # Cold wave: 3+ consecutive
+        cw_mask = streaks >= 3
+        # Include build-up days
+        for idx in df[cw_mask].index:
+            start = max(0, idx - 2)
+            for j in range(start, idx + 1):
+                if cold_day.iloc[j]:
+                    cw_mask.iloc[j] = True
+
+        cw_days = df[cw_mask][["date"]].copy()
+        cw_days["province_code"] = code
+        cw_days["threshold_p5"] = round(p5, 1)
+        all_events.append(cw_days)
+
+    result = pd.concat(all_events, ignore_index=True) if all_events else pd.DataFrame()
+    print(f"  Cold wave events: {len(result)} cold wave days (P5 Tmin, 3d+)")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# 6. WINDSTORM: Province-specific P99 gusts + pressure dynamics
+# ---------------------------------------------------------------------------
+
+def download_windstorm_events() -> pd.DataFrame:
+    """Identify windstorm events from extreme gust + pressure dynamics.
+
+    Windstorm = gust > province P99 OR (gust > 80 km/h AND 1d pressure drop > 6 hPa).
+    """
+    print("Detecting windstorm events (P99 gusts + pressure dynamics)...")
+    raw_dir = DATA_DIR / "raw"
+    all_events = []
+
+    for code in sorted(PROVINCES.keys()):
+        path = raw_dir / f"{code}.csv"
+        if not path.exists():
+            continue
+
+        df = pd.read_csv(path, parse_dates=["date"])
+        gusts = df.get("wind_gusts_10m_max")
+        if gusts is None or gusts.isna().all():
+            continue
+
+        gusts = gusts.fillna(0)
+        pressure = df.get("surface_pressure_mean", pd.Series(dtype=float)).fillna(1013.0)
+        p_tend = pressure.diff(1).fillna(0.0)
+
+        p99 = gusts.quantile(0.99)
+
+        # Windstorm criteria
+        storm_mask = (
+            (gusts > p99)
+            | ((gusts > 80.0) & (p_tend < -6.0))
+        )
+
+        storm_days = df[storm_mask][["date"]].copy()
+        storm_days["province_code"] = code
+        storm_days["threshold_p99"] = round(p99, 1)
+        all_events.append(storm_days)
+
+    result = pd.concat(all_events, ignore_index=True) if all_events else pd.DataFrame()
+    print(f"  Windstorm events: {len(result)} windstorm days (P99 gusts)")
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -359,12 +457,22 @@ def main() -> None:
     dr = download_drought_events()
     dr.to_csv(EVENTS_DIR / "drought_events.csv", index=False)
 
+    # Cold wave
+    cw = download_coldwave_events()
+    cw.to_csv(EVENTS_DIR / "coldwave_events.csv", index=False)
+
+    # Windstorm
+    ws = download_windstorm_events()
+    ws.to_csv(EVENTS_DIR / "windstorm_events.csv", index=False)
+
     print(f"\nAll event data saved to {EVENTS_DIR}")
     print("Summary:")
-    print(f"  Wildfire: {len(wf)} events")
-    print(f"  Flood:    {len(fl)} events")
-    print(f"  Heatwave: {len(hw)} events")
-    print(f"  Drought:  {len(dr)} events")
+    print(f"  Wildfire:  {len(wf)} events")
+    print(f"  Flood:     {len(fl)} events")
+    print(f"  Heatwave:  {len(hw)} events")
+    print(f"  Drought:   {len(dr)} events")
+    print(f"  Cold wave: {len(cw)} events")
+    print(f"  Windstorm: {len(ws)} events")
 
 
 if __name__ == "__main__":

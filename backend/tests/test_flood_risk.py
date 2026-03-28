@@ -4,7 +4,7 @@ from app.ml.models.flood_risk import predict_flood_risk, _rule_based_flood, FEAT
 
 
 def test_feature_names_defined():
-    assert len(FEATURE_NAMES) == 25
+    assert len(FEATURE_NAMES) == 27
     assert "precip_24h" in FEATURE_NAMES
     assert "soil_moisture" in FEATURE_NAMES
 

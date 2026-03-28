@@ -7,12 +7,30 @@ import { Skeleton } from '@/components/ui/skeleton';
 // ── Types ──────────────────────────────────────────────────────────
 
 export interface GumbelData {
-  params: { mu: number; beta: number };
+  params: { mu: number; beta: number; shape?: number; loc?: number; scale?: number };
   currentValue: number;
   exceedanceProbability: number;
   returnPeriod: number;
+  returnPeriodCapped?: boolean;
+  maxCredibleReturnPeriod?: number;
   pdfCurve: Array<{ x: number; y: number }>;
+  returnLevels: Array<{ period: number; value: number; lowConfidence?: boolean; ci?: [number, number] }>;
+}
+
+export interface PotData {
+  threshold: number;
+  nExceedances: number;
+  shape: number;
+  scale: number;
   returnLevels: Array<{ period: number; value: number }>;
+}
+
+export interface MannKendallData {
+  trend: string;
+  p_value: number;
+  slope: number;
+  intercept: number;
+  significanceLevel: string;
 }
 
 export interface PredictionResponse {
@@ -34,6 +52,8 @@ export interface PredictionResponse {
     data: Array<{ step: number; raw: number; smoothed: number }>;
     trend: string;
     rateOfChange: number;
+    controlLimits?: { ucl: number; lcl: number; sigma: number };
+    outOfControl?: boolean;
   };
   zScore: Array<{
     field: string;
@@ -42,13 +62,29 @@ export interface PredictionResponse {
     stdDev: number;
     zScore: number;
     isAnomaly: boolean;
+    distribution?: string;
   }>;
   decisionTree: {
     type: string;
     confidence: number;
     matchedRules: string[];
   };
+  ruleBasedClassifier?: {
+    type: string;
+    confidence: number;
+    matchedRules: string[];
+  };
   knn: Array<{ event: string; distance: number; outcome: string; year: number }>;
+  mannKendall?: {
+    temperature: MannKendallData;
+    precipitation: MannKendallData;
+    windSpeed: MannKendallData;
+  };
+  pot?: {
+    precipitation: PotData;
+    temperature: PotData;
+    windSpeed: PotData;
+  };
   current: {
     temperature: number;
     humidity: number;

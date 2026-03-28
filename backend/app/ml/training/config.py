@@ -53,6 +53,15 @@ WILDFIRE_HUMIDITY_THRESHOLD = 35.0  # %
 DROUGHT_SPEI_THRESHOLD = -1.0
 DROUGHT_SEQUENCE_LENGTH = 90
 
+# Cold wave: Tmin < province-specific P5, 3+ consecutive days
+COLDWAVE_TMIN_PERCENTILE = 0.05  # P5
+COLDWAVE_CONSECUTIVE_DAYS = 3
+
+# Windstorm: wind gust > province-specific P99 OR (gust > 80 AND pressure drop > 6)
+WINDSTORM_GUST_PERCENTILE = 0.99  # P99
+WINDSTORM_GUST_ABSOLUTE = 80.0  # km/h
+WINDSTORM_PRESSURE_DROP = -6.0  # hPa
+
 # ---------------------------------------------------------------------------
 # Training hyperparameters
 # ---------------------------------------------------------------------------

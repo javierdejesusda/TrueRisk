@@ -93,12 +93,51 @@ export function EmaChart({ data }: Props) {
               fontFamily: 'var(--font-mono)',
             }}
           />
+
+          {/* EWMA Control Limits */}
+          {data.controlLimits && (
+            <>
+              <ReferenceLine
+                y={data.controlLimits.ucl}
+                stroke="#ef4444"
+                strokeDasharray="6 4"
+                strokeWidth={1}
+                label={{
+                  value: `UCL: ${data.controlLimits.ucl.toFixed(1)}`,
+                  position: 'right',
+                  fill: '#ef4444',
+                  fontSize: 9,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              />
+              <ReferenceLine
+                y={data.controlLimits.lcl}
+                stroke="#3b82f6"
+                strokeDasharray="6 4"
+                strokeWidth={1}
+                label={{
+                  value: `LCL: ${data.controlLimits.lcl.toFixed(1)}`,
+                  position: 'right',
+                  fill: '#3b82f6',
+                  fontSize: 9,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              />
+            </>
+          )}
         </ComposedChart>
       </ResponsiveContainer>
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className={`mt-3 grid gap-2 ${data.controlLimits ? 'grid-cols-3' : 'grid-cols-2'}`}>
         <StatBox label="Trend" value={data.trend} accent={data.trend === 'rising' ? 'text-accent-red' : data.trend === 'falling' ? 'text-accent-green' : 'text-text-secondary'} />
         <StatBox label="Rate" value={`${data.rateOfChange >= 0 ? '+' : ''}${data.rateOfChange.toFixed(3)}/step`} />
+        {data.controlLimits && (
+          <StatBox
+            label="Control"
+            value={data.outOfControl ? 'Out of Control' : 'In Control'}
+            accent={data.outOfControl ? 'text-accent-red' : 'text-accent-green'}
+          />
+        )}
       </div>
     </ModelCard>
   );

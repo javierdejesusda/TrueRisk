@@ -113,12 +113,24 @@ def _lstm_predict(sequence: list[list[float]]) -> float:
     try:
         import torch
 
-        # Shape: (1, 90, 6)
         arr = np.array(sequence[-90:], dtype=np.float32)
+
+        # CEEMDAN denoising of SPEI-1m signal (column index 4)
+        try:
+            from PyEMD import CEEMDAN
+            spei_signal = arr[:, 4].astype(np.float64)
+            ceemdan = CEEMDAN(trials=50)
+            imfs = ceemdan.ceemdan(spei_signal)
+            # Drop highest-frequency IMF (index 0), reconstruct
+            if len(imfs) > 1:
+                denoised = np.sum(imfs[1:], axis=0).astype(np.float32)
+                arr[:, 4] = denoised
+        except Exception:
+            logger.debug("CEEMDAN denoising failed; using raw SPEI signal")
+
         tensor = torch.from_numpy(arr).unsqueeze(0)
         with torch.no_grad():
             output = model(tensor)
-            # Expect a single sigmoid output or logit
             prob = float(torch.sigmoid(output).squeeze())
         return max(0.0, min(1.0, prob))
     except Exception:

@@ -1,4 +1,4 @@
-"""Wildfire risk model -- RF + LightGBM ensemble with rule-based fallback."""
+"""Wildfire risk model -- LightGBM with Platt calibration and rule-based fallback."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 _SAVED_DIR = Path(__file__).parent.parent / "saved_models"
-RF_MODEL_PATH = _SAVED_DIR / "wildfire_rf.joblib"
 LGBM_MODEL_PATH = _SAVED_DIR / "wildfire_lgbm.joblib"
 CALIBRATOR_PATH = _SAVED_DIR / "wildfire_calibrator.joblib"
 
@@ -40,23 +39,13 @@ FEATURE_NAMES: list[str] = [
     "ndvi_anomaly",
 ]
 
-_rf_model = None
 _lgbm_model = None
 _calibrator = None
 
 
 def _load_models():
-    """Lazy-load ensemble models + optional Platt calibrator from disk."""
-    global _rf_model, _lgbm_model, _calibrator
-
-    if _rf_model is None and RF_MODEL_PATH.exists():
-        try:
-            import joblib
-
-            _rf_model = joblib.load(RF_MODEL_PATH)
-            logger.info("Loaded wildfire RF model from %s", RF_MODEL_PATH)
-        except Exception:
-            logger.exception("Failed to load wildfire RF model")
+    """Lazy-load LightGBM model + optional Platt calibrator from disk."""
+    global _lgbm_model, _calibrator
 
     if _lgbm_model is None and LGBM_MODEL_PATH.exists():
         try:
@@ -76,50 +65,42 @@ def _load_models():
         except Exception:
             logger.exception("Failed to load wildfire calibrator")
 
-    return _rf_model, _lgbm_model, _calibrator
+    return _lgbm_model, _calibrator
 
 
 def get_trained_models():
-    """Return (rf_model, lgbm_model, calibrator) tuple. Any may be None."""
+    """Return (lgbm_model, calibrator) tuple. Either may be None."""
     _load_models()
-    return _rf_model, _lgbm_model, _calibrator
+    return _lgbm_model, _calibrator
 
 
 def predict_wildfire_risk(features: dict) -> float:
     """Return a wildfire-risk score in the range 0--100.
 
-    When trained models are available the score is the (optionally calibrated)
-    average of a Random Forest and a LightGBM classifier.  Otherwise a
+    When the trained LightGBM model is available the score is its
+    (optionally Platt-calibrated) predicted probability.  Otherwise a
     deterministic rule-based heuristic driven by the FWI system is used.
     """
-    rf, lgbm, calibrator = _load_models()
+    lgbm, calibrator = _load_models()
 
-    # Need at least one model to run ML inference
-    if rf is not None or lgbm is not None:
+    if lgbm is not None:
         X = np.array([[features.get(f, 0.0) for f in FEATURE_NAMES]])
 
-        probs: list[float] = []
         try:
-            if rf is not None:
-                probs.append(float(rf.predict_proba(X)[0][1]))
-            if lgbm is not None:
-                probs.append(float(lgbm.predict_proba(X)[0][1]))
+            prob = float(lgbm.predict_proba(X)[0][1])
         except Exception:
             logger.exception("Wildfire model inference failed -- using rule-based fallback")
             return _rule_based_wildfire(features)
 
-        avg_prob = sum(probs) / len(probs)
-
-        # Optional Platt calibration
         if calibrator is not None:
             try:
-                avg_prob = float(
-                    calibrator.predict_proba(np.array([[avg_prob]]))[0][1]
+                prob = float(
+                    calibrator.predict_proba(np.array([[prob]]))[0][1]
                 )
             except Exception:
-                logger.warning("Platt calibration failed; using raw average probability")
+                logger.warning("Platt calibration failed; using raw probability")
 
-        return round(avg_prob * 100, 2)
+        return round(prob * 100, 2)
 
     return _rule_based_wildfire(features)
 

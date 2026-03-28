@@ -1,8 +1,17 @@
-"""Cold wave risk model for Spain."""
+"""Cold wave risk model for Spain -- XGBoost with rule-based fallback."""
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
 from typing import Any
+
+import numpy as np
+
+logger = logging.getLogger(__name__)
+
+_SAVED_DIR = Path(__file__).parent.parent / "saved_models"
+MODEL_PATH = _SAVED_DIR / "coldwave_xgboost.joblib"
 
 FEATURE_NAMES = [
     "temperature",
@@ -29,8 +38,31 @@ FEATURE_NAMES = [
 _model = None
 
 
+def _load_model():
+    """Lazy-load the XGBoost model from disk."""
+    global _model
+    if _model is None and MODEL_PATH.exists():
+        try:
+            import joblib
+            _model = joblib.load(MODEL_PATH)
+            logger.info("Loaded cold wave XGBoost model from %s", MODEL_PATH)
+        except Exception:
+            logger.exception("Failed to load cold wave model")
+    return _model
+
+
 def predict_coldwave_risk(features: dict[str, Any]) -> float:
-    """Return cold wave risk 0-100. Uses rule-based heuristic."""
+    """Return cold wave risk 0-100. Uses XGBoost when available, else rule-based."""
+    model = _load_model()
+
+    if model is not None:
+        X = np.array([[features.get(f, 0.0) for f in FEATURE_NAMES]])
+        try:
+            prob = float(model.predict_proba(X)[0][1])
+            return round(prob * 100, 2)
+        except Exception:
+            logger.exception("Cold wave model inference failed -- using rule-based fallback")
+
     return _rule_based_coldwave(features)
 
 

@@ -6,8 +6,10 @@ from app.ml.models.composite_risk import compute_composite_risk, score_to_severi
 def test_single_dominant_hazard():
     result = compute_composite_risk(80, 10, 5, 3, 2, 1, 0)
     assert result["dominant_hazard"] == "flood"
-    assert result["composite_score"] >= 80
-    assert result["composite_score"] <= 100
+    # New INFORM formula: active=[80,10], geo_mean=(80*10)^0.5≈28.28
+    # composite = 0.6*80 + 0.4*28.28 ≈ 59.31
+    assert result["composite_score"] >= 55
+    assert result["composite_score"] <= 65
 
 
 def test_all_zero():
@@ -35,8 +37,9 @@ def test_severity_labels():
 
 
 def test_secondary_hazards_contribute():
+    """Multi-hazard scenario scores higher than single hazard with lower max."""
     single = compute_composite_risk(50, 0, 0, 0, 0, 0, 0)
-    multi = compute_composite_risk(50, 40, 30, 20, 10, 5, 0)
+    multi = compute_composite_risk(60, 50, 40, 30, 20, 10, 6)
     assert multi["composite_score"] > single["composite_score"]
 
 

@@ -22,7 +22,7 @@ from typing import Optional
 import numpy as np
 from scipy import stats
 
-from app.ml.features.weather_indices import compute_pet_thornthwaite
+from app.ml.features.weather_indices import compute_pet_hargreaves, compute_pet_thornthwaite
 
 # Minimum number of daily observations required per time scale
 _MIN_DAYS: dict[str, int] = {
@@ -41,35 +41,54 @@ _NONE_RESULT: dict[str, Optional[float]] = {
 def _aggregate_daily_to_monthly(
     precip_daily: list[float],
     temp_daily: list[float],
-) -> tuple[list[float], list[float]]:
-    """Aggregate daily precipitation (sum) and temperature (mean) into
+    temp_max_daily: list[float] | None = None,
+    temp_min_daily: list[float] | None = None,
+) -> tuple[list[float], list[float], list[float], list[float]]:
+    """Aggregate daily precipitation (sum) and temperature (mean/max/min) into
     approximate 30-day months, working from the end of the series backward.
 
-    Returns (precip_monthly, temp_monthly) with the most recent month last.
+    Returns (precip_monthly, temp_monthly, temp_max_monthly, temp_min_monthly)
+    with the most recent month last.
     """
     n = len(precip_daily)
     if n < 30:
-        return [], []
+        return [], [], [], []
 
     precip = np.asarray(precip_daily, dtype=np.float64)
     temp = np.asarray(temp_daily, dtype=np.float64)
 
+    # Derive max/min from mean if not provided
+    if temp_max_daily is not None:
+        temp_max = np.asarray(temp_max_daily, dtype=np.float64)
+    else:
+        temp_max = temp + 5.0
+    if temp_min_daily is not None:
+        temp_min = np.asarray(temp_min_daily, dtype=np.float64)
+    else:
+        temp_min = temp - 5.0
+
     # Work backward in 30-day blocks so the most recent month is complete
     monthly_precip: list[float] = []
     monthly_temp: list[float] = []
+    monthly_temp_max: list[float] = []
+    monthly_temp_min: list[float] = []
 
     idx = n
     while idx >= 30:
         start = idx - 30
         monthly_precip.append(float(np.sum(precip[start:idx])))
         monthly_temp.append(float(np.mean(temp[start:idx])))
+        monthly_temp_max.append(float(np.mean(temp_max[start:idx])))
+        monthly_temp_min.append(float(np.mean(temp_min[start:idx])))
         idx = start
 
     # Reverse so chronological order is preserved (oldest first)
     monthly_precip.reverse()
     monthly_temp.reverse()
+    monthly_temp_max.reverse()
+    monthly_temp_min.reverse()
 
-    return monthly_precip, monthly_temp
+    return monthly_precip, monthly_temp, monthly_temp_max, monthly_temp_min
 
 
 def _standardize_series(values: np.ndarray) -> Optional[float]:
@@ -117,10 +136,12 @@ def _compute_scale(
     monthly_temp: list[float],
     latitude: float,
     n_months: int,
+    temp_max_monthly: list[float] | None = None,
+    temp_min_monthly: list[float] | None = None,
 ) -> Optional[float]:
     """Compute SPEI for a single time scale.
 
-    1. Compute PET via Thornthwaite for each month.
+    1. Compute PET via Hargreaves-Samani (preferred) or Thornthwaite (fallback).
     2. Derive water balance D = P - PET.
     3. Build rolling sums of D over *n_months*.
     4. Standardize the resulting series.
@@ -129,8 +150,11 @@ def _compute_scale(
     if total < n_months:
         return None
 
-    # Compute PET for each month
-    pet = compute_pet_thornthwaite(monthly_temp, latitude)
+    # Compute PET -- prefer Hargreaves-Samani when max/min temps available
+    if temp_max_monthly is not None and temp_min_monthly is not None:
+        pet = compute_pet_hargreaves(temp_max_monthly, temp_min_monthly, latitude)
+    else:
+        pet = compute_pet_thornthwaite(monthly_temp, latitude)
     precip_arr = np.asarray(monthly_precip, dtype=np.float64)
     pet_arr = np.asarray(pet, dtype=np.float64)
 
@@ -170,6 +194,8 @@ def compute_spei(
     precip_daily: list[float],
     temp_daily: list[float],
     latitude: float,
+    temp_max_daily: list[float] | None = None,
+    temp_min_daily: list[float] | None = None,
 ) -> dict[str, Optional[float]]:
     """Compute SPEI at 1-month, 3-month, and 6-month time scales from daily
     weather observations.
@@ -185,6 +211,11 @@ def compute_spei(
     latitude : float
         Station/province latitude in degrees (used for PET day-length
         correction).
+    temp_max_daily : list[float], optional
+        Daily maximum temperatures. If provided (along with temp_min_daily),
+        Hargreaves-Samani PET is used instead of Thornthwaite.
+    temp_min_daily : list[float], optional
+        Daily minimum temperatures.
 
     Returns
     -------
@@ -201,9 +232,17 @@ def compute_spei(
     if n_days < _MIN_DAYS["spei_1m"]:
         return dict(_NONE_RESULT)
 
+    # Derive max/min from mean if not provided
+    if temp_max_daily is None:
+        temp_max_daily = [t + 5.0 for t in temp_daily]
+    if temp_min_daily is None:
+        temp_min_daily = [t - 5.0 for t in temp_daily]
+
     # Aggregate daily data into ~30-day months
-    monthly_precip, monthly_temp = _aggregate_daily_to_monthly(
-        precip_daily, temp_daily
+    monthly_precip, monthly_temp, monthly_temp_max, monthly_temp_min = (
+        _aggregate_daily_to_monthly(
+            precip_daily, temp_daily, temp_max_daily, temp_min_daily,
+        )
     )
 
     if not monthly_precip:
@@ -216,7 +255,9 @@ def compute_spei(
             result[key] = None
         else:
             result[key] = _compute_scale(
-                monthly_precip, monthly_temp, latitude, n_months
+                monthly_precip, monthly_temp, latitude, n_months,
+                temp_max_monthly=monthly_temp_max,
+                temp_min_monthly=monthly_temp_min,
             )
 
     return result

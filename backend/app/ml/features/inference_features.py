@@ -15,6 +15,7 @@ from app.ml.features.weather_indices import (
     compute_fwi_system,
     compute_heat_index,
     compute_spi,
+    compute_utci,
     compute_wbgt,
 )
 
@@ -139,6 +140,16 @@ def enrich_daily_history(
     for i in range(1, n):
         api.append(0.85 * api[-1] + precip[i])
 
+    # Antecedent Precipitation Index (K=0.92)
+    api_092 = [precip[0]]
+    for i in range(1, n):
+        api_092.append(0.92 * api_092[-1] + precip[i])
+
+    # Antecedent Precipitation Index (K=0.95)
+    api_095 = [precip[0]]
+    for i in range(1, n):
+        api_095.append(0.95 * api_095[-1] + precip[i])
+
     # --- Pressure features -------------------------------------------------
     p_tend_1d = _diff(pressure, 1)
     p_tend_3d = _diff(pressure, 3)
@@ -227,6 +238,7 @@ def enrich_daily_history(
     # --- Heat indices ------------------------------------------------------
     heat_idx = [compute_heat_index(temp_max[i], humidity[i]) for i in range(n)]
     wbgt = [compute_wbgt(temp_max[i], humidity[i], wind_speed[i] / 3.6) for i in range(n)]
+    utci = [compute_utci(temp_max[i], humidity[i], wind_speed[i] / 3.6) for i in range(n)]
     wind_chill = [_wind_chill(temp_mean[i], wind_speed[i]) for i in range(n)]
 
     # --- Enrich each day dict ----------------------------------------------
@@ -263,6 +275,8 @@ def enrich_daily_history(
         d["consecutive_rain_days"] = float(consec_rain[i])
         d["consecutive_dry_days"] = float(consec_dry[i])
         d["antecedent_precip_index"] = api[i]
+        d["antecedent_precip_index_092"] = api_092[i]
+        d["antecedent_precip_index_095"] = api_095[i]
         d["soil_saturation_excess"] = soil_moisture[i] * precip_7d[i] / 7.0
 
         # Pressure features
@@ -302,6 +316,7 @@ def enrich_daily_history(
         # Heat / cold indices
         d["heat_index"] = heat_idx[i]
         d["wbgt"] = wbgt[i]
+        d["utci"] = utci[i]
         d["wind_chill"] = wind_chill[i]
 
         # FWI system

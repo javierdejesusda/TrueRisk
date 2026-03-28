@@ -526,8 +526,8 @@ def _try_shap(hazard: str, features: dict[str, Any]) -> list[dict]:
             return explain_with_shap(model, features, FEATURE_NAMES, hazard)
     elif hazard == "wildfire":
         from app.ml.models.wildfire_risk import get_trained_models, FEATURE_NAMES
-        rf, lgbm, _ = get_trained_models()
-        model = lgbm or rf
+        lgbm, _ = get_trained_models()
+        model = lgbm
         if model is not None:
             return explain_with_shap(model, features, FEATURE_NAMES, hazard)
     elif hazard == "heatwave":

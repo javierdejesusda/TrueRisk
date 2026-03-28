@@ -34,9 +34,9 @@ export function GumbelChart({ data }: Props) {
 
   return (
     <ModelCard
-      title="Gumbel Extreme Value Distribution"
-      subtitle="Probability density of extreme weather events"
-      methodology="Fits extreme value distributions to historical weather data to estimate the probability of rare events. The curve shows how likely values of different magnitudes are."
+      title="GEV Extreme Value Distribution"
+      subtitle="Generalized Extreme Value analysis with return level estimation"
+      methodology="Fits generalized extreme value distributions to historical weather data to estimate the probability of rare events. The shape parameter (ξ) determines tail behavior: ξ=0 is Gumbel, ξ>0 is Fréchet (heavy tail), ξ<0 is Weibull (bounded tail)."
       badge={{ label: 'EVD', variant: 'info' }}
       className="md:col-span-2 lg:col-span-2"
       index={0}
@@ -108,10 +108,20 @@ export function GumbelChart({ data }: Props) {
         </AreaChart>
       </ResponsiveContainer>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className={`mt-4 grid gap-3 ${gd.params.shape !== undefined ? 'grid-cols-4' : 'grid-cols-3'}`}>
         <StatBox label="Current" value={`${gd.currentValue} ${gc.unit}`} />
         <StatBox label="Exceedance" value={`${(gd.exceedanceProbability * 100).toFixed(1)}%`} />
-        <StatBox label="Return Period" value={gd.returnPeriod >= 9999 ? '>9999 yr' : `~${gd.returnPeriod.toFixed(0)} yr`} />
+        <div>
+          <StatBox label="Return Period" value={gd.returnPeriod >= 9999 ? '>9999 yr' : `~${gd.returnPeriod.toFixed(0)} yr`} />
+          {gd.returnPeriodCapped && (
+            <p className="mt-1 text-center font-[family-name:var(--font-sans)] text-[9px] text-text-muted">
+              Capped at {gd.maxCredibleReturnPeriod?.toLocaleString() ?? '10,000'} yr
+            </p>
+          )}
+        </div>
+        {gd.params.shape !== undefined && (
+          <StatBox label="GEV Shape (ξ)" value={gd.params.shape.toFixed(3)} />
+        )}
       </div>
 
       {/* Return Levels as horizontal mini-bars */}
@@ -121,7 +131,7 @@ export function GumbelChart({ data }: Props) {
           {gd.returnLevels.map((rl) => {
             const pct = Math.max(4, (rl.value / maxReturnLevel) * 100);
             return (
-              <div key={rl.period} className="flex items-center gap-3">
+              <div key={rl.period} className={`flex items-center gap-3 ${rl.lowConfidence ? 'opacity-40' : ''}`}>
                 <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted w-12 text-right shrink-0">{rl.period} yr</span>
                 <div className="flex-1 h-5 rounded bg-white/[0.03] overflow-hidden relative">
                   <div

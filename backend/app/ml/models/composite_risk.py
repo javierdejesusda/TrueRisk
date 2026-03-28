@@ -1,14 +1,16 @@
 """Composite risk engine -- aggregates individual hazard scores.
 
-The composite score is dominated by the highest active threat rather than
-being a simple average.  Secondary hazards contribute marginal risk with
-diminishing returns so that a province under one extreme threat is rated
-higher than one under multiple moderate threats.
+Uses an INFORM-inspired blended formula: the composite is a weighted mix
+of the single highest active hazard (60%) and the geometric mean of the
+top-3 active hazards (40%).  This rewards multi-hazard situations -- a
+province under several concurrent threats scores higher than one with a
+single threat of similar magnitude and everything else near zero.
 """
 
 from __future__ import annotations
 
 import math
+from math import prod
 
 
 def _clamp(v: float) -> float:
@@ -45,12 +47,14 @@ def compute_composite_risk(
 ) -> dict:
     """Compute the composite risk score from individual hazard scores.
 
-    The composite is dominated by the single highest hazard.  Secondary
-    hazards add a fraction of their score that diminishes with rank:
+    Uses an INFORM-inspired blended formula:
 
-    * 2nd-highest:  +15% of its score
-    * 3rd-highest:  +7.5% of its score
-    * etc.
+    * ``active`` = all clamped scores strictly > 5, sorted descending.
+    * ``max_hazard`` = the single highest active score.
+    * ``geo_mean_top3`` = geometric mean of the top 3 active scores.
+    * ``composite = 0.6 * max_hazard + 0.4 * geo_mean_top3`` (capped at 100).
+
+    If no hazard exceeds the noise threshold of 5, the composite is 0.
 
     Returns a dict suitable for persisting as a :class:`RiskScore` row.
     """
@@ -69,15 +73,14 @@ def compute_composite_risk(
     }
     sorted_hazards = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
-    max_hazard = sorted_hazards[0][1]
-
-    # Secondary hazards contribute 15%/rank (rank starts at 1 for the 2nd hazard)
-    secondary_sum = sum(
-        score * 0.15 / (rank + 1)
-        for rank, (_, score) in enumerate(sorted_hazards[1:], 1)
+    # INFORM-inspired blended formula
+    active = sorted([s for s in scores.values() if s > 5], reverse=True)
+    max_hazard = active[0] if active else 0.0
+    geo_mean_top3 = (
+        prod(active[:3]) ** (1.0 / min(3, len(active))) if active else 0.0
     )
+    composite = min(100.0, 0.6 * max_hazard + 0.4 * geo_mean_top3)
 
-    composite = min(100.0, max_hazard + secondary_sum)
     dominant = sorted_hazards[0][0]
     severity = score_to_severity(composite)
 

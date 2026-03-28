@@ -1,7 +1,7 @@
-"""Train the wildfire LightGBM model with Platt calibration.
+"""Train the windstorm LightGBM classifier.
 
-Loads wildfire_train.csv, trains LightGBM, fits a Platt sigmoid calibrator
-on its predicted probabilities, and saves both artefacts.
+Loads windstorm_train.csv, trains with stratified split,
+saves to saved_models/windstorm_lgbm.joblib.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import pandas as pd
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import train_test_split
 
-from app.ml.models.wildfire_risk import FEATURE_NAMES
+from app.ml.models.windstorm_risk import FEATURE_NAMES
 from app.ml.training.config import (
     LGBM_LEARNING_RATE,
     LGBM_MAX_DEPTH,
@@ -25,7 +25,7 @@ from app.ml.training.evaluate_util import print_metrics, save_model
 
 
 def main() -> None:
-    csv_path = PROCESSED_DIR / "wildfire_train.csv"
+    csv_path = PROCESSED_DIR / "windstorm_train.csv"
     print(f"Loading {csv_path}...")
     df = pd.read_csv(csv_path)
 
@@ -46,8 +46,7 @@ def main() -> None:
         X, y, test_size=TEST_SPLIT, random_state=RANDOM_SEED, stratify=y,
     )
 
-    # --- LightGBM ---
-    print("Training LightGBM...")
+    print("Training windstorm LightGBM...")
     lgbm = LGBMClassifier(
         n_estimators=LGBM_N_ESTIMATORS,
         max_depth=LGBM_MAX_DEPTH,
@@ -58,25 +57,13 @@ def main() -> None:
     )
     lgbm.fit(X_train, y_train)
 
-    y_pred_lgbm = lgbm.predict(X_test)
-    y_prob_lgbm = lgbm.predict_proba(X_test)[:, 1]
-    print_metrics(y_test, y_pred_lgbm, y_prob_lgbm, label="Wildfire LightGBM")
+    y_pred = lgbm.predict(X_test)
+    y_prob = lgbm.predict_proba(X_test)[:, 1]
 
-    # --- Platt calibration (LogisticRegression on LightGBM probabilities) ---
-    print("Fitting Platt calibrator...")
-    from sklearn.linear_model import LogisticRegression
+    print_metrics(y_test, y_pred, y_prob, label="Windstorm LightGBM")
 
-    cal_X_train = lgbm.predict_proba(X_train)[:, 1]
-    calibrator = LogisticRegression(random_state=RANDOM_SEED)
-    calibrator.fit(cal_X_train.reshape(-1, 1), y_train)
-
-    y_prob_cal = calibrator.predict_proba(y_prob_lgbm.reshape(-1, 1))[:, 1]
-    y_pred_cal = (y_prob_cal >= 0.5).astype(int)
-    print_metrics(y_test, y_pred_cal, y_prob_cal, label="Wildfire Calibrated")
-
-    # --- Save models ---
-    save_model(lgbm, SAVED_MODELS_DIR / "wildfire_lgbm.joblib", "Wildfire LightGBM")
-    save_model(calibrator, SAVED_MODELS_DIR / "wildfire_calibrator.joblib", "Wildfire Calibrator")
+    out_path = SAVED_MODELS_DIR / "windstorm_lgbm.joblib"
+    save_model(lgbm, out_path, label="Windstorm LightGBM")
     print("Done.")
 
 

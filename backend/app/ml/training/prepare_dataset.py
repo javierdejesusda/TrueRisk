@@ -19,6 +19,7 @@ from app.ml.features.weather_indices import (
     compute_heat_index,
     compute_spei,
     compute_spi,
+    compute_utci,
     compute_wbgt,
 )
 from app.ml.training.config import (
@@ -157,6 +158,17 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
         api_values.append(0.85 * api_values[-1] + precip_vals[i])
     df["antecedent_precip_index"] = api_values
 
+    # Flood: multi-K Antecedent Precipitation Index (K=0.92, K=0.95)
+    api_092 = [precip_vals[0] if precip_vals else 0.0]
+    for i in range(1, len(df)):
+        api_092.append(0.92 * api_092[-1] + precip_vals[i])
+    df["antecedent_precip_index_092"] = api_092
+
+    api_095 = [precip_vals[0] if precip_vals else 0.0]
+    for i in range(1, len(df)):
+        api_095.append(0.95 * api_095[-1] + precip_vals[i])
+    df["antecedent_precip_index_095"] = api_095
+
     # Pressure tendency (daily data, so diff(1) = 1-day change)
     df["pressure_tendency_1d"] = df["pressure"].diff(1).fillna(0.0)
 
@@ -267,6 +279,14 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     )
     df["wbgt"] = df.apply(
         lambda r: compute_wbgt(
+            _safe(r["temp_max"], 25.0),
+            _safe(r["humidity"], 50.0),
+            _safe(r["wind_speed"], 10.0) / 3.6,
+        ),
+        axis=1,
+    )
+    df["utci"] = df.apply(
+        lambda r: compute_utci(
             _safe(r["temp_max"], 25.0),
             _safe(r["humidity"], 50.0),
             _safe(r["wind_speed"], 10.0) / 3.6,
@@ -405,12 +425,13 @@ FLOOD_FEATURES = [
     "elevation_m", "is_coastal", "is_mediterranean", "river_basin_risk",
     "month", "season_sin", "season_cos", "precip_7day_anomaly",
     "consecutive_rain_days", "max_precip_intensity_ratio",
-    "antecedent_precip_index", "soil_saturation_excess",
+    "antecedent_precip_index", "antecedent_precip_index_092",
+    "antecedent_precip_index_095", "soil_saturation_excess",
 ]
 
 HEATWAVE_FEATURES = [
     "temperature", "temperature_max", "temperature_min", "heat_index", "wbgt",
-    "consecutive_hot_days", "consecutive_hot_nights", "heat_wave_day",
+    "utci", "consecutive_hot_days", "consecutive_hot_nights", "heat_wave_day",
     "humidity", "wind_speed", "uv_index", "temperature_anomaly",
     "temp_max_trend", "month", "latitude", "elevation_m",
     "is_coastal", "cloud_cover", "solar_irradiance",
@@ -427,6 +448,23 @@ WILDFIRE_FEATURES = [
 DROUGHT_LSTM_FEATURES = [
     "temperature", "precipitation", "soil_moisture",
     "humidity", "spei_1m", "spei_3m",
+]
+
+COLDWAVE_FEATURES = [
+    "temperature", "temperature_min", "temperature_min_7d", "wind_chill",
+    "consecutive_cold_days", "consecutive_cold_nights", "humidity",
+    "wind_speed", "precip_24h", "month", "latitude", "elevation_m",
+    "is_coastal", "cloud_cover", "season_sin", "season_cos",
+    "temp_trend_7d", "cold_persistence", "temp_drop_7d",
+]
+
+WINDSTORM_FEATURES = [
+    "wind_speed", "wind_gusts", "gust_factor", "wind_variability_3d",
+    "pressure", "pressure_tendency_1d", "pressure_tendency_3d",
+    "pressure_min_3d", "humidity", "precipitation_6h",
+    "gust_speed_ratio_7d", "pressure_tendency_7d", "storm_energy_proxy",
+    "pressure_anomaly_30d", "is_coastal", "is_mediterranean",
+    "elevation_m", "month", "season_sin", "season_cos",
 ]
 
 
@@ -486,6 +524,24 @@ def main() -> None:
     wf_df.to_csv(PROCESSED_DIR / "wildfire_train.csv", index=False)
     pos_rate = wf_label.mean() * 100
     print(f"Wildfire: {len(wf_df)} rows, {pos_rate:.1f}% positive (satellite proxy)")
+
+    # --- Cold Wave dataset (P5 Tmin exceedance labels) ---
+    cw_label = _load_event_labels("coldwave_events.csv", combined)
+    cw_df = combined[COLDWAVE_FEATURES].copy()
+    cw_df.fillna(0.0, inplace=True)
+    cw_df["label"] = cw_label
+    cw_df.to_csv(PROCESSED_DIR / "coldwave_train.csv", index=False)
+    pos_rate = cw_label.mean() * 100
+    print(f"Coldwave: {len(cw_df)} rows, {pos_rate:.1f}% positive (P5 Tmin)")
+
+    # --- Windstorm dataset (P99 gust exceedance labels) ---
+    ws_label = _load_event_labels("windstorm_events.csv", combined)
+    ws_df = combined[WINDSTORM_FEATURES].copy()
+    ws_df.fillna(0.0, inplace=True)
+    ws_df["label"] = ws_label
+    ws_df.to_csv(PROCESSED_DIR / "windstorm_train.csv", index=False)
+    pos_rate = ws_label.mean() * 100
+    print(f"Windstorm: {len(ws_df)} rows, {pos_rate:.1f}% positive (P99 gusts)")
 
     # --- Drought LSTM sequences (real soil-moisture deficit labels) ---
     print("\nBuilding drought LSTM sequences...")
