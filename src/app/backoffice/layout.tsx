@@ -1,6 +1,8 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { useAppStore } from '@/store/app-store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { PageTransition } from '@/components/layout/page-transition';
@@ -11,8 +13,20 @@ export default function BackofficeLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
+  const authUser = useAppStore((s) => s.authUser);
   const { hasActiveAlerts } = useAlerts();
+
+  useEffect(() => {
+    if (authUser && authUser.role !== 'admin') {
+      router.replace('/dashboard');
+    }
+  }, [authUser, router]);
+
+  if (!authUser || authUser.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="relative grain flex min-h-screen bg-bg-primary">

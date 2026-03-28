@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const protectedPaths = ['/dashboard', '/alerts', '/map', '/profile', '/emergency', '/prediction', '/history', '/preparedness', '/community', '/safety'];
+const protectedPaths = ['/dashboard', '/alerts', '/map', '/profile', '/emergency', '/prediction', '/history', '/preparedness', '/community', '/safety', '/backoffice'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,5 +18,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|icons|login|register|report|backoffice|$).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|icons|login|register|report|$).*)'],
 };
