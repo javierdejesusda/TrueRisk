@@ -4,6 +4,7 @@ from sqlalchemy import String, JSON, DateTime, Boolean, Integer, Float, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+from app.security.field_encryption import EncryptedString
 
 
 class User(Base):
@@ -29,14 +30,14 @@ class User(Base):
     special_needs: Mapped[dict] = mapped_column(JSON, default=list)
 
     # Emergency contact
-    emergency_contact_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    emergency_contact_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    phone_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    emergency_contact_name: Mapped[str | None] = mapped_column(EncryptedString(200), nullable=True)
+    emergency_contact_phone: Mapped[str | None] = mapped_column(EncryptedString(100), nullable=True)
+    phone_number: Mapped[str | None] = mapped_column(EncryptedString(100), nullable=True)
     whatsapp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     telegram_chat_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Health & mobility
-    medical_conditions: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    medical_conditions: Mapped[str | None] = mapped_column(EncryptedString(1000), nullable=True)
     mobility_level: Mapped[str] = mapped_column(String(20), default="full")
     has_vehicle: Mapped[bool] = mapped_column(Boolean, default=False)
     has_ac: Mapped[bool] = mapped_column(Boolean, default=True)
