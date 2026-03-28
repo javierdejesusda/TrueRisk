@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_optional_user
+from app.api.deps import get_db, get_optional_user, get_current_user
 from app.models.push_subscription import PushSubscription
 from app.models.user import User
 from app.schemas.push import PushSubscribeRequest, PushSubscribeResponse
@@ -74,3 +74,25 @@ async def unsubscribe(
     subscription.is_active = False
     await db.commit()
     return {"status": "unsubscribed"}
+
+
+@router.post("/test", status_code=200)
+async def test_push(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Send a test push notification to the authenticated user."""
+    from app.config import settings
+    from app.services.push_service import notify_user
+
+    if not settings.vapid_private_key:
+        raise HTTPException(status_code=503, detail="VAPID keys not configured")
+
+    sent = await notify_user(
+        db, user.id,
+        title="TrueRisk Test",
+        body="Push notifications are working correctly!",
+    )
+    if sent == 0:
+        raise HTTPException(status_code=404, detail="No active push subscriptions found")
+    return {"sent": sent}

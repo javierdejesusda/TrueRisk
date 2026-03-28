@@ -11,7 +11,7 @@ export function NotificationChannels() {
   const t = useTranslations('NotificationChannels');
   const tProfile = useTranslations('Profile');
   const backendToken = useAppStore((s) => s.backendToken);
-  const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe } =
+  const { isSupported, isSubscribed, isLoading, error: pushError, subscribe, unsubscribe } =
     usePushNotifications();
 
   const [telegramCode, setTelegramCode] = useState<string | null>(null);
@@ -45,21 +45,38 @@ export function NotificationChannels() {
 
       <div className="flex flex-col gap-4">
         {/* Push Notifications */}
-        {isSupported && (
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-text-primary">{t('push')}</p>
-              <p className="text-xs text-text-muted mt-0.5">
-                {tProfile('pushDescription')}
-              </p>
-            </div>
-            <ToggleSwitch
-              checked={isSubscribed}
-              disabled={isLoading}
-              onToggle={() => (isSubscribed ? unsubscribe() : subscribe())}
-            />
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-text-primary">{t('push')}</p>
+            <p className="text-xs text-text-muted mt-0.5">
+              {isSupported ? tProfile('pushDescription') : pushError || t('pushError')}
+            </p>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            {isSubscribed && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await apiFetch('/api/push/test', { method: 'POST' });
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.detail || 'Test failed');
+                  }
+                }}
+                className="shrink-0 rounded-lg border border-border bg-bg-secondary px-3 py-1.5 text-xs font-medium text-text-primary transition-all duration-150 hover:border-accent-green/60 hover:bg-accent-green/5"
+              >
+                {t('testPush')}
+              </button>
+            )}
+            {isSupported && (
+              <ToggleSwitch
+                checked={isSubscribed}
+                disabled={isLoading}
+                onToggle={() => (isSubscribed ? unsubscribe() : subscribe())}
+              />
+            )}
+          </div>
+        </div>
 
         {/* WhatsApp */}
         <div className="flex items-center justify-between gap-4">

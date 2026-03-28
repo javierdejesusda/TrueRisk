@@ -631,7 +631,9 @@
     "disabled": "Desactivado",
     "phoneRequired": "Configura tu numero de telefono en el perfil primero",
     "toggleError": "No se pudo actualizar la preferencia de notificacion",
-    "toggleSuccess": "Preferencia de notificacion actualizada"
+    "toggleSuccess": "Preferencia de notificacion actualizada",
+    "testPush": "Enviar prueba",
+    "pushError": "Push no disponible"
   },
   "Language": {
     "es": "ES",

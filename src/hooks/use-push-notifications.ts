@@ -18,22 +18,32 @@ export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const provinceCode = useAppStore((s) => s.provinceCode);
   const backendToken = useAppStore((s) => s.backendToken);
   const setPushEnabled = useAppStore((s) => s.setPushEnabled);
 
   useEffect(() => {
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window && !!VAPID_PUBLIC_KEY;
-    setIsSupported(supported);
-    if (supported) {
-      navigator.serviceWorker.ready.then((reg) => {
-        reg.pushManager.getSubscription().then((sub) => {
-          const active = !!sub;
-          setIsSubscribed(active);
-          setPushEnabled(active);
-        });
-      });
+    if (!('serviceWorker' in navigator)) {
+      setError('Service Workers not supported');
+      return;
     }
+    if (!('PushManager' in window)) {
+      setError('Push API not supported');
+      return;
+    }
+    if (!VAPID_PUBLIC_KEY) {
+      setError('Push not configured (missing VAPID key)');
+      return;
+    }
+    setIsSupported(true);
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.pushManager.getSubscription().then((sub) => {
+        const active = !!sub;
+        setIsSubscribed(active);
+        setPushEnabled(active);
+      });
+    });
   }, [setPushEnabled]);
 
   const subscribe = useCallback(async () => {
@@ -101,5 +111,5 @@ export function usePushNotifications() {
     }
   }, [setPushEnabled]);
 
-  return { isSupported, isSubscribed, isLoading, subscribe, unsubscribe };
+  return { isSupported, isSubscribed, isLoading, error, subscribe, unsubscribe };
 }

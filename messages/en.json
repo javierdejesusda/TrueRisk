@@ -633,7 +633,9 @@
     "disabled": "Disabled",
     "phoneRequired": "Set your phone number in the profile below first",
     "toggleError": "Could not update notification preference",
-    "toggleSuccess": "Notification preference updated"
+    "toggleSuccess": "Notification preference updated",
+    "testPush": "Send Test",
+    "pushError": "Push unavailable"
   },
   "Language": {
     "es": "ES",
