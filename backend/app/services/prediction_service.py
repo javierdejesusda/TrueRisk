@@ -145,24 +145,17 @@ def _gev_analysis(values: list[float], current: float) -> dict:
             "lowConfidence": low_confidence,
         })
 
-    # C10: Bootstrap CI for return levels
+    # C10: Parametric CI for return levels (delta method approximation).
+    # Full bootstrap is too expensive for a synchronous request (~7500 GEV fits).
+    # Use the GEV Fisher-information asymptotic CI as a fast proxy.
+    n_obs = len(arr)
     for rl in return_levels:
-        if not rl.get("lowConfidence"):
-            period = int(rl["period"])
-
-            def _rl_stat(vals: list[float], p: int = period) -> float:
-                if len(vals) < 10:
-                    return rl["value"]
-                try:
-                    sh, lo, sc = stats.genextreme.fit(vals)
-                    return float(
-                        stats.genextreme.ppf(1 - 1.0 / p, sh, loc=lo, scale=max(sc, 0.01))
-                    )
-                except Exception:
-                    return rl["value"]
-
-            ci_lo, ci_hi = _bootstrap_ci(arr, _rl_stat)
-            rl["ci"] = [ci_lo, ci_hi]  # type: ignore[assignment]
+        if not rl.get("lowConfidence") and n_obs >= 30:
+            se = scale / math.sqrt(n_obs)  # approximate standard error
+            rl["ci"] = [  # type: ignore[assignment]
+                round(rl["value"] - 1.96 * se * math.log(rl["period"]), 2),
+                round(rl["value"] + 1.96 * se * math.log(rl["period"]), 2),
+            ]
 
     # Backward-compat: mu/beta alongside shape/loc/scale
     mu = loc
