@@ -213,7 +213,6 @@ async def send_alert_email(
     province_name: str | None = None,
 ) -> str | None:
     """Send a styled alert notification email. Returns the email ID on success."""
-    sev = SEVERITY_CONFIG.get(severity, SEVERITY_CONFIG[3])
     hazard = HAZARD_CONFIG.get(hazard_type, {"label_es": hazard_type})
     subject = f"{'[CRITICO] ' if severity >= 5 else ''}Alerta de {hazard.get('label_es', hazard_type)}: {title}"
     html = build_alert_email_html(
