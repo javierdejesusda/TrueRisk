@@ -480,7 +480,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         }}
         style={{ width: '100%', height: '100%' }}
         mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-        maxBounds={[[-20, 27], [6, 44]]}
+        maxBounds={[[-25, 22], [10, 48]]}
         interactiveLayerIds={
           enrichedGeoJSON
             ? zoomLevel >= 6.5 && enrichedMunicipalityGeoJSON
