@@ -1,10 +1,13 @@
 """Compute profile completion percentage by weighted sections."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypedDict
 
 
-SectionConfig = dict[str, float | list[str]]
+class SectionConfig(TypedDict):
+    weight: float
+    fields: list[str]
+
 
 SECTIONS: dict[str, SectionConfig] = {
     "location": {
@@ -46,8 +49,8 @@ def compute_profile_completion(user_dict: dict[str, Any]) -> dict:
     sections = {}
     total = 0.0
     for section, cfg in SECTIONS.items():
-        fields = list(cfg["fields"])
-        weight = float(cfg["weight"])
+        fields = cfg["fields"]
+        weight = cfg["weight"]
         filled = sum(1 for f in fields if user_dict.get(f) is not None)
         pct = filled / len(fields) if fields else 0
         sections[section] = round(pct * 100)
