@@ -197,3 +197,61 @@ def _build_narrative_context(risk: RiskScore, province_name: str) -> str:
         f"Windstorm: {risk.windstorm_score:.0f}, DANA: {risk.dana_score:.0f}. "
         f"Computed at: {risk.computed_at.isoformat() if risk.computed_at else 'unknown'}."
     )
+
+
+async def get_template_narrative(
+    db: AsyncSession, province_code: str,
+) -> dict | None:
+    """Generate a simple template-based narrative from RiskScore data.
+
+    Used as fallback when AI-generated narratives are unavailable.
+    """
+    from app.models.province import Province
+
+    latest_risk = await db.scalar(
+        select(RiskScore)
+        .where(RiskScore.province_code == province_code)
+        .order_by(RiskScore.computed_at.desc())
+        .limit(1)
+    )
+    if not latest_risk:
+        return None
+
+    province = await db.get(Province, province_code)
+    name = province.name if province else province_code
+
+    severity_es = {
+        "low": "bajo", "moderate": "moderado",
+        "high": "alto", "critical": "critico",
+    }
+    sev_es = severity_es.get(latest_risk.severity, latest_risk.severity)
+    hazard_es = {
+        "flood": "inundacion", "wildfire": "incendio forestal",
+        "drought": "sequia", "heatwave": "ola de calor",
+        "seismic": "actividad sismica", "coldwave": "ola de frio",
+        "windstorm": "temporal de viento", "dana": "DANA",
+    }
+    dom_es = hazard_es.get(latest_risk.dominant_hazard, latest_risk.dominant_hazard)
+
+    content_es = (
+        f"Resumen de riesgo para {name}: nivel general {sev_es} "
+        f"con una puntuacion de {latest_risk.composite_score:.0f}/100. "
+        f"El riesgo dominante es {dom_es}. "
+        f"Mantengase informado y siga las recomendaciones de proteccion civil."
+    )
+    content_en = (
+        f"Risk summary for {name}: overall level {latest_risk.severity} "
+        f"with a score of {latest_risk.composite_score:.0f}/100. "
+        f"The dominant hazard is {latest_risk.dominant_hazard}. "
+        f"Stay informed and follow civil protection recommendations."
+    )
+
+    return {
+        "available": True,
+        "province_code": province_code,
+        "type": "morning",
+        "content_es": content_es,
+        "content_en": content_en,
+        "generated_at": latest_risk.computed_at.isoformat() if latest_risk.computed_at else None,
+        "is_template": True,
+    }

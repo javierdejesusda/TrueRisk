@@ -668,19 +668,25 @@ async def get_narrative(
     db: AsyncSession = Depends(get_db),
 ):
     """Get the latest pre-generated narrative for a province."""
-    from app.services.narrative_service import get_latest_narrative
+    from app.services.narrative_service import get_latest_narrative, get_template_narrative
 
     narrative = await get_latest_narrative(db, province_code, type)
-    if not narrative:
-        return {"available": False, "province_code": province_code}
-    return {
-        "available": True,
-        "province_code": province_code,
-        "type": narrative.narrative_type,
-        "content_es": narrative.content_es,
-        "content_en": narrative.content_en,
-        "generated_at": narrative.generated_at.isoformat() if narrative.generated_at else None,
-    }
+    if narrative:
+        return {
+            "available": True,
+            "province_code": province_code,
+            "type": narrative.narrative_type,
+            "content_es": narrative.content_es,
+            "content_en": narrative.content_en,
+            "generated_at": narrative.generated_at.isoformat() if narrative.generated_at else None,
+        }
+
+    # Fallback: template-based narrative from risk score data
+    fallback = await get_template_narrative(db, province_code)
+    if fallback:
+        return fallback
+
+    return {"available": False, "province_code": province_code}
 
 
 @router.get("/{province_code}", response_model=RiskScoreResponse)
