@@ -735,7 +735,11 @@
     "savePhone": "Guardar",
     "phoneSaved": "Telefono guardado",
     "telegramLinked": "Vinculado",
-    "noPhone": "Anade un numero de telefono primero"
+    "noPhone": "Anade un numero de telefono primero",
+    "email": "Email",
+    "emailDesc": "Recibir alertas directamente en tu bandeja de entrada",
+    "emailNoEmail": "No tienes email en tu cuenta",
+    "testEmail": "Enviar prueba"
   },
   "Language": {
     "es": "ES",

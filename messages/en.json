@@ -737,7 +737,11 @@
     "savePhone": "Save",
     "phoneSaved": "Phone saved",
     "telegramLinked": "Linked",
-    "noPhone": "Add phone number first"
+    "noPhone": "Add phone number first",
+    "email": "Email",
+    "emailDesc": "Receive alerts directly in your inbox",
+    "emailNoEmail": "No email on your account",
+    "testEmail": "Send Test"
   },
   "Language": {
     "es": "ES",

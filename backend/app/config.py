@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 10080  # 7 days
 
+    # Resend (email)
+    resend_api_key: str = ""
+    resend_from_email: str = "TrueRisk <alerts@truerisk.cloud>"
+
     # Twilio
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""

@@ -13,7 +13,7 @@ from app.config import settings
 from app.database import engine, Base
 from app.rate_limit import limiter
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
-from app.api import ai_summary, sms, data_sources
+from app.api import ai_summary, sms, data_sources, email
 from app.api import auth, suggestions, preparedness, emergency_plan, safety
 from app.api import flash_flood, drought
 from app.api import gamification as gamification_api
@@ -180,6 +180,7 @@ app.include_router(community.router, prefix="/api/v1/community", tags=["communit
 app.include_router(advisor.router, prefix="/api/v1/advisor", tags=["advisor"])
 app.include_router(ai_summary.router, prefix="/api/v1/ai-summary", tags=["ai-summary"])
 app.include_router(sms.router, prefix="/api/v1/sms", tags=["sms"])
+app.include_router(email.router, prefix="/api/v1/email", tags=["email"])
 app.include_router(data_sources.router, prefix="/api/v1/data", tags=["data-sources"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(auth.router, prefix="/api/v1/account", tags=["account"])

@@ -58,6 +58,7 @@ class ProfileUpdateRequest(BaseModel):
     alert_delivery: str | None = None
     hazard_preferences: list[str] | None = None
     whatsapp_enabled: bool | None = None
+    email_notifications_enabled: bool | None = None
     # Household
     household_members: list[dict] | None = None
     pet_details: list[dict] | None = None
@@ -139,6 +140,7 @@ class UserResponse(BaseModel):
     alert_delivery: str
     hazard_preferences: list | dict
     whatsapp_enabled: bool = False
+    email_notifications_enabled: bool = False
     telegram_chat_id: str | None = None
     # Enhanced settings
     household_members: list | dict | None = None
