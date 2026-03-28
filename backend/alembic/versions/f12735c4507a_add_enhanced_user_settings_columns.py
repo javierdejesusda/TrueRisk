@@ -21,8 +21,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def _column_exists(table: str, column: str) -> bool:
     bind = op.get_bind()
-    result = bind.execute(sa.text(f"PRAGMA table_info({table})"))
-    return any(row[1] == column for row in result.fetchall())
+    dialect = bind.dialect.name
+    if dialect == "sqlite":
+        result = bind.execute(sa.text(f"PRAGMA table_info({table})"))
+        return any(row[1] == column for row in result.fetchall())
+    else:
+        result = bind.execute(sa.text(
+            "SELECT 1 FROM information_schema.columns "
+            "WHERE table_name = :table AND column_name = :column"
+        ), {"table": table, "column": column})
+        return result.fetchone() is not None
 
 
 def _add_column_if_missing(table: str, column: sa.Column) -> None:
