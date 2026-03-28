@@ -1,8 +1,10 @@
 """Prediction service -- computes statistical forecasting models from weather history.
 
-Provides Gumbel extreme-value analysis, linear regression, Bayesian classification,
-exponential moving averages, z-score anomaly detection, decision-tree classification,
-and k-nearest-neighbor matching.
+Provides GEV extreme-value analysis, linear regression, Bayesian classification,
+exponential moving averages, distribution-appropriate anomaly detection, rule-based
+classification, k-nearest-neighbor matching, Mann-Kendall trend tests,
+Peaks-Over-Threshold / GPD analysis, bootstrap confidence intervals, and EWMA
+control charts.
 """
 
 from __future__ import annotations
@@ -13,6 +15,8 @@ from datetime import timedelta
 from app.utils.time import utcnow
 from typing import Any
 
+import numpy as np
+from scipy import stats
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -68,65 +72,100 @@ def _safe(val: Any, default: float = 0.0) -> float:
 
 
 # ---------------------------------------------------------------------------
-# Gumbel extreme-value distribution
+# C1/C2: GEV extreme-value distribution (replaces Gumbel method-of-moments)
 # ---------------------------------------------------------------------------
 
-def _gumbel_params(values: list[float]) -> tuple[float, float]:
-    """Estimate Gumbel location (mu) and scale (beta) via method of moments."""
-    if len(values) < 2:
-        return (0.0, 1.0)
-    mean = sum(values) / len(values)
-    variance = sum((v - mean) ** 2 for v in values) / len(values)
-    std = max(math.sqrt(variance), 0.01)
-    beta = max(std * math.sqrt(6) / math.pi, 0.01)
-    mu = mean - 0.5772 * beta
-    return (round(mu, 4), round(max(beta, 0.01), 4))
+def _gev_fallback(current: float) -> dict:
+    return {
+        "params": {"mu": 0, "beta": 1, "shape": 0, "loc": 0, "scale": 1},
+        "currentValue": round(current, 2),
+        "exceedanceProbability": 0.5,
+        "returnPeriod": 2.0,
+        "returnPeriodCapped": False,
+        "maxCredibleReturnPeriod": 0,
+        "pdfCurve": [],
+        "returnLevels": [],
+    }
 
 
-def _gumbel_pdf(x: float, mu: float, beta: float) -> float:
-    beta = max(beta, 0.01)
-    z = (x - mu) / beta
-    if abs(z) > 20:
-        return 0.0
-    return (1 / beta) * math.exp(-(z + math.exp(-z)))
+def _gev_analysis(values: list[float], current: float) -> dict:
+    if len(values) < 10:
+        return _gev_fallback(current)
 
+    arr = [v for v in values if not math.isnan(v)]
+    if len(arr) < 10:
+        return _gev_fallback(current)
 
-def _gumbel_cdf(x: float, mu: float, beta: float) -> float:
-    beta = max(beta, 0.01)
-    z = (x - mu) / beta
-    z = max(min(z, 20), -20)
-    return math.exp(-math.exp(-z))
+    shape, loc, scale = stats.genextreme.fit(arr)
+    scale = max(scale, 0.01)
 
-
-def _gumbel_analysis(values: list[float], current: float) -> dict:
-    mu, beta = _gumbel_params(values)
-    cdf = _gumbel_cdf(current, mu, beta)
+    cdf = stats.genextreme.cdf(current, shape, loc=loc, scale=scale)
     exceedance = 1 - cdf
     return_period = 1 / max(exceedance, 1e-6)
 
-    vmin = min(values) if values else 0
-    vmax = max(values) if values else 1
+    # C2: Cap return periods
+    max_credible = 2 * len(arr) / 365
+    return_period_capped = return_period > max_credible
+
+    vmin, vmax = min(arr), max(arr)
     spread = max(vmax - vmin, 1e-6)
-    x_range_start = vmin - 0.2 * spread
-    x_range_end = vmax + 0.3 * spread
+    x_start = vmin - 0.2 * spread
+    x_end = vmax + 0.3 * spread
     steps = 60
-    step_size = (x_range_end - x_range_start) / steps
+    step_size = (x_end - x_start) / steps
     pdf_curve = []
     for i in range(steps + 1):
-        x = x_range_start + i * step_size
-        pdf_curve.append({"x": round(x, 2), "y": round(_gumbel_pdf(x, mu, beta), 6)})
+        x = x_start + i * step_size
+        y = stats.genextreme.pdf(x, shape, loc=loc, scale=scale)
+        pdf_curve.append({"x": round(x, 2), "y": round(float(y), 6)})
 
     return_levels = []
     for period in [2, 5, 10, 25, 50, 100]:
         p = 1 - 1.0 / period
-        level = mu - beta * math.log(-math.log(p))
-        return_levels.append({"period": period, "value": round(level, 2)})
+        level = float(stats.genextreme.ppf(p, shape, loc=loc, scale=scale))
+        low_confidence = period > max_credible
+        return_levels.append({
+            "period": period,
+            "value": round(level, 2),
+            "lowConfidence": low_confidence,
+        })
+
+    # C10: Bootstrap CI for return levels
+    for rl in return_levels:
+        if not rl.get("lowConfidence"):
+            period = rl["period"]
+
+            def _rl_stat(vals: list[float], p: int = period) -> float:
+                if len(vals) < 10:
+                    return rl["value"]
+                try:
+                    sh, lo, sc = stats.genextreme.fit(vals)
+                    return float(
+                        stats.genextreme.ppf(1 - 1.0 / p, sh, loc=lo, scale=max(sc, 0.01))
+                    )
+                except Exception:
+                    return rl["value"]
+
+            ci_lo, ci_hi = _bootstrap_ci(arr, _rl_stat)
+            rl["ci"] = [ci_lo, ci_hi]
+
+    # Backward-compat: mu/beta alongside shape/loc/scale
+    mu = loc
+    beta = scale
 
     return {
-        "params": {"mu": mu, "beta": beta},
+        "params": {
+            "mu": round(mu, 4),
+            "beta": round(beta, 4),
+            "shape": round(shape, 4),
+            "loc": round(loc, 4),
+            "scale": round(scale, 4),
+        },
         "currentValue": round(current, 2),
-        "exceedanceProbability": round(exceedance, 4),
-        "returnPeriod": round(min(return_period, 9999), 1),
+        "exceedanceProbability": round(float(exceedance), 4),
+        "returnPeriod": round(min(float(return_period), 9999), 1),
+        "returnPeriodCapped": return_period_capped,
+        "maxCredibleReturnPeriod": round(max_credible, 1),
         "pdfCurve": pdf_curve,
         "returnLevels": return_levels,
     }
@@ -179,7 +218,7 @@ def _linear_regression(values: list[float]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Bayesian event classification
+# C4: Bayesian event classification (KDE likelihood when >=20 obs)
 # ---------------------------------------------------------------------------
 
 _EVENT_THRESHOLDS: dict[str, dict[str, Any]] = {
@@ -219,19 +258,34 @@ def _bayesian_analysis(records: list[dict], baseline: list[dict] | None = None) 
 
         prior = count / len(prior_source)
 
-        # Likelihood: how close current conditions are to the threshold.
-        # Uses a sigmoid-like ramp so values approaching the threshold still
-        # produce non-zero likelihood (not just binary above/below).
-        latest = float(records[-1].get(field, 0) or 0)
-        if below:
-            # For cold events: likelihood increases as temp drops toward threshold
-            distance = (threshold - latest) / max(abs(threshold), 1)
-            # Ramp: 0 at 2× above threshold, 1 at threshold
-            likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
+        latest_value = float(records[-1].get(field, 0) or 0)
+
+        # C4: KDE likelihood when enough observations
+        field_values = [float(r.get(field, 0) or 0) for r in prior_source]
+        if len(field_values) >= 20:
+            try:
+                kde = stats.gaussian_kde(field_values)
+                likelihood = float(kde(latest_value)[0])
+                # Normalize: scale to [0,1] using max PDF as reference
+                max_pdf = float(kde(kde.dataset).max())
+                likelihood = min(likelihood / max(max_pdf, 1e-6), 1.0)
+            except Exception:
+                # Fall back to sigmoid ramp
+                if below:
+                    distance = (threshold - latest_value) / max(abs(threshold), 1)
+                    likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
+                else:
+                    distance = (latest_value - threshold) / max(abs(threshold), 1)
+                    likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
         else:
-            # For warm/extreme events: likelihood increases as value rises toward threshold
-            distance = (latest - threshold) / max(abs(threshold), 1)
-            likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
+            # Sigmoid ramp fallback
+            if below:
+                distance = (threshold - latest_value) / max(abs(threshold), 1)
+                likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
+            else:
+                distance = (latest_value - threshold) / max(abs(threshold), 1)
+                likelihood = max(0.0, min(1.0, 0.5 + distance * 0.5))
+
         # Ensure a small minimum so prior always contributes
         likelihood = max(likelihood, 0.01)
 
@@ -250,12 +304,16 @@ def _bayesian_analysis(records: list[dict], baseline: list[dict] | None = None) 
 
 
 # ---------------------------------------------------------------------------
-# Exponential Moving Average
+# C11: Exponential Moving Average with EWMA control charts
 # ---------------------------------------------------------------------------
 
 def _ema_analysis(values: list[float], alpha: float = 0.3) -> dict:
     if not values:
-        return {"data": [], "trend": "stable", "rateOfChange": 0}
+        return {
+            "data": [], "trend": "stable", "rateOfChange": 0,
+            "controlLimits": {"ucl": 0, "lcl": 0, "sigma": 0},
+            "outOfControl": False,
+        }
 
     smoothed = [values[0]]
     for v in values[1:]:
@@ -284,30 +342,52 @@ def _ema_analysis(values: list[float], alpha: float = 0.3) -> dict:
     else:
         trend = "stable"
 
-    return {"data": data, "trend": trend, "rateOfChange": round(roc, 4)}
+    # C11: EWMA control limits
+    mean_val = sum(values) / len(values) if len(values) > 0 else 0
+    raw_std = (
+        (sum((v - mean_val) ** 2 for v in values) / len(values)) ** 0.5
+        if len(values) > 1
+        else 0
+    )
+    sigma_ema = raw_std * math.sqrt(alpha / (2 - alpha)) if alpha < 2 else raw_std
+    ucl = smoothed[-1] + 3 * sigma_ema
+    lcl = smoothed[-1] - 3 * sigma_ema
+    out_of_control = smoothed[-1] > ucl or smoothed[-1] < lcl
+
+    return {
+        "data": data,
+        "trend": trend,
+        "rateOfChange": round(roc, 4),
+        "controlLimits": {
+            "ucl": round(ucl, 2),
+            "lcl": round(lcl, 2),
+            "sigma": round(sigma_ema, 4),
+        },
+        "outOfControl": out_of_control,
+    }
 
 
 # ---------------------------------------------------------------------------
-# Z-Score anomaly detection
+# C3: Distribution-appropriate z-score anomaly detection
 # ---------------------------------------------------------------------------
 
 def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
     field_map = {
-        "temperature": "temperature",
-        "humidity": "humidity",
-        "precipitation": "precipitation",
-        "windSpeed": "wind_speed",
-        "pressure": "pressure",
+        "temperature": ("temperature", "gaussian"),
+        "humidity": ("humidity", "gaussian"),
+        "precipitation": ("precipitation", "gamma"),
+        "windSpeed": ("wind_speed", "weibull"),
+        "pressure": ("pressure", "gaussian"),
     }
 
     results = []
-    for display_name, db_field in field_map.items():
+    for display_name, (db_field, dist_type) in field_map.items():
         values = [_safe(r.get(db_field)) for r in records if r.get(db_field) is not None]
         current = _safe(latest.get(db_field))
         if len(values) < 2:
             results.append({
                 "field": display_name, "value": current, "mean": 0,
-                "stdDev": 0, "zScore": 0, "isAnomaly": False,
+                "stdDev": 0, "zScore": 0, "isAnomaly": False, "distribution": dist_type,
             })
             continue
 
@@ -316,7 +396,6 @@ def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
         std = math.sqrt(variance) if variance > 0 else 0.0
 
         if std < 0.01:
-            # Baseline is essentially constant — z-score is undefined, treat as 0
             results.append({
                 "field": display_name,
                 "value": round(current, 2),
@@ -324,10 +403,51 @@ def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
                 "stdDev": 0.0,
                 "zScore": 0.0,
                 "isAnomaly": False,
+                "distribution": dist_type,
             })
             continue
 
-        z = (current - mean) / std
+        # C3: Distribution-appropriate z-score via PIT
+        z = 0.0
+        if dist_type == "gamma" and min(values) >= 0:
+            try:
+                pos = [v for v in values if v > 0]
+                if len(pos) >= 5:
+                    a, floc, fscale = stats.gamma.fit(pos, floc=0)
+                    if current <= 0:
+                        zero_frac = len([v for v in values if v <= 0]) / len(values)
+                        zero_frac = max(1e-6, min(zero_frac, 1 - 1e-6))
+                        z = float(stats.norm.ppf(zero_frac))
+                    else:
+                        cdf = stats.gamma.cdf(current, a, loc=floc, scale=fscale)
+                        cdf = max(1e-6, min(cdf, 1 - 1e-6))
+                        z = float(stats.norm.ppf(cdf))
+                else:
+                    z = (current - mean) / std
+            except Exception:
+                z = (current - mean) / std
+        elif dist_type == "weibull" and min(values) >= 0:
+            try:
+                pos = [v for v in values if v > 0]
+                if len(pos) >= 5:
+                    c, floc, fscale = stats.weibull_min.fit(pos, floc=0)
+                    if current <= 0:
+                        zero_frac = len([v for v in values if v <= 0]) / len(values)
+                        zero_frac = max(1e-6, min(zero_frac, 1 - 1e-6))
+                        z = float(stats.norm.ppf(zero_frac))
+                    else:
+                        cdf = stats.weibull_min.cdf(current, c, loc=floc, scale=fscale)
+                        cdf = max(1e-6, min(cdf, 1 - 1e-6))
+                        z = float(stats.norm.ppf(cdf))
+                else:
+                    z = (current - mean) / std
+            except Exception:
+                z = (current - mean) / std
+        else:
+            z = (current - mean) / std
+
+        if math.isnan(z) or math.isinf(z):
+            z = 0.0
 
         results.append({
             "field": display_name,
@@ -336,16 +456,17 @@ def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
             "stdDev": round(std, 2),
             "zScore": round(z, 2),
             "isAnomaly": abs(z) >= 2,
+            "distribution": dist_type,
         })
 
     return results
 
 
 # ---------------------------------------------------------------------------
-# Decision tree (rule-based)
+# C5: Rule-based classifier (renamed from decision tree)
 # ---------------------------------------------------------------------------
 
-def _decision_tree(latest: dict) -> dict:
+def _rule_based_classifier(latest: dict) -> dict:
     rules: list[str] = []
     temp = _safe(latest.get("temperature"), 20)
     precip = _safe(latest.get("precipitation"))
@@ -355,17 +476,17 @@ def _decision_tree(latest: dict) -> dict:
     if precip > 10:
         rules.append("Heavy precipitation (>10mm/h)")
     if precip > 5 and humidity > 80:
-        rules.append("High humidity + moderate rain → flood risk")
+        rules.append("High humidity + moderate rain -> flood risk")
     if temp > 35:
-        rules.append("Extreme heat (>35°C)")
+        rules.append("Extreme heat (>35C)")
     if temp > 30 and humidity < 30:
-        rules.append("Hot & dry → wildfire risk")
+        rules.append("Hot & dry -> wildfire risk")
     if temp < 5:
-        rules.append("Cold snap (<5°C)")
+        rules.append("Cold snap (<5C)")
     if wind > 60:
         rules.append("Storm-force winds (>60 km/h)")
     if wind > 40 and precip > 5:
-        rules.append("Strong wind + rain → severe weather")
+        rules.append("Strong wind + rain -> severe weather")
 
     if not rules:
         rules.append("No extreme conditions detected")
@@ -394,47 +515,63 @@ def _decision_tree(latest: dict) -> dict:
     }
 
 
+# Backward-compat alias
+_decision_tree = _rule_based_classifier
+
+
 # ---------------------------------------------------------------------------
-# K-Nearest Neighbors (historical event matching)
+# C6/C7: K-Nearest Neighbors (6D, z-normalized, full analog pool)
 # ---------------------------------------------------------------------------
 
 _HISTORICAL_EVENTS: list[dict[str, Any]] = [
-    {"year": 2019, "event": "DANA Alicante", "outcome": "catastrophic flooding", "temp": 22, "precip": 90, "wind": 70, "humidity": 95},
-    {"year": 2020, "event": "Storm Gloria", "outcome": "coastal flooding", "temp": 8, "precip": 45, "wind": 90, "humidity": 88},
-    {"year": 2022, "event": "June heatwave", "outcome": "extreme heat 45°C", "temp": 44, "precip": 0, "wind": 15, "humidity": 12},
-    {"year": 2023, "event": "Drought Andalucía", "outcome": "reservoir deficit 30%", "temp": 32, "precip": 2, "wind": 10, "humidity": 25},
-    {"year": 2024, "event": "Valencia DANA", "outcome": "severe flash floods", "temp": 20, "precip": 80, "wind": 65, "humidity": 92},
-    {"year": 2021, "event": "Filomena", "outcome": "heavy snowfall Madrid", "temp": -2, "precip": 30, "wind": 50, "humidity": 90},
-    {"year": 2023, "event": "August wildfires", "outcome": "wildfire Tenerife", "temp": 38, "precip": 0, "wind": 45, "humidity": 15},
-    {"year": 2020, "event": "Saharan dust", "outcome": "poor air quality", "temp": 35, "precip": 0, "wind": 30, "humidity": 20},
+    {"year": 2019, "event": "DANA Alicante", "outcome": "catastrophic flooding",
+     "temp": 22, "precip": 90, "wind": 70, "humidity": 95, "pressure": 1005, "soil_moisture": 0.6},
+    {"year": 2020, "event": "Storm Gloria", "outcome": "coastal flooding",
+     "temp": 8, "precip": 45, "wind": 90, "humidity": 88, "pressure": 998, "soil_moisture": 0.5},
+    {"year": 2022, "event": "June heatwave", "outcome": "extreme heat 45C",
+     "temp": 44, "precip": 0, "wind": 15, "humidity": 12, "pressure": 1018, "soil_moisture": 0.1},
+    {"year": 2023, "event": "Drought Andalucia", "outcome": "reservoir deficit 30%",
+     "temp": 32, "precip": 2, "wind": 10, "humidity": 25, "pressure": 1020, "soil_moisture": 0.08},
+    {"year": 2024, "event": "Valencia DANA", "outcome": "severe flash floods",
+     "temp": 20, "precip": 80, "wind": 65, "humidity": 92, "pressure": 1003, "soil_moisture": 0.55},
+    {"year": 2021, "event": "Filomena", "outcome": "heavy snowfall Madrid",
+     "temp": -2, "precip": 30, "wind": 50, "humidity": 90, "pressure": 1010, "soil_moisture": 0.7},
+    {"year": 2023, "event": "August wildfires", "outcome": "wildfire Tenerife",
+     "temp": 38, "precip": 0, "wind": 45, "humidity": 15, "pressure": 1015, "soil_moisture": 0.05},
+    {"year": 2020, "event": "Saharan dust", "outcome": "poor air quality",
+     "temp": 35, "precip": 0, "wind": 30, "humidity": 20, "pressure": 1012, "soil_moisture": 0.15},
 ]
 
 
-def _build_knn_events_from_summaries(daily_summaries: list[WeatherDailySummary]) -> list[dict[str, Any]]:
-    """Extract extreme weather days from daily summaries for KNN matching."""
+def _build_knn_events_from_summaries(
+    daily_summaries: list[WeatherDailySummary],
+) -> list[dict[str, Any]]:
+    """Build analog pool from ALL daily summaries, classified by dominant condition."""
     events: list[dict[str, Any]] = []
     for s in daily_summaries:
-        is_extreme = (
-            s.precipitation_sum > 30
-            or s.temperature_max > 38
-            or s.wind_speed_max > 60
-            or (s.temperature_max > 30 and s.precipitation_sum < 0.1)
-        )
-        if not is_extreme:
-            continue
-
+        # Classify day by dominant condition
         if s.precipitation_sum > 30:
-            outcome = f"heavy rain ({s.precipitation_sum:.0f}mm)"
-            event = "Heavy precipitation"
+            event = "Heavy rain"
+            outcome = f"precip {s.precipitation_sum:.0f}mm"
         elif s.temperature_max > 38:
-            outcome = f"extreme heat ({s.temperature_max:.1f}C)"
-            event = "Heat extreme"
+            event = "Extreme heat"
+            outcome = f"max {s.temperature_max:.1f}C"
+        elif (
+            hasattr(s, "temperature_min")
+            and s.temperature_min is not None
+            and s.temperature_min < 0
+        ):
+            event = "Frost"
+            outcome = f"min {s.temperature_min:.1f}C"
         elif s.wind_speed_max > 60:
-            outcome = f"strong winds ({s.wind_speed_max:.0f}km/h)"
-            event = "Wind event"
+            event = "Strong winds"
+            outcome = f"gusts {s.wind_speed_max:.0f}km/h"
+        elif s.precipitation_sum < 0.1 and s.temperature_max > 30:
+            event = "Hot dry"
+            outcome = f"{s.temperature_max:.1f}C, dry"
         else:
-            outcome = f"hot dry spell ({s.temperature_max:.1f}C, {s.precipitation_sum:.1f}mm)"
-            event = "Dry heat"
+            event = "Normal"
+            outcome = f"{s.temperature_avg:.1f}C, {s.precipitation_sum:.1f}mm"
 
         events.append({
             "year": s.date.year,
@@ -444,26 +581,42 @@ def _build_knn_events_from_summaries(daily_summaries: list[WeatherDailySummary])
             "precip": s.precipitation_sum,
             "wind": s.wind_speed_max,
             "humidity": s.humidity_avg or 50,
+            "pressure": s.pressure_avg or 1013,
+            "soil_moisture": getattr(s, "soil_moisture_avg", 0.3) or 0.3,
         })
     return events
 
 
 def _knn_matches(latest: dict, k: int = 5, events: list[dict] | None = None) -> list[dict]:
-    t = _safe(latest.get("temperature"), 20)
-    p = _safe(latest.get("precipitation"))
-    w = _safe(latest.get("wind_speed"))
-    h = _safe(latest.get("humidity"), 50)
+    dims = ["temp", "precip", "wind", "humidity", "pressure", "soil_moisture"]
+    query = [
+        _safe(latest.get("temperature"), 20),
+        _safe(latest.get("precipitation")),
+        _safe(latest.get("wind_speed")),
+        _safe(latest.get("humidity"), 50),
+        _safe(latest.get("pressure"), 1013),
+        _safe(latest.get("soil_moisture"), 0.3),
+    ]
 
     source_events = events if events else _HISTORICAL_EVENTS
+
+    # Compute mean/std from event pool for z-normalization
+    pool = [[float(evt.get(d, 0)) for d in dims] for evt in source_events]
+    if not pool:
+        return []
+
+    pool_arr = np.array(pool, dtype=np.float64)
+    means = pool_arr.mean(axis=0)
+    stds = np.maximum(pool_arr.std(axis=0), 1e-6)
+
+    # Normalize query
+    q_norm = [(query[i] - means[i]) / stds[i] for i in range(len(dims))]
+
     scored: list[dict[str, Any]] = []
     for evt in source_events:
-        et, ep, ew, eh = float(evt["temp"]), float(evt["precip"]), float(evt["wind"]), float(evt["humidity"])
-        dist = math.sqrt(
-            ((t - et) / 10) ** 2
-            + ((p - ep) / 20) ** 2
-            + ((w - ew) / 20) ** 2
-            + ((h - eh) / 20) ** 2
-        )
+        evt_vals = [float(evt.get(d, 0)) for d in dims]
+        e_norm = [(evt_vals[i] - means[i]) / stds[i] for i in range(len(dims))]
+        dist = math.sqrt(sum((q - e) ** 2 for q, e in zip(q_norm, e_norm)))
         scored.append({
             "event": evt["event"],
             "distance": round(dist, 2),
@@ -473,6 +626,148 @@ def _knn_matches(latest: dict, k: int = 5, events: list[dict] | None = None) -> 
 
     scored.sort(key=lambda x: float(x["distance"]))
     return scored[:k]
+
+
+# ---------------------------------------------------------------------------
+# C8: Mann-Kendall trend test
+# ---------------------------------------------------------------------------
+
+def _mann_kendall_test(values: list[float]) -> dict:
+    """Mann-Kendall trend test with Sen's slope."""
+    if len(values) < 10:
+        return {
+            "trend": "no data",
+            "p_value": 1.0,
+            "slope": 0.0,
+            "intercept": 0.0,
+            "significanceLevel": "none",
+        }
+
+    try:
+        import pymannkendall as mk
+
+        result = mk.original_test(values)
+
+        if result.p < 0.01:
+            sig = "very_significant"
+        elif result.p < 0.05:
+            sig = "significant"
+        elif result.p < 0.10:
+            sig = "marginally_significant"
+        else:
+            sig = "not_significant"
+
+        return {
+            "trend": result.trend,
+            "p_value": round(result.p, 4),
+            "slope": round(result.slope, 6),
+            "intercept": round(result.intercept, 4),
+            "significanceLevel": sig,
+        }
+    except Exception:
+        return {
+            "trend": "error",
+            "p_value": 1.0,
+            "slope": 0.0,
+            "intercept": 0.0,
+            "significanceLevel": "none",
+        }
+
+
+# ---------------------------------------------------------------------------
+# C9: Peaks Over Threshold + GPD
+# ---------------------------------------------------------------------------
+
+def _pot_gpd_analysis(
+    values: list[float], current: float, threshold_pct: int = 95
+) -> dict:
+    """Peaks Over Threshold with Generalized Pareto Distribution."""
+    if len(values) < 30:
+        return {
+            "threshold": 0,
+            "nExceedances": 0,
+            "shape": 0,
+            "scale": 1,
+            "returnLevels": [],
+        }
+
+    threshold = float(sorted(values)[int(len(values) * threshold_pct / 100)])
+    exceedances = [v - threshold for v in values if v > threshold]
+
+    if len(exceedances) < 5:
+        return {
+            "threshold": round(threshold, 2),
+            "nExceedances": len(exceedances),
+            "shape": 0,
+            "scale": 1,
+            "returnLevels": [],
+        }
+
+    try:
+        shape, _loc, scale = stats.genpareto.fit(exceedances, floc=0)
+        scale = max(scale, 0.01)
+
+        n_total = len(values)
+        n_exceed = len(exceedances)
+        rate = n_exceed / n_total
+
+        return_levels = []
+        for period in [2, 5, 10, 25, 50]:
+            m = period * 365  # daily obs
+            if shape != 0:
+                level = threshold + (scale / shape) * ((m * rate) ** shape - 1)
+            else:
+                level = threshold + scale * math.log(m * rate)
+            return_levels.append({"period": period, "value": round(float(level), 2)})
+
+        return {
+            "threshold": round(threshold, 2),
+            "nExceedances": n_exceed,
+            "shape": round(float(shape), 4),
+            "scale": round(float(scale), 4),
+            "returnLevels": return_levels,
+        }
+    except Exception:
+        return {
+            "threshold": round(threshold, 2),
+            "nExceedances": len(exceedances),
+            "shape": 0,
+            "scale": 1,
+            "returnLevels": [],
+        }
+
+
+# ---------------------------------------------------------------------------
+# C10: Bootstrap confidence intervals
+# ---------------------------------------------------------------------------
+
+def _bootstrap_ci(
+    values: list[float],
+    stat_func: Any,
+    n_boot: int = 500,
+    block_size: int = 7,
+    alpha: float = 0.05,
+) -> tuple[float, float]:
+    """Block bootstrap CI preserving weekly temporal correlation."""
+    if len(values) < 20:
+        val = stat_func(values)
+        return (val, val)
+
+    arr = np.array(values)
+    n = len(arr)
+    n_blocks = max(1, n // block_size)
+
+    boot_stats: list[float] = []
+    rng = np.random.default_rng(42)
+    for _ in range(n_boot):
+        block_starts = rng.integers(0, n - block_size + 1, size=n_blocks)
+        sample = np.concatenate([arr[s : s + block_size] for s in block_starts])[:n]
+        boot_stats.append(stat_func(sample.tolist()))
+
+    boot_stats.sort()
+    lo = boot_stats[int(n_boot * alpha / 2)]
+    hi = boot_stats[int(n_boot * (1 - alpha / 2))]
+    return (round(lo, 4), round(hi, 4))
 
 
 # ---------------------------------------------------------------------------
@@ -514,7 +809,7 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     winds = [_safe(r["wind_speed"]) for r in record_dicts]
 
     # Require minimum 30 daily summaries before using daily data path;
-    # otherwise the statistics are degenerate (e.g. 1 record → zero variance)
+    # otherwise the statistics are degenerate (e.g. 1 record -> zero variance)
     has_enough_daily = len(daily_summaries) >= 30
 
     # For regression/EMA: use daily avg temps when hourly data is sparse (<30 records).
@@ -526,7 +821,7 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     else:
         recent_temps = temps
 
-    # Use daily data for Gumbel (statistically meaningful with years of data)
+    # Use daily data for GEV (statistically meaningful with years of data)
     if has_enough_daily:
         daily_precips = [s.precipitation_sum for s in daily_summaries]
         daily_temp_maxes = [s.temperature_max for s in daily_summaries]
@@ -580,24 +875,58 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
         daily_baseline = None
         bayesian_recent = record_dicts
 
-    # Build KNN events from real historical extremes
+    # C7: Build KNN events from ALL daily summaries (not just extremes)
     knn_events = _build_knn_events_from_summaries(daily_summaries) if has_enough_daily else []
     if len(knn_events) < 3:
         fill_count = min(5 - len(knn_events), len(_HISTORICAL_EVENTS))
         knn_events = knn_events + _HISTORICAL_EVENTS[:fill_count]
 
+    # C5: Rule-based classifier (backward-compat: both keys)
+    rule_result = _rule_based_classifier(latest)
+
+    # C8: Mann-Kendall trend tests on daily series
+    mk_results = {}
+    if has_enough_daily:
+        mk_results["temperature"] = _mann_kendall_test(daily_temp_maxes)
+        mk_results["precipitation"] = _mann_kendall_test(daily_precips)
+        mk_results["windSpeed"] = _mann_kendall_test(daily_wind_maxes)
+    else:
+        mk_results["temperature"] = _mann_kendall_test(temps)
+        mk_results["precipitation"] = _mann_kendall_test(precips)
+        mk_results["windSpeed"] = _mann_kendall_test(winds)
+
+    # C9: POT+GPD on daily series
+    pot_results = {}
+    if has_enough_daily:
+        pot_results["precipitation"] = _pot_gpd_analysis(
+            daily_precips, _safe(latest["precipitation"])
+        )
+        pot_results["temperature"] = _pot_gpd_analysis(
+            daily_temp_maxes, _safe(latest["temperature"])
+        )
+        pot_results["windSpeed"] = _pot_gpd_analysis(
+            daily_wind_maxes, _safe(latest["wind_speed"])
+        )
+    else:
+        pot_results["precipitation"] = _pot_gpd_analysis(precips, _safe(latest["precipitation"]))
+        pot_results["temperature"] = _pot_gpd_analysis(temps, _safe(latest["temperature"]))
+        pot_results["windSpeed"] = _pot_gpd_analysis(winds, _safe(latest["wind_speed"]))
+
     return {
         "gumbel": {
-            "precipitation": _gumbel_analysis(daily_precips, _safe(latest["precipitation"])),
-            "temperature": _gumbel_analysis(daily_temp_maxes, _safe(latest["temperature"])),
-            "windSpeed": _gumbel_analysis(daily_wind_maxes, _safe(latest["wind_speed"])),
+            "precipitation": _gev_analysis(daily_precips, _safe(latest["precipitation"])),
+            "temperature": _gev_analysis(daily_temp_maxes, _safe(latest["temperature"])),
+            "windSpeed": _gev_analysis(daily_wind_maxes, _safe(latest["wind_speed"])),
         },
         "regression": _linear_regression(recent_temps),
         "bayesian": _bayesian_analysis(bayesian_recent, baseline=daily_baseline),
         "ema": _ema_analysis(recent_temps),
         "zScore": _zscore_analysis(baseline_records, latest),
-        "decisionTree": _decision_tree(latest),
+        "decisionTree": rule_result,
+        "ruleBasedClassifier": rule_result,
         "knn": _knn_matches(latest, events=knn_events),
+        "mannKendall": mk_results,
+        "pot": pot_results,
         "current": {
             "temperature": round(_safe(latest["temperature"]), 1),
             "humidity": round(_safe(latest["humidity"]), 1),

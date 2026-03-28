@@ -40,6 +40,7 @@ dependencies = [
     "python-json-logger>=3.0",
     "resend>=2.0",
     "EMD-signal>=1.6",
+    "pymannkendall>=1.4.3",
 ]
 
 [project.optional-dependencies]
