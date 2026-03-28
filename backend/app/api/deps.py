@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,13 +23,11 @@ async def get_db():
 
 async def get_current_user(
     token: str | None = Depends(oauth2_scheme),
-    token_query: str | None = Query(default=None, alias="token"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    effective_token = token or token_query
-    if not effective_token:
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    user_id = decode_access_token(effective_token)
+    user_id = decode_access_token(token)
     if user_id is None:
         raise HTTPException(status_code=401, detail="Invalid token")
     user = await db.get(User, user_id)
@@ -40,13 +38,11 @@ async def get_current_user(
 
 async def get_optional_user(
     token: str | None = Depends(oauth2_scheme),
-    token_query: str | None = Query(default=None, alias="token"),
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
-    effective_token = token or token_query
-    if not effective_token:
+    if not token:
         return None
-    user_id = decode_access_token(effective_token)
+    user_id = decode_access_token(token)
     if user_id is None:
         return None
     return await db.get(User, user_id)

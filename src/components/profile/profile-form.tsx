@@ -1,29 +1,45 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { apiFetch } from '@/lib/api-client';
-import { PROVINCES } from '@/lib/provinces';
-import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { showToast } from '@/components/ui/toast';
-
-// ── Constants ───────────────────────────────────────────────────────────
-
-const RESIDENCE_TYPES = ['apartment', 'house', 'rural', 'other'] as const;
-const SPECIAL_NEEDS = ['elderly', 'children', 'pets', 'disability', 'medical'] as const;
-const MOBILITY_LEVELS = ['full', 'limited', 'wheelchair'] as const;
-const ALERT_DELIVERY_OPTIONS = ['push', 'sms', 'both'] as const;
-const HAZARD_TYPES = ['flood', 'wildfire', 'drought', 'heatwave', 'seismic', 'coldwave', 'windstorm'] as const;
-const AGE_RANGES = ['0-5', '6-17', '18-64', '65+'] as const;
+import { LocationSection } from './sections/location-section';
+import { ResidenceSection } from './sections/residence-section';
+import { HealthSection } from './sections/health-section';
+import { EmergencySection } from './sections/emergency-section';
+import { AlertsSection } from './sections/alerts-section';
+import { HouseholdSection } from './sections/household-section';
+import { BuildingSection } from './sections/building-section';
+import { EconomicSection } from './sections/economic-section';
+import { InfrastructureSection } from './sections/infrastructure-section';
+import { DisasterExperienceSection } from './sections/disaster-experience-section';
+import { LocationMapSection } from './sections/location-map-section';
 
 // ── Schema ──────────────────────────────────────────────────────────────
+
+const householdMemberSchema = z.object({
+  name: z.string().default(''),
+  ageRange: z.string().default('18-64'),
+  mobility: z.string().default('full'),
+});
+
+const petSchema = z.object({
+  type: z.string().default('dog'),
+  count: z.number().int().min(1).default(1),
+  needsTransport: z.boolean().default(false),
+});
+
+const disasterExperienceSchema = z.object({
+  hazardType: z.string().default('flood'),
+  year: z.number().int().nullable().default(null),
+  severity: z.string().default('minor'),
+});
 
 const profileSchema = z.object({
   provinceCode: z.string().min(1),
@@ -41,9 +57,39 @@ const profileSchema = z.object({
   alertSeverityThreshold: z.number().min(1).max(5).default(3),
   alertDelivery: z.string().default('push'),
   hazardPreferences: z.array(z.string()).default([]),
+  // Household
+  householdMembers: z.array(householdMemberSchema).default([]),
+  pets: z.array(petSchema).default([]),
+  // Building
+  constructionYear: z.number().int().min(1800).max(2030).nullable().default(null),
+  buildingMaterials: z.string().default(''),
+  buildingStories: z.number().int().min(1).nullable().default(null),
+  hasBasement: z.boolean().default(false),
+  hasElevator: z.boolean().default(false),
+  buildingCondition: z.number().int().min(1).max(5).nullable().default(null),
+  // Economic
+  incomeBracket: z.string().default(''),
+  hasPropertyInsurance: z.boolean().default(false),
+  hasLifeInsurance: z.boolean().default(false),
+  propertyValueRange: z.string().default(''),
+  hasEmergencySavings: z.boolean().default(false),
+  // Infrastructure
+  hasMedicalDevices: z.boolean().default(false),
+  hasWaterStorage: z.boolean().default(false),
+  hasGenerator: z.boolean().default(false),
+  dependsPublicWater: z.boolean().default(true),
+  // Disaster experience
+  disasterExperiences: z.array(disasterExperienceSchema).default([]),
+  // Location coordinates
+  homeLat: z.number().nullable().default(null),
+  homeLng: z.number().nullable().default(null),
+  workLat: z.number().nullable().default(null),
+  workLng: z.number().nullable().default(null),
+  workProvinceCode: z.string().default(''),
+  workAddress: z.string().default(''),
 });
 
-type ProfileFormData = z.output<typeof profileSchema>;
+export type ProfileFormData = z.output<typeof profileSchema>;
 
 // ── camelCase to snake_case conversion ──────────────────────────────────
 
@@ -51,14 +97,47 @@ function toSnakeCase(key: string): string {
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
+function objectToSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[toSnakeCase(key)] = value;
+  }
+  return result;
+}
+
 function toSnakeCasePayload(data: ProfileFormData): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    result[toSnakeCase(key)] = value;
+    const snakeKey = toSnakeCase(key);
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+      result[snakeKey] = value.map((item) => objectToSnakeCase(item as Record<string, unknown>));
+    } else {
+      result[snakeKey] = value;
+    }
   }
   // Convert empty string floor_level to null for backend
   if (result.floor_level === '' || result.floor_level === undefined) {
     result.floor_level = null;
+  }
+  // Convert empty strings to null for optional string fields
+  const nullableStringFields = [
+    'building_materials', 'income_bracket', 'property_value_range',
+    'work_province_code', 'work_address',
+  ];
+  for (const field of nullableStringFields) {
+    if (result[field] === '') result[field] = null;
+  }
+  return result;
+}
+
+function snakeToCamelCase(key: string): string {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function objectToCamelCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[snakeToCamelCase(key)] = value;
   }
   return result;
 }
@@ -80,22 +159,51 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
     alert_severity_threshold: 'alertSeverityThreshold',
     alert_delivery: 'alertDelivery',
     hazard_preferences: 'hazardPreferences',
+    household_members: 'householdMembers',
+    pets: 'pets',
+    construction_year: 'constructionYear',
+    building_materials: 'buildingMaterials',
+    building_stories: 'buildingStories',
+    has_basement: 'hasBasement',
+    has_elevator: 'hasElevator',
+    building_condition: 'buildingCondition',
+    income_bracket: 'incomeBracket',
+    has_property_insurance: 'hasPropertyInsurance',
+    has_life_insurance: 'hasLifeInsurance',
+    property_value_range: 'propertyValueRange',
+    has_emergency_savings: 'hasEmergencySavings',
+    has_medical_devices: 'hasMedicalDevices',
+    has_water_storage: 'hasWaterStorage',
+    has_generator: 'hasGenerator',
+    depends_public_water: 'dependsPublicWater',
+    disaster_experiences: 'disasterExperiences',
+    home_lat: 'homeLat',
+    home_lng: 'homeLng',
+    work_lat: 'workLat',
+    work_lng: 'workLng',
+    work_province_code: 'workProvinceCode',
+    work_address: 'workAddress',
   };
+
+  const arrayObjectFields = new Set(['household_members', 'pets', 'disaster_experiences']);
 
   const result: Record<string, unknown> = {};
   for (const [snakeKey, camelKey] of Object.entries(mapping)) {
     if (snakeKey in data) {
-      result[camelKey] = data[snakeKey];
+      const value = data[snakeKey];
+      if (arrayObjectFields.has(snakeKey) && Array.isArray(value)) {
+        result[camelKey] = value.map((item) =>
+          typeof item === 'object' && item !== null
+            ? objectToCamelCase(item as Record<string, unknown>)
+            : item
+        );
+      } else {
+        result[camelKey] = value;
+      }
     }
   }
   return result as Partial<ProfileFormData>;
 }
-
-// ── Province options ────────────────────────────────────────────────────
-
-const provinceOptions = PROVINCES
-  .map((p) => ({ value: p.code, label: p.name }))
-  .sort((a, b) => a.label.localeCompare(b.label));
 
 // ── Component ───────────────────────────────────────────────────────────
 
@@ -136,10 +244,32 @@ export function ProfileForm() {
       alertSeverityThreshold: 3,
       alertDelivery: 'push',
       hazardPreferences: [],
+      householdMembers: [],
+      pets: [],
+      constructionYear: null,
+      buildingMaterials: '',
+      buildingStories: null,
+      hasBasement: false,
+      hasElevator: false,
+      buildingCondition: null,
+      incomeBracket: '',
+      hasPropertyInsurance: false,
+      hasLifeInsurance: false,
+      propertyValueRange: '',
+      hasEmergencySavings: false,
+      hasMedicalDevices: false,
+      hasWaterStorage: false,
+      hasGenerator: false,
+      dependsPublicWater: true,
+      disasterExperiences: [],
+      homeLat: null,
+      homeLng: null,
+      workLat: null,
+      workLng: null,
+      workProvinceCode: '',
+      workAddress: '',
     },
   });
-
-  const currentThreshold = watch('alertSeverityThreshold');
 
   // Fetch profile from backend on mount if authenticated
   const fetchProfile = useCallback(async () => {
@@ -165,6 +295,30 @@ export function ProfileForm() {
           alertSeverityThreshold: (mapped.alertSeverityThreshold as number) || 3,
           alertDelivery: (mapped.alertDelivery as string) || 'push',
           hazardPreferences: (mapped.hazardPreferences as string[]) || [],
+          householdMembers: (mapped.householdMembers as ProfileFormData['householdMembers']) || [],
+          pets: (mapped.pets as ProfileFormData['pets']) || [],
+          constructionYear: (mapped.constructionYear as number | null) ?? null,
+          buildingMaterials: (mapped.buildingMaterials as string) || '',
+          buildingStories: (mapped.buildingStories as number | null) ?? null,
+          hasBasement: (mapped.hasBasement as boolean) || false,
+          hasElevator: (mapped.hasElevator as boolean) || false,
+          buildingCondition: (mapped.buildingCondition as number | null) ?? null,
+          incomeBracket: (mapped.incomeBracket as string) || '',
+          hasPropertyInsurance: (mapped.hasPropertyInsurance as boolean) || false,
+          hasLifeInsurance: (mapped.hasLifeInsurance as boolean) || false,
+          propertyValueRange: (mapped.propertyValueRange as string) || '',
+          hasEmergencySavings: (mapped.hasEmergencySavings as boolean) || false,
+          hasMedicalDevices: (mapped.hasMedicalDevices as boolean) || false,
+          hasWaterStorage: (mapped.hasWaterStorage as boolean) || false,
+          hasGenerator: (mapped.hasGenerator as boolean) || false,
+          dependsPublicWater: mapped.dependsPublicWater !== undefined ? (mapped.dependsPublicWater as boolean) : true,
+          disasterExperiences: (mapped.disasterExperiences as ProfileFormData['disasterExperiences']) || [],
+          homeLat: (mapped.homeLat as number | null) ?? null,
+          homeLng: (mapped.homeLng as number | null) ?? null,
+          workLat: (mapped.workLat as number | null) ?? null,
+          workLng: (mapped.workLng as number | null) ?? null,
+          workProvinceCode: (mapped.workProvinceCode as string) || '',
+          workAddress: (mapped.workAddress as string) || '',
         });
       }
     } catch {
@@ -221,494 +375,17 @@ export function ProfileForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-      {/* Province selector */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('locationTitle')}
-        </h2>
-        <Controller
-          name="provinceCode"
-          control={control}
-          render={({ field }) => (
-            <Select
-              label={t('province')}
-              options={provinceOptions}
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-            />
-          )}
-        />
-      </Card>
-
-      {/* Residence type radio cards */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('residenceTitle')}
-        </h2>
-        <Controller
-          name="residenceType"
-          control={control}
-          render={({ field }) => (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label={t('residenceTitle')}>
-              {RESIDENCE_TYPES.map((type) => {
-                const isActive = field.value === type;
-                return (
-                  <div
-                    key={type}
-                    role="radio"
-                    aria-checked={isActive}
-                    tabIndex={0}
-                    onClick={() => field.onChange(type)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        field.onChange(type);
-                      }
-                    }}
-                    className={[
-                      'relative flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200',
-                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-green/50',
-                      isActive
-                        ? 'border-accent-green/60 bg-accent-green/5 shadow-[0_0_12px_rgba(255,255,255,0.04)]'
-                        : 'border-border bg-bg-secondary/50 hover:border-border-hover',
-                    ].join(' ')}
-                  >
-                    <RadioIndicator active={isActive} />
-                    <span
-                      className={[
-                        'text-sm font-medium transition-colors',
-                        isActive ? 'text-text-primary' : 'text-text-secondary',
-                      ].join(' ')}
-                    >
-                      {t(`residence_${type}`)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        />
-      </Card>
-
-      {/* Special needs checkboxes */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-1">
-          {t('specialNeedsTitle')}
-        </h2>
-        <p className="text-xs text-text-muted mb-4">{t('specialNeedsDesc')}</p>
-        <Controller
-          name="specialNeeds"
-          control={control}
-          render={({ field }) => (
-            <div className="flex flex-col gap-2">
-              {SPECIAL_NEEDS.map((need) => {
-                const isChecked = field.value.includes(need);
-                return (
-                  <CheckboxItem
-                    key={need}
-                    checked={isChecked}
-                    label={t(`need_${need}`)}
-                    onToggle={() => {
-                      const next = isChecked
-                        ? field.value.filter((n) => n !== need)
-                        : [...field.value, need];
-                      field.onChange(next);
-                    }}
-                  />
-                );
-              })}
-            </div>
-          )}
-        />
-      </Card>
-
-      {/* Phone Number */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('phoneTitle')}
-        </h2>
-        <div className="flex flex-col gap-4">
-          <Controller
-            name="phoneNumber"
-            control={control}
-            render={({ field }) => (
-              <Input
-                label={t('phoneNumber')}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                placeholder={t('phonePlaceholder')}
-              />
-            )}
-          />
-          <p className="text-xs text-text-muted">{t('phoneDesc')}</p>
-        </div>
-      </Card>
-
-      {/* Emergency Contact */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('emergencyContactTitle')}
-        </h2>
-        <div className="flex flex-col gap-4">
-          <Controller
-            name="emergencyContactName"
-            control={control}
-            render={({ field }) => (
-              <Input
-                label={t('emergencyContactName')}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            )}
-          />
-          <Controller
-            name="emergencyContactPhone"
-            control={control}
-            render={({ field }) => (
-              <Input
-                label={t('emergencyContactPhone')}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                placeholder={t('emergencyContactPhonePlaceholder')}
-              />
-            )}
-          />
-        </div>
-      </Card>
-
-      {/* Health & Mobility */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('healthTitle')}
-        </h2>
-        <div className="flex flex-col gap-5">
-          {/* Medical conditions textarea */}
-          <Controller
-            name="medicalConditions"
-            control={control}
-            render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="medical-conditions"
-                  className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)]"
-                >
-                  {t('medicalConditions')}
-                </label>
-                <textarea
-                  id="medical-conditions"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder={t('medicalConditionsPlaceholder')}
-                  rows={3}
-                  className={[
-                    'w-full rounded-lg border bg-bg-secondary px-3 py-2 text-sm text-text-primary',
-                    'placeholder:text-text-muted',
-                    'transition-all duration-150',
-                    'focus:outline-none',
-                    'border-border hover:border-border-hover focus:border-accent-green/60 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.08)]',
-                    'resize-none font-[family-name:var(--font-sans)]',
-                  ].join(' ')}
-                />
-              </div>
-            )}
-          />
-
-          {/* Mobility level radio cards */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
-              {t('mobilityLevel')}
-            </label>
-            <Controller
-              name="mobilityLevel"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="radiogroup" aria-label={t('mobilityLevel')}>
-                  {MOBILITY_LEVELS.map((level) => {
-                    const isActive = field.value === level;
-                    return (
-                      <div
-                        key={level}
-                        role="radio"
-                        aria-checked={isActive}
-                        tabIndex={0}
-                        onClick={() => field.onChange(level)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange(level);
-                          }
-                        }}
-                        className={[
-                          'relative flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-green/50',
-                          isActive
-                            ? 'border-accent-green/60 bg-accent-green/5 shadow-[0_0_12px_rgba(255,255,255,0.04)]'
-                            : 'border-border bg-bg-secondary/50 hover:border-border-hover',
-                        ].join(' ')}
-                      >
-                        <RadioIndicator active={isActive} />
-                        <span
-                          className={[
-                            'text-sm font-medium transition-colors',
-                            isActive ? 'text-text-primary' : 'text-text-secondary',
-                          ].join(' ')}
-                        >
-                          {t(`mobility_${level}`)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            />
-          </div>
-
-          {/* Vehicle access checkbox */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
-              {t('vehicleAccess')}
-            </label>
-            <Controller
-              name="hasVehicle"
-              control={control}
-              render={({ field }) => (
-                <CheckboxItem
-                  checked={field.value}
-                  label={t('hasVehicle')}
-                  onToggle={() => field.onChange(!field.value)}
-                />
-              )}
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Heat Vulnerability Profile */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('heatProfileTitle')}
-        </h2>
-        <div className="flex flex-col gap-5">
-          {/* Age range radio cards */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
-              {t('ageRange')}
-            </label>
-            <Controller
-              name="ageRange"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label={t('ageRange')}>
-                  {AGE_RANGES.map((range) => {
-                    const isActive = field.value === range;
-                    return (
-                      <div
-                        key={range}
-                        role="radio"
-                        aria-checked={isActive}
-                        tabIndex={0}
-                        onClick={() => field.onChange(range)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange(range);
-                          }
-                        }}
-                        className={[
-                          'relative flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-green/50',
-                          isActive
-                            ? 'border-accent-green/60 bg-accent-green/5 shadow-[0_0_12px_rgba(255,255,255,0.04)]'
-                            : 'border-border bg-bg-secondary/50 hover:border-border-hover',
-                        ].join(' ')}
-                      >
-                        <RadioIndicator active={isActive} />
-                        <span
-                          className={[
-                            'text-sm font-medium transition-colors',
-                            isActive ? 'text-text-primary' : 'text-text-secondary',
-                          ].join(' ')}
-                        >
-                          {t(`age_${range}` as 'age_0-5' | 'age_6-17' | 'age_18-64' | 'age_65+')}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            />
-          </div>
-
-          {/* AC checkbox */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
-              {t('acLabel')}
-            </label>
-            <Controller
-              name="hasAc"
-              control={control}
-              render={({ field }) => (
-                <CheckboxItem
-                  checked={field.value}
-                  label={t('hasAc')}
-                  onToggle={() => field.onChange(!field.value)}
-                />
-              )}
-            />
-          </div>
-
-          {/* Floor level */}
-          <Controller
-            name="floorLevel"
-            control={control}
-            render={({ field }) => (
-              <Input
-                label={t('floorLevel')}
-                type="number"
-                value={field.value === '' ? '' : String(field.value)}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  field.onChange(val === '' ? '' : Number(val));
-                }}
-                onBlur={field.onBlur}
-                placeholder={t('floorLevelPlaceholder')}
-              />
-            )}
-          />
-        </div>
-      </Card>
-
-      {/* Alert Preferences */}
-      <Card variant="glass">
-        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
-          {t('alertPreferencesTitle')}
-        </h2>
-        <div className="flex flex-col gap-5">
-          {/* Severity threshold slider */}
-          <Controller
-            name="alertSeverityThreshold"
-            control={control}
-            render={({ field }) => (
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)]">
-                  {t('severityThreshold')}
-                </label>
-                <p className="text-xs text-text-muted">{t('severityThresholdDesc')}</p>
-                <div className="mt-2">
-                  <input
-                    type="range"
-                    min={1}
-                    max={5}
-                    step={1}
-                    value={field.value}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="w-full accent-accent-green"
-                  />
-                  <div className="flex justify-between mt-1">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <span
-                        key={val}
-                        className={[
-                          'text-xs font-[family-name:var(--font-mono)] transition-colors',
-                          currentThreshold === val ? 'text-accent-green font-bold' : 'text-text-muted',
-                        ].join(' ')}
-                      >
-                        {t(`severity_${val}` as 'severity_1' | 'severity_2' | 'severity_3' | 'severity_4' | 'severity_5')}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          />
-
-          {/* Alert delivery radio cards */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-3 block">
-              {t('alertDelivery')}
-            </label>
-            <Controller
-              name="alertDelivery"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="radiogroup" aria-label={t('alertDelivery')}>
-                  {ALERT_DELIVERY_OPTIONS.map((option) => {
-                    const isActive = field.value === option;
-                    return (
-                      <div
-                        key={option}
-                        role="radio"
-                        aria-checked={isActive}
-                        tabIndex={0}
-                        onClick={() => field.onChange(option)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange(option);
-                          }
-                        }}
-                        className={[
-                          'relative flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-green/50',
-                          isActive
-                            ? 'border-accent-green/60 bg-accent-green/5 shadow-[0_0_12px_rgba(255,255,255,0.04)]'
-                            : 'border-border bg-bg-secondary/50 hover:border-border-hover',
-                        ].join(' ')}
-                      >
-                        <RadioIndicator active={isActive} />
-                        <span
-                          className={[
-                            'text-sm font-medium transition-colors',
-                            isActive ? 'text-text-primary' : 'text-text-secondary',
-                          ].join(' ')}
-                        >
-                          {t(`delivery_${option}`)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            />
-          </div>
-
-          {/* Hazard preferences checkboxes */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary font-[family-name:var(--font-display)] mb-1 block">
-              {t('hazardPreferences')}
-            </label>
-            <p className="text-xs text-text-muted mb-3">{t('hazardPreferencesDesc')}</p>
-            <Controller
-              name="hazardPreferences"
-              control={control}
-              render={({ field }) => (
-                <div className="flex flex-col gap-2">
-                  {HAZARD_TYPES.map((hazard) => {
-                    const isChecked = field.value.includes(hazard);
-                    return (
-                      <CheckboxItem
-                        key={hazard}
-                        checked={isChecked}
-                        label={t(`pref_${hazard}`)}
-                        onToggle={() => {
-                          const next = isChecked
-                            ? field.value.filter((h) => h !== hazard)
-                            : [...field.value, hazard];
-                          field.onChange(next);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            />
-          </div>
-        </div>
-      </Card>
+      <LocationSection control={control} />
+      <ResidenceSection control={control} />
+      <EmergencySection control={control} />
+      <HealthSection control={control} />
+      <HouseholdSection control={control} />
+      <BuildingSection control={control} />
+      <EconomicSection control={control} />
+      <InfrastructureSection control={control} />
+      <DisasterExperienceSection control={control} />
+      <LocationMapSection control={control} />
+      <AlertsSection control={control} watch={watch} />
 
       {/* Submit */}
       <div className="flex justify-end">
@@ -717,82 +394,5 @@ export function ProfileForm() {
         </Button>
       </div>
     </form>
-  );
-}
-
-// ── Shared sub-components ───────────────────────────────────────────────
-
-function RadioIndicator({ active }: { active: boolean }) {
-  return (
-    <span
-      className={[
-        'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-        active ? 'border-accent-green' : 'border-text-muted',
-      ].join(' ')}
-    >
-      {active && <span className="h-2 w-2 rounded-full bg-accent-green" />}
-    </span>
-  );
-}
-
-function CheckboxItem({
-  checked,
-  label,
-  onToggle,
-}: {
-  checked: boolean;
-  label: string;
-  onToggle: () => void;
-}) {
-  return (
-    <div
-      role="checkbox"
-      aria-checked={checked}
-      tabIndex={0}
-      onClick={onToggle}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-      className={[
-        'flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-all duration-200',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-green/50',
-        checked
-          ? 'border-accent-green/60 bg-accent-green/5'
-          : 'border-border bg-bg-secondary/50 hover:border-border-hover',
-      ].join(' ')}
-    >
-      <span
-        className={[
-          'flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors',
-          checked ? 'border-accent-green bg-accent-green' : 'border-text-muted',
-        ].join(' ')}
-      >
-        {checked && (
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#050508"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        )}
-      </span>
-      <span
-        className={[
-          'text-sm font-medium transition-colors',
-          checked ? 'text-text-primary' : 'text-text-secondary',
-        ].join(' ')}
-      >
-        {label}
-      </span>
-    </div>
   );
 }

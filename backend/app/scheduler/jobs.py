@@ -84,6 +84,28 @@ async def run_staleness_check():
         logger.exception("Staleness check failed")
 
 
+async def purge_stale_locations():
+    """Null out GPS coordinates older than 24 hours for privacy."""
+    from datetime import datetime, timedelta, timezone
+    from sqlalchemy import update
+    from app.database import async_session
+    from app.models.user import User
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    try:
+        async with async_session() as db:
+            await db.execute(
+                update(User)
+                .where(User.last_location_at < cutoff)
+                .where(User.last_latitude.isnot(None))
+                .values(last_latitude=None, last_longitude=None, last_location_at=None)
+            )
+            await db.commit()
+        logger.debug("Purged stale GPS coordinates older than 24h")
+    except Exception:
+        logger.exception("Stale location purge failed")
+
+
 def setup_scheduler():
     """Configure and start the scheduler."""
     # Run pipeline every 6 hours
@@ -135,10 +157,19 @@ def setup_scheduler():
         name="30-min data staleness check",
         replace_existing=True,
     )
+    scheduler.add_job(
+        purge_stale_locations,
+        "interval",
+        hours=6,
+        id="purge_stale_locations",
+        name="6h stale GPS location purge",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info(
         "Scheduler started: pipeline every 6h, flash flood every 10min, "
-        "rapid severity every 15min, staleness check every 30min"
+        "rapid severity every 15min, staleness check every 30min, "
+        "stale location purge every 6h"
     )
 
 

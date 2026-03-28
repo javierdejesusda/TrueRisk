@@ -99,7 +99,6 @@ export const useAppStore = create<AppState>()(
         residenceType: state.residenceType,
         specialNeeds: state.specialNeeds,
         hasSeenOnboarding: state.hasSeenOnboarding,
-        backendToken: state.backendToken,
       }),
     }
   )

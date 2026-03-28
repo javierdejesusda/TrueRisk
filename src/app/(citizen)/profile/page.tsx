@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { ProfileCompletion } from '@/components/profile/profile-completion';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { NotificationPrefs } from '@/components/profile/notification-prefs';
 import { NotificationChannels } from '@/components/profile/notification-channels';
@@ -26,6 +27,11 @@ export default function ProfilePage() {
           <p className="font-[family-name:var(--font-sans)] mt-1 text-sm text-text-muted">
             {t('subtitle')}
           </p>
+        </div>
+
+        {/* Profile completion indicator */}
+        <div className="mb-6">
+          <ProfileCompletion />
         </div>
 
         {/* Notification preferences */}

@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Auth / JWT
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 43200  # 30 days
+    jwt_expire_minutes: int = 10080  # 7 days
 
     # Twilio
     twilio_account_sid: str = ""
@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     trusted_proxies: list[str] = [
         "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8",
     ]
+    field_encryption_key: str = ""
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

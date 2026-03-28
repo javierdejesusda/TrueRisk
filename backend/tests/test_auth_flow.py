@@ -18,7 +18,7 @@ async def test_register_returns_token(client):
     nickname = _unique_nickname()
     response = await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -34,12 +34,12 @@ async def test_login_returns_token(client):
     # Register first
     await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
     # Login
     response = await client.post(
         "/api/v1/auth/login",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -52,7 +52,7 @@ async def test_get_me_with_token(client):
     nickname = _unique_nickname()
     reg = await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
     token = reg.json()["access_token"]
 
@@ -72,7 +72,7 @@ async def test_update_profile(client):
     nickname = _unique_nickname()
     reg = await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
     token = reg.json()["access_token"]
 
@@ -97,12 +97,12 @@ async def test_invalid_login_returns_401(client):
     nickname = _unique_nickname()
     await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
 
     response = await client.post(
         "/api/v1/auth/login",
-        json={"nickname": nickname, "password": "WrongPassword"},
+        json={"nickname": nickname, "password": "Wr0ng!Passw"},
     )
     assert response.status_code == 401
 
@@ -112,12 +112,12 @@ async def test_duplicate_registration_returns_409(client):
     nickname = _unique_nickname()
     await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "SecurePass123"},
+        json={"nickname": nickname, "password": "Secur3Pass!x"},
     )
 
     response = await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "AnotherPass456"},
+        json={"nickname": nickname, "password": "An0ther!Pass"},
     )
     assert response.status_code == 409
 
@@ -132,6 +132,6 @@ async def test_get_me_without_token_returns_401(client):
 async def test_login_nonexistent_user_returns_401(client):
     response = await client.post(
         "/api/v1/auth/login",
-        json={"nickname": "nobody_here_999", "password": "Whatever123"},
+        json={"nickname": "nobody_here_999", "password": "Wh4tever!xx"},
     )
     assert response.status_code == 401
