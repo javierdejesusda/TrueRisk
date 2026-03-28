@@ -27,6 +27,7 @@ from app.ml.models.windstorm_risk import predict_windstorm_risk
 from app.ml.models.dana_risk import predict_dana_risk
 from app.ml.features.fwi import compute_fwi_components
 from app.ml.features.spei import compute_spei
+from app.ml.features.weather_indices import compute_heat_index, compute_utci, compute_wbgt
 from app.models.province import Province
 from app.models.risk_score import RiskScore
 from app.models.weather_daily_summary import WeatherDailySummary
@@ -324,42 +325,13 @@ def _compute_wind_chill(temperature: float, wind_speed_kmh: float) -> float:
 
 
 def _compute_heat_index(temperature: float, humidity: float) -> float:
-    """Rothfusz regression heat-index approximation (Celsius)."""
-    # Convert to Fahrenheit for the standard formula
-    tf = temperature * 9.0 / 5.0 + 32.0
-    rh = humidity
-
-    if tf < 80:
-        # Simple formula below 80F
-        hi_f = 0.5 * (tf + 61.0 + (tf - 68.0) * 1.2 + rh * 0.094)
-    else:
-        hi_f = (
-            -42.379
-            + 2.04901523 * tf
-            + 10.14333127 * rh
-            - 0.22475541 * tf * rh
-            - 6.83783e-3 * tf * tf
-            - 5.481717e-2 * rh * rh
-            + 1.22874e-3 * tf * tf * rh
-            + 8.5282e-4 * tf * rh * rh
-            - 1.99e-6 * tf * tf * rh * rh
-        )
-    # Back to Celsius
-    return round((hi_f - 32.0) * 5.0 / 9.0, 2)
+    """Delegate to weather_indices.compute_heat_index (Lu & Romps 2022)."""
+    return compute_heat_index(temperature, humidity)
 
 
 def _compute_wbgt(temperature: float, humidity: float, wind_speed: float) -> float:
-    """Simplified wet-bulb globe temperature estimate (outdoor, Celsius)."""
-    # Stull (2011) wet-bulb approximation
-    tw = temperature * math.atan(0.151977 * math.sqrt(humidity + 8.313659)) + (
-        math.atan(temperature + humidity)
-        - math.atan(humidity - 1.676331)
-        + 0.00391838 * humidity**1.5 * math.atan(0.023101 * humidity)
-        - 4.686035
-    )
-    # WBGT (outdoor) ~ 0.7*Tw + 0.2*Tg + 0.1*Td, simplified without globe temp
-    wbgt = 0.7 * tw + 0.3 * temperature
-    return round(wbgt, 2)
+    """Delegate to weather_indices.compute_wbgt (Kong & Huber 2024)."""
+    return compute_wbgt(temperature, humidity, wind_speed)
 
 
 # ---------------------------------------------------------------------------
@@ -432,6 +404,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
 
     heat_index = _compute_heat_index(temperature, humidity)
     wbgt = _compute_wbgt(temperature, humidity, wind_speed)
+    utci = compute_utci(temperature, humidity, wind_speed / 3.6)
     temperature_anomaly = temperature - 20.0  # crude baseline
     heat_wave_day = float(
         temporal.get("temperature_max", 20) > 35
@@ -464,6 +437,10 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "precip_7day_anomaly": temporal["precip_7day_anomaly"],
         "consecutive_rain_days": temporal["consecutive_rain_days"],
         "max_precip_intensity_ratio": temporal["max_precip_intensity_ratio"],
+        "antecedent_precip_index": temporal.get("antecedent_precip_index", 0.0),
+        "antecedent_precip_index_092": temporal.get("antecedent_precip_index_092", 0.0),
+        "antecedent_precip_index_095": temporal.get("antecedent_precip_index_095", 0.0),
+        "soil_saturation_excess": temporal.get("soil_saturation_excess", 0.0),
         "precip_prob_50mm_72h": 0.0,
         "forecast_uncertainty": 0.0,
     }
@@ -517,6 +494,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         "temperature_min": temporal["temperature_min"],
         "heat_index": heat_index,
         "wbgt": wbgt,
+        "utci": utci,
         "consecutive_hot_days": temporal["consecutive_hot_days"],
         "consecutive_hot_nights": temporal["consecutive_hot_nights"],
         "heat_wave_day": heat_wave_day,

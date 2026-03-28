@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 
 MODEL_PATH = Path(__file__).parent.parent / "saved_models" / "heatwave_xgboost.joblib"
 
-# 18 features expected by the trained XGBoost model (order matters).
+# 20 features expected by the trained XGBoost model (order matters).
 FEATURE_NAMES: list[str] = [
     "temperature",
     "temperature_max",
     "temperature_min",
     "heat_index",
     "wbgt",
+    "utci",
     "consecutive_hot_days",
     "consecutive_hot_nights",
     "heat_wave_day",

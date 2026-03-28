@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 MODEL_PATH = Path(__file__).parent.parent / "saved_models" / "flood_xgboost.joblib"
 
-# 23 features expected by the trained XGBoost model (order matters).
+# 25 features expected by the trained XGBoost model (order matters).
 FEATURE_NAMES: list[str] = [
     "precip_1h",
     "precip_6h",
@@ -37,6 +37,8 @@ FEATURE_NAMES: list[str] = [
     "consecutive_rain_days",
     "max_precip_intensity_ratio",
     "antecedent_precip_index",
+    "antecedent_precip_index_092",
+    "antecedent_precip_index_095",
     "soil_saturation_excess",
 ]
 

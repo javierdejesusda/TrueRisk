@@ -19,6 +19,7 @@ from app.ml.features.weather_indices import (
     compute_heat_index,
     compute_spei,
     compute_spi,
+    compute_utci,
     compute_wbgt,
 )
 from app.ml.training.config import (
@@ -157,6 +158,17 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
         api_values.append(0.85 * api_values[-1] + precip_vals[i])
     df["antecedent_precip_index"] = api_values
 
+    # Flood: multi-K Antecedent Precipitation Index (K=0.92, K=0.95)
+    api_092 = [precip_vals[0] if precip_vals else 0.0]
+    for i in range(1, len(df)):
+        api_092.append(0.92 * api_092[-1] + precip_vals[i])
+    df["antecedent_precip_index_092"] = api_092
+
+    api_095 = [precip_vals[0] if precip_vals else 0.0]
+    for i in range(1, len(df)):
+        api_095.append(0.95 * api_095[-1] + precip_vals[i])
+    df["antecedent_precip_index_095"] = api_095
+
     # Pressure tendency (daily data, so diff(1) = 1-day change)
     df["pressure_tendency_1d"] = df["pressure"].diff(1).fillna(0.0)
 
@@ -267,6 +279,14 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     )
     df["wbgt"] = df.apply(
         lambda r: compute_wbgt(
+            _safe(r["temp_max"], 25.0),
+            _safe(r["humidity"], 50.0),
+            _safe(r["wind_speed"], 10.0) / 3.6,
+        ),
+        axis=1,
+    )
+    df["utci"] = df.apply(
+        lambda r: compute_utci(
             _safe(r["temp_max"], 25.0),
             _safe(r["humidity"], 50.0),
             _safe(r["wind_speed"], 10.0) / 3.6,
@@ -405,12 +425,13 @@ FLOOD_FEATURES = [
     "elevation_m", "is_coastal", "is_mediterranean", "river_basin_risk",
     "month", "season_sin", "season_cos", "precip_7day_anomaly",
     "consecutive_rain_days", "max_precip_intensity_ratio",
-    "antecedent_precip_index", "soil_saturation_excess",
+    "antecedent_precip_index", "antecedent_precip_index_092",
+    "antecedent_precip_index_095", "soil_saturation_excess",
 ]
 
 HEATWAVE_FEATURES = [
     "temperature", "temperature_max", "temperature_min", "heat_index", "wbgt",
-    "consecutive_hot_days", "consecutive_hot_nights", "heat_wave_day",
+    "utci", "consecutive_hot_days", "consecutive_hot_nights", "heat_wave_day",
     "humidity", "wind_speed", "uv_index", "temperature_anomaly",
     "temp_max_trend", "month", "latitude", "elevation_m",
     "is_coastal", "cloud_cover", "solar_irradiance",
