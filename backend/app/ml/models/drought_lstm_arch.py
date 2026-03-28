@@ -4,7 +4,6 @@ Adds multi-head self-attention between the LSTM encoder and classification
 head.  A residual connection + LayerNorm stabilises training.
 """
 
-import torch
 import torch.nn as nn
 
 
