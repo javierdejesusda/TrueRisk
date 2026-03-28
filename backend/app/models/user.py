@@ -89,6 +89,7 @@ class User(Base):
     # Alert preferences
     alert_severity_threshold: Mapped[int] = mapped_column(Integer, default=3)
     alert_delivery: Mapped[str] = mapped_column(String(10), default="push")
+    email_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     hazard_preferences: Mapped[dict] = mapped_column(JSON, default=list)
 
     # Preparedness

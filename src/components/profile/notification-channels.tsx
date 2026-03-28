@@ -8,8 +8,10 @@ import { apiFetch } from '@/lib/api-client';
 import { useAppStore } from '@/store/app-store';
 
 interface UserProfile {
+  email?: string | null;
   phone_number?: string | null;
   whatsapp_enabled?: boolean;
+  email_notifications_enabled?: boolean;
   telegram_chat_id?: string | null;
   alert_delivery?: string;
 }
@@ -142,6 +144,38 @@ export function NotificationChannels() {
                 onToggle={() => (isSubscribed ? unsubscribe() : subscribe())}
               />
             )}
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-text-primary">{t('email')}</p>
+            <p className="text-xs text-text-muted mt-0.5">
+              {profile?.email ? t('emailDesc') : t('emailNoEmail')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {profile?.email_notifications_enabled && profile?.email && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await apiFetch('/api/email/test', { method: 'POST' });
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.detail || 'Test failed');
+                  }
+                }}
+                className="shrink-0 rounded-lg border border-border bg-bg-secondary px-3 py-1.5 text-xs font-medium text-text-primary transition-all duration-150 hover:border-accent-green/60 hover:bg-accent-green/5"
+              >
+                {t('testEmail')}
+              </button>
+            )}
+            <ToggleSwitch
+              checked={!!profile?.email_notifications_enabled}
+              disabled={!profile?.email}
+              onToggle={() => patchProfile({ email_notifications_enabled: !profile?.email_notifications_enabled })}
+            />
           </div>
         </div>
 

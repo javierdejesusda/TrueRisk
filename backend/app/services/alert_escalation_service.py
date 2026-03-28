@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
-CHANNEL_PRIORITY = ["push", "sms", "telegram", "whatsapp"]
+CHANNEL_PRIORITY = ["push", "email", "sms", "telegram", "whatsapp"]
 
 
 async def deliver_alert_multi_channel(
@@ -23,10 +23,12 @@ async def deliver_alert_multi_channel(
     body: str,
     phone: str | None = None,
     telegram_chat_id: str | None = None,
+    email: str | None = None,
     *,
     sms_enabled: bool = False,
     whatsapp_enabled: bool = False,
     telegram_enabled: bool = False,
+    email_enabled: bool = False,
 ) -> str:
     """Try each channel in priority order until delivery succeeds.
 
@@ -40,6 +42,16 @@ async def deliver_alert_multi_channel(
             return "push"
     except Exception:
         logger.debug("Push delivery failed for user %d", user_id)
+
+    # Email
+    if email and email_enabled:
+        try:
+            from app.services.email_service import notify_user_email
+            ok = await notify_user_email(email, title, body)
+            if ok:
+                return "email"
+        except Exception:
+            logger.debug("Email delivery failed for user %d", user_id)
 
     # SMS
     if phone and sms_enabled:
