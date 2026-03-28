@@ -612,7 +612,16 @@
     "acLabel": "Air conditioning",
     "hasAc": "I have air conditioning at home",
     "floorLevel": "Floor level",
-    "floorLevelPlaceholder": "e.g. 4"
+    "floorLevelPlaceholder": "e.g. 4",
+    "completionTitle": "Profile Completion",
+    "completionDescription": "Complete your profile for better risk assessment",
+    "sectionLocation": "Location",
+    "sectionResidence": "Residence",
+    "sectionHealth": "Health",
+    "sectionHousehold": "Household",
+    "sectionEmergency": "Emergency",
+    "sectionBuilding": "Building",
+    "sectionEconomic": "Economic"
   },
   "NotificationChannels": {
     "title": "Notification Channels",

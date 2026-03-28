@@ -610,7 +610,16 @@
     "acLabel": "Aire acondicionado",
     "hasAc": "Tengo aire acondicionado en casa",
     "floorLevel": "Planta del edificio",
-    "floorLevelPlaceholder": "ej. 4"
+    "floorLevelPlaceholder": "ej. 4",
+    "completionTitle": "Completitud del Perfil",
+    "completionDescription": "Completa tu perfil para una mejor evaluacion del riesgo",
+    "sectionLocation": "Ubicacion",
+    "sectionResidence": "Residencia",
+    "sectionHealth": "Salud",
+    "sectionHousehold": "Hogar",
+    "sectionEmergency": "Emergencia",
+    "sectionBuilding": "Edificio",
+    "sectionEconomic": "Economico"
   },
   "NotificationChannels": {
     "title": "Canales de Notificacion",
