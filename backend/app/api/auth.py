@@ -28,7 +28,7 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=TokenResponse)
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def register(request: Request, body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(User).where(User.nickname == body.nickname))
     if existing.scalar_one_or_none():
