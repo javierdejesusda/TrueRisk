@@ -16,7 +16,7 @@ async def _register_user(client, nickname: str) -> dict:
     """Register a user and return {"token": ..., "user": ...}."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"nickname": nickname, "password": "TestPass123"},
+        json={"nickname": nickname, "password": "T3stPass!xx"},
     )
     assert resp.status_code == 200
     data = resp.json()
