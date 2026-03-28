@@ -633,7 +633,13 @@
     "toggleError": "No se pudo actualizar la preferencia de notificacion",
     "toggleSuccess": "Preferencia de notificacion actualizada",
     "testPush": "Enviar prueba",
-    "pushError": "Push no disponible"
+    "pushError": "Push no disponible",
+    "phoneNumber": "Numero de telefono",
+    "phonePlaceholder": "+34 600 000 000",
+    "savePhone": "Guardar",
+    "phoneSaved": "Telefono guardado",
+    "telegramLinked": "Vinculado",
+    "noPhone": "Anade un numero de telefono primero"
   },
   "Language": {
     "es": "ES",

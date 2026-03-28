@@ -55,6 +55,7 @@ class ProfileUpdateRequest(BaseModel):
     alert_severity_threshold: int | None = None
     alert_delivery: str | None = None
     hazard_preferences: list[str] | None = None
+    whatsapp_enabled: bool | None = None
 
 
 class UserResponse(BaseModel):
@@ -82,6 +83,8 @@ class UserResponse(BaseModel):
     alert_severity_threshold: int
     alert_delivery: str
     hazard_preferences: list | dict
+    whatsapp_enabled: bool = False
+    telegram_chat_id: str | None = None
 
 
 class TokenResponse(BaseModel):

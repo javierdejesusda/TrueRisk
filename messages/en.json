@@ -635,7 +635,13 @@
     "toggleError": "Could not update notification preference",
     "toggleSuccess": "Notification preference updated",
     "testPush": "Send Test",
-    "pushError": "Push unavailable"
+    "pushError": "Push unavailable",
+    "phoneNumber": "Phone Number",
+    "phonePlaceholder": "+34 600 000 000",
+    "savePhone": "Save",
+    "phoneSaved": "Phone saved",
+    "telegramLinked": "Linked",
+    "noPhone": "Add phone number first"
   },
   "Language": {
     "es": "ES",
