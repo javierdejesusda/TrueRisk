@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 
 COPY pyproject.toml .
 RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir ".[ml-extras]" || echo "Optional ml-extras not available"
 
 COPY . .
 

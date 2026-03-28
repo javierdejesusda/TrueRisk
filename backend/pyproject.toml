@@ -39,13 +39,12 @@ dependencies = [
     "pyproj>=3.6",
     "python-json-logger>=3.0",
     "resend>=2.0",
-    "EMD-signal>=1.6",
-    "pymannkendall>=1.4.3",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-cov>=6.0", "httpx", "mypy", "ruff", "respx>=0.21"]
 training = ["matplotlib>=3.9", "tqdm>=4.66", "tensorboard>=2.18"]
+ml-extras = ["EMD-signal>=1.6", "pymannkendall>=1.4.3"]
 
 [build-system]
 requires = ["setuptools>=75"]

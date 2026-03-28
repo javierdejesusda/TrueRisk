@@ -74,7 +74,7 @@ jobs:
         run: pip install torch --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,ml-extras]"
 
       - name: Lint (ruff)
         run: ruff check app/
