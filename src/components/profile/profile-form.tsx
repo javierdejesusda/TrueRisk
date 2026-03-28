@@ -14,8 +14,32 @@ import { ResidenceSection } from './sections/residence-section';
 import { HealthSection } from './sections/health-section';
 import { EmergencySection } from './sections/emergency-section';
 import { AlertsSection } from './sections/alerts-section';
+import { HouseholdSection } from './sections/household-section';
+import { BuildingSection } from './sections/building-section';
+import { EconomicSection } from './sections/economic-section';
+import { InfrastructureSection } from './sections/infrastructure-section';
+import { DisasterExperienceSection } from './sections/disaster-experience-section';
+import { LocationMapSection } from './sections/location-map-section';
 
 // ── Schema ──────────────────────────────────────────────────────────────
+
+const householdMemberSchema = z.object({
+  name: z.string().default(''),
+  ageRange: z.string().default('18-64'),
+  mobility: z.string().default('full'),
+});
+
+const petSchema = z.object({
+  type: z.string().default('dog'),
+  count: z.number().int().min(1).default(1),
+  needsTransport: z.boolean().default(false),
+});
+
+const disasterExperienceSchema = z.object({
+  hazardType: z.string().default('flood'),
+  year: z.number().int().nullable().default(null),
+  severity: z.string().default('minor'),
+});
 
 const profileSchema = z.object({
   provinceCode: z.string().min(1),
@@ -33,6 +57,36 @@ const profileSchema = z.object({
   alertSeverityThreshold: z.number().min(1).max(5).default(3),
   alertDelivery: z.string().default('push'),
   hazardPreferences: z.array(z.string()).default([]),
+  // Household
+  householdMembers: z.array(householdMemberSchema).default([]),
+  pets: z.array(petSchema).default([]),
+  // Building
+  constructionYear: z.number().int().min(1800).max(2030).nullable().default(null),
+  buildingMaterials: z.string().default(''),
+  buildingStories: z.number().int().min(1).nullable().default(null),
+  hasBasement: z.boolean().default(false),
+  hasElevator: z.boolean().default(false),
+  buildingCondition: z.number().int().min(1).max(5).nullable().default(null),
+  // Economic
+  incomeBracket: z.string().default(''),
+  hasPropertyInsurance: z.boolean().default(false),
+  hasLifeInsurance: z.boolean().default(false),
+  propertyValueRange: z.string().default(''),
+  hasEmergencySavings: z.boolean().default(false),
+  // Infrastructure
+  hasMedicalDevices: z.boolean().default(false),
+  hasWaterStorage: z.boolean().default(false),
+  hasGenerator: z.boolean().default(false),
+  dependsPublicWater: z.boolean().default(true),
+  // Disaster experience
+  disasterExperiences: z.array(disasterExperienceSchema).default([]),
+  // Location coordinates
+  homeLat: z.number().nullable().default(null),
+  homeLng: z.number().nullable().default(null),
+  workLat: z.number().nullable().default(null),
+  workLng: z.number().nullable().default(null),
+  workProvinceCode: z.string().default(''),
+  workAddress: z.string().default(''),
 });
 
 export type ProfileFormData = z.output<typeof profileSchema>;
@@ -43,14 +97,47 @@ function toSnakeCase(key: string): string {
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
+function objectToSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[toSnakeCase(key)] = value;
+  }
+  return result;
+}
+
 function toSnakeCasePayload(data: ProfileFormData): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    result[toSnakeCase(key)] = value;
+    const snakeKey = toSnakeCase(key);
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+      result[snakeKey] = value.map((item) => objectToSnakeCase(item as Record<string, unknown>));
+    } else {
+      result[snakeKey] = value;
+    }
   }
   // Convert empty string floor_level to null for backend
   if (result.floor_level === '' || result.floor_level === undefined) {
     result.floor_level = null;
+  }
+  // Convert empty strings to null for optional string fields
+  const nullableStringFields = [
+    'building_materials', 'income_bracket', 'property_value_range',
+    'work_province_code', 'work_address',
+  ];
+  for (const field of nullableStringFields) {
+    if (result[field] === '') result[field] = null;
+  }
+  return result;
+}
+
+function snakeToCamelCase(key: string): string {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function objectToCamelCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[snakeToCamelCase(key)] = value;
   }
   return result;
 }
@@ -72,12 +159,47 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
     alert_severity_threshold: 'alertSeverityThreshold',
     alert_delivery: 'alertDelivery',
     hazard_preferences: 'hazardPreferences',
+    household_members: 'householdMembers',
+    pets: 'pets',
+    construction_year: 'constructionYear',
+    building_materials: 'buildingMaterials',
+    building_stories: 'buildingStories',
+    has_basement: 'hasBasement',
+    has_elevator: 'hasElevator',
+    building_condition: 'buildingCondition',
+    income_bracket: 'incomeBracket',
+    has_property_insurance: 'hasPropertyInsurance',
+    has_life_insurance: 'hasLifeInsurance',
+    property_value_range: 'propertyValueRange',
+    has_emergency_savings: 'hasEmergencySavings',
+    has_medical_devices: 'hasMedicalDevices',
+    has_water_storage: 'hasWaterStorage',
+    has_generator: 'hasGenerator',
+    depends_public_water: 'dependsPublicWater',
+    disaster_experiences: 'disasterExperiences',
+    home_lat: 'homeLat',
+    home_lng: 'homeLng',
+    work_lat: 'workLat',
+    work_lng: 'workLng',
+    work_province_code: 'workProvinceCode',
+    work_address: 'workAddress',
   };
+
+  const arrayObjectFields = new Set(['household_members', 'pets', 'disaster_experiences']);
 
   const result: Record<string, unknown> = {};
   for (const [snakeKey, camelKey] of Object.entries(mapping)) {
     if (snakeKey in data) {
-      result[camelKey] = data[snakeKey];
+      const value = data[snakeKey];
+      if (arrayObjectFields.has(snakeKey) && Array.isArray(value)) {
+        result[camelKey] = value.map((item) =>
+          typeof item === 'object' && item !== null
+            ? objectToCamelCase(item as Record<string, unknown>)
+            : item
+        );
+      } else {
+        result[camelKey] = value;
+      }
     }
   }
   return result as Partial<ProfileFormData>;
@@ -122,6 +244,30 @@ export function ProfileForm() {
       alertSeverityThreshold: 3,
       alertDelivery: 'push',
       hazardPreferences: [],
+      householdMembers: [],
+      pets: [],
+      constructionYear: null,
+      buildingMaterials: '',
+      buildingStories: null,
+      hasBasement: false,
+      hasElevator: false,
+      buildingCondition: null,
+      incomeBracket: '',
+      hasPropertyInsurance: false,
+      hasLifeInsurance: false,
+      propertyValueRange: '',
+      hasEmergencySavings: false,
+      hasMedicalDevices: false,
+      hasWaterStorage: false,
+      hasGenerator: false,
+      dependsPublicWater: true,
+      disasterExperiences: [],
+      homeLat: null,
+      homeLng: null,
+      workLat: null,
+      workLng: null,
+      workProvinceCode: '',
+      workAddress: '',
     },
   });
 
@@ -149,6 +295,30 @@ export function ProfileForm() {
           alertSeverityThreshold: (mapped.alertSeverityThreshold as number) || 3,
           alertDelivery: (mapped.alertDelivery as string) || 'push',
           hazardPreferences: (mapped.hazardPreferences as string[]) || [],
+          householdMembers: (mapped.householdMembers as ProfileFormData['householdMembers']) || [],
+          pets: (mapped.pets as ProfileFormData['pets']) || [],
+          constructionYear: (mapped.constructionYear as number | null) ?? null,
+          buildingMaterials: (mapped.buildingMaterials as string) || '',
+          buildingStories: (mapped.buildingStories as number | null) ?? null,
+          hasBasement: (mapped.hasBasement as boolean) || false,
+          hasElevator: (mapped.hasElevator as boolean) || false,
+          buildingCondition: (mapped.buildingCondition as number | null) ?? null,
+          incomeBracket: (mapped.incomeBracket as string) || '',
+          hasPropertyInsurance: (mapped.hasPropertyInsurance as boolean) || false,
+          hasLifeInsurance: (mapped.hasLifeInsurance as boolean) || false,
+          propertyValueRange: (mapped.propertyValueRange as string) || '',
+          hasEmergencySavings: (mapped.hasEmergencySavings as boolean) || false,
+          hasMedicalDevices: (mapped.hasMedicalDevices as boolean) || false,
+          hasWaterStorage: (mapped.hasWaterStorage as boolean) || false,
+          hasGenerator: (mapped.hasGenerator as boolean) || false,
+          dependsPublicWater: mapped.dependsPublicWater !== undefined ? (mapped.dependsPublicWater as boolean) : true,
+          disasterExperiences: (mapped.disasterExperiences as ProfileFormData['disasterExperiences']) || [],
+          homeLat: (mapped.homeLat as number | null) ?? null,
+          homeLng: (mapped.homeLng as number | null) ?? null,
+          workLat: (mapped.workLat as number | null) ?? null,
+          workLng: (mapped.workLng as number | null) ?? null,
+          workProvinceCode: (mapped.workProvinceCode as string) || '',
+          workAddress: (mapped.workAddress as string) || '',
         });
       }
     } catch {
@@ -209,6 +379,12 @@ export function ProfileForm() {
       <ResidenceSection control={control} />
       <EmergencySection control={control} />
       <HealthSection control={control} />
+      <HouseholdSection control={control} />
+      <BuildingSection control={control} />
+      <EconomicSection control={control} />
+      <InfrastructureSection control={control} />
+      <DisasterExperienceSection control={control} />
+      <LocationMapSection control={control} />
       <AlertsSection control={control} watch={watch} />
 
       {/* Submit */}
