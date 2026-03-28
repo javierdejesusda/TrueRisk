@@ -106,6 +106,14 @@ async def get_me(user: User = Depends(get_current_user)):
     return UserResponse.model_validate(user)
 
 
+from app.services.profile_completion_service import compute_profile_completion
+
+@router.get("/me/completion")
+async def get_profile_completion(user: User = Depends(get_current_user)):
+    user_dict = {c.key: getattr(user, c.key) for c in User.__table__.columns}
+    return compute_profile_completion(user_dict)
+
+
 @router.patch("/me", response_model=UserResponse)
 async def update_me(
     body: ProfileUpdateRequest,
