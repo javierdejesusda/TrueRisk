@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.rate_limit import limiter
 from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
@@ -26,7 +27,8 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=TokenResponse)
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(User).where(User.nickname == body.nickname))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Nickname already taken")
@@ -51,7 +53,8 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.nickname == body.nickname))
     user = result.scalar_one_or_none()
     if (
@@ -67,7 +70,8 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/oauth", response_model=TokenResponse)
-async def oauth_link(body: OAuthLinkRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def oauth_link(request: Request, body: OAuthLinkRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(User).where(
             User.auth_provider == body.provider,
