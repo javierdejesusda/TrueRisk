@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.rate_limit import limiter
 from app.models.user import User
+from app.services.profile_completion_service import compute_profile_completion
 from app.schemas.auth import (
     LoginRequest,
     OAuthLinkRequest,
@@ -105,8 +106,6 @@ async def oauth_link(request: Request, body: OAuthLinkRequest, db: AsyncSession 
 async def get_me(user: User = Depends(get_current_user)):
     return UserResponse.model_validate(user)
 
-
-from app.services.profile_completion_service import compute_profile_completion
 
 @router.get("/me/completion")
 async def get_profile_completion(user: User = Depends(get_current_user)):
