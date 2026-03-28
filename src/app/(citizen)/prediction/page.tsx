@@ -96,6 +96,15 @@ export default function PredictionPage() {
       </div>
       <PredictionHeader current={data.current} />
 
+      {/* AI Weather Summary */}
+      <AiWeatherSummary />
+
+      {/* How Predictions Work */}
+      <PredictionsExplainer />
+
+      {/* ML Pipeline */}
+      <PipelineDiagram />
+
       {/* Multi-Horizon Risk Forecast (TFT + GNN) */}
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('forecastTitle')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -121,9 +130,6 @@ export default function PredictionPage() {
         <HydroNowcastCard />
       </div>
 
-      {/* AI Weather Summary */}
-      <AiWeatherSummary />
-
       {/* Model Registry */}
       <ModelInfoPanel />
 
@@ -138,10 +144,6 @@ export default function PredictionPage() {
         <DecisionTreeCard data={data.decisionTree} />
         <KnnMatches data={data.knn} />
       </div>
-
-      {/* ML Pipeline & Methodology */}
-      <PipelineDiagram />
-      <PredictionsExplainer />
     </motion.div>
   );
 }

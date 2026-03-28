@@ -273,6 +273,11 @@ body {
   animation: slide-up 0.2s ease-out;
 }
 
+/* Push zoom controls above the Report Hazard button */
+.maplibregl-ctrl-bottom-right {
+  bottom: 48px !important;
+}
+
 /* Hide MapLibre attribution — credited in README instead */
 .maplibregl-ctrl-attrib {
   display: none !important;
