@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Auth / JWT
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 43200  # 30 days
+    jwt_expire_minutes: int = 10080  # 7 days
 
     # Twilio
     twilio_account_sid: str = ""
