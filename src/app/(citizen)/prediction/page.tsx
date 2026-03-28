@@ -97,7 +97,9 @@ export default function PredictionPage() {
       <PredictionHeader current={data.current} />
 
       {/* AI Weather Summary */}
-      <AiWeatherSummary />
+      <div className="mt-8">
+        <AiWeatherSummary />
+      </div>
 
       {/* How Predictions Work */}
       <PredictionsExplainer />
