@@ -63,12 +63,12 @@ export function AddressSearch() {
           onChange={(e) => setAddress(e.target.value)}
           placeholder={t('inputPlaceholder')}
           disabled={isCreating}
-          className="flex-1 h-13 sm:h-14 px-5 rounded-xl border border-border bg-bg-card text-text-primary placeholder:text-text-muted text-base font-[family-name:var(--font-sans)] outline-none focus:ring-2 focus:ring-severity-2/40 focus:border-severity-2/60 transition-all disabled:opacity-50"
+          className="flex-1 h-13 sm:h-14 px-5 rounded-xl border border-border bg-bg-card text-text-primary placeholder:text-text-muted text-base font-[family-name:var(--font-sans)] outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={!address.trim() || isCreating}
-          className="h-13 sm:h-14 px-8 rounded-xl bg-severity-2 text-bg-primary font-[family-name:var(--font-display)] font-semibold text-sm sm:text-base whitespace-nowrap hover:bg-severity-2/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-13 sm:h-14 px-8 rounded-xl bg-white/[0.14] backdrop-blur-[24px] border border-white/[0.18] text-text-primary font-[family-name:var(--font-display)] font-semibold text-sm sm:text-base whitespace-nowrap shadow-[0_2px_12px_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.24] hover:border-white/[0.35] hover:shadow-[0_8px_32px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.15)] hover:-translate-y-0.5 transition-all duration-250 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {isCreating ? t('analyzing') : t('analyzeButton')}
         </button>

@@ -58,7 +58,6 @@ export function AlertsPanel() {
       title={t('panelActiveAlerts')}
       icon={BellIcon}
       collapsedContent={collapsedContent}
-      defaultCollapsed
     >
       {isLoading ? (
         <div className="flex flex-col gap-2">

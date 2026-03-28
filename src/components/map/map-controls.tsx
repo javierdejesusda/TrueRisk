@@ -147,7 +147,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
           <div className="flex gap-1.5">
             <button
               onClick={onResetView}
-              className="flex items-center gap-1 rounded-md bg-bg-card px-2 py-1 text-[11px] text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1 rounded-md bg-white/[0.06] backdrop-blur-[20px] border border-white/[0.08] px-2 py-1 text-[11px] text-text-secondary hover:bg-white/[0.14] hover:text-text-primary hover:border-white/[0.20] hover:shadow-[0_4px_16px_rgba(255,255,255,0.05)] transition-all duration-250 cursor-pointer"
               aria-label="Reset map view"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -158,7 +158,7 @@ export function MapControls({ alertCount, lastUpdated, onResetView, onRefresh, t
             </button>
             <button
               onClick={onRefresh}
-              className="flex items-center gap-1 rounded-md bg-bg-card px-2 py-1 text-[11px] text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1 rounded-md bg-white/[0.06] backdrop-blur-[20px] border border-white/[0.08] px-2 py-1 text-[11px] text-text-secondary hover:bg-white/[0.14] hover:text-text-primary hover:border-white/[0.20] hover:shadow-[0_4px_16px_rgba(255,255,255,0.05)] transition-all duration-250 cursor-pointer"
               aria-label="Refresh alerts"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

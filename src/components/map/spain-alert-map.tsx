@@ -719,7 +719,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       {/* Report hazard button — positioned above legend */}
       <button
         onClick={() => setShowReportForm(true)}
-        className="absolute bottom-14 left-4 z-10 flex items-center gap-2 glass-heavy rounded-xl border border-white/10 px-4 py-2.5 text-xs font-medium text-text-primary hover:bg-white/10 transition-colors"
+        className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-xl border border-white/[0.18] bg-white/[0.14] backdrop-blur-[24px] px-4 py-2.5 text-xs font-medium text-text-primary shadow-[0_2px_12px_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.24] hover:border-white/[0.35] hover:shadow-[0_8px_32px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.15)] hover:-translate-y-0.5 transition-all duration-250 cursor-pointer"
       >
         <span className="text-orange-400">!</span>
         {t('reportHazard')}

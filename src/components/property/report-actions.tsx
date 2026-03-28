@@ -42,7 +42,7 @@ export function ReportActions({ reportId, pdfAvailable }: ReportActionsProps) {
       <button
         type="button"
         onClick={handleCopyLink}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-bg-card text-sm text-text-secondary hover:text-text-primary hover:border-white/20 transition-all cursor-pointer"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/[0.15] bg-transparent text-sm text-text-secondary hover:bg-white/[0.12] hover:border-white/[0.30] hover:text-text-primary hover:backdrop-blur-[20px] hover:shadow-[0_8px_28px_rgba(255,255,255,0.08),inset_0_1px_0_rgba(255,255,255,0.08)] hover:-translate-y-0.5 transition-all duration-250 cursor-pointer"
       >
         {copied ? (
           <>
@@ -66,7 +66,7 @@ export function ReportActions({ reportId, pdfAvailable }: ReportActionsProps) {
         <a
           href={`/api/property/report/${reportId}/pdf`}
           download
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-severity-2 text-bg-primary text-sm font-semibold hover:bg-severity-2/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.14] backdrop-blur-[24px] border border-white/[0.18] text-text-primary text-sm font-semibold shadow-[0_2px_12px_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.24] hover:border-white/[0.35] hover:shadow-[0_8px_32px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.15)] hover:-translate-y-0.5 transition-all duration-250"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />

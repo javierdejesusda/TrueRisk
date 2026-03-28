@@ -1,19 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import "./globals.css";
 
-const geistSans = Geist({
+const ibmPlexSans = IBM_Plex_Sans({
+  variable: '--font-display',
   subsets: ['latin'],
-  variable: '--font-sans',
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
+const ibmPlexMono = IBM_Plex_Mono({
   variable: '--font-mono',
+  subsets: ['latin'],
+  weight: ['400', '500'],
   display: 'swap',
 });
 
@@ -57,7 +59,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} antialiased`}
       >
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black">
           Skip to content

@@ -29,9 +29,9 @@
   --color-severity-4: #EF4444;
   --color-severity-5: #e51f1f;
 
-  --font-display: 'Geist', system-ui, sans-serif;
-  --font-sans: 'Geist', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+  --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
 }
 
 /* ── Base styles ───────────────────────────────────────────────── */
