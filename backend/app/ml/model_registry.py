@@ -44,11 +44,11 @@ MODEL_REGISTRY: list[dict] = [
     {
         "id": "drought",
         "name": "Drought Risk",
-        "method": "SPEI + LSTM",
+        "method": "SPEI + Attention-LSTM",
         "description": "Two-stage model: SPEI (Standardised Precipitation-Evapotranspiration Index) quantifies current drought severity at 1/3/6-month scales, while an LSTM neural network predicts 30-day drought trajectory from 90-day daily sequences of 6 climate features.",
         "feature_count": len(DROUGHT_FEATURES),
         "features": list(DROUGHT_FEATURES),
-        "architecture": "SPEI piecewise-linear mapping + PyTorch LSTM (hidden_size=64, num_layers=2)",
+        "architecture": "SPEI piecewise-linear mapping + PyTorch Attention-LSTM (hidden_size=64, num_layers=2, num_heads=4) with CEEMDAN denoising",
         "metrics": {
             "accuracy": 0.86,
             "f1_score": 0.81,
@@ -149,8 +149,8 @@ def get_model_registry() -> list[dict]:
             "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
         },
         "drought": {
-            "method": "SPEI + LSTM + Temporal Fusion Transformer",
-            "architecture": "SPEI mapping + LSTM + TFT quantile regression (multi-horizon)",
+            "method": "SPEI + Attention-LSTM + Temporal Fusion Transformer",
+            "architecture": "SPEI mapping + Attention-LSTM + TFT quantile regression (multi-horizon)",
         },
         "coldwave": {
             "method": "Rule-based + Temporal Fusion Transformer",

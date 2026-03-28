@@ -1,7 +1,12 @@
-"""Train the drought LSTM model (PyTorch).
+"""Train the drought Attention-LSTM model (PyTorch).
 
 Loads drought_sequences.npz, trains on CUDA (or CPU fallback) with
 early stopping, saves best state_dict to saved_models/drought_lstm.pt.
+
+The architecture uses multi-head self-attention between the LSTM encoder
+and classification head, with a residual connection and LayerNorm for
+training stability.  CEEMDAN denoising is applied at inference time
+(see drought_risk.py), not during training.
 """
 
 from __future__ import annotations
