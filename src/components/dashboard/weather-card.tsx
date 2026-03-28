@@ -22,7 +22,7 @@ export function WeatherCard() {
 
   if (isLoading) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <Skeleton height="20px" width="120px" className="mb-4" />
         <Skeleton height="48px" width="80px" className="mb-4" />
         <div className="grid grid-cols-2 gap-3">
@@ -36,7 +36,7 @@ export function WeatherCard() {
 
   if (!weather) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <p className="font-[family-name:var(--font-sans)] text-sm text-text-muted">{t('noWeatherData')}</p>
       </Card>
     );
@@ -50,7 +50,7 @@ export function WeatherCard() {
   ];
 
   return (
-    <Card variant="glass" padding="md">
+    <Card variant="glass" padding="md" className="h-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted">
           {t('weather')}

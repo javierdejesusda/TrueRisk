@@ -52,7 +52,7 @@ export function RiskOverview() {
 
   if (isLoading) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <Skeleton height="20px" width="120px" className="mb-4" />
         <Skeleton height="64px" width="100px" className="mb-4" />
         <div className="flex flex-col gap-2">
@@ -66,14 +66,14 @@ export function RiskOverview() {
 
   if (!risk) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <p className="font-[family-name:var(--font-sans)] text-sm text-text-muted">{t('noRiskData')}</p>
       </Card>
     );
   }
 
   return (
-    <Card variant="glass" padding="md">
+    <Card variant="glass" padding="md" className="h-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted">
           {t('riskOverview')}

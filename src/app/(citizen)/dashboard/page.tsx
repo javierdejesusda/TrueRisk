@@ -33,7 +33,7 @@ export default function DashboardPage() {
       transition={{ duration: 0.3 }}
     >
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-text-primary">
             {t('title')}
@@ -53,37 +53,37 @@ export default function DashboardPage() {
       </div>
 
       {/* DANA early warning banner (shows when DANA score >= 60) */}
-      <div className="mb-4">
+      <div className="mb-3">
         <DanaWarningBanner />
       </div>
 
       {/* AI morning briefing */}
-      <div className="mb-4">
+      <div className="mb-3">
         <RiskNarrative />
       </div>
 
       {/* Bento grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 pb-8">
         {/* Left column: Risk overview (spans 2 rows on desktop) */}
-        <div className="lg:row-span-2" data-tour="risk-overview">
+        <div className="lg:row-span-2 h-full" data-tour="risk-overview">
           <RiskOverview />
         </div>
 
         {/* Top right: Weather */}
-        <div data-tour="weather-card">
+        <div className="h-full" data-tour="weather-card">
           <WeatherCard />
         </div>
 
         {/* Top far right: Alerts */}
-        <div data-tour="alert-feed">
+        <div className="h-full" data-tour="alert-feed">
           <AlertFeed />
         </div>
 
         {/* Bottom spanning 1 column: Quick actions + data quality */}
-        <div>
+        <div className="h-full">
           <QuickActions />
         </div>
-        <div>
+        <div className="h-full">
           <DataQualityPanel />
         </div>
 

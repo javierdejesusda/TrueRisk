@@ -99,7 +99,7 @@ export function AlertFeed() {
 
   if (loading) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <Skeleton height="20px" width="120px" className="mb-4" />
         <div className="flex flex-col gap-2">
           {[0, 1, 2].map((i) => (
@@ -113,7 +113,7 @@ export function AlertFeed() {
   const unified = unifyAlerts(alerts, aemetAlerts, ta);
 
   return (
-    <Card variant="glass" padding="md">
+    <Card variant="glass" padding="md" className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted">
           {t('activeAlerts')}
@@ -159,7 +159,7 @@ export function AlertFeed() {
 
       <Link
         href="/alerts"
-        className="mt-4 block text-center font-[family-name:var(--font-sans)] text-xs font-medium text-accent-blue hover:text-accent-blue/80 transition-colors"
+        className="mt-auto pt-4 block text-center font-[family-name:var(--font-sans)] text-xs font-medium text-accent-blue hover:text-accent-blue/80 transition-colors"
       >
         {t('viewAll')} &rarr;
       </Link>

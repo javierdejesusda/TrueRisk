@@ -53,7 +53,7 @@ export function DataQualityPanel() {
 
   if (isLoading) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <Skeleton height="14px" width="120px" className="mb-3" />
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} height="14px" className="mb-2" />
@@ -66,7 +66,7 @@ export function DataQualityPanel() {
 
   if (entries.length === 0) {
     return (
-      <Card variant="glass" padding="md">
+      <Card variant="glass" padding="md" className="h-full">
         <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted mb-2">
           Data Sources
         </h2>
@@ -78,7 +78,7 @@ export function DataQualityPanel() {
   }
 
   return (
-    <Card variant="glass" padding="md">
+    <Card variant="glass" padding="md" className="h-full">
       <h2 className="font-[family-name:var(--font-display)] text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
         Data Sources
       </h2>

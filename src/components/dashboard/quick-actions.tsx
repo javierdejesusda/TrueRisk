@@ -62,7 +62,7 @@ export function QuickActions() {
   const t = useTranslations('Dashboard');
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 h-full">
       {ACTIONS.map(({ titleKey, subtitleKey, href, icon }) => (
         <Link
           key={href}
