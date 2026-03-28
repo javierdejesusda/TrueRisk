@@ -4,7 +4,9 @@ from __future__ import annotations
 from typing import Any
 
 
-SECTIONS = {
+SectionConfig = dict[str, float | list[str]]
+
+SECTIONS: dict[str, SectionConfig] = {
     "location": {
         "weight": 0.20,
         "fields": ["province_code", "home_latitude", "home_longitude"],
@@ -44,8 +46,10 @@ def compute_profile_completion(user_dict: dict[str, Any]) -> dict:
     sections = {}
     total = 0.0
     for section, cfg in SECTIONS.items():
-        filled = sum(1 for f in cfg["fields"] if user_dict.get(f) is not None)
-        pct = filled / len(cfg["fields"]) if cfg["fields"] else 0
+        fields = list(cfg["fields"])
+        weight = float(cfg["weight"])
+        filled = sum(1 for f in fields if user_dict.get(f) is not None)
+        pct = filled / len(fields) if fields else 0
         sections[section] = round(pct * 100)
-        total += pct * cfg["weight"]
+        total += pct * weight
     return {"total": round(total * 100), "sections": sections}

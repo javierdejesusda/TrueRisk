@@ -39,7 +39,7 @@ class EncryptedString(TypeDecorator):
 
     def __init__(self, length: int = 500, **kw):
         super().__init__()
-        self.impl = String(length)
+        self.impl = String(length)  # type: ignore[assignment]
 
     def process_bind_param(self, value, dialect):
         if value is None:
