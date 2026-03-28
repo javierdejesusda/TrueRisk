@@ -13,7 +13,6 @@ const RotatingEarth = dynamic(
 
 export default function Home() {
   const t = useTranslations('Home');
-  const tc = useTranslations('Common');
   const [introComplete, setIntroComplete] = useState(false);
   const handleIntroComplete = useCallback(() => setIntroComplete(true), []);
 
@@ -38,22 +37,6 @@ export default function Home() {
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="relative z-10 flex flex-col items-center text-center"
           >
-            {/* Status badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0, duration: 0.5 }}
-              className="mb-8 flex items-center gap-2 rounded-full border border-border bg-white/[0.08] px-4 py-1.5 backdrop-blur-md"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-green opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-green" />
-              </span>
-              <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider text-text-secondary">
-                {tc('systemActive')}
-              </span>
-            </motion.div>
-
             {/* Title */}
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
