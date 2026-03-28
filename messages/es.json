@@ -760,7 +760,7 @@
     "nicknameTaken": "El nombre de usuario ya esta en uso",
     "emailTaken": "El correo ya esta registrado",
     "passwordMismatch": "Las contrasenas no coinciden",
-    "passwordMin": "Minimo 8 caracteres",
+    "passwordMin": "Min. 10 caracteres, mayuscula, minuscula, numero y caracter especial",
     "logoutButton": "Cerrar sesion",
     "province": "Provincia",
     "registerSuccess": "Cuenta creada con exito"

@@ -41,7 +41,7 @@ export default function RegisterPage() {
         .object({
             nickname: z.string().min(1),
             email: z.string().email().optional().or(z.literal('')),
-            password: z.string().min(8, t('passwordMin')),
+            password: z.string().min(10, t('passwordMin')),
             confirmPassword: z.string().min(1),
             province_code: z.string().min(1),
         })

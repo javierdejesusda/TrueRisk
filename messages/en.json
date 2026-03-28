@@ -762,7 +762,7 @@
     "nicknameTaken": "Username already taken",
     "emailTaken": "Email already registered",
     "passwordMismatch": "Passwords don't match",
-    "passwordMin": "Minimum 8 characters",
+    "passwordMin": "Min. 10 characters, uppercase, lowercase, digit, and special character",
     "logoutButton": "Sign out",
     "province": "Province",
     "registerSuccess": "Account created successfully"
