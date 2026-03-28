@@ -96,10 +96,18 @@ def _gev_analysis(values: list[float], current: float) -> dict:
     if len(arr) < 10:
         return _gev_fallback(current)
 
-    shape, loc, scale = stats.genextreme.fit(arr)
-    scale = max(scale, 0.01)
+    try:
+        shape, loc, scale = stats.genextreme.fit(arr)
+    except Exception:
+        return _gev_fallback(current)
 
-    cdf = stats.genextreme.cdf(current, shape, loc=loc, scale=scale)
+    scale = max(scale, 0.01)
+    if math.isnan(shape) or math.isnan(loc) or math.isnan(scale):
+        return _gev_fallback(current)
+
+    cdf = float(stats.genextreme.cdf(current, shape, loc=loc, scale=scale))
+    if math.isnan(cdf):
+        cdf = 0.5
     exceedance = 1 - cdf
     return_period = 1 / max(exceedance, 1e-6)
 
@@ -116,13 +124,20 @@ def _gev_analysis(values: list[float], current: float) -> dict:
     pdf_curve = []
     for i in range(steps + 1):
         x = x_start + i * step_size
-        y = stats.genextreme.pdf(x, shape, loc=loc, scale=scale)
-        pdf_curve.append({"x": round(x, 2), "y": round(float(y), 6)})
+        y = float(stats.genextreme.pdf(x, shape, loc=loc, scale=scale))
+        if math.isnan(y) or math.isinf(y):
+            y = 0.0
+        pdf_curve.append({"x": round(x, 2), "y": round(y, 6)})
 
     return_levels = []
     for period in [2, 5, 10, 25, 50, 100]:
         p = 1 - 1.0 / period
-        level = float(stats.genextreme.ppf(p, shape, loc=loc, scale=scale))
+        try:
+            level = float(stats.genextreme.ppf(p, shape, loc=loc, scale=scale))
+            if math.isnan(level) or math.isinf(level):
+                level = vmax * (1 + period / 100)
+        except Exception:
+            level = vmax * (1 + period / 100)
         low_confidence = period > max_credible
         return_levels.append({
             "period": period,
@@ -817,15 +832,15 @@ async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     if len(temps) >= 30:
         recent_temps = temps[-48:] if len(temps) > 48 else temps
     elif has_enough_daily:
-        recent_temps = [s.temperature_avg for s in daily_summaries[-60:]]
+        recent_temps = [_safe(s.temperature_avg) for s in daily_summaries[-60:]]
     else:
         recent_temps = temps
 
     # Use daily data for GEV (statistically meaningful with years of data)
     if has_enough_daily:
-        daily_precips = [s.precipitation_sum for s in daily_summaries]
-        daily_temp_maxes = [s.temperature_max for s in daily_summaries]
-        daily_wind_maxes = [s.wind_speed_max for s in daily_summaries]
+        daily_precips = [_safe(s.precipitation_sum) for s in daily_summaries]
+        daily_temp_maxes = [_safe(s.temperature_max) for s in daily_summaries]
+        daily_wind_maxes = [_safe(s.wind_speed_max) for s in daily_summaries]
     else:
         daily_precips = precips
         daily_temp_maxes = temps

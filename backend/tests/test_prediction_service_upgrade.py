@@ -58,6 +58,18 @@ class TestGEVAnalysis:
         assert result["currentValue"] == 15.0
         assert result["params"]["shape"] == 0
 
+    def test_gev_degenerate_constant_data(self):
+        """Constant values should return fallback, not crash."""
+        result = _gev_analysis([5.0] * 100, 5.0)
+        assert "params" in result
+        assert result["currentValue"] == 5.0
+
+    def test_gev_handles_none_as_nan(self):
+        """Values with NaN should be filtered gracefully."""
+        values = [1.0, 2.0, float("nan")] * 10
+        result = _gev_analysis(values, 2.0)
+        assert "params" in result
+
 
 # ---------------------------------------------------------------------------
 # C2: Return period capping
