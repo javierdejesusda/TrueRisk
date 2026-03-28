@@ -36,13 +36,13 @@ export default function ReportPage() {
 
   return (
     <motion.div
-      className="min-h-[calc(100vh-4rem)] px-6 lg:px-12 pb-16 max-w-2xl mx-auto flex flex-col"
+      className="h-screen pt-20 px-6 lg:px-12 pb-16 max-w-2xl mx-auto flex flex-col overflow-y-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {/* Hero */}
-      <div className="pt-16 sm:pt-24 text-center">
+      <div className="pt-6 sm:pt-10 text-center">
         <h1 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-extrabold text-text-primary">
           {t('title')}
         </h1>

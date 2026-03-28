@@ -42,8 +42,8 @@ export default function ReportViewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto pt-8">
-        <p className="text-sm text-text-muted text-center mb-8 font-[family-name:var(--font-sans)]">
+      <div className="h-screen pt-20 px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto overflow-y-auto">
+        <p className="pt-6 text-sm text-text-muted text-center font-[family-name:var(--font-sans)]">
           {t('loading')}
         </p>
         <LoadingSkeleton />
@@ -53,7 +53,7 @@ export default function ReportViewPage() {
 
   if (error && !report) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="h-screen pt-20 flex items-center justify-center">
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -80,13 +80,13 @@ export default function ReportViewPage() {
 
   return (
     <motion.div
-      className="min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto"
+      className="h-screen pt-20 px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto overflow-y-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
       {/* Title */}
-      <div className="pt-6 sm:pt-8">
+      <div className="pt-4 sm:pt-6">
         <h1 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-extrabold text-text-primary text-center">
           {t('reportTitle')}
         </h1>
