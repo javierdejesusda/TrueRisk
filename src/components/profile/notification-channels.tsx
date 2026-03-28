@@ -23,7 +23,7 @@ export function NotificationChannels() {
     if (!backendToken) return;
     setTelegramLoading(true);
     try {
-      const res = await apiFetch('/api/v1/telegram/link', { method: 'POST' });
+      const res = await apiFetch('/api/telegram/link', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setTelegramCode(data.code);

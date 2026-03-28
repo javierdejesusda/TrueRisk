@@ -39,7 +39,7 @@ export function StepLocation() {
       const { latitude, longitude } = position.coords;
 
       if (backendToken) {
-        const res = await fetch('/api/v1/location/update', {
+        const res = await fetch('/api/location/update', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
