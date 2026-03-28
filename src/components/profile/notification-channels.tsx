@@ -16,6 +16,7 @@ export function NotificationChannels() {
 
   const [telegramCode, setTelegramCode] = useState<string | null>(null);
   const [telegramInstructions, setTelegramInstructions] = useState<string | null>(null);
+  const [telegramDeepLink, setTelegramDeepLink] = useState<string | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(false);
 
   async function handleLinkTelegram() {
@@ -27,6 +28,7 @@ export function NotificationChannels() {
         const data = await res.json();
         setTelegramCode(data.code);
         setTelegramInstructions(data.instructions);
+        setTelegramDeepLink(data.deep_link || null);
       }
     } catch {
       // Silently fail
@@ -99,11 +101,19 @@ export function NotificationChannels() {
           {telegramCode && (
             <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 px-3 py-2">
               <p className="text-xs text-text-muted mb-1">{t('telegramInstructions')}</p>
-              <code className="text-sm font-[family-name:var(--font-mono)] text-accent-green font-bold">
-                /start {telegramCode}
-              </code>
-              {telegramInstructions && (
-                <p className="text-xs text-text-muted mt-1">{telegramInstructions}</p>
+              {telegramDeepLink ? (
+                <a
+                  href={telegramDeepLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-lg bg-accent-green/20 px-4 py-2 text-sm font-medium text-accent-green hover:bg-accent-green/30 transition-colors"
+                >
+                  {t('openTelegram')}
+                </a>
+              ) : (
+                <code className="text-sm font-[family-name:var(--font-mono)] text-accent-green font-bold">
+                  /start {telegramCode}
+                </code>
               )}
             </div>
           )}

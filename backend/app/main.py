@@ -33,6 +33,7 @@ handler.setFormatter(JsonFormatter(
 logging.basicConfig(handlers=[handler], level=logging.INFO, force=True)
 
 _start_time = time.time()
+logger = logging.getLogger(__name__)
 
 
 def _sync_missing_columns(conn):
@@ -92,6 +93,13 @@ async def lifespan(app: FastAPI):
     # Start background scheduler
     from app.scheduler.jobs import setup_scheduler, shutdown_scheduler
     setup_scheduler()
+
+    # Register Telegram webhook (best-effort, non-blocking)
+    try:
+        from app.services.telegram_service import register_webhook
+        await register_webhook()
+    except Exception:
+        logger.exception("Telegram webhook registration failed (non-critical)")
 
     yield
 

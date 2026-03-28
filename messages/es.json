@@ -624,6 +624,7 @@
     "telegramDesc": "Recibir alertas por bot de Telegram",
     "linkTelegram": "Vincular Telegram",
     "telegramInstructions": "Envia este codigo al bot de TrueRisk en Telegram",
+    "openTelegram": "Abrir en Telegram",
     "linked": "Vinculado",
     "notLinked": "Aun no vinculado",
     "enabled": "Activado",

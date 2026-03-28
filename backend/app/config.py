@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     # Telegram
     telegram_bot_token: str = ""
     telegram_admin_chat_id: str = ""
+    telegram_bot_username: str = ""
+    telegram_webhook_url: str = ""
 
     # Data source API keys
     firms_map_key: str = ""
