@@ -95,24 +95,12 @@ export default function PredictionPage() {
         <span className="text-xs font-[family-name:var(--font-sans)] text-text-muted">{t('provinceAnalysis')}</span>
       </div>
       <PredictionHeader current={data.current} />
-      <PredictionsExplainer />
 
-      {/* AI Weather Summary */}
-      <AiWeatherSummary />
-
-      {/* ML Pipeline Visualization */}
-      <PipelineDiagram />
-
-      {/* Multi-Horizon Risk Forecast */}
+      {/* Multi-Horizon Risk Forecast (TFT + GNN) */}
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('forecastTitle')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <ForecastChart data={forecastData} isLoading={forecastLoading} />
         <AttentionWeightsChart data={forecastData} />
-      </div>
-
-      {/* Hydrological Nowcast */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-        <HydroNowcastCard />
       </div>
 
       {/* Hazard ML Models */}
@@ -128,12 +116,20 @@ export default function PredictionPage() {
         <HazardOverviewChart riskData={riskData} />
       </div>
 
+      {/* Hydrological Nowcast */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+        <HydroNowcastCard />
+      </div>
+
+      {/* AI Weather Summary */}
+      <AiWeatherSummary />
+
       {/* Model Registry */}
       <ModelInfoPanel />
 
       {/* Statistical Models */}
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('statisticalMethods')}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <GumbelChart data={data.gumbel} />
         <RegressionChart data={data.regression} />
         <BayesianChart data={data.bayesian} />
@@ -142,6 +138,10 @@ export default function PredictionPage() {
         <DecisionTreeCard data={data.decisionTree} />
         <KnnMatches data={data.knn} />
       </div>
+
+      {/* ML Pipeline & Methodology */}
+      <PipelineDiagram />
+      <PredictionsExplainer />
     </motion.div>
   );
 }

@@ -42,6 +42,51 @@ function SeismicIcon() {
   );
 }
 
+function WildfireIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 12c2-2.96 0-7-1-8 0 3.04-1.18 4.43-2.58 5.96C7 11.54 6 13.24 6 15a6 6 0 0 0 12 0c0-1.76-1-3.46-2.42-5.04C14.18 8.43 13 7.04 13 4c-1 1-3 5.04-1 8z" />
+    </svg>
+  );
+}
+
+function DroughtIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v2" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 20v2" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="M6 18L4 20" />
+      <path d="M18 18l2 2" />
+    </svg>
+  );
+}
+
+function ColdwaveIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v20" />
+      <path d="M2 12h20" />
+      <path d="m4.93 4.93 14.14 14.14" />
+      <path d="m19.07 4.93-14.14 14.14" />
+      <path d="m9 2 3 3 3-3" />
+      <path d="m9 22 3-3 3 3" />
+    </svg>
+  );
+}
+
+function WindstormIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />
+      <path d="M9.6 4.6A2 2 0 1 1 11 8H2" />
+      <path d="M12.6 19.4A2 2 0 1 0 14 16H2" />
+    </svg>
+  );
+}
+
 interface FirstAidCardDef {
   titleKey: string;
   stepsKey: string;
@@ -59,6 +104,13 @@ const CARD_DEFS: FirstAidCardDef[] = [
     iconColor: 'text-accent-blue',
   },
   {
+    titleKey: 'wildfire',
+    stepsKey: 'wildfireSteps',
+    icon: <WildfireIcon />,
+    borderColor: 'border-accent-red/40',
+    iconColor: 'text-accent-red',
+  },
+  {
     titleKey: 'heatwave',
     stepsKey: 'heatwaveSteps',
     icon: <HeatIcon />,
@@ -71,6 +123,27 @@ const CARD_DEFS: FirstAidCardDef[] = [
     icon: <SeismicIcon />,
     borderColor: 'border-accent-yellow/40',
     iconColor: 'text-accent-yellow',
+  },
+  {
+    titleKey: 'drought',
+    stepsKey: 'droughtSteps',
+    icon: <DroughtIcon />,
+    borderColor: 'border-amber-500/40',
+    iconColor: 'text-amber-400',
+  },
+  {
+    titleKey: 'coldwave',
+    stepsKey: 'coldwaveSteps',
+    icon: <ColdwaveIcon />,
+    borderColor: 'border-cyan-400/40',
+    iconColor: 'text-cyan-400',
+  },
+  {
+    titleKey: 'windstorm',
+    stepsKey: 'windstormSteps',
+    icon: <WindstormIcon />,
+    borderColor: 'border-white/20',
+    iconColor: 'text-text-muted',
   },
 ];
 

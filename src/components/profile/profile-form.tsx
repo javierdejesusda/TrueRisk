@@ -376,15 +376,15 @@ export function ProfileForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
       <LocationSection control={control} />
-      <ResidenceSection control={control} />
       <EmergencySection control={control} />
       <HealthSection control={control} />
+      <ResidenceSection control={control} />
       <HouseholdSection control={control} />
+      <LocationMapSection control={control} />
       <BuildingSection control={control} />
-      <EconomicSection control={control} />
       <InfrastructureSection control={control} />
       <DisasterExperienceSection control={control} />
-      <LocationMapSection control={control} />
+      <EconomicSection control={control} />
       <AlertsSection control={control} watch={watch} />
 
       {/* Submit */}

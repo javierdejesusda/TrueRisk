@@ -272,3 +272,8 @@ body {
 .maplibregl-popup {
   animation: slide-up 0.2s ease-out;
 }
+
+/* Hide MapLibre attribution — credited in README instead */
+.maplibregl-ctrl-attrib {
+  display: none !important;
+}
