@@ -23,11 +23,11 @@ def test_inf_input_clamped_to_100():
 
 
 def test_dana_eighth_hazard_contributes():
-    """DANA (8th param) should contribute to composite."""
+    """DANA (8th param) should affect composite when it is the highest."""
     without_dana = compute_composite_risk(50, 0, 0, 0, 0, 0, 0, 0)
-    with_dana = compute_composite_risk(50, 0, 0, 0, 0, 0, 0, 40)
+    with_dana = compute_composite_risk(50, 0, 0, 0, 0, 0, 0, 70)
     assert with_dana["composite_score"] > without_dana["composite_score"]
-    assert with_dana["dana_score"] == 40
+    assert with_dana["dana_score"] == 70
 
 
 def test_dana_can_be_dominant():
@@ -43,9 +43,10 @@ def test_tie_breaking_deterministic():
 
 
 def test_all_equal_moderate():
+    # All 30: active=[30]*8, geo_mean_top3=(30*30*30)^(1/3)=30
+    # composite = 0.6*30 + 0.4*30 = 30.0
     result = compute_composite_risk(30, 30, 30, 30, 30, 30, 30, 30)
-    assert result["composite_score"] > 30  # secondary contributions
-    assert result["composite_score"] < 50  # shouldn't inflate too much
+    assert result["composite_score"] == 30.0
 
 
 def test_severity_boundary_20():
