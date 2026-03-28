@@ -64,19 +64,41 @@ export function ReportForm({ onSubmit, onClose }: ReportFormProps) {
   };
 
   const getLocation = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setError(t('locationUnsupported'));
+      return;
+    }
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
-      },
-      () => {
-        setError(t('locationError'));
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    setError(null);
+    let retries = 0;
+
+    const attempt = (highAccuracy: boolean, timeout: number) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setLocating(false);
+        },
+        (err) => {
+          if (err.code === 1) {
+            // PERMISSION_DENIED
+            setError(t('locationDenied'));
+            setLocating(false);
+          } else if (err.code === 3 && retries < 2) {
+            // TIMEOUT - retry with lower accuracy / longer timeout
+            retries++;
+            setError(t('locationTimeout'));
+            attempt(false, 30000);
+          } else {
+            // POSITION_UNAVAILABLE or final timeout
+            setError(t('locationUnavailable'));
+            setLocating(false);
+          }
+        },
+        { enableHighAccuracy: highAccuracy, timeout, maximumAge: 60000 },
+      );
+    };
+
+    attempt(true, 15000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
