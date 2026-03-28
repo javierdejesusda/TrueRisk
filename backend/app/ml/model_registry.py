@@ -30,11 +30,11 @@ MODEL_REGISTRY: list[dict] = [
     {
         "id": "wildfire",
         "name": "Wildfire Risk",
-        "method": "RF + LightGBM Ensemble",
-        "description": "Dual-model ensemble combining Random Forest and LightGBM classifiers with optional Platt calibration. Leverages the Canadian Forest Fire Weather Index (FWI) system alongside 20 meteorological and geographic features.",
+        "method": "LightGBM",
+        "description": "LightGBM classifier with Platt sigmoid calibration for wildfire risk prediction. Leverages the Canadian Forest Fire Weather Index (FWI) system alongside 20 meteorological and geographic features.",
         "feature_count": len(WILDFIRE_FEATURES),
         "features": list(WILDFIRE_FEATURES),
-        "architecture": "Random Forest + LightGBM ensemble with Platt sigmoid calibration",
+        "architecture": "LightGBM classifier with Platt sigmoid calibration",
         "metrics": {
             "accuracy": 0.91,
             "f1_score": 0.87,
@@ -141,8 +141,8 @@ def get_model_registry() -> list[dict]:
             "architecture": "XGBoost binary classifier + TFT quantile regression (multi-horizon)",
         },
         "wildfire": {
-            "method": "RF + LightGBM + Temporal Fusion Transformer",
-            "architecture": "Ensemble classifier + TFT quantile regression (multi-horizon)",
+            "method": "LightGBM + Temporal Fusion Transformer",
+            "architecture": "LightGBM classifier + TFT quantile regression (multi-horizon)",
         },
         "heatwave": {
             "method": "XGBoost + Temporal Fusion Transformer",
