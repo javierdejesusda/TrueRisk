@@ -1,16 +1,27 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
+const legalLinks = [
+  { href: '/privacy', key: 'privacy' },
+  { href: '/terms', key: 'terms' },
+  { href: '/cookies', key: 'cookies' },
+  { href: '/license', key: 'license' },
+  { href: '/about', key: 'about' },
+  { href: '/accessibility', key: 'accessibility' },
+] as const;
+
 export function Footer() {
-  const t = useTranslations('Landing');
+  const tLanding = useTranslations('Landing');
+  const tLegal = useTranslations('Legal.footer');
 
   return (
     <footer className="w-full border-t border-border bg-bg-primary px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center">
         {/* Tech stack */}
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-text-muted">
-          <span>{t('builtWith')}</span>
+          <span>{tLanding('builtWith')}</span>
           <span className="font-[family-name:var(--font-mono)] text-text-secondary">
             Next.js
           </span>
@@ -26,7 +37,7 @@ export function Footer() {
 
         {/* Province coverage + GitHub */}
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-text-muted">
-          <span>{t('provincesCoverage')}</span>
+          <span>{tLanding('provincesCoverage')}</span>
           <a
             href="https://github.com/javierdejesusda/TrueRisk"
             target="_blank"
@@ -44,9 +55,22 @@ export function Footer() {
           </a>
         </div>
 
+        {/* Legal links */}
+        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-text-muted">
+          {legalLinks.map(({ href, key }) => (
+            <Link
+              key={key}
+              href={href}
+              className="transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:text-text-primary"
+            >
+              {tLegal(key)}
+            </Link>
+          ))}
+        </nav>
+
         {/* Copyright */}
         <p className="text-xs text-text-muted">
-          {t('copyright', { year: new Date().getFullYear() })}
+          {tLanding('copyright', { year: new Date().getFullYear() })}
         </p>
       </div>
     </footer>
