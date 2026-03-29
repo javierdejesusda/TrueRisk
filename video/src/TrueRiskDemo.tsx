@@ -23,6 +23,7 @@ import { Preparedness } from "./scenes/act3/Preparedness";
 import { Profile } from "./scenes/act3/Profile";
 import { Report } from "./scenes/act3/Report";
 import { Phrases } from "./scenes/act3/Phrases";
+import { Notifications } from "./scenes/act3/Notifications";
 import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
 
@@ -173,6 +174,15 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Sequence durationInFrames={D.phrases}>
           <Phrases />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition
+          presentation={fade()}
+          timing={linearTiming({ durationInFrames: T.fadeMedium })}
+        />
+
+        <TransitionSeries.Sequence durationInFrames={D.notifications}>
+          <Notifications />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
