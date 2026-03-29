@@ -23,6 +23,10 @@ from app.models.risk_score import RiskScore
 from app.services.arpsi_service import FloodZoneResult, check_flood_zone
 from app.services.elevation_service import ElevationResult, get_elevation_and_slope
 
+# Scale factor for deriving province baselines from geographic risk weights
+# when no ML-computed RiskScore is available in the database.
+_GEO_BASELINE_SCALE = 20.0
+
 logger = logging.getLogger(__name__)
 
 
@@ -115,35 +119,47 @@ def refine_flood_risk(
 ) -> tuple[float, float, str]:
     """Refine the province-level flood score using ARPSI flood-zone data.
 
+    Uses a hybrid approach: the province weather-based score is scaled by a
+    modifier, but ARPSI flood-zone presence guarantees a minimum baseline
+    representing structural, permanent flood risk independent of current
+    weather conditions.
+
     Returns ``(refined_score, modifier, explanation)``.
     """
+    min_baseline = 0.0
+
     if arpsi_result.in_flood_zone:
         if arpsi_result.return_period == "T10":
             modifier = 2.5
+            min_baseline = 35.0
             explanation = (
                 f"Address is inside a high-frequency flood zone "
                 f"({arpsi_result.zone_name}, T10 return period)"
             )
         elif arpsi_result.return_period == "T100":
             modifier = 1.8
+            min_baseline = 25.0
             explanation = (
                 f"Address is inside a moderate flood zone "
                 f"({arpsi_result.zone_name}, T100 return period)"
             )
         elif arpsi_result.return_period == "T500":
             modifier = 1.3
+            min_baseline = 15.0
             explanation = (
                 f"Address is inside a low-frequency flood zone "
                 f"({arpsi_result.zone_name}, T500 return period)"
             )
         else:
             modifier = 1.5
+            min_baseline = 20.0
             explanation = f"Address is inside flood zone {arpsi_result.zone_name}"
     elif (
         arpsi_result.distance_to_nearest_zone_m is not None
         and arpsi_result.distance_to_nearest_zone_m < 500
     ):
         modifier = 1.2
+        min_baseline = 10.0
         explanation = (
             f"Address is {arpsi_result.distance_to_nearest_zone_m:.0f}m "
             f"from nearest flood zone"
@@ -152,7 +168,7 @@ def refine_flood_risk(
         modifier = 0.5
         explanation = "Address is not in or near any designated flood zone"
 
-    score = _clamp(province_score * modifier)
+    score = _clamp(max(province_score * modifier, min_baseline))
     return round(score, 2), round(modifier, 2), explanation
 
 
@@ -369,17 +385,29 @@ async def compute_property_risk(
 
     if risk_row is None:
         logger.warning(
-            "No risk scores found for province %s; using zero baselines",
+            "No risk scores found for province %s; using geographic baselines",
             province_code,
         )
 
-    province_flood = risk_row.flood_score if risk_row else 0.0
-    province_wildfire = risk_row.wildfire_score if risk_row else 0.0
-    province_heatwave = risk_row.heatwave_score if risk_row else 0.0
-    province_drought = risk_row.drought_score if risk_row else 0.0
-    province_coldwave = risk_row.coldwave_score if risk_row else 0.0
-    province_windstorm = risk_row.windstorm_score if risk_row else 0.0
-    province_seismic = risk_row.seismic_score if risk_row else 0.0
+    if risk_row:
+        province_flood = risk_row.flood_score
+        province_wildfire = risk_row.wildfire_score
+        province_heatwave = risk_row.heatwave_score
+        province_drought = risk_row.drought_score
+        province_coldwave = risk_row.coldwave_score
+        province_windstorm = risk_row.windstorm_score
+        province_seismic = risk_row.seismic_score
+    else:
+        # Derive baseline scores from the province's geographic risk weights
+        # so properties get meaningful scores even before the ML pipeline runs.
+        weights = PROVINCES.get(province_code, {})
+        province_flood = _GEO_BASELINE_SCALE * weights.get("flood_risk_weight", 0.3)
+        province_wildfire = _GEO_BASELINE_SCALE * weights.get("wildfire_risk_weight", 0.3)
+        province_heatwave = _GEO_BASELINE_SCALE * weights.get("heatwave_risk_weight", 0.3)
+        province_drought = _GEO_BASELINE_SCALE * weights.get("drought_risk_weight", 0.3)
+        province_coldwave = _GEO_BASELINE_SCALE * weights.get("coldwave_risk_weight", 0.3)
+        province_windstorm = _GEO_BASELINE_SCALE * weights.get("windstorm_risk_weight", 0.3)
+        province_seismic = _GEO_BASELINE_SCALE * weights.get("seismic_risk_weight", 0.3)
 
     # 2. Fetch terrain and flood-zone data concurrently.
     #    Flood zone check uses its own DB session to avoid poisoning the
