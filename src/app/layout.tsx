@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { AuthProvider } from '@/components/providers/auth-provider';
+import { CookieBanner } from '@/components/legal/cookie-banner';
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -69,6 +70,7 @@ export default async function RootLayout({
             <main id="main-content">
               {children}
             </main>
+            <CookieBanner />
           </NextIntlClientProvider>
         </AuthProvider>
       </body>
