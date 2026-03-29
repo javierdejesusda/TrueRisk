@@ -92,6 +92,8 @@ export function ReservoirChart({ reservoirs }: ReservoirChartProps) {
                 fontFamily: 'var(--font-sans)',
                 color: '#e0e0e0',
               }}
+              labelStyle={{ color: '#e0e0e0' }}
+              itemStyle={{ color: '#e0e0e0' }}
               formatter={(value, _name, props) => {
                 const p = props.payload as { volume: number; capacity: number; fullName: string };
                 return [
