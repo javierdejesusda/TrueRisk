@@ -42,7 +42,7 @@ export const LogoClose: React.FC = () => {
         style={{
           position: "absolute",
           inset: 0,
-          background: `radial-gradient(circle at 50% 45%, rgba(132, 204, 22, 0.08) 0%, transparent 60%)`,
+          background: `radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.06) 0%, transparent 60%)`,
         }}
       />
 

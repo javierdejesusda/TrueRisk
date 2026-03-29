@@ -25,14 +25,14 @@ export const VIDEO = {
   width: 1920,
   height: 1080,
   fps: 30,
-  durationInFrames: 1453,
+  durationInFrames: 1498,
 } as const;
 
 export const SCENE_DURATIONS = {
   theDate: 90,
   theCost: 120,
   theQuestion: 60,
-  heroVideo: 133,
+  heroVideo: 178,
   dashboard: 150,
   map: 150,
   alerts: 120,

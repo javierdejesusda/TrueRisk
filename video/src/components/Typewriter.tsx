@@ -30,8 +30,10 @@ export const Typewriter: React.FC<TypewriterProps> = ({
     text.length
   );
   const displayedText = text.slice(0, charsToShow);
+  const isComplete = charsToShow >= text.length;
 
-  const cursorOpacity = showCursor
+  // Hide cursor once typing is complete
+  const cursorOpacity = showCursor && !isComplete
     ? interpolate(
         (frame - startFrame) % cursorBlinkFrames,
         [0, cursorBlinkFrames / 2, cursorBlinkFrames],

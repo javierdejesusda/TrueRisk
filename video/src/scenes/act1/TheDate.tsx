@@ -14,8 +14,8 @@ export const TheDate: React.FC = () => {
         gap: 16,
       }}
     >
-      <Typewriter text="October 29, 2024" startFrame={10} charsPerFrame={3} fontSize={64} fontWeight={300} color={COLORS.text} />
-      <Typewriter text="Valencia, Spain" startFrame={35} charsPerFrame={3} fontSize={64} fontWeight={300} color={COLORS.text} showCursor={true} />
+      <Typewriter text="October 29, 2024" startFrame={10} charsPerFrame={1.5} fontSize={64} fontWeight={300} color={COLORS.text} />
+      <Typewriter text="Valencia, Spain" startFrame={30} charsPerFrame={1.5} fontSize={64} fontWeight={300} color={COLORS.text} showCursor={true} />
     </AbsoluteFill>
   );
 };

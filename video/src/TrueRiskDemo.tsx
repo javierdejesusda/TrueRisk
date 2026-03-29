@@ -26,7 +26,7 @@ export const TrueRiskDemo: React.FC = () => {
       <Audio
         src={staticFile("music.mp3")}
         volume={(f) =>
-          interpolate(f, [0, 30, 1200, 1300], [0, 0.7, 0.7, 0], {
+          interpolate(f, [0, 30, 1250, 1350], [0, 0.7, 0.7, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           })
