@@ -26,6 +26,7 @@ import { AiWeatherSummary } from '@/components/predictions/ai-weather-summary';
 import { HydroNowcastCard } from '@/components/predictions/hydro-nowcast-card';
 import { PROVINCES } from '@/lib/provinces';
 import { useTranslations } from 'next-intl';
+import { LazySection } from '@/components/ui/lazy-section';
 
 export default function PredictionPage() {
   const t = useTranslations('Predictions');
@@ -108,44 +109,54 @@ export default function PredictionPage() {
       <PipelineDiagram />
 
       {/* Multi-Horizon Risk Forecast (TFT + GNN) */}
-      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('forecastTitle')}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <ForecastChart data={forecastData} isLoading={forecastLoading} />
-        <AttentionWeightsChart data={forecastData} />
-      </div>
+      <LazySection height="300px">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('forecastTitle')}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <ForecastChart data={forecastData} isLoading={forecastLoading} />
+          <AttentionWeightsChart data={forecastData} />
+        </div>
+      </LazySection>
 
       {/* Hazard ML Models */}
-      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('modelInventory')}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <FloodModelCard riskData={riskData} explanations={explanations} />
-        <WildfireModelCard riskData={riskData} explanations={explanations} />
-        <DroughtModelCard riskData={riskData} explanations={explanations} />
-        <HeatwaveModelCard riskData={riskData} explanations={explanations} />
-        <SeismicModelCard riskData={riskData} explanations={explanations} />
-        <ColdwaveModelCard riskData={riskData} explanations={explanations} />
-        <WindstormModelCard riskData={riskData} explanations={explanations} />
-        <HazardOverviewChart riskData={riskData} />
-      </div>
+      <LazySection height="400px">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('modelInventory')}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <FloodModelCard riskData={riskData} explanations={explanations} />
+          <WildfireModelCard riskData={riskData} explanations={explanations} />
+          <DroughtModelCard riskData={riskData} explanations={explanations} />
+          <HeatwaveModelCard riskData={riskData} explanations={explanations} />
+          <SeismicModelCard riskData={riskData} explanations={explanations} />
+          <ColdwaveModelCard riskData={riskData} explanations={explanations} />
+          <WindstormModelCard riskData={riskData} explanations={explanations} />
+          <HazardOverviewChart riskData={riskData} />
+        </div>
+      </LazySection>
 
       {/* Hydrological Nowcast */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-        <HydroNowcastCard />
-      </div>
+      <LazySection height="300px">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+          <HydroNowcastCard />
+        </div>
+      </LazySection>
 
       {/* Model Registry */}
-      <ModelInfoPanel />
+      <LazySection height="200px">
+        <ModelInfoPanel />
+      </LazySection>
 
       {/* Statistical Models */}
-      <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('statisticalMethods')}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <GumbelChart data={data.gumbel} />
-        <RegressionChart data={data.regression} />
-        <BayesianChart data={data.bayesian} />
-        <EmaChart data={data.ema} />
-        <ZScoreChart data={data.zScore} />
-        <DecisionTreeCard data={data.decisionTree} />
-        <KnnMatches data={data.knn} />
-      </div>
+      <LazySection height="400px">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mt-8 mb-4 border-l-2 border-accent-green pl-3">{t('statisticalMethods')}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <GumbelChart data={data.gumbel} />
+          <RegressionChart data={data.regression} />
+          <BayesianChart data={data.bayesian} />
+          <EmaChart data={data.ema} />
+          <ZScoreChart data={data.zScore} />
+          <DecisionTreeCard data={data.decisionTree} />
+          <KnnMatches data={data.knn} />
+        </div>
+      </LazySection>
     </motion.div>
   );
 }

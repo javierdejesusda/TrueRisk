@@ -9,6 +9,7 @@ const REFRESH_INTERVAL = 30_000;
 
 export function useAlerts(filters?: { province?: string; hazard?: string }) {
   const setAlertsStore = useAppStore((s) => s.setAlerts);
+  const sseStatus = useAppStore((s) => s.sseStatus);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +41,10 @@ export function useAlerts(filters?: { province?: string; hazard?: string }) {
 
   useEffect(() => {
     fetchData();
+    if (sseStatus === 'connected') return;
     const interval = setInterval(fetchData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchData, sseStatus]);
 
   const hasActiveAlerts = alerts.length > 0;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import {
   AreaChart,
   Area,
@@ -55,7 +55,7 @@ interface HistoryChartProps {
   data: WeatherHistoryRecord[];
 }
 
-export function HistoryChart({ data }: HistoryChartProps) {
+function HistoryChartInner({ data }: HistoryChartProps) {
   const chartData = useMemo<ChartDataPoint[]>(() => {
     const sorted = [...data].sort(
       (a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime(),
@@ -128,3 +128,5 @@ export function HistoryChart({ data }: HistoryChartProps) {
     </ResponsiveContainer>
   );
 }
+
+export const HistoryChart = memo(HistoryChartInner);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { ModelCard } from './model-card';
@@ -10,7 +10,7 @@ interface Props {
   data: PredictionResponse['bayesian'];
 }
 
-export function BayesianChart({ data }: Props) {
+function BayesianChartInner({ data }: Props) {
   // Build grouped chart data with prior and posterior
   const chartData = useMemo(() => {
     return data.map((b) => ({
@@ -98,3 +98,5 @@ export function BayesianChart({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const BayesianChart = memo(BayesianChartInner);

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { ModelCard } from './model-card';
 import type { PredictionResponse } from './shared';
@@ -8,7 +9,7 @@ interface Props {
   data: PredictionResponse['knn'];
 }
 
-export function KnnMatches({ data }: Props) {
+function KnnMatchesInner({ data }: Props) {
   return (
     <ModelCard
       title="Historical Pattern Matching (KNN)"
@@ -89,3 +90,5 @@ export function KnnMatches({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const KnnMatches = memo(KnnMatchesInner);

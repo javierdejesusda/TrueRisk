@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -11,7 +11,7 @@ interface Props {
   data: PredictionResponse['ema'];
 }
 
-export function EmaChart({ data }: Props) {
+function EmaChartInner({ data }: Props) {
   // Dynamic color based on trend
   const trendColor = useMemo(() => {
     if (data.trend === 'rising') return '#ef4444';
@@ -142,3 +142,5 @@ export function EmaChart({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const EmaChart = memo(EmaChartInner);

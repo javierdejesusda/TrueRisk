@@ -34,8 +34,22 @@ export function useAllWeather() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, REFRESH_INTERVAL);
-    return () => clearInterval(interval);
+    let interval = setInterval(fetchData, REFRESH_INTERVAL);
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        fetchData();
+        interval = setInterval(fetchData, REFRESH_INTERVAL);
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [fetchData]);
 
   const markers = useMemo<WeatherMarker[]>(() => {

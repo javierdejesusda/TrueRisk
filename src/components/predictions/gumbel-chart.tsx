@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea,
 } from 'recharts';
@@ -11,7 +11,7 @@ interface Props {
   data: PredictionResponse['gumbel'];
 }
 
-export function GumbelChart({ data }: Props) {
+function GumbelChartInner({ data }: Props) {
   const [tab, setTab] = useState<GumbelTab>('precipitation');
   const gc = GUMBEL_CONFIG[tab];
   const gd = data[tab];
@@ -161,3 +161,5 @@ export function GumbelChart({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const GumbelChart = memo(GumbelChartInner);
