@@ -475,11 +475,11 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
 
       <Map
         ref={mapRef}
-        initialViewState={{
-          longitude: -3.7,
-          latitude: 40.4,
-          zoom: 5.5,
-        }}
+        initialViewState={
+          process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+            ? { longitude: -0.38, latitude: 39.47, zoom: 8.5 }
+            : { longitude: -3.7, latitude: 40.4, zoom: 5.5 }
+        }
         style={{ width: '100%', height: '100%' }}
         mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
         maxBounds={[[-25, 22], [10, 48]]}
