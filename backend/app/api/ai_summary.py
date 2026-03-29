@@ -30,6 +30,17 @@ async def stream_summary(
     user: User | None = Depends(get_optional_user),
 ):
     """SSE stream of AI weather summary. Rate limited to 5/min per real IP."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_ai_streaming import stream_mock_summary
+
+        async def demo_generator():
+            async for chunk in stream_mock_summary(province_code, locale):
+                yield {"event": "delta", "data": chunk}
+            yield {"event": "done", "data": ""}
+
+        return EventSourceResponse(demo_generator())
+
     if not settings.openai_api_key:
         raise HTTPException(status_code=503, detail="AI summary service not configured")
 

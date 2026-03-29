@@ -23,6 +23,10 @@ async def fetch_recent_quakes(
     min_magnitude: float = 2.0, days: int = 90
 ) -> list[dict[str, Any]]:
     """Fetch recent earthquakes near Spain/Iberian region from USGS."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_earthquakes import get_mock_earthquakes
+        return get_mock_earthquakes()
     global _cache, _cache_ts
     now = time.time()
     if _cache and now - _cache_ts < _CACHE_TTL:

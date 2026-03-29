@@ -27,6 +27,10 @@ async def fetch_active_fires(
     map_key: str | None = None, source: str = "VIIRS_SNPP_NRT", days: int = 1
 ) -> list[dict[str, Any]]:
     """Fetch active fire hotspots for Spain from NASA FIRMS."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_fire_hotspots import get_mock_fire_hotspots
+        return get_mock_fire_hotspots()
     global _cache, _cache_ts
     now = time.time()
     if _cache and now - _cache_ts < _CACHE_TTL:

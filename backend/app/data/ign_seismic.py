@@ -43,6 +43,10 @@ async def fetch_recent_quakes(days: int = 90) -> list[dict]:
     Returns a list of dicts with keys: magnitude, depth_km, lat, lon, timestamp.
     Falls back to empty list on API error (seismic risk = 0 is a safe default).
     """
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_earthquakes import get_mock_earthquakes
+        return get_mock_earthquakes()
     cache_key = f"quakes_{days}"
     now = time.time()
     if cache_key in _CACHE:

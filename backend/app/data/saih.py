@@ -86,6 +86,10 @@ def _parse_features(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 async def fetch_reservoir_levels() -> list[dict[str, Any]]:
     """Fetch reservoir capacity levels from MITECO (all Spanish basins)."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_reservoirs import get_mock_reservoirs
+        return get_mock_reservoirs()
     cache_key = "reservoirs:all"
     now = time.time()
     if cache_key in _cache and now - _cache_ts.get(cache_key, 0) < _CACHE_TTL:

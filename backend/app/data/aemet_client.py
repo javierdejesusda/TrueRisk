@@ -151,6 +151,10 @@ async def fetch_alerts(
     2. Fetch the ``datos`` URL which returns a TAR archive.
     3. Extract XML files from the TAR and parse CAP alerts.
     """
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_aemet_alerts import get_mock_aemet_alerts
+        return get_mock_aemet_alerts()
     cache_key = f"alerts:{area}"
     now = time.time()
     if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:
@@ -318,6 +322,10 @@ async def fetch_wildfire_index(api_key: str) -> dict[str, Any] | None:
 
 async def fetch_weather_stations(api_key: str) -> list[dict[str, Any]]:
     """Fetch latest observations from all AEMET weather stations."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_weather_stations import get_mock_weather_stations
+        return get_mock_weather_stations()
     cache_key = "stations:all"
     now = time.time()
     if cache_key in _alert_cache and now - _alert_cache_ts.get(cache_key, 0) < _CACHE_TTL:

@@ -720,6 +720,10 @@ async def fetch_river_flows(basin: str = "ebro") -> list[dict[str, Any]]:
     Returns list of dicts with keys:
         gauge_id, name, river, flow_m3s, level_m, lat, lon, basin
     """
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_river_gauges import get_mock_river_flows
+        return get_mock_river_flows()
     basin = basin.lower()
     if basin not in SAIH_BASINS:
         logger.warning("Unknown SAIH basin: %s", basin)
@@ -754,6 +758,10 @@ async def fetch_all_basin_flows() -> list[dict[str, Any]]:
     Best-effort: continues if one basin fails. Results are cached
     per-basin so partial failures don't invalidate other basins.
     """
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_river_gauges import get_mock_river_flows
+        return get_mock_river_flows()
     cache_key = "river_flows:all"
     now = time.time()
     if cache_key in _cache and now - _cache_ts.get(cache_key, 0) < _CACHE_TTL:

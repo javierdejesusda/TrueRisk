@@ -36,6 +36,10 @@ _DAILY_PARAMS = (
 
 async def fetch_current(lat: float, lon: float) -> dict[str, Any]:
     """Fetch current weather conditions for a single location."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_weather_forecast import get_mock_current
+        return get_mock_current(lat, lon)
     try:
         resp = await resilient_get(
             _BASE_URL,
@@ -85,6 +89,10 @@ async def fetch_forecast(
     lat: float, lon: float, days: int = 7
 ) -> dict[str, Any]:
     """Fetch hourly + daily forecast for a single location."""
+    from app.demo import is_demo_mode
+    if is_demo_mode():
+        from app.demo.mock_weather_forecast import get_mock_forecast
+        return get_mock_forecast(lat, lon)
     try:
         resp = await resilient_get(
             _BASE_URL,
