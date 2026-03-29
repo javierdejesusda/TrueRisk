@@ -1,5 +1,6 @@
 'use client';
 
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Map, { Source, Layer, Popup, Marker, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
@@ -215,10 +216,11 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
     []
   );
 
-  // Pulse animation for alerted provinces (throttled to 100ms)
+  // Pulse animation for alerted provinces (requestAnimationFrame)
   useEffect(() => {
+    let rafId: number;
     const start = performance.now();
-    const id = setInterval(() => {
+    function tick() {
       const elapsed = (performance.now() - start) % 5000;
       const opacity = 0.15 + 0.25 * Math.sin((elapsed / 5000) * Math.PI * 2);
       try {
@@ -232,8 +234,10 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
           ]);
         }
       } catch { /* Layer not ready */ }
-    }, 100);
-    return () => clearInterval(id);
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   // Risk pulse — brightens the risk color on a slow cycle
@@ -247,8 +251,9 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       } catch { /* */ }
       return;
     }
+    let rafId: number;
     const start = performance.now();
-    const id = setInterval(() => {
+    function tick() {
       const elapsed = (performance.now() - start) % 5000;
       const opacity = Math.max(0, 0.2 * Math.sin((elapsed / 5000) * Math.PI * 2));
       try {
@@ -262,8 +267,10 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
           ]);
         }
       } catch { /* Layer not ready */ }
-    }, 100);
-    return () => clearInterval(id);
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [activeMapLayer]);
 
   // Hover handling
