@@ -90,9 +90,13 @@ async def lifespan(app: FastAPI):
     from app.data.safe_points_seed import seed_safe_points
     await seed_safe_points()
 
-    # Start background scheduler
+    # Start background scheduler (skip in demo mode — data is pre-seeded)
     from app.scheduler.jobs import setup_scheduler, shutdown_scheduler
-    setup_scheduler()
+    from app.demo import is_demo_mode
+    if not is_demo_mode():
+        setup_scheduler()
+    else:
+        logger.info("Demo mode active — skipping background scheduler")
 
     # Register Telegram webhook (best-effort, non-blocking)
     try:
