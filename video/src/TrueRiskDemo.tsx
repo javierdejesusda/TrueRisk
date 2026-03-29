@@ -70,8 +70,8 @@ export const TrueRiskDemo: React.FC = () => {
           <Heartbeat />
         </TransitionSeries.Sequence>
 
-        {/* Light leak overlay bridging heartbeat → globe */}
-        <TransitionSeries.Overlay durationInFrames={120} offset={-60}>
+        {/* Light leak overlay bridging heartbeat → globe (60 frames, centered on cut point) */}
+        <TransitionSeries.Overlay durationInFrames={60}>
           <LightLeak hueShift={100} seed={1} />
         </TransitionSeries.Overlay>
 
