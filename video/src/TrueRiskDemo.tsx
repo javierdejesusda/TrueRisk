@@ -7,7 +7,7 @@ import { flip } from "@remotion/transitions/flip";
 import { clockWipe } from "@remotion/transitions/clock-wipe";
 import { LightLeak } from "@remotion/light-leaks";
 
-import { SCENE_DURATIONS as D, TRANSITION_DURATIONS as T } from "./lib/constants";
+import { SCENE_DURATIONS as D, TRANSITION_DURATIONS as T, VIDEO } from "./lib/constants";
 
 import { TheDate } from "./scenes/act1/TheDate";
 import { TheStorm } from "./scenes/act1/TheStorm";
@@ -80,7 +80,7 @@ export const TrueRiskDemo: React.FC = () => {
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
-          presentation={clockWipe()}
+          presentation={clockWipe({ width: VIDEO.width, height: VIDEO.height })}
           timing={springTiming({ config: { damping: 20 }, durationInFrames: T.clockWipe })}
         />
 
