@@ -1,11 +1,24 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { LanguageSwitcher } from '@/components/layout/language-switcher';
 
 export const metadata = {
   robots: 'index, follow',
 };
 
-export default function LegalLayout({ children }: { children: React.ReactNode }) {
+const legalLinks = [
+  { href: '/privacy', key: 'privacy' },
+  { href: '/terms', key: 'terms' },
+  { href: '/cookies', key: 'cookies' },
+  { href: '/license', key: 'license' },
+  { href: '/about', key: 'about' },
+  { href: '/accessibility', key: 'accessibility' },
+] as const;
+
+export default async function LegalLayout({ children }: { children: React.ReactNode }) {
+  const tFooter = await getTranslations('Legal.footer');
+  const tLanding = await getTranslations('Landing');
+
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
@@ -28,15 +41,14 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <footer className="border-t border-border bg-bg-primary px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-text-muted">
-            <Link href="/privacy" className="transition-colors hover:text-text-primary">Privacy Policy</Link>
-            <Link href="/terms" className="transition-colors hover:text-text-primary">Terms of Use</Link>
-            <Link href="/cookies" className="transition-colors hover:text-text-primary">Cookie Policy</Link>
-            <Link href="/license" className="transition-colors hover:text-text-primary">License</Link>
-            <Link href="/about" className="transition-colors hover:text-text-primary">About</Link>
-            <Link href="/accessibility" className="transition-colors hover:text-text-primary">Accessibility</Link>
+            {legalLinks.map(({ href, key }) => (
+              <Link key={key} href={href} className="transition-colors hover:text-text-primary">
+                {tFooter(key)}
+              </Link>
+            ))}
           </nav>
           <p className="mt-4 text-center text-xs text-text-muted">
-            © {new Date().getFullYear()} TrueRisk. All rights reserved.
+            {tLanding('copyright', { year: new Date().getFullYear() })}
           </p>
         </div>
       </footer>

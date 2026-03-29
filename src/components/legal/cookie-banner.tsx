@@ -56,7 +56,7 @@ export function CookieBanner() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={dismiss}
-                  className="inline-flex h-9 items-center rounded-lg bg-accent-green px-4 text-sm font-medium text-bg-primary transition-all hover:brightness-110 hover:scale-[1.03] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-green focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card"
+                  className="inline-flex h-9 items-center rounded-lg bg-accent-green px-4 text-sm font-medium text-bg-primary transition-[transform,filter] hover:brightness-110 hover:scale-[1.03] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-green focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card"
                 >
                   {t('dismiss')}
                 </button>

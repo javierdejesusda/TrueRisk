@@ -5,6 +5,7 @@ import { LegalPageShell } from '@/components/legal/legal-page-shell';
 
 export default function CookiesPage() {
   const t = useTranslations('Legal.cookies');
+  const th = useTranslations('Legal.tableHeaders');
 
   const sections = [
     { id: 'what-are-cookies', label: t('whatAreCookies.title') },
@@ -28,10 +29,10 @@ export default function CookiesPage() {
       <table>
         <thead>
           <tr>
-            <th>Cookie</th>
-            <th>Type</th>
-            <th>Purpose</th>
-            <th>Duration</th>
+            <th>{th('cookie')}</th>
+            <th>{th('type')}</th>
+            <th>{th('purpose')}</th>
+            <th>{th('duration')}</th>
           </tr>
         </thead>
         <tbody>
@@ -61,8 +62,8 @@ export default function CookiesPage() {
       <table>
         <thead>
           <tr>
-            <th>Key</th>
-            <th>Purpose</th>
+            <th>{th('key')}</th>
+            <th>{th('purpose')}</th>
           </tr>
         </thead>
         <tbody>

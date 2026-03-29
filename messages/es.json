@@ -1116,6 +1116,14 @@
   "backToHome": "Volver al inicio",
   "lastUpdated": "Última actualización: {date}",
   "tableOfContents": "En esta página",
+  "tableHeaders": {
+    "cookie": "Cookie",
+    "type": "Tipo",
+    "purpose": "Propósito",
+    "duration": "Duración",
+    "key": "Clave",
+    "service": "Servicio"
+  },
   "privacy": {
     "title": "Política de Privacidad",
     "intro": "TrueRisk es un proyecto comunitario de código abierto comprometido con la protección de tu privacidad. Esta política explica qué datos recopilamos, por qué y cómo los protegemos.",

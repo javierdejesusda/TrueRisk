@@ -5,6 +5,7 @@ import { LegalPageShell } from '@/components/legal/legal-page-shell';
 
 export default function AboutPage() {
   const t = useTranslations('Legal.about');
+  const th = useTranslations('Legal.tableHeaders');
 
   const sections = [
     { id: 'mission', label: t('mission.title') },
@@ -34,8 +35,8 @@ export default function AboutPage() {
       <table>
         <thead>
           <tr>
-            <th>Service</th>
-            <th>Purpose</th>
+            <th>{th('service')}</th>
+            <th>{th('purpose')}</th>
           </tr>
         </thead>
         <tbody>
