@@ -1098,5 +1098,396 @@
     "general": "General",
     "offlineReady": "Disponible sin conexión",
     "tapToSpeak": "Toca para escuchar la pronunciación"
+  },
+  "Legal": {
+  "cookieBanner": {
+    "message": "Este sitio utiliza cookies esenciales para autenticación y preferencias de idioma. No se utilizan cookies de seguimiento ni analíticas.",
+    "learnMore": "Más información",
+    "dismiss": "Entendido"
+  },
+  "footer": {
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Uso",
+    "cookies": "Política de Cookies",
+    "license": "Licencia",
+    "about": "Acerca de",
+    "accessibility": "Accesibilidad"
+  },
+  "backToHome": "Volver al inicio",
+  "lastUpdated": "Última actualización: {date}",
+  "tableOfContents": "En esta página",
+  "privacy": {
+    "title": "Política de Privacidad",
+    "intro": "TrueRisk es un proyecto comunitario de código abierto comprometido con la protección de tu privacidad. Esta política explica qué datos recopilamos, por qué y cómo los protegemos.",
+    "dataController": {
+      "title": "Responsable del Tratamiento",
+      "content": "TrueRisk es un proyecto comunitario de código abierto alojado en GitHub. Al no existir una entidad legal formal detrás del proyecto, los mantenedores del proyecto actúan como responsables del tratamiento de datos. Para cualquier consulta relacionada con datos, por favor abre un issue en nuestro repositorio de GitHub o contáctanos a través de los datos que aparecen al final de esta página."
+    },
+    "dataWeCollect": {
+      "title": "Datos que Recopilamos",
+      "intro": "Recopilamos diferentes categorías de datos según cómo uses la plataforma:",
+      "identity": {
+        "title": "Identidad y Autenticación",
+        "content": "Dirección de correo electrónico, nombre de usuario, nombre para mostrar, URL de avatar y proveedor de autenticación (Google, GitHub o credenciales). Tu correo electrónico se cifra en reposo."
+      },
+      "location": {
+        "title": "Datos de Ubicación",
+        "content": "Direcciones de hogar y trabajo (cifradas en reposo), coordenadas geográficas, preferencias de provincia y — si concedes permiso — ubicación GPS en tiempo real para funciones de emergencia."
+      },
+      "health": {
+        "title": "Salud y Datos Médicos",
+        "content": "Condiciones médicas (cifradas en reposo), nivel de movilidad, rango de edad y si dependes de electricidad para equipos médicos. Estos datos se utilizan únicamente para personalizar la orientación de emergencia."
+      },
+      "emergency": {
+        "title": "Contactos de Emergencia",
+        "content": "Nombres y números de teléfono de contactos de emergencia (ambos cifrados en reposo). Se utilizan para la función de verificación de seguridad familiar."
+      },
+      "household": {
+        "title": "Información del Hogar",
+        "content": "Detalles de los miembros del hogar, información de mascotas y necesidades especiales. Se utilizan para generar planes de preparación personalizados y orientación de emergencia."
+      },
+      "building": {
+        "title": "Detalles del Edificio",
+        "content": "Año de construcción, materiales de construcción, número de plantas, nivel del piso y estado del edificio. Se utilizan para evaluar la vulnerabilidad ante peligros naturales."
+      },
+      "economic": {
+        "title": "Vulnerabilidad Económica",
+        "content": "Rango de ingresos, estado de seguros, rango de valor de propiedad y ahorros de emergencia. Se utilizan para adaptar las recomendaciones de preparación a tu situación."
+      },
+      "safety": {
+        "title": "Verificaciones de Seguridad",
+        "content": "Tu estado de seguridad durante emergencias (seguro, necesita ayuda, evacuando, refugiado), ubicación y mensajes opcionales. Se comparte con los miembros de tu familia vinculados."
+      },
+      "family": {
+        "title": "Vínculos Familiares",
+        "content": "Conexiones con otros usuarios que designes como familia, amigos o vecinos. Se utilizan para verificaciones mutuas de seguridad durante emergencias."
+      },
+      "community": {
+        "title": "Reportes Comunitarios",
+        "content": "Reportes de peligros que envías incluyendo tipo, gravedad, ubicación, descripción y fotos opcionales. Estos son visibles para otros usuarios en la zona afectada."
+      },
+      "preparedness": {
+        "title": "Datos de Preparación",
+        "content": "Estado de finalización de listas de verificación, planes de emergencia (incluyendo puntos de encuentro, planes de comunicación, información de seguros y ubicación de documentos) y puntuaciones de preparación a lo largo del tiempo."
+      },
+      "notifications": {
+        "title": "Preferencias de Notificación",
+        "content": "Endpoints de notificaciones push, números de teléfono para alertas SMS, IDs de chat de Telegram y tus preferencias de entrega de alertas (canales, umbrales de gravedad, horarios de silencio)."
+      }
+    },
+    "legalBasis": {
+      "title": "Base Legal del Tratamiento",
+      "intro": "Según el Artículo 6 del RGPD, tratamos tus datos sobre las siguientes bases:",
+      "consent": "Consentimiento — Eliges crear una cuenta y proporcionar información de perfil opcional. Puedes retirar el consentimiento en cualquier momento eliminando tu cuenta.",
+      "contract": "Ejecución contractual — Tratamiento necesario para proporcionar el servicio para el que te registraste (alertas de riesgo, orientación de emergencia, herramientas de preparación).",
+      "legitimate": "Interés legítimo — Medidas de seguridad, prevención de abusos y mejora del servicio.",
+      "vital": "Intereses vitales — Funciones de seguridad de emergencia (verificaciones de seguridad, estado familiar) donde el tratamiento puede ser necesario para proteger la vida."
+    },
+    "howWeUse": {
+      "title": "Cómo Usamos tus Datos",
+      "content": "Tus datos se utilizan para: calcular puntuaciones de riesgo personalizadas para tu ubicación, enviar alertas relevantes de peligros, generar orientación de emergencia adaptada a tu perfil (salud, movilidad, hogar), permitir la coordinación de seguridad familiar durante emergencias, hacer seguimiento de tu progreso de preparación y facilitar los reportes comunitarios de peligros."
+    },
+    "storage": {
+      "title": "Almacenamiento y Cifrado de Datos",
+      "content": "Tus datos se almacenan en servidores ubicados en la Unión Europea (infraestructura de hosting Cubepath). Los campos sensibles — incluyendo direcciones de correo electrónico, direcciones de hogar y trabajo, condiciones médicas, nombres de contactos de emergencia y números de teléfono — se cifran en reposo usando cifrado simétrico Fernet. Las contraseñas se hashean y nunca se almacenan en texto plano."
+    },
+    "retention": {
+      "title": "Retención de Datos",
+      "content": "Los datos de la cuenta se conservan mientras tu cuenta exista. Los informes de riesgo de propiedades expiran automáticamente después de 30 días. Las verificaciones de seguridad expiran según su duración configurada. Puedes eliminar tu cuenta completa y todos los datos asociados en cualquier momento a través de la configuración del perfil."
+    },
+    "thirdParty": {
+      "title": "Servicios de Terceros",
+      "intro": "TrueRisk se integra con los siguientes servicios externos:",
+      "google": "Google OAuth — Proveedor de autenticación. Sujeto a la Política de Privacidad de Google.",
+      "github": "GitHub OAuth — Proveedor de autenticación. Sujeto a la Política de Privacidad de GitHub.",
+      "openmeteo": "Open-Meteo — API meteorológica de código abierto. Recibe datos de ubicación a nivel provincial (no datos personales) para obtener información meteorológica.",
+      "aemet": "AEMET (Agencia Estatal de Meteorología) — Datos oficiales meteorológicos y de alertas. No se comparten datos personales.",
+      "maplibre": "OpenFreeMap / MapLibre — Renderizado de mosaicos de mapas. Tu navegador solicita mosaicos directamente; la dirección IP es visible para el servidor de mosaicos.",
+      "nominatim": "Nominatim / OpenStreetMap — Servicio de geocodificación. Las direcciones se envían para resolver coordenadas. Sujeto a la política de privacidad de OpenStreetMap."
+    },
+    "transfers": {
+      "title": "Transferencias Internacionales de Datos",
+      "content": "Tus datos principales se almacenan dentro de la UE. Sin embargo, si te autentificas a través de Google o GitHub, esos proveedores pueden procesar datos de autenticación fuera de la UE bajo sus propios acuerdos de procesamiento de datos conformes al RGPD."
+    },
+    "rights": {
+      "title": "Tus Derechos",
+      "intro": "Según el RGPD, tienes los siguientes derechos:",
+      "access": "Derecho de acceso — Solicitar una copia de todos los datos que tenemos sobre ti.",
+      "rectification": "Derecho de rectificación — Corregir datos inexactos a través de la configuración de tu perfil o contactándonos.",
+      "erasure": "Derecho de supresión — Eliminar tu cuenta y todos los datos asociados en cualquier momento a través de la configuración del perfil.",
+      "portability": "Derecho a la portabilidad de datos — Solicitar tus datos en un formato estructurado y legible por máquina.",
+      "restriction": "Derecho a la limitación — Solicitar que limitemos el tratamiento de tus datos.",
+      "objection": "Derecho de oposición — Oponerte al tratamiento basado en interés legítimo.",
+      "withdraw": "Derecho a retirar el consentimiento — Retirar el consentimiento en cualquier momento sin afectar el tratamiento anterior."
+    },
+    "exerciseRights": {
+      "title": "Cómo Ejercer tus Derechos",
+      "content": "Para ejercer cualquiera de estos derechos, puedes: eliminar tu cuenta directamente a través de la configuración del perfil, abrir un issue en nuestro repositorio de GitHub o enviarnos un correo electrónico a la dirección indicada abajo. Responderemos en un plazo de 30 días según lo requiere el RGPD."
+    },
+    "children": {
+      "title": "Privacidad de Menores",
+      "content": "TrueRisk no está dirigido a menores de 16 años. No recopilamos conscientemente datos personales de menores de 16 años. Si crees que un menor nos ha proporcionado datos personales, por favor contáctanos y los eliminaremos."
+    },
+    "changes": {
+      "title": "Cambios en esta Política",
+      "content": "Podemos actualizar esta política de privacidad de vez en cuando. Los cambios se publicarán en esta página con una fecha actualizada. El uso continuado de TrueRisk después de los cambios constituye la aceptación de la política actualizada."
+    },
+    "contact": {
+      "title": "Contacto",
+      "content": "Para consultas relacionadas con la privacidad, por favor abre un issue en nuestro repositorio de GitHub o envíanos un correo electrónico a:",
+      "email": "privacy@truerisk.cloud",
+      "github": "github.com/javierdejesusda/TrueRisk"
+    }
+  },
+  "terms": {
+    "title": "Términos de Uso",
+    "intro": "Al acceder o utilizar TrueRisk, aceptas quedar vinculado por estos términos. Si no estás de acuerdo, por favor no uses el servicio.",
+    "acceptance": {
+      "title": "Aceptación de los Términos",
+      "content": "Estos Términos de Uso rigen tu acceso y uso de TrueRisk, una plataforma de inteligencia de riesgo multi-peligro para España. Al crear una cuenta o usar cualquier función de la plataforma, aceptas estos términos en su totalidad."
+    },
+    "serviceDescription": {
+      "title": "Descripción del Servicio",
+      "content": "TrueRisk proporciona puntuación de riesgo basada en ML para 7 peligros naturales (inundación, incendio forestal, sequía, ola de calor, sísmico, ola de frío, tormenta de viento) para las 52 provincias españolas. Las funciones incluyen monitorización meteorológica en tiempo real, orientación de emergencia personalizada, reportes comunitarios de peligros, verificaciones de seguridad familiar y herramientas de planificación de preparación."
+    },
+    "accounts": {
+      "title": "Registro de Cuenta",
+      "content": "Debes proporcionar información precisa al crear una cuenta. Eres responsable de mantener la seguridad de tu contraseña y cuenta. Una cuenta por persona. Debes tener al menos 16 años para crear una cuenta."
+    },
+    "acceptableUse": {
+      "title": "Uso Aceptable",
+      "content": "Te comprometes a no: enviar reportes comunitarios de peligros falsos o engañosos, usar sistemas automatizados para extraer datos o sobrecargar la plataforma, suplantar a otros usuarios o funcionarios, usar la plataforma para fines ilegales o intentar obtener acceso no autorizado a otras cuentas o infraestructura del sistema."
+    },
+    "riskDisclaimer": {
+      "title": "Aviso sobre Información de Riesgo",
+      "important": "IMPORTANTE",
+      "content": "Las puntuaciones de riesgo, predicciones de peligros y resúmenes generados por IA proporcionados por TrueRisk son solo con fines informativos. Son producidos por modelos de aprendizaje automático y pueden contener inexactitudes o errores.",
+      "notSubstitute": "TrueRisk no es un sustituto de los servicios oficiales de emergencia. En cualquier emergencia, sigue siempre las instrucciones de Protección Civil, AEMET y los servicios de emergencia (112). No confíes únicamente en TrueRisk para decisiones que afecten la seguridad de la vida.",
+      "noGuarantee": "No garantizamos que la plataforma esté disponible durante eventos de emergencia reales. Las condiciones de red, la capacidad del servidor y otros factores pueden afectar la disponibilidad cuando más lo necesites."
+    },
+    "communityContent": {
+      "title": "Reportes Comunitarios y Contenido del Usuario",
+      "content": "Los reportes comunitarios de peligros son enviados por usuarios y no están verificados por fuentes oficiales. TrueRisk no es responsable de la precisión del contenido enviado por usuarios. Al enviar un reporte, otorgas a TrueRisk una licencia no exclusiva para mostrarlo a otros usuarios en la zona afectada. Conservas la propiedad de tu contenido."
+    },
+    "intellectualProperty": {
+      "title": "Propiedad Intelectual",
+      "content": "TrueRisk es software de código abierto publicado bajo la Licencia MIT. Eres libre de usar, modificar y distribuir el código fuente de acuerdo con los términos de la licencia. El nombre y logotipo de TrueRisk son marcas del proyecto utilizadas para identificar este despliegue específico."
+    },
+    "liability": {
+      "title": "Limitación de Responsabilidad",
+      "content": "TrueRisk se proporciona como un proyecto comunitario de código abierto \"tal cual\" y \"según disponibilidad\", sin garantías de ningún tipo, expresas o implícitas. En la máxima medida permitida por la ley, los contribuidores del proyecto no serán responsables de ningún daño derivado de: decisiones tomadas basándose en puntuaciones de riesgo o predicciones, información de peligros inexacta o retrasada, indisponibilidad del servicio durante emergencias, pérdida de datos o cualquier otro uso de la plataforma."
+    },
+    "availability": {
+      "title": "Disponibilidad del Servicio",
+      "content": "TrueRisk es un proyecto comunitario sin Acuerdo de Nivel de Servicio (SLA). La plataforma puede no estar disponible por mantenimiento, actualizaciones o problemas de infraestructura. Hacemos nuestro mejor esfuerzo para mantener el tiempo de actividad pero no proporcionamos garantías."
+    },
+    "termination": {
+      "title": "Terminación",
+      "content": "Puedes eliminar tu cuenta en cualquier momento a través de la configuración del perfil, lo que elimina permanentemente todos tus datos. Nos reservamos el derecho de suspender o terminar cuentas que violen estos términos o tengan comportamiento abusivo."
+    },
+    "governingLaw": {
+      "title": "Ley Aplicable",
+      "content": "Estos términos se rigen por las leyes de España. Cualquier disputa se someterá a la jurisdicción de los tribunales de España."
+    },
+    "changesToTerms": {
+      "title": "Cambios en estos Términos",
+      "content": "Podemos actualizar estos términos de vez en cuando. Los cambios se publicarán en esta página con una fecha actualizada. El uso continuado de TrueRisk después de los cambios constituye la aceptación de los términos actualizados."
+    }
+  },
+  "cookies": {
+    "title": "Política de Cookies",
+    "intro": "Esta política explica cómo TrueRisk utiliza cookies y tecnologías similares.",
+    "whatAreCookies": {
+      "title": "Qué son las Cookies",
+      "content": "Las cookies son pequeños archivos de texto almacenados en tu dispositivo por tu navegador web. Se utilizan para recordar preferencias y habilitar funcionalidades esenciales. El almacenamiento local es una tecnología similar del navegador que almacena datos localmente en tu dispositivo."
+    },
+    "cookiesWeUse": {
+      "title": "Cookies que Utilizamos",
+      "intro": "TrueRisk utiliza solo cookies esenciales y funcionales:",
+      "locale": {
+        "name": "locale",
+        "type": "Funcional",
+        "purpose": "Almacena tu preferencia de idioma (español o inglés)",
+        "duration": "Persistente"
+      },
+      "session": {
+        "name": "authjs.session-token",
+        "type": "Esencial",
+        "purpose": "Mantiene tu sesión de autenticación",
+        "duration": "7 días"
+      },
+      "secureSession": {
+        "name": "__Secure-authjs.session-token",
+        "type": "Esencial",
+        "purpose": "Sesión de autenticación segura (solo HTTPS)",
+        "duration": "7 días"
+      }
+    },
+    "localStorage": {
+      "title": "Almacenamiento Local",
+      "intro": "TrueRisk también utiliza el almacenamiento local del navegador para lo siguiente:",
+      "province": {
+        "name": "truerisk-province",
+        "purpose": "Tus preferencias de la aplicación incluyendo provincia seleccionada, idioma, configuración de capas del mapa y preferencias de notificación"
+      },
+      "consent": {
+        "name": "truerisk-cookie-consent",
+        "purpose": "Recuerda que has visto y cerrado el banner informativo de cookies"
+      }
+    },
+    "noTracking": {
+      "title": "Sin Analíticas ni Seguimiento",
+      "content": "TrueRisk no utiliza cookies de analíticas, publicidad ni seguimiento. No usamos Google Analytics, Facebook Pixel ni ninguna tecnología de seguimiento similar. Tu comportamiento de navegación en TrueRisk no se rastrea ni se perfila."
+    },
+    "thirdPartyCookies": {
+      "title": "Cookies de Terceros",
+      "content": "TrueRisk no establece cookies de terceros. Cuando te autentificas a través de Google o GitHub, se te redirige a sus sitios que pueden establecer sus propias cookies. Estas se rigen por sus respectivas políticas de cookies."
+    },
+    "managing": {
+      "title": "Gestión de Cookies",
+      "content": "Puedes controlar las cookies a través de la configuración de tu navegador. La mayoría de los navegadores permiten bloquear o eliminar cookies. Sin embargo, deshabilitar las cookies esenciales impedirá que inicies sesión en TrueRisk. Limpiar el almacenamiento local restablecerá tus preferencias de la aplicación."
+    },
+    "changes": {
+      "title": "Cambios en esta Política",
+      "content": "Podemos actualizar esta política de cookies de vez en cuando. Los cambios se publicarán en esta página con una fecha actualizada."
+    }
+  },
+  "license": {
+    "title": "Licencia",
+    "intro": "TrueRisk es software libre y de código abierto.",
+    "mitTitle": "Licencia MIT",
+    "mitText": "Copyright (c) 2025-2026 Contribuidores de TrueRisk\n\nPor la presente se concede permiso, libre de cargos, a cualquier persona que obtenga una copia de este software y de los archivos de documentación asociados (el \"Software\"), a utilizar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software, y a permitir a las personas a las que se les proporcione el Software a hacer lo mismo, sujeto a las siguientes condiciones:\n\nEl aviso de copyright anterior y este aviso de permiso se incluirán en todas las copias o partes sustanciales del Software.\n\nEL SOFTWARE SE PROPORCIONA \"COMO ESTÁ\", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE COMERCIALIZACIÓN, IDONEIDAD PARA UN PROPÓSITO PARTICULAR E INCUMPLIMIENTO. EN NINGÚN CASO LOS AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS U OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O CUALQUIER OTRO MOTIVO, DERIVADA DE, FUERA DE O EN CONEXIÓN CON EL SOFTWARE O EL USO U OTRO TIPO DE ACCIONES EN EL SOFTWARE.",
+    "whatThisMeans": {
+      "title": "Qué Significa Esto",
+      "content": "La Licencia MIT es una de las licencias de código abierto más permisivas. Eres libre de:",
+      "use": "Usar TrueRisk para cualquier propósito, incluyendo uso comercial",
+      "modify": "Modificar el código fuente según tus necesidades",
+      "distribute": "Distribuir copias del código original o modificado",
+      "sublicense": "Incluir TrueRisk en software propietario",
+      "condition": "La única condición es que incluyas el aviso de copyright original y el texto de la licencia en cualquier copia o parte sustancial del software."
+    },
+    "contributing": {
+      "title": "Contribuir",
+      "content": "Damos la bienvenida a contribuciones de la comunidad. Para contribuir, visita nuestro repositorio de GitHub, haz un fork del proyecto y envía un pull request. Todas las contribuciones se realizan bajo la misma Licencia MIT.",
+      "github": "github.com/javierdejesusda/TrueRisk"
+    },
+    "thirdParty": {
+      "title": "Licencias de Terceros",
+      "intro": "TrueRisk está construido con las siguientes tecnologías de código abierto:",
+      "items": {
+        "nextjs": "Next.js — Licencia MIT",
+        "react": "React — Licencia MIT",
+        "maplibre": "MapLibre GL JS — Licencia BSD 3-Clause",
+        "fastapi": "FastAPI — Licencia MIT",
+        "tailwind": "Tailwind CSS — Licencia MIT",
+        "framer": "Framer Motion — Licencia MIT",
+        "recharts": "Recharts — Licencia MIT",
+        "zustand": "Zustand — Licencia MIT",
+        "lucide": "Lucide Icons — Licencia ISC"
+      }
+    }
+  },
+  "about": {
+    "title": "Acerca de TrueRisk",
+    "mission": {
+      "title": "Nuestra Misión",
+      "content": "TrueRisk tiene como objetivo hacer que la información de riesgo de peligros naturales sea accesible, comprensible y accionable para todos en España. Creemos que cada ciudadano merece inteligencia de riesgo en tiempo real y personalizada — no solo datos sin procesar, sino orientación clara sobre qué hacer cuando los peligros amenazan su zona."
+    },
+    "project": {
+      "title": "El Proyecto",
+      "content": "TrueRisk es un proyecto comunitario de código abierto alojado en GitHub bajo la Licencia MIT. Fue creado para abordar la brecha entre los datos de peligros disponibles y la preparación ciudadana. La plataforma combina fuentes de datos oficiales con aprendizaje automático para proporcionar inteligencia de riesgo que anteriormente solo estaba disponible para agencias especializadas."
+    },
+    "whatWeDo": {
+      "title": "Qué Hacemos",
+      "content": "TrueRisk monitoriza 7 peligros naturales en las 52 provincias españolas: inundaciones, incendios forestales, sequía, olas de calor, eventos sísmicos, olas de frío y tormentas de viento. Cada peligro tiene un modelo ML dedicado (XGBoost, LightGBM o PyTorch) que procesa datos meteorológicos en tiempo real, patrones históricos y características geográficas para producir puntuaciones de riesgo actualizadas continuamente."
+    },
+    "thirdParty": {
+      "title": "Fuentes de Datos y Atribución",
+      "intro": "TrueRisk depende de los siguientes servicios externos y fuentes de datos:",
+      "google": {
+        "name": "Google OAuth",
+        "description": "Proveedor de autenticación para inicio de sesión"
+      },
+      "github": {
+        "name": "GitHub OAuth",
+        "description": "Proveedor de autenticación para inicio de sesión"
+      },
+      "openmeteo": {
+        "name": "Open-Meteo",
+        "description": "API meteorológica de código abierto que proporciona datos en tiempo real y pronósticos"
+      },
+      "aemet": {
+        "name": "AEMET",
+        "description": "Agencia Estatal de Meteorología — observaciones meteorológicas oficiales, pronósticos y avisos de peligros"
+      },
+      "openfreemap": {
+        "name": "OpenFreeMap / MapLibre",
+        "description": "Renderizado de mosaicos de mapas de código abierto y componentes de mapas interactivos"
+      },
+      "nominatim": {
+        "name": "Nominatim / OpenStreetMap",
+        "description": "Servicio de geocodificación para resolver direcciones a coordenadas"
+      },
+      "ine": {
+        "name": "INE",
+        "description": "Instituto Nacional de Estadística — datos demográficos provinciales y municipales"
+      }
+    },
+    "techStack": {
+      "title": "Stack Tecnológico",
+      "frontend": "Frontend: Next.js 16, React 19, Tailwind CSS v4, MapLibre GL, Framer Motion, Recharts",
+      "backend": "Backend: FastAPI, SQLAlchemy (async), PostgreSQL, Alembic",
+      "ml": "ML/IA: XGBoost, LightGBM, PyTorch (Temporal Fusion Transformer)",
+      "infra": "Infraestructura: Docker, Dokploy, hosting Cubepath (UE)"
+    },
+    "contribute": {
+      "title": "Cómo Contribuir",
+      "content": "TrueRisk está abierto a contribuciones de todo tipo: código, documentación, traducciones, reportes de errores y sugerencias de funciones. Visita nuestro repositorio de GitHub para comenzar.",
+      "github": "github.com/javierdejesusda/TrueRisk"
+    },
+    "contact": {
+      "title": "Contacto",
+      "content": "Para consultas generales, solicitudes de funciones o reportes de errores, por favor abre un issue en nuestro repositorio de GitHub. Para asuntos relacionados con la privacidad, consulta nuestra Política de Privacidad.",
+      "email": "contact@truerisk.cloud"
+    }
+  },
+  "accessibility": {
+    "title": "Declaración de Accesibilidad",
+    "commitment": {
+      "title": "Nuestro Compromiso",
+      "content": "TrueRisk está comprometido con garantizar la accesibilidad digital para todos los usuarios, incluyendo personas con discapacidad. Nos esforzamos por cumplir con las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.1 en el Nivel AA."
+    },
+    "features": {
+      "title": "Características de Accesibilidad",
+      "skipLink": "Enlace para saltar al contenido para usuarios de teclado",
+      "semantic": "Estructura HTML semántica en toda la aplicación",
+      "keyboard": "Soporte de navegación por teclado para todos los elementos interactivos",
+      "aria": "Etiquetas y roles ARIA para contenido dinámico",
+      "contrast": "Ratios de contraste de color que cumplen los estándares WCAG AA para texto",
+      "responsive": "Diseño responsivo que funciona en varios niveles de zoom (hasta 200%)",
+      "motion": "Soporte de movimiento reducido — las animaciones respetan prefers-reduced-motion",
+      "focus": "Indicadores de enfoque visibles en todos los elementos interactivos"
+    },
+    "limitations": {
+      "title": "Limitaciones Conocidas",
+      "map": "Mapa interactivo (MapLibre GL) — El componente de mapa tiene soporte limitado de teclado y lector de pantalla. La selección de provincias y los datos de peligros también están disponibles a través de interfaces sin mapa.",
+      "charts": "Visualizaciones de datos (Recharts) — Los gráficos proporcionan representación visual de datos de riesgo. Los puntos de datos clave están disponibles en forma de texto en otras partes de la interfaz.",
+      "realtime": "Actualizaciones en tiempo real — Parte del contenido dinámico (alertas SSE, meteorología en vivo) puede no anunciarse inmediatamente a los lectores de pantalla."
+    },
+    "assistive": {
+      "title": "Tecnología de Asistencia",
+      "content": "TrueRisk ha sido desarrollado con compatibilidad para lectores de pantalla, navegación solo con teclado y zoom del navegador. Probamos con tecnologías de asistencia comunes y agradecemos los comentarios sobre problemas de accesibilidad."
+    },
+    "reporting": {
+      "title": "Reportar Problemas",
+      "content": "Si encuentras alguna barrera de accesibilidad mientras usas TrueRisk, por favor háznos saber. Los problemas de accesibilidad se tratan como errores de alta prioridad. Puedes reportar problemas en nuestro repositorio de GitHub o contactarnos directamente.",
+      "github": "github.com/javierdejesusda/TrueRisk"
+    },
+    "contact": {
+      "title": "Contacto",
+      "content": "Para asuntos relacionados con la accesibilidad:",
+      "email": "accessibility@truerisk.cloud"
+    }
   }
+}
 }
