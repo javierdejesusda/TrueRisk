@@ -37,15 +37,6 @@ export const LogoClose: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
-      {/* Subtle radial glow */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.06) 0%, transparent 60%)`,
-        }}
-      />
-
       {/* Content */}
       <div
         style={{
