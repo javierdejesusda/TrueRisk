@@ -51,12 +51,13 @@ def test_extracts_extreme_wind():
     assert events[0]["wind"] == 80
 
 
-def test_includes_normal_weather():
+def test_includes_mild_weather():
     """C7: All daily summaries are included in the analog pool, not just extremes."""
-    summaries = [_make_summary(precipitation_sum=5, temperature_max=25, wind_speed_max=15)]
+    summaries = [_make_summary(precipitation_sum=0, temperature_max=22, wind_speed_max=10)]
     events = _build_knn_events_from_summaries(summaries)
     assert len(events) == 1
-    assert "Normal" in events[0]["event"]
+    # Non-extreme days get descriptive labels (e.g. "Mild day", "Dry & cool")
+    assert "Normal" not in events[0]["event"]
 
 
 def test_historical_events_has_entries():

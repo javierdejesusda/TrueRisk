@@ -551,35 +551,57 @@ _HISTORICAL_EVENTS: list[dict[str, Any]] = [
 ]
 
 
+def _classify_day(s: "WeatherDailySummary") -> tuple[str, str]:
+    """Classify a daily summary into a descriptive event label and outcome."""
+    temp_min = getattr(s, "temperature_min", None)
+
+    # Extreme events first
+    if s.precipitation_sum > 30:
+        return "Heavy rain", f"precip {s.precipitation_sum:.0f}mm"
+    if s.temperature_max > 38:
+        return "Extreme heat", f"max {s.temperature_max:.1f}°C"
+    if temp_min is not None and temp_min < -5:
+        return "Hard freeze", f"min {temp_min:.1f}°C"
+    if s.wind_speed_max > 60:
+        return "Strong winds", f"gusts {s.wind_speed_max:.0f}km/h"
+
+    # Notable events
+    if s.precipitation_sum > 10:
+        return "Moderate rain", f"precip {s.precipitation_sum:.0f}mm"
+    if s.temperature_max > 35:
+        return "Hot day", f"max {s.temperature_max:.1f}°C"
+    if temp_min is not None and temp_min < 0:
+        return "Frost", f"min {temp_min:.1f}°C"
+    if s.wind_speed_max > 40:
+        return "Windy", f"gusts {s.wind_speed_max:.0f}km/h"
+
+    # Moderate events
+    if s.precipitation_sum > 2:
+        return "Light rain", f"{s.precipitation_sum:.1f}mm, {s.temperature_avg:.1f}°C"
+    if s.precipitation_sum < 0.1 and s.temperature_max > 30:
+        return "Hot & dry", f"{s.temperature_max:.1f}°C, no rain"
+    if s.temperature_max > 28:
+        return "Warm day", f"max {s.temperature_max:.1f}°C"
+    if s.temperature_max < 10:
+        return "Cold day", f"max {s.temperature_max:.1f}°C"
+
+    # Mild conditions — describe by dominant characteristic
+    humidity = s.humidity_avg or 50
+    if humidity > 80:
+        return "Humid & mild", f"{s.temperature_avg:.1f}°C, {humidity:.0f}% RH"
+    if s.precipitation_sum < 0.1 and s.temperature_max < 25:
+        return "Dry & cool", f"{s.temperature_avg:.1f}°C, dry"
+
+    return "Mild day", f"{s.temperature_avg:.1f}°C, {s.precipitation_sum:.1f}mm"
+
+
 def _build_knn_events_from_summaries(
     daily_summaries: list[WeatherDailySummary],
 ) -> list[dict[str, Any]]:
     """Build analog pool from ALL daily summaries, classified by dominant condition."""
     events: list[dict[str, Any]] = []
     for s in daily_summaries:
-        # Classify day by dominant condition
-        if s.precipitation_sum > 30:
-            event = "Heavy rain"
-            outcome = f"precip {s.precipitation_sum:.0f}mm"
-        elif s.temperature_max > 38:
-            event = "Extreme heat"
-            outcome = f"max {s.temperature_max:.1f}C"
-        elif (
-            hasattr(s, "temperature_min")
-            and s.temperature_min is not None
-            and s.temperature_min < 0
-        ):
-            event = "Frost"
-            outcome = f"min {s.temperature_min:.1f}C"
-        elif s.wind_speed_max > 60:
-            event = "Strong winds"
-            outcome = f"gusts {s.wind_speed_max:.0f}km/h"
-        elif s.precipitation_sum < 0.1 and s.temperature_max > 30:
-            event = "Hot dry"
-            outcome = f"{s.temperature_max:.1f}C, dry"
-        else:
-            event = "Normal"
-            outcome = f"{s.temperature_avg:.1f}C, {s.precipitation_sum:.1f}mm"
+        event, outcome = _classify_day(s)
 
         events.append({
             "year": s.date.year,
