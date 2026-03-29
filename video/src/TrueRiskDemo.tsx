@@ -1,4 +1,4 @@
-import { AbsoluteFill, staticFile, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, staticFile, interpolate } from "remotion";
 import { Audio } from "@remotion/media";
 import { TransitionSeries, linearTiming, springTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
@@ -13,9 +13,14 @@ import { HeroVideo } from "./scenes/HeroVideo";
 import { Dashboard } from "./scenes/act3/Dashboard";
 import { MapDeepDive } from "./scenes/act3/MapDeepDive";
 import { Alerts } from "./scenes/act3/Alerts";
+import { Evacuation } from "./scenes/act3/Evacuation";
 import { Emergency } from "./scenes/act3/Emergency";
+import { Drought } from "./scenes/act3/Drought";
 import { Predictions } from "./scenes/act3/Predictions";
 import { Preparedness } from "./scenes/act3/Preparedness";
+import { Profile } from "./scenes/act3/Profile";
+import { Report } from "./scenes/act3/Report";
+import { Phrases } from "./scenes/act3/Phrases";
 import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
 
@@ -26,7 +31,7 @@ export const TrueRiskDemo: React.FC = () => {
       <Audio
         src={staticFile("music.mp3")}
         volume={(f) =>
-          interpolate(f, [0, 30, 1250, 1350], [0, 0.7, 0.7, 0], {
+          interpolate(f, [0, 30, 1600, 1700], [0, 0.7, 0.7, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           })
@@ -62,7 +67,7 @@ export const TrueRiskDemo: React.FC = () => {
           timing={linearTiming({ durationInFrames: T.fadeShort })}
         />
 
-        {/* === THE HERO: Landing page video === */}
+        {/* === HERO: Landing page video === */}
         <TransitionSeries.Sequence durationInFrames={D.heroVideo}>
           <HeroVideo />
         </TransitionSeries.Sequence>
@@ -100,8 +105,26 @@ export const TrueRiskDemo: React.FC = () => {
           timing={springTiming({ config: { damping: 20 }, durationInFrames: T.slideShort })}
         />
 
+        <TransitionSeries.Sequence durationInFrames={D.evacuation}>
+          <Evacuation />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition
+          presentation={slide({ direction: "from-left" })}
+          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.slideShort })}
+        />
+
         <TransitionSeries.Sequence durationInFrames={D.emergency}>
           <Emergency />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition
+          presentation={slide({ direction: "from-right" })}
+          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.slideShort })}
+        />
+
+        <TransitionSeries.Sequence durationInFrames={D.drought}>
+          <Drought />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
@@ -120,6 +143,33 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Sequence durationInFrames={D.preparedness}>
           <Preparedness />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition
+          presentation={slide({ direction: "from-left" })}
+          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.slideShort })}
+        />
+
+        <TransitionSeries.Sequence durationInFrames={D.profile}>
+          <Profile />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition
+          presentation={slide({ direction: "from-right" })}
+          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.slideShort })}
+        />
+
+        <TransitionSeries.Sequence durationInFrames={D.report}>
+          <Report />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition
+          presentation={slide({ direction: "from-left" })}
+          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.slideShort })}
+        />
+
+        <TransitionSeries.Sequence durationInFrames={D.phrases}>
+          <Phrases />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
