@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Cell } from 'recharts';
 import { ModelCard } from './model-card';
 import { DarkTooltip, getZScoreColor, capitalizeField, type PredictionResponse } from './shared';
@@ -9,7 +9,7 @@ interface Props {
   data: PredictionResponse['zScore'];
 }
 
-export function ZScoreChart({ data }: Props) {
+function ZScoreChartInner({ data }: Props) {
   const chartData = useMemo(() => {
     return data.map((z) => ({
       name: capitalizeField(z.field),
@@ -88,3 +88,5 @@ export function ZScoreChart({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const ZScoreChart = memo(ZScoreChartInner);

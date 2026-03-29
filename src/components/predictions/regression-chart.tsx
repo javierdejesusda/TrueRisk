@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import {
   ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -11,7 +11,7 @@ interface Props {
   data: PredictionResponse['regression'];
 }
 
-export function RegressionChart({ data }: Props) {
+function RegressionChartInner({ data }: Props) {
   // Compute confidence band: ± standard error estimated from rSquared
   const chartData = useMemo(() => {
     return data.data.map((d) => {
@@ -130,3 +130,5 @@ export function RegressionChart({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const RegressionChart = memo(RegressionChartInner);

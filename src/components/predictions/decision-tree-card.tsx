@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { ModelCard } from './model-card';
 import { getConfidenceColor, SemiCircleGauge, EMERGENCY_LABELS, EMERGENCY_COLORS, type PredictionResponse } from './shared';
@@ -8,7 +9,7 @@ interface Props {
   data: PredictionResponse['decisionTree'];
 }
 
-export function DecisionTreeCard({ data }: Props) {
+function DecisionTreeCardInner({ data }: Props) {
   const confidenceColor = getConfidenceColor(data.confidence);
   const confidencePct = data.confidence * 100;
 
@@ -97,3 +98,5 @@ export function DecisionTreeCard({ data }: Props) {
     </ModelCard>
   );
 }
+
+export const DecisionTreeCard = memo(DecisionTreeCardInner);
