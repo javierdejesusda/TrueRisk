@@ -540,7 +540,7 @@ def _build_report_response(
         ),
         computed_at=report.computed_at.isoformat(),
         expires_at=report.expires_at.isoformat() if report.expires_at else None,
-        pdf_available=report.pdf_url is not None,
+        pdf_available=True,
         share_url=f"/report/{report.report_id}",
     )
 
@@ -638,6 +638,6 @@ def _build_report_response_from_db(report: PropertyReport) -> PropertyReportResp
         ),
         computed_at=report.computed_at.isoformat(),
         expires_at=report.expires_at.isoformat() if report.expires_at else None,
-        pdf_available=report.pdf_url is not None,
+        pdf_available=True,
         share_url=f"/report/{report.report_id}",
     )
