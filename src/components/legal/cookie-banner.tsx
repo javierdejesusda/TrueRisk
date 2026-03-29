@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,20 +8,26 @@ import { X } from 'lucide-react';
 
 const STORAGE_KEY = 'truerisk-cookie-consent';
 
+function getSnapshot() {
+  return localStorage.getItem(STORAGE_KEY) !== 'dismissed';
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
 export function CookieBanner() {
   const t = useTranslations('Legal.cookieBanner');
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const dismissed = localStorage.getItem(STORAGE_KEY);
-    if (!dismissed) {
-      setVisible(true);
-    }
-  }, []);
+  const visible = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, 'dismissed');
-    setVisible(false);
+    window.dispatchEvent(new StorageEvent('storage'));
   }
 
   return (
