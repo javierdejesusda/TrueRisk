@@ -194,6 +194,11 @@ body {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes nav-enter {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes star-btn {
   0% { offset-distance: 0%; }
   100% { offset-distance: 100%; }

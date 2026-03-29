@@ -65,12 +65,10 @@ export function NavPill() {
   }
 
   return (
-    <motion.nav
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+    <nav
       data-tour="nav-pill"
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 glass-heavy rounded-2xl h-12 px-3 sm:px-5 max-w-[calc(100vw-2rem)] w-auto"
+      style={{ animation: 'nav-enter 0.4s ease-out both' }}
     >
       {/* Logo */}
       <Link
@@ -225,6 +223,6 @@ export function NavPill() {
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-red" />
         </span>
       )}
-    </motion.nav>
+    </nav>
   );
 }
