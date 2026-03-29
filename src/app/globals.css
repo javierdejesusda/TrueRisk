@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "maplibre-gl/dist/maplibre-gl.css";
 
 @theme {
   --color-bg-primary: #050508;
