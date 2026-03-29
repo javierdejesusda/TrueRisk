@@ -81,6 +81,7 @@ function FlowBar({
 
 export function HydroNowcastCard() {
   const t = useTranslations('HydroNowcast');
+  const tPred = useTranslations('Predictions');
   const { data, isLoading } = useHydroNowcast();
 
   const chartData = useMemo(() => {
@@ -298,8 +299,7 @@ export function HydroNowcastCard() {
         {/* Methodology note */}
         <div className="mt-3 border-l-2 border-text-muted/20 pl-3">
           <p className="font-[family-name:var(--font-sans)] text-[11px] text-text-muted leading-relaxed">
-            Rational method (Q = C&middot;I&middot;A / 3.6) with time-of-concentration delay.
-            Converts upstream precipitation forecasts to estimated downstream flow.
+            {tPred('hydroMethod')}
           </p>
         </div>
       </Card>

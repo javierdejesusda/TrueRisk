@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,7 @@ export function ModelCard({
   index,
   children,
 }: ModelCardProps) {
+  const t = useTranslations('StatisticalModels');
   const [methodOpen, setMethodOpen] = useState(true);
 
   return (
@@ -76,7 +78,7 @@ export function ModelCard({
           >
             <path d="M4 3l3 3-3 3" />
           </svg>
-          Methodology
+          {t('methodology')}
         </button>
         <AnimatePresence>
           {methodOpen && (

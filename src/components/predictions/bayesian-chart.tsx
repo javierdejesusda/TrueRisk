@@ -1,40 +1,44 @@
 'use client';
 
 import { useMemo, memo } from 'react';
+import { useTranslations } from 'next-intl';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { ModelCard } from './model-card';
-import { DarkTooltip, DISASTER_COLORS, DISASTER_LABELS, ChartAnnotation, type PredictionResponse } from './shared';
+import { DarkTooltip, DISASTER_COLORS, DISASTER_LABEL_KEYS, ChartAnnotation, type PredictionResponse } from './shared';
 
 interface Props {
   data: PredictionResponse['bayesian'];
 }
 
 function BayesianChartInner({ data }: Props) {
+  const t = useTranslations('StatisticalModels');
+  const tHaz = useTranslations('HazardModels');
+
   // Build grouped chart data with prior and posterior
   const chartData = useMemo(() => {
     return data.map((b) => ({
-      name: DISASTER_LABELS[b.type] ?? b.type,
+      name: tHaz(DISASTER_LABEL_KEYS[b.type] ?? 'disasterGeneral'),
       type: b.type,
       prior: parseFloat((b.prior * 100).toFixed(1)),
       posterior: parseFloat((b.probability * 100).toFixed(1)),
     }));
-  }, [data]);
+  }, [data, tHaz]);
 
   // Likelihood multipliers
   const multipliers = useMemo(() => {
     return data.map((b) => ({
       type: b.type,
-      label: DISASTER_LABELS[b.type] ?? b.type,
+      label: tHaz(DISASTER_LABEL_KEYS[b.type] ?? 'disasterGeneral'),
       multiplier: b.prior > 0 ? (b.probability / b.prior).toFixed(1) : 'N/A',
     }));
-  }, [data]);
+  }, [data, tHaz]);
 
   return (
     <ModelCard
-      title="Bayesian Risk"
-      subtitle="Prior vs posterior probability per disaster type"
-      methodology="Combines prior knowledge about disaster frequencies with current weather conditions to update risk probabilities in real-time using Bayes' theorem."
+      title={t('bayesian')}
+      subtitle={t('bayesianSubtitleAlt')}
+      methodology={t('bayesianMethod')}
       index={2}
     >
       <ResponsiveContainer width="100%" height={240}>
@@ -45,14 +49,14 @@ function BayesianChartInner({ data }: Props) {
           <Tooltip content={<DarkTooltip />} />
 
           {/* Prior bars — semi-transparent */}
-          <Bar dataKey="prior" name="Prior (%)" radius={[0, 4, 4, 0]} animationDuration={800} opacity={0.35}>
+          <Bar dataKey="prior" name={t('priorPct')} radius={[0, 4, 4, 0]} animationDuration={800} opacity={0.35}>
             {chartData.map((entry, i) => (
               <Cell key={`prior-${i}`} fill={DISASTER_COLORS[entry.type] ?? '#8b5cf6'} />
             ))}
           </Bar>
 
           {/* Posterior bars — full opacity */}
-          <Bar dataKey="posterior" name="Posterior (%)" radius={[0, 4, 4, 0]} animationDuration={800}>
+          <Bar dataKey="posterior" name={t('posteriorPct')} radius={[0, 4, 4, 0]} animationDuration={800}>
             {chartData.map((entry, i) => (
               <Cell key={`post-${i}`} fill={DISASTER_COLORS[entry.type] ?? '#8b5cf6'} />
             ))}
@@ -81,19 +85,19 @@ function BayesianChartInner({ data }: Props) {
 
       <div className="mt-3">
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-text-muted">Highest risk:</span>
+          <span className="text-text-muted">{t('highestRisk')}:</span>
           <Badge
             variant={data[0]?.probability > 0.5 ? 'danger' : data[0]?.probability > 0.3 ? 'warning' : 'info'}
             size="sm"
           >
-            {DISASTER_LABELS[data[0]?.type] ?? 'None'}{' '}
+            {data[0]?.type ? tHaz(DISASTER_LABEL_KEYS[data[0]?.type] ?? 'disasterGeneral') : tHaz('none')}{' '}
             ({(data[0]?.probability * 100).toFixed(1)}%)
           </Badge>
         </div>
       </div>
 
       <ChartAnnotation>
-        Faded bars show prior beliefs; solid bars show updated posterior probabilities. The multiplier shows how much evidence shifted the estimate.
+        {t('bayesianAnnotation')}
       </ChartAnnotation>
     </ModelCard>
   );

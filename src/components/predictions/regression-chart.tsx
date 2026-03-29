@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, memo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 function RegressionChartInner({ data }: Props) {
+  const t = useTranslations('StatisticalModels');
   // Compute confidence band: ± standard error estimated from rSquared
   const chartData = useMemo(() => {
     return data.data.map((d) => {
@@ -40,9 +42,9 @@ function RegressionChartInner({ data }: Props) {
 
   return (
     <ModelCard
-      title="Trend Forecast"
-      subtitle="Linear regression with 6h & 12h projection"
-      methodology="Applies linear regression to recent weather observations to identify trends and project values 6 and 12 hours ahead. R\u00B2 indicates how well the line fits the data."
+      title={t('regression')}
+      subtitle={t('regressionSubtitle')}
+      methodology={t('regressionMethod')}
       index={1}
     >
       <ResponsiveContainer width="100%" height={220}>
@@ -66,7 +68,7 @@ function RegressionChartInner({ data }: Props) {
           <Area
             type="monotone"
             dataKey="upper"
-            name="Upper bound"
+            name={t('upperBound')}
             stroke="none"
             fill="url(#regressionBand)"
             fillOpacity={0.06}
@@ -75,7 +77,7 @@ function RegressionChartInner({ data }: Props) {
           <Area
             type="monotone"
             dataKey="lower"
-            name="Lower bound"
+            name={t('lowerBound')}
             stroke="none"
             fill="transparent"
             animationDuration={800}
@@ -86,7 +88,7 @@ function RegressionChartInner({ data }: Props) {
             <Area
               type="monotone"
               dataKey="fitted"
-              name="Projection"
+              name={t('projection')}
               stroke="none"
               fill="url(#regressionProjection)"
               animationDuration={1000}
@@ -100,7 +102,7 @@ function RegressionChartInner({ data }: Props) {
               stroke="#22c55e"
               strokeDasharray="4 3"
               strokeWidth={1}
-              label={{ value: `6h: ${data.projected6h}`, position: 'top', fill: '#22c55e', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+              label={{ value: `${t('forecast6h')}: ${data.projected6h}`, position: 'top', fill: '#22c55e', fontSize: 9, fontFamily: 'var(--font-mono)' }}
             />
           )}
           {has12h && (
@@ -109,23 +111,23 @@ function RegressionChartInner({ data }: Props) {
               stroke="#22c55e"
               strokeDasharray="4 3"
               strokeWidth={1}
-              label={{ value: `12h: ${data.projected12h}`, position: 'top', fill: '#22c55e', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+              label={{ value: `${t('forecast12h')}: ${data.projected12h}`, position: 'top', fill: '#22c55e', fontSize: 9, fontFamily: 'var(--font-mono)' }}
             />
           )}
 
           {/* Actual data line (blue, solid) */}
-          <Line type="monotone" dataKey="actual" name="Actual (mm)" stroke="#3b82f6" strokeWidth={2} dot={{ r: 1.5, fill: '#3b82f6' }} connectNulls={false} animationDuration={800} />
+          <Line type="monotone" dataKey="actual" name={t('actual')} stroke="#3b82f6" strokeWidth={2} dot={{ r: 1.5, fill: '#3b82f6' }} connectNulls={false} animationDuration={800} />
 
           {/* Fitted/predicted line (white, dashed) */}
-          <Line type="monotone" dataKey="fitted" name="Predicted (mm)" stroke="#FFFFFF" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls animationDuration={1000} />
+          <Line type="monotone" dataKey="fitted" name={t('predicted')} stroke="#FFFFFF" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls animationDuration={1000} />
         </ComposedChart>
       </ResponsiveContainer>
 
       <div className="mt-3 grid grid-cols-4 gap-2">
-        <StatBox label="R\u00B2" value={data.rSquared.toFixed(3)} />
-        <StatBox label="Slope" value={`${slopeArrow} ${data.slope >= 0 ? '+' : ''}${data.slope.toFixed(3)}`} accent={slopeColor} />
-        <StatBox label="6h Forecast" value={`${data.projected6h} mm`} accent="text-accent-green" />
-        <StatBox label="12h Forecast" value={`${data.projected12h} mm`} accent="text-accent-green" />
+        <StatBox label={t('rSquared')} value={data.rSquared.toFixed(3)} />
+        <StatBox label={t('slope')} value={`${slopeArrow} ${data.slope >= 0 ? '+' : ''}${data.slope.toFixed(3)}`} accent={slopeColor} />
+        <StatBox label={t('forecast6h')} value={`${data.projected6h} mm`} accent="text-accent-green" />
+        <StatBox label={t('forecast12h')} value={`${data.projected12h} mm`} accent="text-accent-green" />
       </div>
     </ModelCard>
   );

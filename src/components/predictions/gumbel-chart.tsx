@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, memo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea,
 } from 'recharts';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 function GumbelChartInner({ data }: Props) {
+  const tStat = useTranslations('StatisticalModels');
   const [tab, setTab] = useState<GumbelTab>('precipitation');
   const gc = GUMBEL_CONFIG[tab];
   const gd = data[tab];
@@ -34,28 +36,28 @@ function GumbelChartInner({ data }: Props) {
 
   return (
     <ModelCard
-      title="GEV Extreme Value Distribution"
-      subtitle="Generalized Extreme Value analysis with return level estimation"
-      methodology="Fits generalized extreme value distributions to historical weather data to estimate the probability of rare events. The shape parameter (ξ) determines tail behavior: ξ=0 is Gumbel, ξ>0 is Fréchet (heavy tail), ξ<0 is Weibull (bounded tail)."
-      badge={{ label: 'EVD', variant: 'info' }}
+      title={tStat('gevTitle')}
+      subtitle={tStat('gevSubtitle')}
+      methodology={tStat('gevMethod')}
+      badge={{ label: tStat('gevBadge'), variant: 'info' }}
       className="md:col-span-2 lg:col-span-2"
       index={0}
     >
       {/* Tab switcher */}
       <div className="mb-4 flex gap-1.5">
-        {(Object.keys(GUMBEL_CONFIG) as GumbelTab[]).map((t) => (
+        {(Object.keys(GUMBEL_CONFIG) as GumbelTab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={[
               'cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-              tab === t
+              tab === tabKey
                 ? 'text-white'
                 : 'text-text-muted hover:text-text-secondary hover:bg-bg-secondary',
             ].join(' ')}
-            style={tab === t ? { backgroundColor: GUMBEL_CONFIG[t].stroke + '30', color: GUMBEL_CONFIG[t].stroke } : undefined}
+            style={tab === tabKey ? { backgroundColor: GUMBEL_CONFIG[tabKey].stroke + '30', color: GUMBEL_CONFIG[tabKey].stroke } : undefined}
           >
-            {GUMBEL_CONFIG[t].name}
+            {tStat(GUMBEL_CONFIG[tabKey].nameKey)}
           </button>
         ))}
       </div>
@@ -96,7 +98,7 @@ function GumbelChartInner({ data }: Props) {
             strokeDasharray="5 3"
             strokeWidth={2}
             label={{
-              value: `Current: ${gd.currentValue} ${gc.unit}`,
+              value: `${tStat('current')}: ${gd.currentValue} ${gc.unit}`,
               position: 'top',
               fill: gc.stroke,
               fontSize: 10,
@@ -109,24 +111,24 @@ function GumbelChartInner({ data }: Props) {
       </ResponsiveContainer>
 
       <div className={`mt-4 grid gap-3 ${gd.params.shape !== undefined ? 'grid-cols-4' : 'grid-cols-3'}`}>
-        <StatBox label="Current" value={`${gd.currentValue} ${gc.unit}`} />
-        <StatBox label="Exceedance" value={`${(gd.exceedanceProbability * 100).toFixed(1)}%`} />
+        <StatBox label={tStat('current')} value={`${gd.currentValue} ${gc.unit}`} />
+        <StatBox label={tStat('exceedance')} value={`${(gd.exceedanceProbability * 100).toFixed(1)}%`} />
         <div>
-          <StatBox label="Return Period" value={gd.returnPeriod >= 9999 ? '>9999 yr' : `~${gd.returnPeriod.toFixed(0)} yr`} />
+          <StatBox label={tStat('returnPeriod')} value={gd.returnPeriod >= 9999 ? '>9999 yr' : `~${gd.returnPeriod.toFixed(0)} yr`} />
           {gd.returnPeriodCapped && (
             <p className="mt-1 text-center font-[family-name:var(--font-sans)] text-[9px] text-text-muted">
-              Capped at {gd.maxCredibleReturnPeriod?.toLocaleString() ?? '10,000'} yr
+              {tStat('cappedAt', { value: gd.maxCredibleReturnPeriod?.toLocaleString() ?? '10,000' })}
             </p>
           )}
         </div>
         {gd.params.shape !== undefined && (
-          <StatBox label="GEV Shape (ξ)" value={gd.params.shape.toFixed(3)} />
+          <StatBox label={tStat('gevShape')} value={gd.params.shape.toFixed(3)} />
         )}
       </div>
 
       {/* Return Levels as horizontal mini-bars */}
       <div className="mt-3">
-        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">Return Levels</p>
+        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">{tStat('returnLevels')}</p>
         <div className="space-y-1.5">
           {gd.returnLevels.map((rl) => {
             const pct = Math.max(4, (rl.value / maxReturnLevel) * 100);
@@ -156,7 +158,7 @@ function GumbelChartInner({ data }: Props) {
       </div>
 
       <ChartAnnotation>
-        Higher values are rarer. The shaded zone marks extreme events beyond the 95th percentile.
+        {tStat('gumbelAnnotation')}
       </ChartAnnotation>
     </ModelCard>
   );

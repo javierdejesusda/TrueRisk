@@ -123,10 +123,10 @@ export type GumbelTab = 'precipitation' | 'temperature' | 'windSpeed';
 
 // ── Constants ──────────────────────────────────────────────────────
 
-export const GUMBEL_CONFIG: Record<GumbelTab, { name: string; unit: string; stroke: string; gradId: string }> = {
-  precipitation: { name: 'Precipitation', unit: 'mm', stroke: '#8b5cf6', gradId: 'gumbelPrecip' },
-  temperature: { name: 'Temperature', unit: '\u00B0C', stroke: '#f97316', gradId: 'gumbelTemp' },
-  windSpeed: { name: 'Wind Speed', unit: 'km/h', stroke: '#06b6d4', gradId: 'gumbelWind' },
+export const GUMBEL_CONFIG: Record<GumbelTab, { nameKey: string; unit: string; stroke: string; gradId: string }> = {
+  precipitation: { nameKey: 'precipitation', unit: 'mm', stroke: '#8b5cf6', gradId: 'gumbelPrecip' },
+  temperature: { nameKey: 'temperature', unit: '°C', stroke: '#f97316', gradId: 'gumbelTemp' },
+  windSpeed: { nameKey: 'windSpeed', unit: 'km/h', stroke: '#06b6d4', gradId: 'gumbelWind' },
 };
 
 export const DISASTER_COLORS: Record<string, string> = {
@@ -136,20 +136,20 @@ export const DISASTER_COLORS: Record<string, string> = {
   wind_storm: '#FFFFFF',
 };
 
-export const DISASTER_LABELS: Record<string, string> = {
-  flood: 'Flood',
-  heat_wave: 'Heat Wave',
-  cold_snap: 'Cold Snap',
-  wind_storm: 'Wind Storm',
+export const DISASTER_LABEL_KEYS: Record<string, string> = {
+  flood: 'disasterFlood',
+  heat_wave: 'disasterHeatWave',
+  cold_snap: 'disasterColdSnap',
+  wind_storm: 'disasterWindStorm',
 };
 
-export const EMERGENCY_LABELS: Record<string, string> = {
-  flood: 'Flood',
-  heat_wave: 'Heat Wave',
-  cold_snap: 'Cold Snap',
-  wind_storm: 'Wind Storm',
-  thunderstorm: 'Thunderstorm',
-  general: 'General',
+export const EMERGENCY_LABEL_KEYS: Record<string, string> = {
+  flood: 'disasterFlood',
+  heat_wave: 'disasterHeatWave',
+  cold_snap: 'disasterColdSnap',
+  wind_storm: 'disasterWindStorm',
+  thunderstorm: 'disasterThunderstorm',
+  general: 'disasterGeneral',
 };
 
 export const EMERGENCY_COLORS: Record<string, string> = {

@@ -1,30 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-
-const STAGES = [
-  {
-    label: 'Data Sources',
-    items: ['Open-Meteo API', 'AEMET CAP', 'IGN Seismic'],
-    color: '#3b82f6',
-  },
-  {
-    label: 'Feature Engineering',
-    items: ['23 flood features', '20 wildfire features', '18 heatwave features', '6 LSTM features', '8 seismic features', '14 coldwave features', '14 windstorm features'],
-    color: '#8b5cf6',
-  },
-  {
-    label: '7 ML Models',
-    items: ['XGBoost (flood)', 'RF+LightGBM (wildfire)', 'SPEI+LSTM (drought)', 'XGBoost (heatwave)', 'Rule-based (seismic)', 'Rule-based (coldwave)', 'Rule-based (windstorm)'],
-    color: '#22c55e',
-  },
-  {
-    label: 'Composite Score',
-    items: ['Dominant hazard weighting', 'Province-specific factors', 'Severity classification'],
-    color: '#f97316',
-  },
-];
 
 function Arrow() {
   return (
@@ -37,15 +15,24 @@ function Arrow() {
 }
 
 export function PipelineDiagram() {
+  const t = useTranslations('Predictions');
+
+  const stages = [
+    { label: t('pipelineDataSources'), items: [t('pipelineOpenMeteo'), t('pipelineAemetCap'), t('pipelineIgnSeismic')], color: '#3b82f6' },
+    { label: t('pipelineFeatureEng'), items: [t('pipelineFloodFeatures'), t('pipelineWildfireFeatures'), t('pipelineHeatwaveFeatures'), t('pipelineLstmFeatures'), t('pipelineSeismicFeatures'), t('pipelineColdwaveFeatures'), t('pipelineWindstormFeatures')], color: '#8b5cf6' },
+    { label: t('pipeline7Models'), items: [t('pipelineXgboostFlood'), t('pipelineRfWildfire'), t('pipelineSpeiDrought'), t('pipelineXgboostHeat'), t('pipelineRuleSeismic'), t('pipelineRuleCold'), t('pipelineRuleWind')], color: '#22c55e' },
+    { label: t('pipelineComposite'), items: [t('pipelineDominant'), t('pipelineProvince'), t('pipelineSeverity')], color: '#f97316' },
+  ];
+
   return (
     <div className="mt-8">
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mb-4 border-l-2 border-accent-green pl-3">
-        ML Pipeline
+        {t('mlPipeline')}
       </h2>
       <Card>
         <div className="p-4">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-1">
-            {STAGES.map((stage, i) => (
+            {stages.map((stage, i) => (
               <div key={stage.label} className="contents">
                 <motion.div
                   className="flex-1 min-w-0"
@@ -72,7 +59,7 @@ export function PipelineDiagram() {
                     </ul>
                   </div>
                 </motion.div>
-                {i < STAGES.length - 1 && <Arrow />}
+                {i < stages.length - 1 && <Arrow />}
               </div>
             ))}
           </div>

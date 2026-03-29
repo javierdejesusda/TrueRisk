@@ -24,7 +24,7 @@ export function PredictionHeader({ current }: Props) {
       <div>
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary">{t('title')}</h1>
         <p className="mt-1 text-sm font-[family-name:var(--font-sans)] text-text-muted">
-          ML model forecasts and extreme value analysis
+          {t('headerSubtitle')}
         </p>
       </div>
       <div className="flex items-center gap-4">
@@ -32,7 +32,7 @@ export function PredictionHeader({ current }: Props) {
           <span className={`font-[family-name:var(--font-mono)] text-xl font-bold ${tempColor(current.temperature)}`}>
             {current.temperature != null ? current.temperature.toFixed(1) : '—'}°C
           </span>
-          <span className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">Temp</span>
+          <span className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-wider text-text-muted">{t('temp')}</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="font-[family-name:var(--font-mono)] text-xl font-bold text-text-primary">

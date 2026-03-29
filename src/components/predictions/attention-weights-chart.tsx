@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ModelCard } from './model-card';
 import { DarkTooltip } from './shared';
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function AttentionWeightsChart({ data }: Props) {
+  const t = useTranslations('Predictions');
+
   const chartData = useMemo(() => {
     if (!data || data.hazards.length === 0) return [];
     // Aggregate attention weights across all hazards
@@ -38,10 +41,10 @@ export function AttentionWeightsChart({ data }: Props) {
 
   return (
     <ModelCard
-      title="TFT Attention Weights"
-      subtitle="Variable selection importance from Temporal Fusion Transformer"
-      methodology="The TFT attention mechanism learns which input features matter most for each prediction. Higher weights indicate stronger influence on the forecast."
-      badge={{ label: 'Attention', variant: 'info' }}
+      title={t('tftAttention')}
+      subtitle={t('tftAttentionSubtitle')}
+      methodology={t('tftAttentionMethod')}
+      badge={{ label: t('attention'), variant: 'info' }}
       index={1}
     >
       <div className="h-[280px]">
@@ -63,7 +66,7 @@ export function AttentionWeightsChart({ data }: Props) {
               width={80}
             />
             <Tooltip content={<DarkTooltip />} />
-            <Bar dataKey="weight" fill="#22c55e" radius={[0, 4, 4, 0]} name="Weight" />
+            <Bar dataKey="weight" fill="#22c55e" radius={[0, 4, 4, 0]} name={t('weight')} />
           </BarChart>
         </ResponsiveContainer>
       </div>

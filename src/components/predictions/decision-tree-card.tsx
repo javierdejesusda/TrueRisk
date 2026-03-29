@@ -2,40 +2,43 @@
 
 import { memo } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { ModelCard } from './model-card';
-import { getConfidenceColor, SemiCircleGauge, EMERGENCY_LABELS, EMERGENCY_COLORS, type PredictionResponse } from './shared';
+import { getConfidenceColor, SemiCircleGauge, EMERGENCY_LABEL_KEYS, EMERGENCY_COLORS, type PredictionResponse } from './shared';
 
 interface Props {
   data: PredictionResponse['decisionTree'];
 }
 
 function DecisionTreeCardInner({ data }: Props) {
+  const t = useTranslations('StatisticalModels');
+  const tHaz = useTranslations('HazardModels');
   const confidenceColor = getConfidenceColor(data.confidence);
   const confidencePct = data.confidence * 100;
 
   return (
     <ModelCard
-      title="Emergency Classification"
-      subtitle="Rule-based weather classifier"
-      methodology="Evaluates current conditions against a decision tree of weather thresholds to classify the most likely emergency type and confidence level."
+      title={t('decisionTree')}
+      subtitle={t('decisionTreeSubtitleAlt')}
+      methodology={t('decisionTreeMethod')}
       confidence={data.confidence}
       index={5}
     >
       <div className="flex flex-col gap-4">
         {/* Classification header */}
         <div className="text-center">
-          <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-[family-name:var(--font-sans)]">Classification</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-[family-name:var(--font-sans)]">{t('classification')}</p>
           <div className={`font-[family-name:var(--font-display)] text-2xl font-bold ${EMERGENCY_COLORS[data.type] ?? 'text-text-primary'}`}>
-            {EMERGENCY_LABELS[data.type] ?? data.type}
+            {tHaz(EMERGENCY_LABEL_KEYS[data.type] ?? 'disasterGeneral')}
           </div>
         </div>
 
         {/* Semi-circle gauge replaces confidence bar */}
-        <SemiCircleGauge value={confidencePct} max={100} size={140} label="Confidence" />
+        <SemiCircleGauge value={confidencePct} max={100} size={140} label={t('confidence')} />
 
         {/* Vertical flowchart of matched rules */}
         <div className="w-full">
-          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-2">Decision Path</p>
+          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-2">{t('decisionPath')}</p>
           <div className="relative">
             {data.matchedRules.map((rule, i) => {
               const isLast = i === data.matchedRules.length - 1;
@@ -79,12 +82,12 @@ function DecisionTreeCardInner({ data }: Props) {
                         className="rounded-lg p-3 text-center"
                         style={{ backgroundColor: confidenceColor + '15', border: `1px solid ${confidenceColor}30` }}
                       >
-                        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5 font-[family-name:var(--font-sans)]">Result</p>
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5 font-[family-name:var(--font-sans)]">{t('resultLabel')}</p>
                         <span
                           className="font-[family-name:var(--font-display)] text-sm font-bold"
                           style={{ color: confidenceColor }}
                         >
-                          {EMERGENCY_LABELS[data.type] ?? data.type} ({confidencePct.toFixed(0)}%)
+                          {tHaz(EMERGENCY_LABEL_KEYS[data.type] ?? 'disasterGeneral')} ({confidencePct.toFixed(0)}%)
                         </span>
                       </motion.div>
                     </>

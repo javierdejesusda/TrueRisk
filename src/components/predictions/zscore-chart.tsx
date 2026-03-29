@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, memo } from 'react';
+import { useTranslations } from 'next-intl';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Cell } from 'recharts';
 import { ModelCard } from './model-card';
 import { DarkTooltip, getZScoreColor, capitalizeField, type PredictionResponse } from './shared';
@@ -10,6 +11,8 @@ interface Props {
 }
 
 function ZScoreChartInner({ data }: Props) {
+  const t = useTranslations('StatisticalModels');
+
   const chartData = useMemo(() => {
     return data.map((z) => ({
       name: capitalizeField(z.field),
@@ -23,10 +26,10 @@ function ZScoreChartInner({ data }: Props) {
 
   return (
     <ModelCard
-      title="Anomaly Detection"
-      subtitle="Z-score deviation from historical baseline"
-      methodology="Compares current weather values to historical averages using Z-scores. Values beyond \u00B12 standard deviations are flagged as anomalies, indicating unusual conditions."
-      badge={hasAnomaly ? { label: 'Anomaly', variant: 'danger' } : undefined}
+      title={t('zscore')}
+      subtitle={t('zscoreSubtitle')}
+      methodology={t('zscoreMethodFull')}
+      badge={hasAnomaly ? { label: t('anomaly'), variant: 'danger' } : undefined}
       index={4}
     >
       <ResponsiveContainer width="100%" height={200}>
@@ -52,19 +55,19 @@ function ZScoreChartInner({ data }: Props) {
             stroke="#ef4444"
             strokeDasharray="3 3"
             strokeWidth={1}
-            label={{ value: 'Anomaly', position: 'right', fill: '#ef4444', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+            label={{ value: t('anomaly'), position: 'right', fill: '#ef4444', fontSize: 9, fontFamily: 'var(--font-mono)' }}
           />
           <ReferenceLine
             y={-2}
             stroke="#ef4444"
             strokeDasharray="3 3"
             strokeWidth={1}
-            label={{ value: 'Anomaly', position: 'right', fill: '#ef4444', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+            label={{ value: t('anomaly'), position: 'right', fill: '#ef4444', fontSize: 9, fontFamily: 'var(--font-mono)' }}
           />
           <ReferenceLine
             y={0}
             stroke="rgba(255,255,255,0.2)"
-            label={{ value: 'Baseline', position: 'right', fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+            label={{ value: t('baseline'), position: 'right', fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
           />
 
           <Bar dataKey="zScore" name="Z-Score" radius={[4, 4, 0, 0]} animationDuration={800}>
@@ -79,10 +82,7 @@ function ZScoreChartInner({ data }: Props) {
       <div className="mt-3 flex items-center gap-2">
         <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${hasAnomaly ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
           <span className={`h-2 w-2 rounded-full ${hasAnomaly ? 'bg-red-400 animate-pulse' : 'bg-green-400'}`} />
-          {hasAnomaly
-            ? `${anomalyCount} anomal${anomalyCount === 1 ? 'y' : 'ies'} detected`
-            : 'No anomalies'
-          }
+          {t('anomaliesDetected', { count: anomalyCount })}
         </div>
       </div>
     </ModelCard>

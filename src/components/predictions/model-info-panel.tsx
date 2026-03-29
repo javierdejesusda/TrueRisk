@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { StatBox } from './shared';
@@ -28,6 +29,8 @@ interface ModelRegistryResponse {
 }
 
 export function ModelInfoPanel() {
+  const t = useTranslations('Predictions');
+  const tHaz = useTranslations('HazardModels');
   const [registry, setRegistry] = useState<ModelRegistryResponse | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -43,7 +46,7 @@ export function ModelInfoPanel() {
   return (
     <div className="mt-8">
       <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-[0.15em] text-text-secondary mb-4 border-l-2 border-accent-green pl-3">
-        Model Registry ({registry.total} models)
+        {t('modelRegistryTitle', { count: registry.total })}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {registry.models.map((model, i) => (
@@ -69,16 +72,16 @@ export function ModelInfoPanel() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-1.5 mb-2">
-                  <StatBox label="Accuracy" value={`${(model.metrics.accuracy * 100).toFixed(0)}%`} />
-                  <StatBox label="F1 Score" value={`${(model.metrics.f1_score * 100).toFixed(0)}%`} />
+                  <StatBox label={t('accuracy')} value={`${(model.metrics.accuracy * 100).toFixed(0)}%`} />
+                  <StatBox label={t('f1Score')} value={`${(model.metrics.f1_score * 100).toFixed(0)}%`} />
                   <StatBox
-                    label="AUC-ROC"
-                    value={model.metrics.auc_roc ? `${(model.metrics.auc_roc * 100).toFixed(0)}%` : 'N/A'}
+                    label={t('aucRoc')}
+                    value={model.metrics.auc_roc ? `${(model.metrics.auc_roc * 100).toFixed(0)}%` : t('na')}
                   />
                 </div>
 
                 <p className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
-                  {model.feature_count} features
+                  {t('featuresCount', { count: model.feature_count })}
                 </p>
 
                 <AnimatePresence>
@@ -91,10 +94,10 @@ export function ModelInfoPanel() {
                       className="overflow-hidden"
                     >
                       <div className="mt-2 pt-2 border-t border-border">
-                        <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-1">Architecture</p>
+                        <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-1">{t('architecture')}</p>
                         <p className="font-[family-name:var(--font-sans)] text-[11px] text-text-secondary mb-2">{model.architecture}</p>
 
-                        <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-1">Features</p>
+                        <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-1">{tHaz('features')}</p>
                         <div className="flex flex-wrap gap-1">
                           {model.features.map((f) => (
                             <span

@@ -3,6 +3,7 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+import { useTranslations } from 'next-intl';
 import type { FeatureContribution } from '@/hooks/use-risk-explain';
 
 const HAZARD_COLORS: Record<string, string> = {
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function FeatureImportanceChart({ hazard, contributions, maxItems = 5 }: Props) {
+  const t = useTranslations('HazardModels');
   const color = HAZARD_COLORS[hazard] ?? '#22c55e';
   const top = contributions
     .filter((c) => c.contribution > 0)
@@ -37,7 +39,7 @@ export function FeatureImportanceChart({ hazard, contributions, maxItems = 5 }: 
   if (top.length === 0) {
     return (
       <div className="flex items-center justify-center h-24 text-text-muted text-xs">
-        No significant feature contributions
+        {t('noSignificantFeatures')}
       </div>
     );
   }
@@ -52,7 +54,7 @@ export function FeatureImportanceChart({ hazard, contributions, maxItems = 5 }: 
   return (
     <div className="mt-3">
       <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider mb-2">
-        Feature importance
+        {t('featureImportance')}
       </p>
       <ResponsiveContainer width="100%" height={top.length * 32 + 16}>
         <BarChart

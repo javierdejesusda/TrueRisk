@@ -2,6 +2,7 @@
 
 import { memo } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { ModelCard } from './model-card';
 import type { PredictionResponse } from './shared';
 
@@ -10,11 +11,13 @@ interface Props {
 }
 
 function KnnMatchesInner({ data }: Props) {
+  const t = useTranslations('StatisticalModels');
+
   return (
     <ModelCard
-      title="Historical Pattern Matching (KNN)"
-      subtitle="Nearest historical weather events by Euclidean distance"
-      methodology="Finds the most similar historical weather patterns and shows what happened next, ranked by similarity distance. Lower distance means a closer match to current conditions."
+      title={t('knn')}
+      subtitle={t('knnSubtitle')}
+      methodology={t('knnMethod')}
       className="md:col-span-2 lg:col-span-2"
       index={6}
     >
@@ -48,7 +51,7 @@ function KnnMatchesInner({ data }: Props) {
                   {event.year}
                 </span>
                 {isTopMatch && (
-                  <span className="text-[8px] uppercase tracking-wider text-accent-yellow/70 font-[family-name:var(--font-sans)]">Top</span>
+                  <span className="text-[8px] uppercase tracking-wider text-accent-yellow/70 font-[family-name:var(--font-sans)]">{t('topMatch')}</span>
                 )}
               </div>
 
@@ -78,7 +81,7 @@ function KnnMatchesInner({ data }: Props) {
 
               {/* Distance value */}
               <div className="flex flex-col items-end shrink-0">
-                <span className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">Distance</span>
+                <span className="text-[10px] text-text-muted uppercase tracking-wider font-[family-name:var(--font-sans)]">{t('distance')}</span>
                 <span className="font-[family-name:var(--font-mono)] text-xs font-medium tabular-nums text-text-secondary">
                   {event.distance.toFixed(3)}
                 </span>

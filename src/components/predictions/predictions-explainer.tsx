@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 
@@ -83,35 +84,21 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 // ── Data Sources ────────────────────────────────────────────────────
 
-const DATA_SOURCES = [
-  {
-    icon: <WeatherStationIcon />,
-    label: 'AEMET Weather Stations',
-    desc: 'Real-time meteorological data',
-  },
-  {
-    icon: <SatelliteIcon />,
-    label: 'Satellite Observations',
-    desc: 'Soil moisture, vegetation, thermal',
-  },
-  {
-    icon: <SeismographIcon />,
-    label: 'IGN Seismic Catalog',
-    desc: 'Earthquake magnitude, depth, proximity',
-  },
-  {
-    icon: <DatabaseIcon />,
-    label: 'Historical Disaster DB',
-    desc: 'Documented DANA events, wildfires, droughts',
-  },
-] as const;
-
 function DataSourcesSection() {
+  const t = useTranslations('Predictions');
+
+  const dataSources = [
+    { icon: <WeatherStationIcon />, label: t('aemet'), desc: t('aemetDesc') },
+    { icon: <SatelliteIcon />, label: t('satellite'), desc: t('satelliteDesc') },
+    { icon: <SeismographIcon />, label: t('ign'), desc: t('ignDesc') },
+    { icon: <DatabaseIcon />, label: t('historicalDb'), desc: t('historicalDesc') },
+  ];
+
   return (
     <div>
-      <SectionHeading>Data Sources</SectionHeading>
+      <SectionHeading>{t('dataSources')}</SectionHeading>
       <div className="grid grid-cols-2 gap-2">
-        {DATA_SOURCES.map((src) => (
+        {dataSources.map((src) => (
           <div
             key={src.label}
             className="flex items-start gap-2.5 rounded-xl bg-white/[0.03] p-3"
@@ -134,30 +121,20 @@ function DataSourcesSection() {
 
 // ── ML Pipeline ─────────────────────────────────────────────────────
 
-const PIPELINE_STEPS = [
-  {
-    num: '01',
-    title: 'Data Ingestion & Normalization',
-    detail: 'Raw data from 50+ weather stations',
-  },
-  {
-    num: '02',
-    title: 'Feature Engineering',
-    detail: '23-feature vectors per hazard type',
-  },
-  {
-    num: '03',
-    title: 'Model Inference & Calibration',
-    detail: 'Platt scaling for probability calibration',
-  },
-] as const;
-
 function MLPipelineSection() {
+  const t = useTranslations('Predictions');
+
+  const pipelineSteps = [
+    { num: '01', title: t('step1'), detail: t('step1Desc') },
+    { num: '02', title: t('step2'), detail: t('step2Desc') },
+    { num: '03', title: t('step3'), detail: t('step3Desc') },
+  ];
+
   return (
     <div>
-      <SectionHeading>ML Pipeline</SectionHeading>
+      <SectionHeading>{t('mlPipeline')}</SectionHeading>
       <div className="flex items-stretch gap-0">
-        {PIPELINE_STEPS.map((step, i) => (
+        {pipelineSteps.map((step, i) => (
           <div key={step.num} className="flex items-stretch flex-1 min-w-0">
             {/* Step card */}
             <div className="rounded-xl bg-bg-secondary p-3 flex-1 min-w-0">
@@ -172,7 +149,7 @@ function MLPipelineSection() {
               </p>
             </div>
             {/* Connecting arrow */}
-            {i < PIPELINE_STEPS.length - 1 && (
+            {i < pipelineSteps.length - 1 && (
               <div className="flex items-center px-1.5 shrink-0">
                 <svg width="16" height="12" viewBox="0 0 16 12" fill="none" className="text-text-muted">
                   <path d="M0 6h12M10 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -188,64 +165,25 @@ function MLPipelineSection() {
 
 // ── Model Inventory ─────────────────────────────────────────────────
 
-const MODELS = [
-  {
-    hazard: 'Flood',
-    model: 'XGBoost',
-    features: '23 features',
-    basis: 'DANA event history',
-    color: '#3b82f6',
-  },
-  {
-    hazard: 'Wildfire',
-    model: 'RF + LightGBM',
-    features: '20 features',
-    basis: 'Canadian FWI',
-    color: '#f97316',
-  },
-  {
-    hazard: 'Drought',
-    model: 'LSTM',
-    features: 'SPEI indices',
-    basis: '90-day sequences',
-    color: '#eab308',
-  },
-  {
-    hazard: 'Heatwave',
-    model: 'XGBoost',
-    features: '18 features',
-    basis: 'WBGT heat stress',
-    color: '#ef4444',
-  },
-  {
-    hazard: 'Seismic',
-    model: 'Rule-based',
-    features: 'IGN catalog',
-    basis: '200 km radius',
-    color: '#a855f7',
-  },
-  {
-    hazard: 'Cold Wave',
-    model: 'Rule-based',
-    features: 'Wind chill',
-    basis: 'Persistence tracking',
-    color: '#22d3ee',
-  },
-  {
-    hazard: 'Windstorm',
-    model: 'Rule-based',
-    features: 'Pressure dynamics',
-    basis: 'Gust intensity',
-    color: '#94a3b8',
-  },
-] as const;
-
 function ModelInventorySection() {
+  const t = useTranslations('Predictions');
+  const tHaz = useTranslations('HazardModels');
+
+  const models = [
+    { hazard: tHaz('disasterFlood'), model: 'XGBoost', features: '23 features', basis: 'DANA', color: '#3b82f6' },
+    { hazard: tHaz('wildfire'), model: 'RF + LightGBM', features: '20 features', basis: 'FWI', color: '#f97316' },
+    { hazard: tHaz('drought'), model: 'LSTM', features: 'SPEI indices', basis: '90-day sequences', color: '#eab308' },
+    { hazard: tHaz('heatwave'), model: 'XGBoost', features: '18 features', basis: 'WBGT', color: '#ef4444' },
+    { hazard: tHaz('seismic'), model: 'Rule-based', features: 'IGN catalog', basis: '200 km radius', color: '#a855f7' },
+    { hazard: tHaz('coldwave'), model: 'Rule-based', features: 'Wind chill', basis: 'Persistence tracking', color: '#22d3ee' },
+    { hazard: tHaz('windstorm'), model: 'Rule-based', features: 'Pressure dynamics', basis: 'Gust intensity', color: '#94a3b8' },
+  ];
+
   return (
     <div>
-      <SectionHeading>Model Inventory</SectionHeading>
+      <SectionHeading>{t('modelInventory')}</SectionHeading>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        {MODELS.map((m) => (
+        {models.map((m) => (
           <div key={m.hazard} className="rounded-xl bg-white/[0.03] p-3">
             <div className="flex items-center gap-2 mb-1.5">
               <span
@@ -276,22 +214,25 @@ function ModelInventorySection() {
 
 // ── Statistical Methods ─────────────────────────────────────────────
 
-const STAT_METHODS = [
-  { name: 'Gumbel EVD', desc: 'Extreme-value distribution for return-period estimation of rare meteorological events.' },
-  { name: 'Linear Regression', desc: 'Trend fitting over rolling windows to project short-term variable trajectories.' },
-  { name: 'Bayesian Classification', desc: 'Prior-weighted likelihood scoring for multi-hazard risk categorization.' },
-  { name: 'EMA Smoothing', desc: 'Exponential moving averages to filter noise and detect directional momentum.' },
-  { name: 'Z-Score Anomaly', desc: 'Standard-deviation gating to flag statistically unusual observations.' },
-  { name: 'Decision Trees', desc: 'Rule-based branching on threshold conditions for interpretable risk flags.' },
-  { name: 'KNN Matching', desc: 'K-nearest neighbor search against historical events to find analogous scenarios.' },
-] as const;
-
 function StatisticalMethodsSection() {
+  const t = useTranslations('Predictions');
+  const tStat = useTranslations('StatisticalModels');
+
+  const methods = [
+    { name: tStat('gumbelEvd'), desc: tStat('explainerGumbel') },
+    { name: tStat('linearRegression'), desc: tStat('explainerRegression') },
+    { name: tStat('bayesianClassification'), desc: tStat('explainerBayesian') },
+    { name: tStat('emaSmoothing'), desc: tStat('explainerEma') },
+    { name: tStat('zscoreAnomaly'), desc: tStat('explainerZscore') },
+    { name: tStat('decisionTrees'), desc: tStat('explainerDecisionTree') },
+    { name: tStat('knnMatching'), desc: tStat('explainerKnn') },
+  ];
+
   return (
     <div>
-      <SectionHeading>Statistical Methods</SectionHeading>
+      <SectionHeading>{t('statisticalMethods')}</SectionHeading>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {STAT_METHODS.map((m) => (
+        {methods.map((m) => (
           <div key={m.name} className="rounded-xl bg-white/[0.03] p-3">
             <p className="font-[family-name:var(--font-mono)] text-[11px] font-medium text-text-primary mb-0.5">
               {m.name}
@@ -310,6 +251,7 @@ function StatisticalMethodsSection() {
 
 export function PredictionsExplainer() {
   const [expanded, setExpanded] = useState(false);
+  const t = useTranslations('Predictions');
 
   return (
     <Card variant="glass" className="mt-6 mb-2">
@@ -317,12 +259,10 @@ export function PredictionsExplainer() {
         {/* ── Hero (always visible) ─────────────────────────────── */}
         <div>
           <h2 className="font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">
-            How Predictions Work
+            {t('howItWorks')}
           </h2>
           <p className="font-[family-name:var(--font-sans)] text-xs text-text-secondary mt-1 leading-relaxed">
-            TrueRisk fuses real-time AEMET weather data, satellite imagery, and seismic catalogs through a
-            multi-model machine-learning pipeline. Each hazard type runs its own trained classifier while
-            statistical methods cross-validate the outputs to produce calibrated risk probabilities.
+            {t('explainerSummary')}
           </p>
         </div>
 
@@ -333,7 +273,7 @@ export function PredictionsExplainer() {
           className="flex items-center gap-1.5 self-start cursor-pointer rounded-lg px-2.5 py-1 -ml-1 text-text-muted hover:text-text-secondary transition-colors duration-150 bg-transparent"
         >
           <span className="font-[family-name:var(--font-sans)] text-[11px] font-medium select-none">
-            {expanded ? 'Hide details' : 'Show methodology'}
+            {expanded ? t('hideDetails') : t('showMethodology')}
           </span>
           <ChevronIcon expanded={expanded} />
         </button>
@@ -365,11 +305,10 @@ export function PredictionsExplainer() {
                 {/* e. Limitations Disclaimer */}
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-3">
                   <p className="font-[family-name:var(--font-display)] text-[10px] text-text-muted uppercase tracking-wider mb-1">
-                    Limitations
+                    {t('limitations')}
                   </p>
                   <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted leading-relaxed">
-                    Models are trained on historical data and may not capture unprecedented events.
-                    Predictions should complement, not replace, official AEMET warnings.
+                    {t('limitationsText')}
                   </p>
                 </div>
               </div>

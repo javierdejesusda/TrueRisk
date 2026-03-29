@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -58,11 +58,12 @@ function HazardCardContent({ score, hazard, explanation, statBoxes, fallbackFeat
   statBoxes: { label: string; value: string }[];
   fallbackFeatures: { name: string; value: number; color: string }[];
 }) {
+  const t = useTranslations('HazardModels');
   const hasExplain = explanation && explanation.contributions.length > 0;
 
   return (
     <>
-      <SemiCircleGauge value={score} label="Risk Score" />
+      <SemiCircleGauge value={score} label={t('riskScore')} />
       <div className="grid grid-cols-3 gap-2 mt-3">
         {statBoxes.map((box) => (
           <StatBox key={box.label} label={box.label} value={box.value} />
@@ -72,7 +73,7 @@ function HazardCardContent({ score, hazard, explanation, statBoxes, fallbackFeat
         <FeatureImportanceChart hazard={hazard} contributions={explanation.contributions} maxItems={5} />
       ) : (
         <div className="mt-3 space-y-1.5">
-          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">Top features</p>
+          <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">{t('topFeatures')}</p>
           {fallbackFeatures.map((f) => (
             <FeatureBar key={f.name} name={f.name} value={f.value} color={f.color} />
           ))}
@@ -90,9 +91,9 @@ export function FloodModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Flash Floods / DANA"
-      subtitle="XGBoost classifier — 23 features"
-      methodology="Gradient-boosted decision tree trained on historical DANA events. Ingests 23 features including soil moisture, pressure trends, 6h/24h/48h accumulated precipitation, river basin risk indices, and Mediterranean coastal exposure. Outputs calibrated flood probability."
+      title={t('flood')}
+      subtitle={t('floodSubtitle')}
+      methodology={t('floodMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={7}
@@ -103,14 +104,14 @@ export function FloodModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'Soil moisture', value: 85, color: '#3b82f6' },
-          { name: 'Precipitation 24h', value: 72, color: '#3b82f6' },
-          { name: 'Pressure trend', value: 58, color: '#3b82f6' },
+          { name: t('soilMoisture'), value: 85, color: '#3b82f6' },
+          { name: t('precipitation24h'), value: 72, color: '#3b82f6' },
+          { name: t('pressureTrend'), value: 58, color: '#3b82f6' },
         ]}
         statBoxes={[
-          { label: 'Model', value: 'XGBoost' },
-          { label: 'Features', value: '23' },
-          { label: 'Hazard', value: 'DANA/Flood' },
+          { label: t('model'), value: 'XGBoost' },
+          { label: t('features'), value: '23' },
+          { label: t('hazard'), value: t('danaFlood') },
         ]}
       />
     </ModelCard>
@@ -125,9 +126,9 @@ export function WildfireModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Wildfires"
-      subtitle="RF + LightGBM ensemble — Canadian FWI"
-      methodology="Ensemble of Random Forest and LightGBM classifiers using the Canadian Fire Weather Index system (FFMC, DMC, DC, ISI, BUI, FWI). 20 features include consecutive dry days, soil moisture, UV index, and elevation. Outputs are averaged and optionally Platt-calibrated for reliable probabilities."
+      title={t('wildfire')}
+      subtitle={t('wildfireSubtitle')}
+      methodology={t('wildfireMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={8}
@@ -138,14 +139,14 @@ export function WildfireModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'Dry days', value: 78, color: '#f97316' },
-          { name: 'FWI index', value: 65, color: '#f97316' },
-          { name: 'UV index', value: 52, color: '#f97316' },
+          { name: t('dryDays'), value: 78, color: '#f97316' },
+          { name: t('fwiIndex'), value: 65, color: '#f97316' },
+          { name: t('uvIndex'), value: 52, color: '#f97316' },
         ]}
         statBoxes={[
-          { label: 'Models', value: 'RF + LGBM' },
-          { label: 'Features', value: '20' },
-          { label: 'System', value: 'FWI' },
+          { label: t('models'), value: t('rfLgbm') },
+          { label: t('features'), value: '20' },
+          { label: t('system'), value: 'FWI' },
         ]}
       />
     </ModelCard>
@@ -160,9 +161,9 @@ export function DroughtModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Drought"
-      subtitle="SPEI/SPI indices + LSTM trajectory"
-      methodology="Two-stage model: first computes SPEI (Standardised Precipitation-Evapotranspiration Index) at 1-month and 3-month scales to quantify current drought severity. Then an LSTM neural network predicts 30-day drought trajectory from 90-day sequences of temperature, precipitation, soil moisture, and humidity. Composite score blends SPEI severity, LSTM outlook, and soil-moisture deficit."
+      title={t('drought')}
+      subtitle={t('droughtSubtitle')}
+      methodology={t('droughtMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={9}
@@ -173,14 +174,14 @@ export function DroughtModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'SPEI index', value: 82, color: '#FBBF24' },
-          { name: 'Soil deficit', value: 68, color: '#FBBF24' },
-          { name: 'LSTM outlook', value: 55, color: '#FBBF24' },
+          { name: t('speiIndex'), value: 82, color: '#FBBF24' },
+          { name: t('soilDeficit'), value: 68, color: '#FBBF24' },
+          { name: t('lstmOutlook'), value: 55, color: '#FBBF24' },
         ]}
         statBoxes={[
-          { label: 'Model', value: 'LSTM' },
-          { label: 'Sequence', value: '90 days' },
-          { label: 'Index', value: 'SPEI' },
+          { label: t('model'), value: 'LSTM' },
+          { label: t('sequence'), value: '90 days' },
+          { label: t('index'), value: 'SPEI' },
         ]}
       />
     </ModelCard>
@@ -195,9 +196,9 @@ export function HeatwaveModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Heatwaves"
-      subtitle="XGBoost + WBGT heat stress index"
-      methodology="XGBoost classifier trained on 18 features including Wet Bulb Globe Temperature (WBGT) for heat stress, consecutive hot days/nights tracking, temperature anomalies, 48h max temperature forecasts, and geographic factors (latitude, elevation, coastal exposure). Models health-impact risk from sustained extreme heat."
+      title={t('heatwave')}
+      subtitle={t('heatwaveSubtitle')}
+      methodology={t('heatwaveMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={10}
@@ -208,14 +209,14 @@ export function HeatwaveModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'WBGT temp', value: 88, color: '#ef4444' },
-          { name: 'Hot days', value: 70, color: '#ef4444' },
-          { name: 'Temp anomaly', value: 60, color: '#ef4444' },
+          { name: t('wbgtTemp'), value: 88, color: '#ef4444' },
+          { name: t('hotDays'), value: 70, color: '#ef4444' },
+          { name: t('tempAnomaly'), value: 60, color: '#ef4444' },
         ]}
         statBoxes={[
-          { label: 'Model', value: 'XGBoost' },
-          { label: 'Features', value: '18' },
-          { label: 'Index', value: 'WBGT' },
+          { label: t('model'), value: 'XGBoost' },
+          { label: t('features'), value: '18' },
+          { label: t('index'), value: 'WBGT' },
         ]}
       />
     </ModelCard>
@@ -230,9 +231,9 @@ export function SeismicModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Seismic / Earthquake"
-      subtitle="Rule-based — IGN seismic catalog"
-      methodology="Analyzes recent seismic activity from Spain's IGN catalog within 200km of the province. Considers earthquake magnitude, frequency, proximity, and depth. Shallow M4+ earthquakes near populated areas drive the highest scores. Province seismic zone weights reflect the Betic Cordillera fault system exposure."
+      title={t('seismic')}
+      subtitle={t('seismicSubtitle')}
+      methodology={t('seismicMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={12}
@@ -243,14 +244,14 @@ export function SeismicModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'Magnitude', value: 75, color: '#a855f7' },
-          { name: 'Frequency', value: 60, color: '#a855f7' },
-          { name: 'Proximity', value: 50, color: '#a855f7' },
+          { name: t('magnitude'), value: 75, color: '#a855f7' },
+          { name: t('frequency'), value: 60, color: '#a855f7' },
+          { name: t('proximity'), value: 50, color: '#a855f7' },
         ]}
         statBoxes={[
-          { label: 'Model', value: 'Rule-based' },
-          { label: 'Features', value: '8' },
-          { label: 'Source', value: 'IGN' },
+          { label: t('model'), value: t('ruleBased') },
+          { label: t('features'), value: '8' },
+          { label: t('source'), value: 'IGN' },
         ]}
       />
     </ModelCard>
@@ -265,9 +266,9 @@ export function ColdwaveModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Cold Waves / Filomena"
-      subtitle="Rule-based — wind chill + persistence"
-      methodology="Tracks wind chill temperature, consecutive cold days (max <5C) and cold nights (min <0C), elevation, and inland exposure. Designed to detect Filomena-type events where sustained sub-zero temperatures and snowfall paralyze infrastructure. Seasonal damping reduces scores in warm months."
+      title={t('coldwave')}
+      subtitle={t('coldwaveSubtitle')}
+      methodology={t('coldwaveMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={13}
@@ -278,14 +279,14 @@ export function ColdwaveModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'Wind chill', value: 80, color: '#22D3EE' },
-          { name: 'Cold days', value: 65, color: '#22D3EE' },
-          { name: 'Elevation', value: 48, color: '#22D3EE' },
+          { name: t('windChill'), value: 80, color: '#22D3EE' },
+          { name: t('coldDays'), value: 65, color: '#22D3EE' },
+          { name: t('elevation'), value: 48, color: '#22D3EE' },
         ]}
         statBoxes={[
-          { label: 'Model', value: 'Rule-based' },
-          { label: 'Features', value: '14' },
-          { label: 'Index', value: 'Wind Chill' },
+          { label: t('model'), value: t('ruleBased') },
+          { label: t('features'), value: '14' },
+          { label: t('index'), value: t('windChillIdx') },
         ]}
       />
     </ModelCard>
@@ -300,9 +301,9 @@ export function WindstormModelCard({ riskData, explanations }: Props) {
 
   return (
     <ModelCard
-      title="Windstorms / DANA Winds"
-      subtitle="Rule-based — wind + pressure dynamics"
-      methodology="Analyzes sustained wind speed, gust intensity, and barometric pressure dynamics. Rapid pressure drops signal approaching storm systems. Coastal provinces and Mediterranean areas during autumn DANA season receive elevated scores. Tracks galernas (sudden Cantabrian storms) and Atlantic low-pressure events."
+      title={t('windstorm')}
+      subtitle={t('windstormSubtitle')}
+      methodology={t('windstormMethod')}
       confidence={score / 100}
       badge={{ label: badge.label, variant: badge.variant }}
       index={14}
@@ -313,14 +314,14 @@ export function WindstormModelCard({ riskData, explanations }: Props) {
         explanation={explanation}
 
         fallbackFeatures={[
-          { name: 'Wind speed', value: 82, color: '#94a3b8' },
-          { name: 'Pressure drop', value: 68, color: '#94a3b8' },
-          { name: 'Gust intensity', value: 55, color: '#94a3b8' },
+          { name: t('windSpeed'), value: 82, color: '#94a3b8' },
+          { name: t('pressureDrop'), value: 68, color: '#94a3b8' },
+          { name: t('gustIntensity'), value: 55, color: '#94a3b8' },
         ]}
         statBoxes={[
-          { label: 'Model', value: 'Rule-based' },
-          { label: 'Features', value: '14' },
-          { label: 'System', value: 'Pressure' },
+          { label: t('model'), value: t('ruleBased') },
+          { label: t('features'), value: '14' },
+          { label: t('system'), value: t('pressure') },
         ]}
       />
     </ModelCard>
@@ -328,27 +329,31 @@ export function WindstormModelCard({ riskData, explanations }: Props) {
 }
 
 export function HazardOverviewChart({ riskData }: { riskData: HazardScore | null }) {
+  const t = useTranslations('HazardModels');
   const [viewMode, setViewMode] = useState<'radar' | 'bar'>('radar');
+
+  const chartData = useMemo(() => {
+    if (!riskData) return [];
+    return [
+      { name: t('disasterFlood'), score: riskData.flood_score, fill: '#3b82f6' },
+      { name: t('wildfire'), score: riskData.wildfire_score, fill: '#f97316' },
+      { name: t('drought'), score: riskData.drought_score, fill: '#FBBF24' },
+      { name: t('heatwave'), score: riskData.heatwave_score, fill: '#ef4444' },
+      { name: t('seismic'), score: riskData.seismic_score, fill: '#a855f7' },
+      { name: t('coldwave'), score: riskData.coldwave_score, fill: '#22D3EE' },
+      { name: t('windstorm'), score: riskData.windstorm_score, fill: '#94a3b8' },
+    ];
+  }, [riskData, t]);
 
   if (!riskData) return null;
 
-  const chartData = [
-    { name: 'Flood', score: riskData.flood_score, fill: '#3b82f6' },
-    { name: 'Wildfire', score: riskData.wildfire_score, fill: '#f97316' },
-    { name: 'Drought', score: riskData.drought_score, fill: '#FBBF24' },
-    { name: 'Heatwave', score: riskData.heatwave_score, fill: '#ef4444' },
-    { name: 'Seismic', score: riskData.seismic_score, fill: '#a855f7' },
-    { name: 'Cold Wave', score: riskData.coldwave_score, fill: '#22D3EE' },
-    { name: 'Windstorm', score: riskData.windstorm_score, fill: '#94a3b8' },
-  ];
-
   return (
     <ModelCard
-      title="Hazard Overview"
-      subtitle="Composite risk from all ML models"
-      methodology="Aggregates predictions from all seven hazard-specific models (Flood XGBoost, Wildfire RF+LightGBM, Drought SPEI+LSTM, Heatwave XGBoost, Seismic IGN, Cold Wave wind chill, Windstorm pressure dynamics) into a single composite risk score. The dominant hazard is identified as the highest individual score."
+      title={t('overview')}
+      subtitle={t('overviewSubtitle')}
+      methodology={t('overviewMethod')}
       confidence={riskData.composite_score / 100}
-      badge={{ label: `${riskData.composite_score.toFixed(0)} Composite`, variant: riskData.composite_score >= 70 ? 'danger' : riskData.composite_score >= 50 ? 'warning' : 'info' }}
+      badge={{ label: `${riskData.composite_score.toFixed(0)} ${t('composite')}`, variant: riskData.composite_score >= 70 ? 'danger' : riskData.composite_score >= 50 ? 'warning' : 'info' }}
       index={11}
       className="lg:col-span-2"
     >
@@ -359,7 +364,7 @@ export function HazardOverviewChart({ riskData }: { riskData: HazardScore | null
             viewMode === 'radar' ? 'bg-accent-green/15 text-accent-green' : 'text-text-muted hover:text-text-secondary hover:bg-bg-secondary'
           }`}
         >
-          Radar
+          {t('radarView')}
         </button>
         <button
           onClick={() => setViewMode('bar')}
@@ -367,7 +372,7 @@ export function HazardOverviewChart({ riskData }: { riskData: HazardScore | null
             viewMode === 'bar' ? 'bg-accent-green/15 text-accent-green' : 'text-text-muted hover:text-text-secondary hover:bg-bg-secondary'
           }`}
         >
-          Bars
+          {t('barView')}
         </button>
       </div>
 
@@ -386,7 +391,7 @@ export function HazardOverviewChart({ riskData }: { riskData: HazardScore | null
               stroke="rgba(255,255,255,0.06)"
             />
             <Radar
-              name="Risk Score"
+              name={t('riskScore')}
               dataKey="score"
               stroke="var(--color-accent-green)"
               fill="var(--color-accent-green)"
@@ -404,7 +409,7 @@ export function HazardOverviewChart({ riskData }: { riskData: HazardScore | null
             <XAxis dataKey="name" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} stroke="rgba(255,255,255,0.1)" />
             <YAxis domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} stroke="rgba(255,255,255,0.1)" />
             <Tooltip content={<DarkTooltip />} />
-            <Bar dataKey="score" name="Risk Score" radius={[4, 4, 0, 0]} animationDuration={800}>
+            <Bar dataKey="score" name={t('riskScore')} radius={[4, 4, 0, 0]} animationDuration={800}>
               {chartData.map((entry, i) => (
                 <Cell key={i} fill={entry.fill} />
               ))}

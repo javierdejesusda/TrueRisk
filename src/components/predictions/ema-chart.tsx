@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, memo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -12,6 +13,8 @@ interface Props {
 }
 
 function EmaChartInner({ data }: Props) {
+  const t = useTranslations('StatisticalModels');
+
   // Dynamic color based on trend
   const trendColor = useMemo(() => {
     if (data.trend === 'rising') return '#ef4444';
@@ -28,14 +31,14 @@ function EmaChartInner({ data }: Props) {
   // Trend rate display
   const rateDisplay = useMemo(() => {
     const sign = data.rateOfChange >= 0 ? '+' : '';
-    return `${data.trend === 'rising' ? 'Rising' : data.trend === 'falling' ? 'Falling' : 'Stable'} ${sign}${data.rateOfChange.toFixed(1)}%/h`;
-  }, [data.trend, data.rateOfChange]);
+    return `${data.trend === 'rising' ? t('rising') : data.trend === 'falling' ? t('falling') : t('stable')} ${sign}${data.rateOfChange.toFixed(1)}%/h`;
+  }, [data.trend, data.rateOfChange, t]);
 
   return (
     <ModelCard
-      title="EMA Trend"
-      subtitle="Exponential moving average on precipitation"
-      methodology="Applies an exponential moving average to smooth out short-term fluctuations in precipitation data, revealing the underlying trend direction and rate of change."
+      title={t('ema')}
+      subtitle={t('emaSubtitle')}
+      methodology={t('emaMethod')}
       badge={{
         label: rateDisplay,
         variant: data.trend === 'rising' ? 'danger' : data.trend === 'falling' ? 'success' : 'neutral',
@@ -59,7 +62,7 @@ function EmaChartInner({ data }: Props) {
           <Area
             type="monotone"
             dataKey="smoothed"
-            name="EMA (mm)"
+            name={t('smoothed')}
             stroke={trendColor}
             strokeWidth={2.5}
             fill="url(#emaGradient)"
@@ -70,7 +73,7 @@ function EmaChartInner({ data }: Props) {
           <Line
             type="monotone"
             dataKey="raw"
-            name="Raw (mm)"
+            name={t('raw')}
             stroke="#f97316"
             strokeWidth={1.5}
             strokeDasharray="4 2"
@@ -129,12 +132,12 @@ function EmaChartInner({ data }: Props) {
       </ResponsiveContainer>
 
       <div className={`mt-3 grid gap-2 ${data.controlLimits ? 'grid-cols-3' : 'grid-cols-2'}`}>
-        <StatBox label="Trend" value={data.trend} accent={data.trend === 'rising' ? 'text-accent-red' : data.trend === 'falling' ? 'text-accent-green' : 'text-text-secondary'} />
-        <StatBox label="Rate" value={`${data.rateOfChange >= 0 ? '+' : ''}${data.rateOfChange.toFixed(3)}/step`} />
+        <StatBox label={t('trend')} value={data.trend} accent={data.trend === 'rising' ? 'text-accent-red' : data.trend === 'falling' ? 'text-accent-green' : 'text-text-secondary'} />
+        <StatBox label={t('rate')} value={`${data.rateOfChange >= 0 ? '+' : ''}${data.rateOfChange.toFixed(3)}/step`} />
         {data.controlLimits && (
           <StatBox
-            label="Control"
-            value={data.outOfControl ? 'Out of Control' : 'In Control'}
+            label={t('control')}
+            value={data.outOfControl ? t('outOfControl') : t('inControl')}
             accent={data.outOfControl ? 'text-accent-red' : 'text-accent-green'}
           />
         )}
