@@ -87,7 +87,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.map}>
@@ -96,7 +96,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.alerts}>
@@ -105,7 +105,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.evacuation}>
@@ -114,7 +114,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.emergency}>
@@ -123,7 +123,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.drought}>
@@ -132,7 +132,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.predictions}>
@@ -141,7 +141,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.preparedness}>
@@ -150,7 +150,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.profile}>
@@ -159,7 +159,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.report}>
@@ -168,7 +168,7 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
+          timing={springTiming({ config: { damping: 28, stiffness: 100 }, durationInFrames: T.fadeMedium })}
         />
 
         <TransitionSeries.Sequence durationInFrames={D.phrases}>
