@@ -39,6 +39,9 @@ interface AppState {
   setSpecialNeeds: (v: string[]) => void;
   hasSeenOnboarding: boolean;
   dismissOnboarding: () => void;
+  hasSeenWalkthrough: boolean;
+  dismissWalkthrough: () => void;
+  resetWalkthrough: () => void;
   backendToken: string | null;
   setBackendToken: (token: string | null) => void;
   authUser: { id: number; name: string; email: string; image: string; role: string } | null;
@@ -82,6 +85,9 @@ export const useAppStore = create<AppState>()(
       setSpecialNeeds: (specialNeeds) => set({ specialNeeds }),
       hasSeenOnboarding: false,
       dismissOnboarding: () => set({ hasSeenOnboarding: true }),
+      hasSeenWalkthrough: false,
+      dismissWalkthrough: () => set({ hasSeenWalkthrough: true }),
+      resetWalkthrough: () => set({ hasSeenWalkthrough: false }),
       backendToken: null,
       setBackendToken: (backendToken) => set({ backendToken }),
       authUser: null,
@@ -99,6 +105,7 @@ export const useAppStore = create<AppState>()(
         residenceType: state.residenceType,
         specialNeeds: state.specialNeeds,
         hasSeenOnboarding: state.hasSeenOnboarding,
+        hasSeenWalkthrough: state.hasSeenWalkthrough,
       }),
     }
   )

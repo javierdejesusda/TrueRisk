@@ -14,7 +14,9 @@ export function NavPill() {
   const alerts = useAppStore((s) => s.alerts);
   const risk = useAppStore((s) => s.risk);
   const clearAuth = useAppStore((s) => s.clearAuth);
+  const resetWalkthrough = useAppStore((s) => s.resetWalkthrough);
   const t = useTranslations('Nav');
+  const tWalk = useTranslations('Walkthrough');
   const tAuth = useTranslations('Auth');
   const { user, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -67,6 +69,7 @@ export function NavPill() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
+      data-tour="nav-pill"
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 glass-heavy rounded-2xl h-12 px-3 sm:px-5 max-w-[calc(100vw-2rem)] w-auto"
     >
       {/* Logo */}
@@ -167,6 +170,28 @@ export function NavPill() {
                 </svg>
                 {t('settings')}
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  resetWalkthrough();
+                  setDropdownOpen(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M1 4v6h6M23 20v-6h-6" />
+                  <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
+                </svg>
+                {tWalk('replay')}
+              </button>
               <div className="mx-3 my-1 border-t border-white/5" />
               <button
                 type="button"

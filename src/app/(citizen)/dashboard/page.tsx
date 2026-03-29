@@ -9,7 +9,6 @@ import { RiskOverview } from '@/components/dashboard/risk-overview';
 import { WeatherCard } from '@/components/dashboard/weather-card';
 import { AlertFeed } from '@/components/dashboard/alert-feed';
 import { QuickActions } from '@/components/dashboard/quick-actions';
-import { Walkthrough } from '@/components/ui/walkthrough';
 import { PersonalizedSuggestions } from '@/components/dashboard/personalized-suggestions';
 import { PreparednessWidget } from '@/components/dashboard/preparedness-widget';
 import { DataQualityPanel } from '@/components/dashboard/data-quality-panel';
@@ -80,7 +79,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom spanning 1 column: Quick actions + data quality */}
-        <div className="h-full">
+        <div className="h-full" data-tour="quick-actions">
           <QuickActions />
         </div>
         <div className="h-full">
@@ -88,7 +87,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Full width: Preparedness widget */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3" data-tour="preparedness-widget">
           <PreparednessWidget />
         </div>
 
@@ -97,7 +96,6 @@ export default function DashboardPage() {
           <PersonalizedSuggestions />
         </div>
       </div>
-      <Walkthrough />
     </motion.div>
   );
 }

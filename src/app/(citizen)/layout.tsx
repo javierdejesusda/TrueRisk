@@ -12,6 +12,7 @@ import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { useOfflinePack } from '@/hooks/use-offline-pack';
 import { useAppStore } from '@/store/app-store';
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow';
+import { Walkthrough } from '@/components/ui/walkthrough';
 
 export default function CitizenLayout({
   children,
@@ -64,6 +65,7 @@ export default function CitizenLayout({
       <PushBanner />
       <EmergencyBanner />
       {children}
+      <Walkthrough />
       <OfflineIndicator />
       <ToastContainer />
     </div>
