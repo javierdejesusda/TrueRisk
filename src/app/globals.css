@@ -301,3 +301,120 @@ body {
     bottom: 120px !important;
   }
 }
+
+/* ── Legal page prose ─────────────────────────────────────────── */
+
+.prose-legal h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  scroll-margin-top: 2rem;
+}
+
+.prose-legal h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-legal p {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.prose-legal ul {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-legal li {
+  margin-bottom: 0.5rem;
+}
+
+.prose-legal strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.prose-legal a {
+  color: var(--color-accent-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 150ms;
+}
+
+.prose-legal a:hover {
+  color: var(--color-text-primary);
+}
+
+.prose-legal code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background: var(--color-bg-secondary);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  color: var(--color-text-primary);
+}
+
+.prose-legal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.prose-legal th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prose-legal td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prose-legal .legal-callout {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent-yellow);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.prose-legal .legal-callout strong {
+  color: var(--color-accent-yellow);
+}
+
+.prose-legal pre {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  white-space: pre-wrap;
+  color: var(--color-text-secondary);
+}
