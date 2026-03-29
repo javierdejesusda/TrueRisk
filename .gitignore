@@ -28,6 +28,7 @@ CLAUDE.md
 *.jpg
 *.png
 !map-*.png
+!video/public/*.png
 
 # python backend
 backend/.env
