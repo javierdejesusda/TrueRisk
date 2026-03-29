@@ -282,3 +282,22 @@ body {
 .maplibregl-ctrl-attrib {
   display: none !important;
 }
+
+/* ── Mobile bottom sheet panel overrides ───────────────────── */
+
+.mobile-sheet-panels .glass-heavy {
+  max-width: 100%;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Push MapLibre zoom controls above bottom sheet on mobile */
+@media (max-width: 767px) {
+  .maplibregl-ctrl-bottom-right {
+    bottom: 120px !important;
+  }
+}

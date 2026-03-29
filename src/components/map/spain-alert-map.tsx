@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { MapLegend } from './map-legend';
 import { MapPopup } from './map-popup';
 import { MapControls } from './map-controls';
+import { MobileMapControls } from './mobile/mobile-map-controls';
 import { useAppStore } from '@/store/app-store';
 import { useCommunityReports } from '@/hooks/use-community-reports';
 import { ReportMarkers } from '@/components/community/report-markers';
@@ -31,9 +32,10 @@ export interface SpainAlertMapProps {
   fireHotspots?: FireHotspot[] | null;
   earthquakes?: Earthquake[] | null;
   reservoirs?: ReservoirPoint[] | null;
+  isMobile?: boolean;
 }
 
-export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotspots, earthquakes, reservoirs }: SpainAlertMapProps) {
+export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotspots, earthquakes, reservoirs, isMobile }: SpainAlertMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [baseGeoJSON, setBaseGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
@@ -495,7 +497,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         onLoad={() => setMapReady(true)}
         cursor={hoveredFeatureId ? 'pointer' : 'grab'}
       >
-        <NavigationControl position="bottom-right" />
+        {!isMobile && <NavigationControl position="bottom-right" />}
 
         {enrichedGeoJSON && (
           <Source
@@ -702,24 +704,46 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       </Map>
 
       {/* Overlay controls */}
-      <MapLegend />
-      <MapControls
-        alertCount={totalAlerts}
-        lastUpdated={new Date().toISOString()}
-        onResetView={handleResetView}
-        onRefresh={() => {}}
-        dataLayers={dataLayerVisibility}
-        onToggleDataLayer={toggleDataLayer}
-        fireCount={fireHotspots?.length}
-        quakeCount={earthquakes?.length}
-        reservoirCount={reservoirs?.length}
-        gaugeCount={riverGauges?.length}
-      />
+      <MapLegend isMobile={isMobile} />
 
-      {/* Report hazard button — positioned above legend */}
+      {/* Desktop: full controls panel */}
+      {!isMobile && (
+        <MapControls
+          alertCount={totalAlerts}
+          lastUpdated={new Date().toISOString()}
+          onResetView={handleResetView}
+          onRefresh={() => {}}
+          dataLayers={dataLayerVisibility}
+          onToggleDataLayer={toggleDataLayer}
+          fireCount={fireHotspots?.length}
+          quakeCount={earthquakes?.length}
+          reservoirCount={reservoirs?.length}
+          gaugeCount={riverGauges?.length}
+        />
+      )}
+
+      {/* Mobile: compact controls */}
+      {isMobile && (
+        <MobileMapControls
+          alertCount={totalAlerts}
+          onResetView={handleResetView}
+          onRefresh={() => {}}
+          dataLayers={dataLayerVisibility}
+          onToggleDataLayer={toggleDataLayer}
+          fireCount={fireHotspots?.length}
+          quakeCount={earthquakes?.length}
+          reservoirCount={reservoirs?.length}
+          gaugeCount={riverGauges?.length}
+        />
+      )}
+
+      {/* Report hazard button */}
       <button
         onClick={() => setShowReportForm(true)}
-        className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-xl border border-white/[0.18] bg-white/[0.14] backdrop-blur-[24px] px-4 py-2.5 text-xs font-medium text-text-primary shadow-[0_2px_12px_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.24] hover:border-white/[0.35] hover:shadow-[0_8px_32px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.15)] hover:-translate-y-0.5 transition-all duration-250 cursor-pointer"
+        className={[
+          'absolute z-10 flex items-center gap-2 rounded-xl border border-white/[0.18] bg-white/[0.14] backdrop-blur-[24px] text-xs font-medium text-text-primary shadow-[0_2px_12px_rgba(255,255,255,0.04),inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.24] hover:border-white/[0.35] hover:shadow-[0_8px_32px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.15)] hover:-translate-y-0.5 transition-all duration-250 cursor-pointer',
+          isMobile ? 'bottom-28 right-3 px-3 py-2' : 'bottom-4 right-4 px-4 py-2.5',
+        ].join(' ')}
       >
         <span className="text-orange-400">!</span>
         {t('reportHazard')}
