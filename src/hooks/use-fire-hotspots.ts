@@ -33,8 +33,22 @@ export function useFireHotspots() {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 600_000); // 10min
-    return () => clearInterval(id);
+    let id = setInterval(refresh, 600_000);
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        clearInterval(id);
+      } else {
+        refresh();
+        id = setInterval(refresh, 600_000);
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [refresh]);
 
   return { data, isLoading, error, refresh };
