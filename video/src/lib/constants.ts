@@ -25,7 +25,7 @@ export const VIDEO = {
   width: 1920,
   height: 1080,
   fps: 30,
-  durationInFrames: 2250,
+  durationInFrames: 1453,
 } as const;
 
 export const SCENE_DURATIONS = {
