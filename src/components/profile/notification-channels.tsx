@@ -10,7 +10,6 @@ import { useAppStore } from '@/store/app-store';
 interface UserProfile {
   email?: string | null;
   phone_number?: string | null;
-  whatsapp_enabled?: boolean;
   email_notifications_enabled?: boolean;
   telegram_chat_id?: string | null;
   alert_delivery?: string;
@@ -18,7 +17,6 @@ interface UserProfile {
 
 export function NotificationChannels() {
   const t = useTranslations('NotificationChannels');
-  const tProfile = useTranslations('Profile');
   const backendToken = useAppStore((s) => s.backendToken);
   const { isSupported, isSubscribed, isLoading, error: pushError, subscribe, unsubscribe } =
     usePushNotifications();
@@ -80,6 +78,18 @@ export function NotificationChannels() {
   }
 
   const hasPhone = !!(profile?.phone_number);
+  const smsEnabled = profile?.alert_delivery === 'sms' || profile?.alert_delivery === 'both';
+
+  function handleToggleSms() {
+    if (smsEnabled) {
+      // Turning SMS off: 'both' → 'push', 'sms' → 'push'
+      patchProfile({ alert_delivery: 'push' });
+    } else {
+      // Turning SMS on: 'push' → 'both' (preserve push), anything else → 'sms'
+      const next = isSubscribed ? 'both' : 'sms';
+      patchProfile({ alert_delivery: next });
+    }
+  }
 
   return (
     <Card variant="glass">
@@ -118,7 +128,7 @@ export function NotificationChannels() {
           <div>
             <p className="text-sm font-medium text-text-primary">{t('push')}</p>
             <p className="text-xs text-text-muted mt-0.5">
-              {isSupported ? tProfile('pushDescription') : pushError || t('pushError')}
+              {isSupported ? t('pushDesc') : pushError || t('pushError')}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -179,21 +189,6 @@ export function NotificationChannels() {
           </div>
         </div>
 
-        {/* WhatsApp */}
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-text-primary">{t('whatsapp')}</p>
-            <p className="text-xs text-text-muted mt-0.5">
-              {hasPhone ? t('whatsappDesc') : t('noPhone')}
-            </p>
-          </div>
-          <ToggleSwitch
-            checked={!!profile?.whatsapp_enabled}
-            disabled={!hasPhone}
-            onToggle={() => patchProfile({ whatsapp_enabled: !profile?.whatsapp_enabled })}
-          />
-        </div>
-
         {/* SMS */}
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -203,9 +198,9 @@ export function NotificationChannels() {
             </p>
           </div>
           <ToggleSwitch
-            checked={profile?.alert_delivery === 'sms'}
+            checked={smsEnabled}
             disabled={!hasPhone}
-            onToggle={() => patchProfile({ alert_delivery: profile?.alert_delivery === 'sms' ? 'push' : 'sms' })}
+            onToggle={handleToggleSms}
           />
         </div>
 

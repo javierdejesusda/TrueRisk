@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { apiFetch } from '@/lib/api-client';
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 
@@ -20,7 +21,6 @@ export function usePushNotifications() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const provinceCode = useAppStore((s) => s.provinceCode);
-  const backendToken = useAppStore((s) => s.backendToken);
   const setPushEnabled = useAppStore((s) => s.setPushEnabled);
 
   useEffect(() => {
@@ -37,12 +37,16 @@ export function usePushNotifications() {
       return;
     }
     setIsSupported(true);
-    navigator.serviceWorker.ready.then((reg) => {
+
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
       reg.pushManager.getSubscription().then((sub) => {
         const active = !!sub;
         setIsSubscribed(active);
         setPushEnabled(active);
       });
+    }).catch((err) => {
+      console.error('SW registration failed:', err);
+      setError('Service Worker registration failed');
     });
   }, [setPushEnabled]);
 
@@ -59,14 +63,8 @@ export function usePushNotifications() {
       const auth = sub.getKey('auth');
       if (!key || !auth) return false;
 
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (backendToken) {
-        headers['Authorization'] = `Bearer ${backendToken}`;
-      }
-
-      const res = await fetch('/api/push/subscribe', {
+      const res = await apiFetch('/api/push/subscribe', {
         method: 'POST',
-        headers,
         body: JSON.stringify({
           endpoint: sub.endpoint,
           keys: {
@@ -86,7 +84,7 @@ export function usePushNotifications() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, provinceCode, backendToken, setPushEnabled]);
+  }, [isSupported, provinceCode, setPushEnabled]);
 
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);
@@ -96,9 +94,8 @@ export function usePushNotifications() {
       if (sub) {
         const endpoint = sub.endpoint;
         await sub.unsubscribe();
-        await fetch('/api/push/unsubscribe', {
+        await apiFetch('/api/push/unsubscribe', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ endpoint }),
         });
       }

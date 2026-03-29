@@ -821,8 +821,6 @@
     "pushDesc": "Receive browser push notifications for alerts",
     "sms": "SMS",
     "smsDesc": "Receive alerts via text message",
-    "whatsapp": "WhatsApp",
-    "whatsappDesc": "Receive alerts via WhatsApp",
     "telegram": "Telegram",
     "telegramDesc": "Receive alerts via Telegram bot",
     "linkTelegram": "Link Telegram",
