@@ -22,11 +22,16 @@ const RISK_LEVEL_KEYS = [
   { key: 'critical', color: '#e51f1f' },
 ] as const;
 
-export function MapLegend() {
+interface MapLegendProps {
+  isMobile?: boolean;
+}
+
+export function MapLegend({ isMobile: isMobileLayout }: MapLegendProps) {
   const [collapsed, setCollapsed] = useState(false);
   const isMobile = useMediaQuery('(max-width: 1023px)');
   const activeMapLayer = useAppStore((s) => s.activeMapLayer);
   const t = useTranslations('Map');
+  const bottomClass = isMobileLayout ? 'bottom-28' : 'bottom-4';
 
   useEffect(() => {
     if (!isMobile) return;
@@ -41,7 +46,7 @@ export function MapLegend() {
     return (
       <button
         onClick={() => setCollapsed(false)}
-        className="absolute bottom-4 left-3 sm:left-5 lg:left-[320px] z-10 flex h-8 gap-0.5 glass-heavy rounded-xl overflow-hidden border border-border cursor-pointer"
+        className={`absolute ${bottomClass} left-3 sm:left-5 lg:left-[320px] z-10 flex h-8 gap-0.5 glass-heavy rounded-xl overflow-hidden border border-border cursor-pointer`}
         aria-label={t('showLegend')}
       >
         {levelKeys.map((level) => (
@@ -56,7 +61,7 @@ export function MapLegend() {
   }
 
   return (
-    <div className="absolute bottom-4 left-3 sm:left-5 lg:left-[320px] z-10">
+    <div className={`absolute ${bottomClass} left-3 sm:left-5 lg:left-[320px] z-10`}>
       <div className="glass-heavy rounded-2xl p-3">
         <div className="flex items-center justify-between mb-2">
           <span className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-secondary">{title}</span>
