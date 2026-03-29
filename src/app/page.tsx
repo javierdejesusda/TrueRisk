@@ -47,7 +47,6 @@ export default function Home() {
               True
               <span
                 className="text-accent-green"
-                style={{ filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.3))' }}
               >
                 Risk
               </span>
