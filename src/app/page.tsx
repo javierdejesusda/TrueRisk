@@ -24,12 +24,6 @@ export default function Home() {
           <RotatingEarth className="h-full w-full" onIntroComplete={handleIntroComplete} />
         </div>
 
-        {/* Animated background glow */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full bg-accent-green/[0.08] blur-[120px]" />
-          <div className="absolute bottom-1/4 left-1/3 h-[300px] w-[300px] rounded-full bg-accent-blue/[0.06] blur-[100px]" />
-        </div>
-
         {introComplete && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
