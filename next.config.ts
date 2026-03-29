@@ -5,6 +5,15 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "recharts",
+      "d3",
+      "@hookform/resolvers",
+    ],
+  },
   async headers() {
     return [
       {
@@ -30,6 +39,18 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
             ].join('; '),
           },
+        ],
+      },
+      {
+        source: '/geo/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/icons/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
     ];
