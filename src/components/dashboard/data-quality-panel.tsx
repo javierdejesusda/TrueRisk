@@ -97,7 +97,7 @@ export function DataQualityPanel() {
                 {status.total_records_last_fetch}
               </span>
             )}
-            <span className="font-[family-name:var(--font-mono)] text-[9px] text-text-muted tabular-nums shrink-0">
+            <span className="font-[family-name:var(--font-mono)] text-[9px] text-text-muted tabular-nums shrink-0" suppressHydrationWarning>
               {status.last_success ? relativeTime(status.last_success) : '--'}
             </span>
           </div>

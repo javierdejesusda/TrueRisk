@@ -148,7 +148,7 @@ export function AlertFeed() {
                 <p className="font-[family-name:var(--font-sans)] text-xs font-medium text-text-primary truncate">
                   {alert.title}
                 </p>
-                <p className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
+                <p className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted" suppressHydrationWarning>
                   {alert.source} {alert.time && `· ${alert.time}`}
                 </p>
               </div>

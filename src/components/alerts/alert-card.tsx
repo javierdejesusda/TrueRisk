@@ -104,7 +104,7 @@ export function AlertCard({ alert }: AlertCardProps) {
 
           {/* Footer: timestamp */}
           <div className="flex items-center gap-3">
-            <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
+            <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted" suppressHydrationWarning>
               {formatRelativeTime(alert.created_at)}
             </span>
           </div>

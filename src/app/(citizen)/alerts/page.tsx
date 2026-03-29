@@ -110,8 +110,8 @@ export default function AlertsPage() {
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-text-muted">
                           <span className="font-[family-name:var(--font-mono)] uppercase tracking-wider capitalize">{alert.hazard_type}</span>
                           {alert.province_code && <span className="font-[family-name:var(--font-mono)]">Province {alert.province_code}</span>}
-                          <span className="font-[family-name:var(--font-mono)]">Onset: {formatTime(alert.onset)}</span>
-                          <span className="font-[family-name:var(--font-mono)]">Expires: {formatTime(alert.expires)}</span>
+                          <span className="font-[family-name:var(--font-mono)]" suppressHydrationWarning>Onset: {formatTime(alert.onset)}</span>
+                          <span className="font-[family-name:var(--font-mono)]" suppressHydrationWarning>Expires: {formatTime(alert.expires)}</span>
                         </div>
                         <AlertExplanationToggle alertId={alert.id} onExplain={explainAlert} />
                       </div>
@@ -145,8 +145,8 @@ export default function AlertsPage() {
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-text-muted">
                           <span className="font-[family-name:var(--font-mono)] uppercase tracking-wider">{alert.event}</span>
                           <span className="font-[family-name:var(--font-mono)]">{alert.area_desc}</span>
-                          <span className="font-[family-name:var(--font-mono)]">Onset: {formatTime(alert.onset)}</span>
-                          <span className="font-[family-name:var(--font-mono)]">Expires: {formatTime(alert.expires)}</span>
+                          <span className="font-[family-name:var(--font-mono)]" suppressHydrationWarning>Onset: {formatTime(alert.onset)}</span>
+                          <span className="font-[family-name:var(--font-mono)]" suppressHydrationWarning>Expires: {formatTime(alert.expires)}</span>
                         </div>
                       </div>
                     </div>

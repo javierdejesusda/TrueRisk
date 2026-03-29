@@ -62,7 +62,7 @@ export function RiskNarrative() {
           {isEmergency ? t('emergencyAlert') : t('morningBriefing')}
         </h2>
         {narrative.generated_at && (
-          <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
+          <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted" suppressHydrationWarning>
             {t('generatedAt', { time: formatTimestamp(narrative.generated_at) })}
           </span>
         )}

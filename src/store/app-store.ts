@@ -49,6 +49,8 @@ interface AppState {
   clearAuth: () => void;
 }
 
+const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -58,7 +60,7 @@ export const useAppStore = create<AppState>()(
         set({ locale });
         window.location.reload();
       },
-      provinceCode: '28',
+      provinceCode: isDemo ? '46' : '28',
       setProvinceCode: (provinceCode) => set({ provinceCode }),
       weather: null,
       setWeather: (weather) => set({ weather }),
@@ -83,9 +85,9 @@ export const useAppStore = create<AppState>()(
       setResidenceType: (residenceType) => set({ residenceType }),
       specialNeeds: [],
       setSpecialNeeds: (specialNeeds) => set({ specialNeeds }),
-      hasSeenOnboarding: false,
+      hasSeenOnboarding: isDemo ? true : false,
       dismissOnboarding: () => set({ hasSeenOnboarding: true }),
-      hasSeenWalkthrough: false,
+      hasSeenWalkthrough: isDemo ? true : false,
       dismissWalkthrough: () => set({ hasSeenWalkthrough: true }),
       resetWalkthrough: () => set({ hasSeenWalkthrough: false }),
       backendToken: null,
@@ -107,6 +109,15 @@ export const useAppStore = create<AppState>()(
         hasSeenOnboarding: state.hasSeenOnboarding,
         hasSeenWalkthrough: state.hasSeenWalkthrough,
       }),
+      merge: (persisted, current) => {
+        const merged = { ...current, ...(persisted as Partial<AppState>) };
+        if (isDemo) {
+          merged.provinceCode = '46';
+          merged.hasSeenOnboarding = true;
+          merged.hasSeenWalkthrough = true;
+        }
+        return merged;
+      },
     }
   )
 );
