@@ -32,6 +32,7 @@ from app.api import property as property_api
 from app.api import location as location_api
 from app.api import evacuation as evacuation_api
 from app.api import insurance as insurance_api
+from app.api import chat as chat_api
 from app.api.municipality import router as municipality_router
 from app.api.climate import router as climate_router
 
@@ -212,6 +213,7 @@ app.include_router(insurance_api.router, prefix="/api/v1/insurance", tags=["insu
 app.include_router(gamification_api.router, prefix="/api/v1/gamification", tags=["gamification"])
 app.include_router(municipality_router)
 app.include_router(climate_router)
+app.include_router(chat_api.router, prefix="/api/v1/chat", tags=["chat"])
 
 
 @app.get("/health", tags=["system"], summary="Liveness check")
