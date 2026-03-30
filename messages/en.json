@@ -813,7 +813,11 @@
     "sectionHousehold": "Household",
     "sectionEmergency": "Emergency",
     "sectionBuilding": "Building",
-    "sectionEconomic": "Economic"
+    "sectionEconomic": "Economic",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "emailDescription": "Used for notifications and password recovery",
+    "emailTaken": "This email is already registered to another account"
   },
   "NotificationChannels": {
     "title": "Notification Channels",

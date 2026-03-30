@@ -811,7 +811,11 @@
     "sectionHousehold": "Hogar",
     "sectionEmergency": "Emergencia",
     "sectionBuilding": "Edificio",
-    "sectionEconomic": "Economico"
+    "sectionEconomic": "Economico",
+    "emailLabel": "Correo electronico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "emailDescription": "Se usa para notificaciones y recuperacion de contrasena",
+    "emailTaken": "Este correo ya esta registrado en otra cuenta"
   },
   "NotificationChannels": {
     "title": "Canales de Notificacion",

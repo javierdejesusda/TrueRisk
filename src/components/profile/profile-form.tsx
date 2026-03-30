@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { showToast } from '@/components/ui/toast';
 import { LocationSection } from './sections/location-section';
 import { ResidenceSection } from './sections/residence-section';
@@ -42,6 +44,7 @@ const disasterExperienceSchema = z.object({
 });
 
 const profileSchema = z.object({
+  email: z.string().email().optional().or(z.literal('')),
   provinceCode: z.string().min(1),
   residenceType: z.string(),
   specialNeeds: z.array(z.string()),
@@ -144,6 +147,7 @@ function objectToCamelCase(obj: Record<string, unknown>): Record<string, unknown
 
 function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFormData> {
   const mapping: Record<string, keyof ProfileFormData> = {
+    email: 'email',
     province_code: 'provinceCode',
     residence_type: 'residenceType',
     special_needs: 'specialNeeds',
@@ -224,11 +228,13 @@ export function ProfileForm() {
     handleSubmit,
     reset,
     watch,
+    setError,
     formState: { isDirty },
   } = useForm<ProfileFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(profileSchema) as any,
     defaultValues: {
+      email: '',
       provinceCode,
       residenceType,
       specialNeeds,
@@ -280,6 +286,7 @@ export function ProfileForm() {
         const data = await res.json();
         const mapped = fromSnakeCasePayload(data);
         reset({
+          email: (mapped.email as string) || '',
           provinceCode: (mapped.provinceCode as string) || provinceCode,
           residenceType: (mapped.residenceType as string) || residenceType,
           specialNeeds: (mapped.specialNeeds as string[]) || specialNeeds,
@@ -359,6 +366,8 @@ export function ProfileForm() {
           if (mapped.specialNeeds) setSpecialNeeds(mapped.specialNeeds as string[]);
           reset(data);
           showToast({ title: t('saved'), severity: 1 });
+        } else if (res.status === 409) {
+          setError('email', { type: 'server', message: t('emailTaken') });
         } else {
           showToast({ title: t('saveError'), severity: 4 });
         }
@@ -375,6 +384,31 @@ export function ProfileForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      {/* Email */}
+      <Card variant="glass">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
+          {t('emailLabel')}
+        </h2>
+        <div className="flex flex-col gap-4">
+          <Controller
+            name="email"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Input
+                type="email"
+                label={t('emailLabel')}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t('emailPlaceholder')}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <p className="text-xs text-text-muted">{t('emailDescription')}</p>
+        </div>
+      </Card>
+
       <LocationSection control={control} />
       <EmergencySection control={control} />
       <HealthSection control={control} />
