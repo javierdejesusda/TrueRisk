@@ -85,7 +85,11 @@ async def _fetch_ebro_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
         logger.warning("SAIH Ebro returned status %d", resp.status_code)
         return []
 
-    data = resp.json()
+    try:
+        data = resp.json()
+    except (ValueError, KeyError):
+        logger.warning("SAIH Ebro returned non-JSON response")
+        return []
     items = data if isinstance(data, list) else data.get("data", [])
     readings: list[dict[str, Any]] = []
     for item in items if isinstance(items, list) else []:
