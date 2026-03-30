@@ -53,6 +53,7 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
       TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL:-https://truerisk.cloud/api/v1/telegram/webhook}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       BACKEND_CORS_ORIGINS: '["https://truerisk.cloud"]'
     depends_on:
       db:
