@@ -1,18 +1,36 @@
-# TrueRisk
+<div align="center">
+
+![TrueRisk](hero.png)
 
 [![CI](https://github.com/javierdejesusda/TrueRisk/actions/workflows/ci.yml/badge.svg)](https://github.com/javierdejesusda/TrueRisk/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg)](https://python.org)
+[![Node 22](https://img.shields.io/badge/Node-22-339933.svg)](https://nodejs.org)
 
-**Climate emergency management platform with ML-powered risk scoring for every province in Spain.**
+**Multi-hazard risk intelligence platform with real-time weather monitoring, ML-powered risk scoring, and personalized emergency guidance for every province in Spain.**
 
-**Live:** [truerisk.cloud](https://truerisk.cloud) | **API Docs:** [truerisk.cloud/docs](https://truerisk.cloud/docs)
+[Live Platform](https://truerisk.cloud) · [API Docs](https://truerisk.cloud/docs) · [Technical Report](docs/technical-report/main.pdf)
 
-## What It Does
+</div>
 
-- **Real-time risk scoring** for all 52 Spanish provinces using 7 ML models and live weather data from AEMET and Open-Meteo.
-- **Interactive map** with per-province risk levels, alerts, and seismic activity from the IGN catalog.
-- **Model explainability** with per-feature importance derived from the rule-based scoring logic.
-- **Community reporting** where citizens can submit and view local hazard observations.
-- **Emergency advisor** providing guidance tailored to current conditions and risk levels.
+---
+
+## Features
+
+- **7 ML risk models** — Flood, wildfire, drought, heatwave, seismic, cold wave, and windstorm risk scored 0–100 for all 52 Spanish provinces
+- **Real-time weather monitoring** — Live data from AEMET (Spanish Weather Agency), Open-Meteo forecasts, and IGN seismic catalog
+- **Interactive risk map** — Province-level risk visualization with MapLibre GL, alert overlays, and seismic activity markers
+- **AI emergency advisor** — Context-aware safety guidance powered by OpenAI, tailored to current conditions and location
+- **Community hazard reports** — Citizens can submit and view local hazard observations with photo evidence
+- **Model explainability** — Per-feature importance breakdown showing why each risk score was computed
+- **Temporal Fusion Transformer forecasting** — Deep learning sequence models for multi-day risk prediction
+- **Multi-channel alerts** — Web Push notifications, email (Resend), SMS (Twilio), and Telegram bot integration
+- **Drought dashboard** — Dedicated monitoring with SPEI index, reservoir levels, and LSTM-based predictions
+- **Property risk assessment** — Location-specific risk analysis for real estate and insurance applications
+- **Emergency preparedness** — Personalized emergency plans, evacuation routes, and safety guidelines
+- **Admin backoffice** — Alert management, data records, and system monitoring dashboard
+- **Bilingual** — Full English and Spanish support via next-intl
+- **Authentication** — NextAuth v5 with JWT, Google OAuth, and GitHub OAuth
 
 ## Architecture
 
@@ -61,7 +79,7 @@ graph LR
 4. **Composite Scoring** — Dominant hazard weighting with diminishing secondary contributions, province-specific hazard weights
 5. **Explainability** — Deterministic feature importance computed from the same thresholds used in scoring
 
-## Risk Score (0-100)
+### Risk Score (0–100)
 
 | Weight | Component |
 |--------|-----------|
@@ -72,37 +90,150 @@ graph LR
 
 ## Tech Stack
 
-**Frontend:** Next.js 16, TypeScript, React 19, Tailwind CSS v4, Framer Motion, Zustand, Recharts, MapLibre GL, React Hook Form + Zod, next-intl
-
-**Backend:** Python 3.12, FastAPI, SQLAlchemy, Alembic, scikit-learn, XGBoost, LightGBM, PyTorch (LSTM), httpx, slowapi
-
-**Data Sources:** AEMET (Spanish weather agency), Open-Meteo (forecast), IGN (seismic catalog)
-
-**Infrastructure:** Docker Compose, GitHub Actions CI
-
-## Getting Started
-
 ### Frontend
 
-```bash
-npm install
-npm run dev
-```
+| Technology | Version |
+|-----------|---------|
+| [Next.js](https://nextjs.org) | 16 |
+| [React](https://react.dev) | 19 |
+| [TypeScript](https://typescriptlang.org) | 5 |
+| [Tailwind CSS](https://tailwindcss.com) | 4 |
+| [Framer Motion](https://motion.dev) | 12 |
+| [MapLibre GL](https://maplibre.org) | 5 |
+| [Recharts](https://recharts.org) | 3 |
+| [Zustand](https://zustand.docs.pmnd.rs) | 5 |
+| [next-intl](https://next-intl.dev) | 4 |
+| [NextAuth](https://authjs.dev) | 5 (beta) |
+| [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) | 7 / 4 |
 
 ### Backend
 
+| Technology | Version |
+|-----------|---------|
+| [Python](https://python.org) | 3.12 |
+| [FastAPI](https://fastapi.tiangolo.com) | 0.115+ |
+| [SQLAlchemy](https://sqlalchemy.org) | 2.0+ (async) |
+| [Alembic](https://alembic.sqlalchemy.org) | 1.14+ |
+| [XGBoost](https://xgboost.readthedocs.io) | 2.1+ |
+| [LightGBM](https://lightgbm.readthedocs.io) | 4.5+ |
+| [PyTorch](https://pytorch.org) | 2.4+ |
+| [PyTorch Forecasting](https://pytorch-forecasting.readthedocs.io) | 1.1+ (TFT) |
+| [Torch Geometric](https://pyg.org) | 2.6+ (GNN) |
+| [scikit-learn](https://scikit-learn.org) | 1.5+ |
+| [SHAP](https://shap.readthedocs.io) | 0.45+ |
+
+### Infrastructure
+
+| Technology | Purpose |
+|-----------|---------|
+| PostgreSQL 16 | Production database |
+| Docker Compose | Container orchestration |
+| GitHub Actions | CI/CD pipeline |
+| Sentry | Error tracking and monitoring |
+
+### Data Sources
+
+| Source | Data |
+|--------|------|
+| [AEMET](https://opendata.aemet.es) | Real-time weather, CAP alerts |
+| [Open-Meteo](https://open-meteo.com) | Forecast and historical weather |
+| [IGN](https://www.ign.es) | Seismic catalog |
+
+## Prerequisites
+
+- **Node.js** 22+
+- **Python** 3.12+
+- **PostgreSQL** 16+ (or use Docker)
+- **API keys:** [AEMET OpenData](https://opendata.aemet.es/centrodedescargas/inicio) (free, required for weather data)
+
+## Getting Started
+
+### 1. Clone and install
+
 ```bash
+git clone https://github.com/javierdejesusda/TrueRisk.git
+cd TrueRisk
+
+# Frontend
+npm install
+
+# Backend
 cd backend
 pip install -e ".[dev]"
+```
+
+### 2. Configure environment
+
+```bash
+# Frontend — copy and fill in your API keys
+cp .env.example .env
+
+# Backend — copy and fill in your API keys
+cp backend/.env.example backend/.env
+```
+
+See `.env.example` and `.env.production.example` for all available configuration options.
+
+### 3. Set up the database
+
+```bash
+cd backend
+
+# Run migrations (uses DATABASE_URL from .env, defaults to SQLite for development)
+alembic upgrade head
+```
+
+### 4. Start development servers
+
+```bash
+# Frontend (from project root)
+npm run dev
+
+# Backend (from backend/)
+cd backend
 uvicorn app.main:app --reload
 ```
 
-API documentation is available at `http://localhost:8000/docs` (Swagger UI) and `http://localhost:8000/redoc` (ReDoc).
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:8000/docs](http://localhost:8000/docs) (Swagger UI)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-## Docker
+### Docker
 
 ```bash
-docker-compose up
+# Development (frontend + backend + PostgreSQL)
+docker compose up
+
+# Production
+docker compose -f docker-compose.prod.yml up
+```
+
+## Testing
+
+```bash
+# Frontend — unit and integration tests
+npm test
+
+# Frontend — with coverage
+npx vitest run --coverage
+
+# Frontend — type checking
+npx tsc --noEmit
+
+# Frontend — linting
+npx eslint .
+
+# Backend — test suite
+cd backend && pytest
+
+# Backend — with coverage
+cd backend && pytest --cov=app --cov-report=term-missing
+
+# Backend — type checking
+cd backend && mypy app
+
+# Backend — linting
+cd backend && ruff check .
 ```
 
 ## API Endpoints
@@ -113,52 +244,65 @@ All endpoints are prefixed with `/api/v1`.
 |-------|-------------|
 | `/api/v1/provinces` | Province data (52 provinces) |
 | `/api/v1/weather` | Current weather, forecast, history |
-| `/api/v1/risk` | Risk scores by province, all, map |
+| `/api/v1/risk` | Risk scores by province, all, map view |
 | `/api/v1/risk/{code}/explain` | Per-feature importance for a province |
 | `/api/v1/risk/models` | ML model registry with metadata |
 | `/api/v1/alerts` | CRUD alerts + AEMET alerts + SSE stream |
 | `/api/v1/analysis` | ML prediction pipeline |
 | `/api/v1/community` | Citizen hazard reports |
 | `/api/v1/advisor` | Emergency guidance |
-| `/api/v1/backoffice` | Admin dashboard stats |
+| `/api/v1/chat` | AI-powered conversation |
+| `/api/v1/drought` | Drought monitoring data |
+| `/api/v1/property` | Property risk assessment |
 | `/api/v1/push` | Web Push subscription management |
-| `/health` | Health check (DB status, uptime, version) |
+| `/api/v1/backoffice` | Admin dashboard stats |
+| `/health` | Health check |
+| `/ready` | Readiness check (DB, models) |
 
 ## Project Structure
 
 ```
-src/
-  app/
-    (auth)/           # Login and registration
-    (citizen)/        # Dashboard, alerts, history, profile, map
-    backoffice/       # Admin panel
-  components/
-    ui/               # Button, Card, Badge, Tooltip, Pagination, ...
-    layout/           # Sidebar, Header, PageTransition
-    map/              # Interactive MapLibre map
-    weather/          # WeatherCard, WeatherChart
-    risk/             # RiskGauge, RiskBreakdown
-    alerts/           # AlertBanner, AlertCard
-    dashboard/        # Dashboard widgets
-    community/        # Community report components
-    emergency/        # Emergency advisor
-    predictions/      # ML prediction views, feature importance charts
-  hooks/              # useWeather, useRiskScore, useRiskExplain, ...
-  store/              # Zustand store
-  types/              # TypeScript type definitions
-  i18n/               # Internationalization (next-intl)
-  lib/
-    constants/        # Provinces, thresholds
-
-backend/
-  app/
-    api/              # FastAPI route handlers + error handling
-    ml/               # 7 ML models + feature engineering + model registry
-    models/           # SQLAlchemy ORM models
-    schemas/          # Pydantic request/response schemas
-    services/         # Business logic + explainability service
-    scheduler/        # Background tasks
-  alembic/            # Database migrations
-  tests/              # pytest test suite
-  data/               # Seed data and historical records
+├── src/
+│   ├── app/
+│   │   ├── (auth)/           # Login, registration, password reset
+│   │   ├── (citizen)/        # Dashboard, map, alerts, chat, predictions, reports
+│   │   ├── (legal)/          # Privacy, terms, cookies, accessibility
+│   │   ├── backoffice/       # Admin panel
+│   │   └── api/              # Server-side API routes
+│   ├── components/           # 140+ React components
+│   ├── hooks/                # 50+ custom hooks
+│   ├── store/                # Zustand state management
+│   ├── types/                # TypeScript type definitions
+│   ├── i18n/                 # Internationalization config
+│   └── lib/                  # Utilities and constants
+├── backend/
+│   ├── app/
+│   │   ├── api/              # 30+ FastAPI route handlers
+│   │   ├── ml/
+│   │   │   ├── models/       # 7 hazard models + TFT + GNN
+│   │   │   ├── features/     # Feature engineering
+│   │   │   └── training/     # Training scripts
+│   │   ├── models/           # SQLAlchemy ORM models
+│   │   ├── schemas/          # Pydantic request/response schemas
+│   │   ├── services/         # Business logic + explainability
+│   │   ├── scheduler/        # Background tasks
+│   │   └── security/         # Auth and encryption
+│   ├── alembic/              # Database migrations
+│   └── tests/                # pytest test suite
+├── messages/                 # i18n translations (en, es)
+├── docs/
+│   └── technical-report/     # Academic paper (PDF)
+└── docker-compose.yml        # Docker development environment
 ```
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Security
+
+To report security vulnerabilities, please see [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2026 Javier de Jesus
