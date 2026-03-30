@@ -10,13 +10,11 @@ import { TheDate } from "./scenes/act1/TheDate";
 import { TheCost } from "./scenes/act1/TheCost";
 import { TheQuestion } from "./scenes/act1/TheQuestion";
 import { HeroVideo } from "./scenes/HeroVideo";
-import { Dashboard } from "./scenes/act3/Dashboard";
+import { DashboardAndAlerts } from "./scenes/act3/DashboardAndAlerts";
 import { MapDeepDive } from "./scenes/act3/MapDeepDive";
-import { Alerts } from "./scenes/act3/Alerts";
-import { Evacuation } from "./scenes/act3/Evacuation";
+import { EvacuationAndPreparedness } from "./scenes/act3/EvacuationAndPreparedness";
 import { EmergencyAndAI } from "./scenes/act3/EmergencyAndAI";
 import { DroughtAndPredictions } from "./scenes/act3/DroughtAndPredictions";
-import { Preparedness } from "./scenes/act3/Preparedness";
 import { ProfileAndReport } from "./scenes/act3/ProfileAndReport";
 import { PhrasesAndBilingual } from "./scenes/act3/PhrasesAndBilingual";
 import { PlatformFeatures } from "./scenes/act3/PlatformFeatures";
@@ -44,7 +42,7 @@ export const TrueRiskDemo: React.FC = () => {
       <Audio
         src={staticFile("music.mp3")}
         volume={(f) =>
-          interpolate(f, [0, 45, 2200, 2400], [0, 0.7, 0.7, 0], {
+          interpolate(f, [0, 45, 1900, 2100], [0, 0.7, 0.7, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           })
@@ -79,8 +77,8 @@ export const TrueRiskDemo: React.FC = () => {
         <TransitionSeries.Transition {...longFade()} />
 
         {/* === PRODUCT SHOWCASE === */}
-        <TransitionSeries.Sequence durationInFrames={D.dashboard}>
-          <CinematicWrapper><Dashboard /></CinematicWrapper>
+        <TransitionSeries.Sequence durationInFrames={D.dashboardAndAlerts}>
+          <CinematicWrapper><DashboardAndAlerts /></CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...mediumFade()} />
@@ -89,16 +87,10 @@ export const TrueRiskDemo: React.FC = () => {
           <CinematicWrapper><MapDeepDive /></CinematicWrapper>
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...shortFade()} />
+        <TransitionSeries.Transition {...mediumFade()} />
 
-        <TransitionSeries.Sequence durationInFrames={D.alerts}>
-          <CinematicWrapper><Alerts /></CinematicWrapper>
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...shortFade()} />
-
-        <TransitionSeries.Sequence durationInFrames={D.evacuation}>
-          <CinematicWrapper><Evacuation /></CinematicWrapper>
+        <TransitionSeries.Sequence durationInFrames={D.evacuationAndPreparedness}>
+          <CinematicWrapper><EvacuationAndPreparedness /></CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...mediumFade()} />
@@ -111,12 +103,6 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Sequence durationInFrames={D.droughtAndPredictions}>
           <CinematicWrapper><DroughtAndPredictions /></CinematicWrapper>
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...shortFade()} />
-
-        <TransitionSeries.Sequence durationInFrames={D.preparedness}>
-          <CinematicWrapper><Preparedness /></CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />

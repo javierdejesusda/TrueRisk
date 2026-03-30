@@ -25,7 +25,7 @@ export const VIDEO = {
   width: 1920,
   height: 1080,
   fps: 30,
-  durationInFrames: 2500,
+  durationInFrames: 2193,
 } as const;
 
 export const SCENE_DURATIONS = {
@@ -33,13 +33,11 @@ export const SCENE_DURATIONS = {
   theCost: 160,
   theQuestion: 90,
   heroVideo: 153,
-  dashboard: 180,
+  dashboardAndAlerts: 200,
   map: 160,
-  alerts: 150,
-  evacuation: 150,
+  evacuationAndPreparedness: 180,
   emergencyAndAI: 180,
   droughtAndPredictions: 180,
-  preparedness: 160,
   profileAndReport: 170,
   phrasesAndBilingual: 150,
   platformFeatures: 160,
