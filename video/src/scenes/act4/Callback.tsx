@@ -1,82 +1,45 @@
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  spring,
-  interpolate,
-} from "remotion";
-import { COLORS, FONT_FAMILY, VIDEO } from "../../lib/constants";
+import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import { COLORS, FONT_FAMILY } from "../../lib/constants";
+
+const WORDS = ["What", "if", "they", "had", "TrueRisk?"];
 
 export const Callback: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // "What if they had" fades in
-  const prefixOpacity = interpolate(frame, [0, 20], [0, 1], {
-    extrapolateRight: "clamp",
-  });
-
-  // "TrueRisk?" springs in after
-  const nameProgress = spring({
-    frame: frame - 25,
-    fps: VIDEO.fps,
-    config: { damping: 15 },
-  });
-
-  // "?" pulse 1 second after appearing
-  const questionPulse = spring({
-    frame: frame - 55,
-    fps: VIDEO.fps,
-    config: { damping: 8 },
-  });
-  const questionScale = 1 + interpolate(questionPulse, [0, 0.5, 1], [0, 0.15, 0]);
-
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: COLORS.bg,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-        <span
-          style={{
-            fontFamily: FONT_FAMILY.sans,
-            fontSize: 56,
-            fontWeight: 400,
-            color: COLORS.textSecondary,
-            opacity: prefixOpacity,
-          }}
-        >
-          What if they had{" "}
-        </span>
-        <span
-          style={{
-            fontFamily: FONT_FAMILY.sans,
-            fontSize: 56,
-            fontWeight: 700,
-            color: COLORS.text,
-            opacity: nameProgress,
-            transform: `scale(${nameProgress})`,
-            display: "inline-block",
-          }}
-        >
-          TrueRisk
-        </span>
-        <span
-          style={{
-            fontFamily: FONT_FAMILY.sans,
-            fontSize: 56,
-            fontWeight: 700,
-            color: COLORS.text,
-            opacity: nameProgress,
-            transform: `scale(${questionScale})`,
-            display: "inline-block",
-            transformOrigin: "bottom center",
-          }}
-        >
-          ?
-        </span>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+        {WORDS.map((word, i) => {
+          // Each word appears after a delay — black pause first (30 frames), then words stagger
+          const delay = 30 + i * 12;
+          const opacity = interpolate(frame, [delay, delay + 10], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          });
+          const translateY = interpolate(frame, [delay, delay + 10], [8, 0], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          });
+
+          const isLast = i === WORDS.length - 1;
+
+          return (
+            <span
+              key={i}
+              style={{
+                fontFamily: FONT_FAMILY.sans,
+                fontSize: 56,
+                fontWeight: isLast ? 700 : 400,
+                color: isLast ? COLORS.text : COLORS.textSecondary,
+                opacity,
+                transform: `translateY(${translateY}px)`,
+                display: "inline-block",
+              }}
+            >
+              {word}
+            </span>
+          );
+        })}
       </div>
     </AbsoluteFill>
   );
