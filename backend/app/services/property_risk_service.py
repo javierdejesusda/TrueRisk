@@ -23,9 +23,10 @@ from app.models.risk_score import RiskScore
 from app.services.arpsi_service import FloodZoneResult, check_flood_zone
 from app.services.elevation_service import ElevationResult, get_elevation_and_slope
 
-# Scale factor for deriving province baselines from geographic risk weights
-# when no ML-computed RiskScore is available in the database.
-_GEO_BASELINE_SCALE = 20.0
+# Scale factor for deriving province baselines from geographic risk weights.
+# Used both as a fallback when no ML-computed RiskScore exists and as a
+# floor to ensure province scores always reflect geographic exposure.
+_GEO_BASELINE_SCALE = 45.0
 
 logger = logging.getLogger(__name__)
 
@@ -389,25 +390,36 @@ async def compute_property_risk(
             province_code,
         )
 
+    # Derive geographic baselines from province risk weights.  These serve
+    # as a floor — even when the ML pipeline computes a low score because
+    # there is no current weather activity, the geographic exposure risk
+    # (historical/climatological) must still be reflected.
+    weights = PROVINCES.get(province_code, {})
+    geo_flood = _GEO_BASELINE_SCALE * weights.get("flood_risk_weight", 0.3)
+    geo_wildfire = _GEO_BASELINE_SCALE * weights.get("wildfire_risk_weight", 0.3)
+    geo_heatwave = _GEO_BASELINE_SCALE * weights.get("heatwave_risk_weight", 0.3)
+    geo_drought = _GEO_BASELINE_SCALE * weights.get("drought_risk_weight", 0.3)
+    geo_coldwave = _GEO_BASELINE_SCALE * weights.get("coldwave_risk_weight", 0.3)
+    geo_windstorm = _GEO_BASELINE_SCALE * weights.get("windstorm_risk_weight", 0.3)
+    geo_seismic = _GEO_BASELINE_SCALE * weights.get("seismic_risk_weight", 0.3)
+
     if risk_row:
-        province_flood = risk_row.flood_score
-        province_wildfire = risk_row.wildfire_score
-        province_heatwave = risk_row.heatwave_score
-        province_drought = risk_row.drought_score
-        province_coldwave = risk_row.coldwave_score
-        province_windstorm = risk_row.windstorm_score
-        province_seismic = risk_row.seismic_score
+        # Use ML-computed scores but enforce the geographic baseline as floor.
+        province_flood = max(risk_row.flood_score, geo_flood)
+        province_wildfire = max(risk_row.wildfire_score, geo_wildfire)
+        province_heatwave = max(risk_row.heatwave_score, geo_heatwave)
+        province_drought = max(risk_row.drought_score, geo_drought)
+        province_coldwave = max(risk_row.coldwave_score, geo_coldwave)
+        province_windstorm = max(risk_row.windstorm_score, geo_windstorm)
+        province_seismic = max(risk_row.seismic_score, geo_seismic)
     else:
-        # Derive baseline scores from the province's geographic risk weights
-        # so properties get meaningful scores even before the ML pipeline runs.
-        weights = PROVINCES.get(province_code, {})
-        province_flood = _GEO_BASELINE_SCALE * weights.get("flood_risk_weight", 0.3)
-        province_wildfire = _GEO_BASELINE_SCALE * weights.get("wildfire_risk_weight", 0.3)
-        province_heatwave = _GEO_BASELINE_SCALE * weights.get("heatwave_risk_weight", 0.3)
-        province_drought = _GEO_BASELINE_SCALE * weights.get("drought_risk_weight", 0.3)
-        province_coldwave = _GEO_BASELINE_SCALE * weights.get("coldwave_risk_weight", 0.3)
-        province_windstorm = _GEO_BASELINE_SCALE * weights.get("windstorm_risk_weight", 0.3)
-        province_seismic = _GEO_BASELINE_SCALE * weights.get("seismic_risk_weight", 0.3)
+        province_flood = geo_flood
+        province_wildfire = geo_wildfire
+        province_heatwave = geo_heatwave
+        province_drought = geo_drought
+        province_coldwave = geo_coldwave
+        province_windstorm = geo_windstorm
+        province_seismic = geo_seismic
 
     # 2. Fetch terrain and flood-zone data concurrently.
     #    Flood zone check uses its own DB session to avoid poisoning the
