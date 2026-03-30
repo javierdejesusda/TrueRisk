@@ -149,4 +149,4 @@ async def cleanup_expired(db: AsyncSession) -> int:
         delete(RefreshToken).where(RefreshToken.expires_at < cutoff)
     )
     await db.commit()
-    return result.rowcount  # type: ignore[return-value]
+    return result.rowcount or 0  # type: ignore[return-value, union-attr]

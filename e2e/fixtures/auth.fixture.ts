@@ -91,7 +91,7 @@ export const test = base.extend<{ authenticatedPage: Page }>({
     await bypassOnboarding(page);
     // Reload so Zustand picks up the localStorage change
     await page.goto("/dashboard");
-    await use(page);
+    await use(page); // eslint-disable-line react-hooks/rules-of-hooks
   },
 });
 
