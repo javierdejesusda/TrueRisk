@@ -75,6 +75,6 @@ async def fetch_ndvi(lat: float, lon: float) -> dict[str, Any]:
         httpx.TimeoutException,
         ValueError,
         KeyError,
-    ):
-        logger.exception("Failed to fetch NDVI for (%s, %s)", lat, lon)
+    ) as exc:
+        logger.warning("Failed to fetch NDVI for (%s, %s): %s", lat, lon, exc)
         return _cache.get(cache_key, {})
