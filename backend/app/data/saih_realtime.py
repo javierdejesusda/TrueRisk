@@ -740,7 +740,7 @@ async def fetch_river_flows(basin: str = "ebro") -> list[dict[str, Any]]:
 
     try:
         async with httpx.AsyncClient(
-            timeout=_TIMEOUT, follow_redirects=True
+            timeout=_TIMEOUT, follow_redirects=True, verify=False
         ) as client:
             readings = await fetcher(client)
             if readings:
