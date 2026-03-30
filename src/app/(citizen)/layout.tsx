@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import * as Sentry from '@sentry/nextjs';
 import { NavPill } from '@/components/layout/nav-pill';
 import { useAlertStream } from '@/hooks/use-alert-stream';
 import { useAuth } from '@/hooks/use-auth';
@@ -22,6 +23,8 @@ export default function CitizenLayout({
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const hasSeenOnboarding = useAppStore((s) => s.hasSeenOnboarding);
+  const authUser = useAppStore((s) => s.authUser);
+  const provinceCode = useAppStore((s) => s.provinceCode);
   useAlertStream();
   useOfflinePack(); // Auto-syncs on mount and every 30min
 
@@ -38,6 +41,21 @@ export default function CitizenLayout({
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (authUser) {
+      Sentry.setUser({ id: String(authUser.id) });
+      Sentry.setTag('user_role', authUser.role);
+    } else {
+      Sentry.setUser(null);
+    }
+  }, [authUser]);
+
+  useEffect(() => {
+    if (provinceCode) {
+      Sentry.setTag('province_code', provinceCode);
+    }
+  }, [provinceCode]);
 
   if (isLoading) {
     return (
