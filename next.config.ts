@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://truerisk.cloud wss://truerisk.cloud https://*.basemaps.cartocdn.com https://*.cartocdn.com https://cdn.jsdelivr.net https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
+              "connect-src 'self' https://truerisk.cloud wss://truerisk.cloud https://*.basemaps.cartocdn.com https://*.cartocdn.com https://cdn.jsdelivr.net https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io",
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",
               "base-uri 'self'",

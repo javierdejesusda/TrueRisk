@@ -38,6 +38,9 @@ jobs:
         run: npm run build
         env:
           BACKEND_URL: "http://localhost:8000"
+          NEXT_PUBLIC_SENTRY_DSN: ""
+          SENTRY_ORG: ""
+          SENTRY_PROJECT: ""
 
   backend:
     runs-on: ubuntu-latest
