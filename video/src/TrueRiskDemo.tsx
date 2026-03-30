@@ -17,10 +17,10 @@ import { DroughtAndPredictions } from "./scenes/act3/DroughtAndPredictions";
 import { ProfileAndReport } from "./scenes/act3/ProfileAndReport";
 import { PhrasesAndBilingual } from "./scenes/act3/PhrasesAndBilingual";
 import { PlatformFeatures } from "./scenes/act3/PlatformFeatures";
+import { StatsLine } from "./scenes/act4/StatsLine";
 import { BlackPause } from "./scenes/act4/BlackPause";
 import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
-import { ProgressBar } from "./components/ProgressBar";
 
 // Opening: short fades so text doesn't overlap (scenes hold longer instead)
 const openingFade = () => ({
@@ -58,8 +58,6 @@ export const TrueRiskDemo: React.FC = () => {
           })
         }
       />
-
-      <ProgressBar />
 
       <TransitionSeries>
         {/* === OPENING — slow, emotional === */}
@@ -133,6 +131,13 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Sequence durationInFrames={D.platformFeatures}>
           <PlatformFeatures />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition {...quickFade()} />
+
+        {/* Stats summary — one line that captures the whole platform */}
+        <TransitionSeries.Sequence durationInFrames={D.statsLine}>
+          <StatsLine />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...closingFade()} />
