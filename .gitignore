@@ -1,4 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 /node_modules
@@ -22,12 +21,14 @@
 
 # misc
 .DS_Store
-CLAUDE.md
+
 *.pem
 *.jpeg
 *.jpg
 *.png
+!hero.png
 !map-*.png
+
 # demo video
 /video/
 
@@ -57,7 +58,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 !.env.example
 !.env.production.example
@@ -69,5 +70,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# docs - keep technical report PDF public, ignore everything else
+docs/superpowers/
+docs/technical-report/*.tex
+docs/technical-report/*.bib
+docs/technical-report/*.sty
+docs/technical-report/*.drawio
+docs/technical-report/*.png
+docs/technical-report/*.aux
+docs/technical-report/*.log
+docs/technical-report/*.out
+docs/technical-report/*.synctex*
 
-.vercel
+# AI / Claude artifacts
+CLAUDE.md
+.claude/
+.agents/
+.superpowers/
+skills-lock.json
