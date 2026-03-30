@@ -59,8 +59,8 @@ export const DashboardAndAlerts: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "32px 60px", gap: 10 }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 36, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
-          Risk Dashboard
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 48, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+          Risk Intelligence
         </span>
         <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 400, color: COLORS.textSecondary, opacity: titleOpacity }}>
           Province: Madrid · Updated: Now

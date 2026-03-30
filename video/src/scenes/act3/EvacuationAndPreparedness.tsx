@@ -102,7 +102,7 @@ export const EvacuationAndPreparedness: React.FC = () => {
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           textShadow: "0 2px 20px rgba(0,0,0,0.9)",
         }}>
-          Safety & Emergency Readiness
+          Safety & Readiness
         </span>
       </div>
     </AbsoluteFill>

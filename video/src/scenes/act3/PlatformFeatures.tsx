@@ -27,7 +27,7 @@ export const PlatformFeatures: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "50px 100px", gap: 20 }}>
       <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
-        Platform
+        Platform Infrastructure
       </span>
 
       <div style={{ display: "flex", gap: 24, flex: 1 }}>
@@ -86,7 +86,7 @@ export const PlatformFeatures: React.FC = () => {
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           textShadow: "0 2px 20px rgba(0,0,0,0.9)",
         }}>
-          15+ Data Sources · Multi-Channel Alerts
+          Platform Infrastructure
         </span>
       </div>
     </AbsoluteFill>

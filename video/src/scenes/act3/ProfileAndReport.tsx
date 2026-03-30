@@ -23,7 +23,7 @@ export const ProfileAndReport: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "60px 120px", gap: 24 }}>
       <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
-        Personalized Risk Assessment
+        Personalized Assessment
       </span>
 
       <div style={{ display: "flex", gap: 24, flex: 1 }}>
@@ -108,7 +108,7 @@ export const ProfileAndReport: React.FC = () => {
       <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
         <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-          Risk Score Adapts to Your Situation
+          Personalized Assessment
         </span>
       </div>
     </AbsoluteFill>

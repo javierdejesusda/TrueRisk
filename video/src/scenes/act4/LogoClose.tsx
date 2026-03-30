@@ -32,8 +32,8 @@ export const LogoClose: React.FC = () => {
         <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 20, fontWeight: 400, color: COLORS.text, opacity: urlOpacity }}>
           truerisk.cloud
         </span>
-        <div style={{ marginTop: 24, opacity: finalLineOpacity }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 300, color: COLORS.textSecondary, fontStyle: "italic" }}>
+        <div style={{ marginTop: 36, opacity: finalLineOpacity }}>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 32, fontWeight: 400, color: COLORS.textSecondary }}>
             Built for Spain. Built to save lives.
           </span>
         </div>

@@ -82,7 +82,7 @@ export const PhrasesAndBilingual: React.FC = () => {
       <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
         <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [50, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-          12 Languages · Full i18n
+          Multilingual Support
         </span>
       </div>
     </AbsoluteFill>
