@@ -20,8 +20,8 @@ class CommunityReport(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="pending")
     upvotes: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     # Enhanced fields
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -31,7 +31,7 @@ class CommunityReport(Base):
     )
     verified_count: Mapped[int] = mapped_column(Integer, default=0)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
 
 class ReportVerification(Base):
@@ -43,4 +43,4 @@ class ReportVerification(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     report_id: Mapped[int] = mapped_column(ForeignKey("community_reports.id"), index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

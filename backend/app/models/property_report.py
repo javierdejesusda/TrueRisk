@@ -43,8 +43,8 @@ class PropertyReport(Base):
     province_composite_score: Mapped[float] = mapped_column(Float, default=0.0)
     province_severity: Mapped[str] = mapped_column(String(20), default="low")
 
-    computed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     pdf_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     access_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

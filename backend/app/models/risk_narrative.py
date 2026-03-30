@@ -16,4 +16,4 @@ class RiskNarrative(Base):
     narrative_type: Mapped[str] = mapped_column(String(20))  # morning, emergency, weekly
     content_es: Mapped[str] = mapped_column(Text)
     content_en: Mapped[str] = mapped_column(Text)
-    generated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

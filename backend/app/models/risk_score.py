@@ -23,5 +23,5 @@ class RiskScore(Base):
     dominant_hazard: Mapped[str] = mapped_column(String(20), default="flood")
     severity: Mapped[str] = mapped_column(String(20), default="low")
     features_snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
-    computed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -18,4 +18,4 @@ class PushSubscription(Base):
     p256dh_key: Mapped[str] = mapped_column(String(200))
     auth_key: Mapped[str] = mapped_column(String(200))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

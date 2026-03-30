@@ -17,8 +17,8 @@ class AlertPreference(Base):
     batch_interval_minutes: Mapped[int] = mapped_column(Integer, default=30)
     escalation_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     snoozed_hazards: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class AlertDelivery(Base):
@@ -28,7 +28,7 @@ class AlertDelivery(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
     alert_id: Mapped[int] = mapped_column(Integer, ForeignKey("alerts.id"), index=True)
     channel: Mapped[str] = mapped_column(String(10))
-    delivered_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    delivered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     priority: Mapped[str] = mapped_column(String(10), default="normal")
     batched: Mapped[bool] = mapped_column(Boolean, default=False)

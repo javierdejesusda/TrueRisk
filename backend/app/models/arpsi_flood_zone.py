@@ -27,4 +27,4 @@ class ArpsiFloodZone(Base):
     area_km2: Mapped[float | None] = mapped_column(Float, nullable=True)
     risk_level: Mapped[str] = mapped_column(String(20))
     source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    loaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    loaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

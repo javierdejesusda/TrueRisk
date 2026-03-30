@@ -19,4 +19,4 @@ class GeocodeCache(Base):
     municipality_code: Mapped[str | None] = mapped_column(String(5), nullable=True)
     confidence: Mapped[float] = mapped_column(Float)
     source: Mapped[str] = mapped_column(String(20))
-    cached_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    cached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -23,7 +23,7 @@ class RiverGauge(Base):
     threshold_p95: Mapped[float | None] = mapped_column(Float, nullable=True)
     threshold_p99: Mapped[float | None] = mapped_column(Float, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class RiverReading(Base):
@@ -33,6 +33,6 @@ class RiverReading(Base):
     gauge_id: Mapped[str] = mapped_column(String(50), index=True)
     flow_m3s: Mapped[float] = mapped_column(Float)
     level_m: Mapped[float | None] = mapped_column(Float, nullable=True)
-    recorded_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     source: Mapped[str] = mapped_column(String(20))
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

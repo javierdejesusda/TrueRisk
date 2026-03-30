@@ -16,6 +16,6 @@ class WaterRestriction(Base):
     restriction_level: Mapped[int] = mapped_column(Integer)  # 0-4: none, alert, warning, emergency, exceptional
     description: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String(100))
-    effective_date: Mapped[datetime] = mapped_column(DateTime)
+    effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

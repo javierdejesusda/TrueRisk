@@ -98,10 +98,10 @@ class User(Base):
     # GPS location (updated by client when user grants location permission)
     last_latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     last_longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
-    last_location_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_location_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
