@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pythonjsonlogger.json import JsonFormatter
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -241,10 +242,13 @@ async def readiness():
     models_loaded = len(list(models_dir.glob("*.joblib"))) + len(list(models_dir.glob("*.pt"))) + len(list(models_dir.glob("*.ckpt"))) if models_dir.exists() else 0
 
     ready = db_status == "ok"
-    return {
+    payload = {
         "ready": ready,
         "database": db_status,
         "models_loaded": models_loaded,
         "version": "2.0.0",
         "uptime_seconds": round(time.time() - _start_time, 1),
     }
+    if not ready:
+        return JSONResponse(content=payload, status_code=503)
+    return payload

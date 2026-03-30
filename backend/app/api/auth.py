@@ -208,7 +208,9 @@ async def reset_password(
 
 
 @router.get("/me/export")
+@limiter.limit("3/hour")
 async def export_my_data(
+    request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
