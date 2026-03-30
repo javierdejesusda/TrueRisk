@@ -1,4 +1,9 @@
+import logging
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -48,7 +53,25 @@ class Settings(BaseSettings):
     ]
     field_encryption_key: str = ""
 
+    # Observability
+    sentry_dsn: str = ""
+
     model_config = {"env_file": ".env", "extra": "ignore"}
+
+    @model_validator(mode="after")
+    def _validate_startup(self) -> "Settings":
+        if not self.demo_mode:
+            if not self.jwt_secret:
+                raise ValueError(
+                    "JWT_SECRET must be set when DEMO_MODE is not enabled. "
+                    "Generate one with: openssl rand -hex 32"
+                )
+            if not self.field_encryption_key:
+                logger.warning(
+                    "FIELD_ENCRYPTION_KEY is empty — encrypted fields will "
+                    "be stored in plain text. Set it for production use."
+                )
+        return self
 
 
 settings = Settings()
