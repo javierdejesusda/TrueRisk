@@ -968,7 +968,20 @@
     "passwordMin": "Min. 10 characters, uppercase, lowercase, digit, and special character",
     "logoutButton": "Sign out",
     "province": "Province",
-    "registerSuccess": "Account created successfully"
+    "registerSuccess": "Account created successfully",
+    "forgotPassword": "Forgot your password?",
+    "forgotPasswordTitle": "Reset Password",
+    "forgotPasswordDescription": "Enter the email associated with your account and we'll send you a reset link.",
+    "sendResetLink": "Send reset link",
+    "resetLinkSent": "If that email exists, a reset link has been sent. Check your inbox.",
+    "resetPasswordTitle": "Set New Password",
+    "resetPasswordDescription": "Enter your new password below.",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "resetPassword": "Reset password",
+    "resetSuccess": "Password reset successfully. You can now sign in.",
+    "resetFailed": "Invalid or expired reset link. Please request a new one.",
+    "backToLogin": "Back to sign in"
   },
   "PropertyReport": {
     "title": "Climate Risk Report",

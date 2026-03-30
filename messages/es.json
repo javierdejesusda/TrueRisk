@@ -966,7 +966,20 @@
     "passwordMin": "Min. 10 caracteres, mayuscula, minuscula, numero y caracter especial",
     "logoutButton": "Cerrar sesion",
     "province": "Provincia",
-    "registerSuccess": "Cuenta creada con exito"
+    "registerSuccess": "Cuenta creada con exito",
+    "forgotPassword": "Has olvidado tu contrasena?",
+    "forgotPasswordTitle": "Restablecer contrasena",
+    "forgotPasswordDescription": "Introduce el email asociado a tu cuenta y te enviaremos un enlace de restablecimiento.",
+    "sendResetLink": "Enviar enlace",
+    "resetLinkSent": "Si ese email existe, se ha enviado un enlace. Revisa tu bandeja de entrada.",
+    "resetPasswordTitle": "Nueva contrasena",
+    "resetPasswordDescription": "Introduce tu nueva contrasena a continuacion.",
+    "newPassword": "Nueva contrasena",
+    "confirmNewPassword": "Confirmar nueva contrasena",
+    "resetPassword": "Restablecer contrasena",
+    "resetSuccess": "Contrasena restablecida con exito. Ya puedes iniciar sesion.",
+    "resetFailed": "Enlace invalido o expirado. Solicita uno nuevo.",
+    "backToLogin": "Volver a iniciar sesion"
   },
   "PropertyReport": {
     "title": "Informe de Riesgo Climatico",
