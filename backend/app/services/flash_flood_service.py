@@ -57,7 +57,12 @@ async def check_flash_flood_conditions(db: AsyncSession) -> list[FloodAlert]:
             if prev is not None:
                 rapid_alert = detect_rapid_flow_increase(prev, flow_data)
                 if rapid_alert is not None:
-                    alerts.append(rapid_alert)
+                    # Fill province_code from gauge thresholds
+                    gt = gauge_thresholds.get(gauge_id)
+                    if gt and gt.get("province_code"):
+                        rapid_alert.province_code = gt["province_code"]
+                    if rapid_alert.province_code:
+                        alerts.append(rapid_alert)
             _previous_readings[gauge_id] = flow_data
 
         if not current_flow or current_flow <= 0:
@@ -67,7 +72,9 @@ async def check_flash_flood_conditions(db: AsyncSession) -> list[FloodAlert]:
         if not thresholds:
             continue
 
-        province = thresholds.get("province_code", "")
+        province = thresholds.get("province_code", "") or ""
+        if not province:
+            continue  # Skip gauges without a mapped province
         gauge_name = flow_data.get("name", "") or thresholds.get("name", gauge_id)
         river_name = flow_data.get("river", "") or thresholds.get("river_name", "")
         basin = flow_data.get("basin", "")
