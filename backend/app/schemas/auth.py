@@ -41,6 +41,7 @@ class OAuthLinkRequest(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
+    email: str | None = None
     display_name: str | None = None
     province_code: str | None = None
     residence_type: str | None = None
@@ -91,6 +92,14 @@ class ProfileUpdateRequest(BaseModel):
     # Preferences
     language_preference: str | None = None
     disaster_experience: list[dict] | None = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v):
+        if v is not None and v != "":
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", v):
+                raise ValueError("Invalid email format")
+        return v if v != "" else None
 
     @field_validator("construction_year")
     @classmethod

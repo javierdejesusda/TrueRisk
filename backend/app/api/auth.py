@@ -133,6 +133,13 @@ async def update_me(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     updates = body.model_dump(exclude_unset=True)
+    # Check email uniqueness if email is being updated
+    if "email" in updates and updates["email"] is not None:
+        existing = await db.execute(
+            select(User).where(User.email == updates["email"], User.id != user.id)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="Email already registered")
     for field, value in updates.items():
         setattr(db_user, field, value)
     await db.commit()
