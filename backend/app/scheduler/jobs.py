@@ -43,7 +43,7 @@ async def run_rapid_severity_check():
     - DANA compound score > 80
     """
     from app.database import async_session
-    from app.data.aemet_client import fetch_aemet_alerts
+    from app.data.aemet_client import fetch_alerts as fetch_aemet_alerts
     from app.services.push_service import notify_province
 
     try:
