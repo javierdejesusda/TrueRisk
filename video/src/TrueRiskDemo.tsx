@@ -22,10 +22,10 @@ import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
 import { ProgressBar } from "./components/ProgressBar";
 
-// Opening: slow, breathing fades
-const slowFade = () => ({
+// Opening: short fades so text doesn't overlap (scenes hold longer instead)
+const openingFade = () => ({
   presentation: fade(),
-  timing: linearTiming({ durationInFrames: 40 }),
+  timing: linearTiming({ durationInFrames: 15 }),
 });
 
 // Product showcase: snappy fades
@@ -67,19 +67,19 @@ export const TrueRiskDemo: React.FC = () => {
           <TheDate />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...slowFade()} />
+        <TransitionSeries.Transition {...openingFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theCost}>
           <TheCost />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...slowFade()} />
+        <TransitionSeries.Transition {...openingFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theQuestion}>
           <TheQuestion />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...slowFade()} />
+        <TransitionSeries.Transition {...openingFade()} />
 
         {/* === HERO — fade from black into hero video === */}
         <TransitionSeries.Sequence durationInFrames={D.heroVideo}>
