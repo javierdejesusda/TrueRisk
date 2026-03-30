@@ -25,29 +25,26 @@ export const VIDEO = {
   width: 1920,
   height: 1080,
   fps: 30,
-  durationInFrames: 2628,
+  durationInFrames: 2500,
 } as const;
 
 export const SCENE_DURATIONS = {
   theDate: 100,
-  theCost: 150,      // Longer hold for emotional impact
-  theQuestion: 80,   // More breathing room
+  theCost: 160,
+  theQuestion: 90,
   heroVideo: 153,
-  dashboard: 160,    // More time to absorb
-  map: 150,
-  alerts: 140,
-  evacuation: 140,
-  emergency: 140,
-  aiAdvisor: 160,
-  drought: 140,
-  predictions: 150,
-  preparedness: 140,
-  profileAndReport: 150,  // Merged profile + report
-  phrasesAndBilingual: 140, // Merged phrases + bilingual
-  notifications: 120,
-  dataSources: 140,
-  callback: 160,
-  logoClose: 130,
+  dashboard: 180,
+  map: 160,
+  alerts: 150,
+  evacuation: 150,
+  emergencyAndAI: 180,
+  droughtAndPredictions: 180,
+  preparedness: 160,
+  profileAndReport: 170,
+  phrasesAndBilingual: 150,
+  platformFeatures: 160,
+  callback: 170,
+  logoClose: 140,
 } as const;
 
 export const TRANSITION_DURATIONS = {
