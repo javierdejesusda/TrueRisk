@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -35,3 +37,10 @@ def decode_access_token(token: str) -> int | None:
         return int(payload["sub"])
     except (JWTError, KeyError, ValueError):
         return None
+
+
+def generate_reset_token() -> tuple[str, str]:
+    """Return (plain_token, hashed_token). Send plain to user, store hash in DB."""
+    plain = secrets.token_urlsafe(32)
+    hashed = hashlib.sha256(plain.encode()).hexdigest()
+    return plain, hashed

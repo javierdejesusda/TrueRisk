@@ -1,10 +1,15 @@
-import pytest
-import respx
-from httpx import ASGITransport, AsyncClient, Response
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.pool import StaticPool
+import os
 
-from app.database import Base
+# Set JWT_SECRET before any app imports so config validation passes
+os.environ.setdefault("JWT_SECRET", "test-secret-do-not-use-in-production")
+
+import pytest  # noqa: E402
+import respx  # noqa: E402
+from httpx import ASGITransport, AsyncClient, Response  # noqa: E402
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+
+from app.database import Base  # noqa: E402
 
 # Import all models so Base.metadata knows about them
 import app.models.province  # noqa: F401
@@ -27,6 +32,7 @@ import app.models.property_report  # noqa: F401
 import app.models.arpsi_flood_zone  # noqa: F401
 import app.models.geocode_cache  # noqa: F401
 import app.models.api_key  # noqa: F401
+import app.models.password_reset_token  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite+aiosqlite://"
 

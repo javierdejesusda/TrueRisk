@@ -239,3 +239,17 @@ async def notify_user_email(
     )
     result = await send_email(email, f"TrueRisk: {title}", html)
     return result is not None
+
+
+async def send_password_reset_email(to_email: str, token: str) -> None:
+    """Send a password reset email with a one-time link."""
+    reset_url = f"https://truerisk.cloud/reset-password?token={token}"
+    html = f"""
+    <div style="font-family:system-ui,sans-serif;max-width:500px;margin:0 auto;padding:32px;background:#0a0a0a;color:#e5e5e5;border-radius:12px;">
+        <h2 style="color:#fff;margin:0 0 16px;">Password Reset</h2>
+        <p style="line-height:1.6;">You requested a password reset for your TrueRisk account. Click the button below to set a new password:</p>
+        <a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#10b981;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:16px 0;">Reset Password</a>
+        <p style="font-size:13px;color:#737373;margin-top:24px;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
+    </div>
+    """
+    await send_email(to=to_email, subject="Reset your TrueRisk password", html=html)
