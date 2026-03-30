@@ -1,94 +1,349 @@
-import { AbsoluteFill, useCurrentFrame, spring, interpolate } from "remotion";
-import { COLORS, FONT_FAMILY, VIDEO } from "../../lib/constants";
+import React, { useEffect, useState } from "react";
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  interpolate,
+  staticFile,
+  delayRender,
+  continueRender,
+} from "remotion";
+import { geoMercator, geoPath } from "d3-geo";
+import type { FeatureCollection, Geometry } from "geojson";
+import { COLORS, FONT_FAMILY } from "../../lib/constants";
 
-const PROVINCES = [
-  { name: "Valencia", score: 72, level: "High" },
-  { name: "Castellón", score: 68, level: "High" },
-  { name: "Alicante", score: 55, level: "Medium" },
-  { name: "Barcelona", score: 42, level: "Medium" },
-  { name: "Madrid", score: 15, level: "Low" },
-  { name: "Zaragoza", score: 38, level: "Medium" },
-  { name: "Huesca", score: 45, level: "Medium" },
-  { name: "Tarragona", score: 51, level: "Medium" },
-  { name: "Murcia", score: 35, level: "Low" },
-  { name: "Sevilla", score: 12, level: "Low" },
-  { name: "Málaga", score: 18, level: "Low" },
-  { name: "Granada", score: 22, level: "Low" },
-];
+const RISK_SCORES: Record<string, number> = {
+  "46": 72, // Valencia
+  "12": 68, // Castellón
+  "03": 55, // Alicante
+  "30": 45, // Murcia
+  "02": 42, // Albacete
+  "08": 42, // Barcelona
+  "43": 51, // Tarragona
+  "25": 38, // Lleida
+  "17": 40, // Girona
+  "22": 45, // Huesca
+  "50": 38, // Zaragoza
+  "44": 35, // Teruel
+  "28": 15, // Madrid
+  "45": 20, // Toledo
+  "16": 18, // Cuenca
+  "19": 22, // Guadalajara
+  "13": 25, // Ciudad Real
+  "06": 15, // Badajoz
+  "10": 12, // Cáceres
+  "41": 12, // Sevilla
+  "14": 18, // Córdoba
+  "23": 20, // Jaén
+  "18": 22, // Granada
+  "04": 18, // Almería
+  "29": 15, // Málaga
+  "11": 10, // Cádiz
+  "21": 12, // Huelva
+  "37": 10, // Salamanca
+  "49": 8, // Zamora
+  "47": 12, // Valladolid
+  "40": 10, // Segovia
+  "05": 10, // Ávila
+  "42": 15, // Soria
+  "09": 12, // Burgos
+  "34": 8, // Palencia
+  "24": 10, // León
+  "33": 12, // Asturias
+  "39": 10, // Cantabria
+  "48": 8, // Bizkaia
+  "20": 8, // Gipuzkoa
+  "01": 8, // Álava
+  "31": 15, // Navarra
+  "26": 12, // La Rioja
+  "36": 10, // Pontevedra
+  "15": 8, // A Coruña
+  "27": 8, // Lugo
+  "32": 8, // Ourense
+  "07": 10, // Illes Balears
+  "38": 8, // Santa Cruz de Tenerife
+  "35": 10, // Las Palmas
+  "51": 5, // Ceuta
+  "52": 5, // Melilla
+};
 
-const LAYERS = ["Risk Scores", "Active Alerts", "Fire Hotspots", "Earthquakes", "Reservoirs", "River Gauges"];
+function riskColor(score: number): string {
+  if (score >= 60) return "#EF4444"; // Red - High
+  if (score >= 40) return "#F97316"; // Orange - Medium-High
+  if (score >= 20) return "#FBBF24"; // Yellow - Medium
+  return "#84CC16"; // Green - Low
+}
+
+type ProvinceProperties = {
+  cod_prov: string;
+  name: string;
+};
 
 export const MapDeepDive: React.FC = () => {
   const frame = useCurrentFrame();
+  const [geoData, setGeoData] =
+    useState<FeatureCollection<Geometry, ProvinceProperties> | null>(null);
+  const [handle] = useState(() => delayRender());
 
-  const titleOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
-  const statsOpacity = interpolate(frame, [8, 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  useEffect(() => {
+    fetch(staticFile("spain-provinces.geojson"))
+      .then((res) => res.json())
+      .then((data: FeatureCollection<Geometry, ProvinceProperties>) => {
+        setGeoData(data);
+        continueRender(handle);
+      })
+      .catch((err) => {
+        console.error(err);
+        continueRender(handle);
+      });
+  }, [handle]);
+
+  if (!geoData) return null;
+
+  const projection = geoMercator()
+    .center([-3.5, 40])
+    .scale(2800)
+    .translate([960, 540]);
+
+  const pathGenerator = geoPath().projection(projection);
+
+  const mapOpacity = interpolate(frame, [0, 20], [0, 1], {
+    extrapolateRight: "clamp",
+  });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "50px 120px", gap: 20 }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
-          Risk Map — 52 Provinces
+    <AbsoluteFill style={{ backgroundColor: "#0a1628" }}>
+      {/* Map SVG */}
+      <svg width={1920} height={1080} style={{ opacity: mapOpacity }}>
+        {geoData.features.map((feature, i) => {
+          const code = feature.properties.cod_prov;
+          const score = RISK_SCORES[code] ?? 10;
+          const color = riskColor(score);
+          const d = pathGenerator(feature);
+          if (!d) return null;
+
+          const delay = 5 + i * 0.5;
+          const provinceOpacity = interpolate(
+            frame,
+            [delay, delay + 15],
+            [0, 1],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+
+          return (
+            <path
+              key={code}
+              d={d}
+              fill={color}
+              stroke="#0a1628"
+              strokeWidth={1.5}
+              opacity={provinceOpacity}
+            />
+          );
+        })}
+      </svg>
+
+      {/* Left sidebar — alerts panel */}
+      <div
+        style={{
+          position: "absolute",
+          left: 40,
+          top: 80,
+          width: 300,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          opacity: interpolate(frame, [25, 40], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          }),
+        }}
+      >
+        <span
+          style={{
+            fontFamily: FONT_FAMILY.sans,
+            fontSize: 16,
+            fontWeight: 600,
+            color: COLORS.text,
+            textTransform: "uppercase" as const,
+            letterSpacing: 1,
+          }}
+        >
+          Active Alerts
         </span>
-        <div style={{ display: "flex", gap: 24, opacity: statsOpacity }}>
-          <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 18, fontWeight: 500, color: COLORS.textSecondary }}>154 fires</span>
-          <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 18, fontWeight: 500, color: COLORS.textSecondary }}>5 quakes</span>
-          <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 18, fontWeight: 500, color: COLORS.textSecondary }}>374 reservoirs</span>
-        </div>
+        {[
+          "Vientos nivel naranja — Huesca",
+          "Costeros nivel naranja — Girona",
+          "Vientos nivel amarillo — Madrid",
+          "Vientos nivel amarillo — Castellón",
+        ].map((alert, i) => (
+          <div
+            key={i}
+            style={{
+              padding: "10px 14px",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              borderRadius: 8,
+              borderLeft: `3px solid ${i < 2 ? "#F97316" : "#FBBF24"}`,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: FONT_FAMILY.sans,
+                fontSize: 13,
+                fontWeight: 400,
+                color: COLORS.text,
+              }}
+            >
+              {alert}
+            </span>
+          </div>
+        ))}
       </div>
 
-      <div style={{ display: "flex", gap: 20, flex: 1 }}>
-        {/* Province grid */}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          {PROVINCES.map((p, i) => {
-            const delay = 8 + i * 3;
-            const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 24, stiffness: 130 } });
-            const opacity = interpolate(progress, [0, 1], [0, 1]);
-            const scale = interpolate(progress, [0, 1], [0.92, 1]);
-
-            const scoreBarWidth = interpolate(progress, [0, 1], [0, p.score]);
-
-            return (
-              <div key={i} style={{
-                padding: "16px 20px", backgroundColor: "#111119", borderRadius: 10,
-                display: "flex", flexDirection: "column", gap: 8,
-                transform: `scale(${scale})`, opacity,
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 17, fontWeight: 500, color: COLORS.text }}>{p.name}</span>
-                  <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 20, fontWeight: 700, color: COLORS.text }}>{p.score}</span>
-                </div>
-                <div style={{ height: 4, borderRadius: 2, backgroundColor: "#1C1C1E" }}>
-                  <div style={{ width: `${scoreBarWidth}%`, height: "100%", borderRadius: 2, backgroundColor: COLORS.text }} />
-                </div>
-                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 12, fontWeight: 400, color: COLORS.textSecondary }}>{p.level}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Map layers */}
-        <div style={{
-          width: 260, display: "flex", flexDirection: "column", gap: 10,
-          opacity: interpolate(frame, [25, 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
-        }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 600, color: COLORS.textSecondary, marginBottom: 4 }}>MAP LAYERS</span>
-          {LAYERS.map((layer, i) => (
-            <div key={i} style={{
-              padding: "12px 16px", backgroundColor: "#111119", borderRadius: 8,
-              display: "flex", alignItems: "center", gap: 10,
-            }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: COLORS.text }} />
-              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 15, fontWeight: 400, color: COLORS.text }}>{layer}</span>
-            </div>
+      {/* Risk score legend */}
+      <div
+        style={{
+          position: "absolute",
+          left: 40,
+          bottom: 80,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          opacity: interpolate(frame, [30, 45], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          }),
+        }}
+      >
+        <span
+          style={{
+            fontFamily: FONT_FAMILY.sans,
+            fontSize: 14,
+            fontWeight: 600,
+            color: COLORS.text,
+          }}
+        >
+          Risk Score
+        </span>
+        <div style={{ display: "flex", gap: 4 }}>
+          {["#84CC16", "#FBBF24", "#F97316", "#EF4444"].map((c, i) => (
+            <div
+              key={i}
+              style={{
+                width: 40,
+                height: 8,
+                borderRadius: 2,
+                backgroundColor: c,
+              }}
+            />
           ))}
         </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: 172,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: FONT_FAMILY.mono,
+              fontSize: 11,
+              color: COLORS.textSecondary,
+            }}
+          >
+            0
+          </span>
+          <span
+            style={{
+              fontFamily: FONT_FAMILY.mono,
+              fontSize: 11,
+              color: COLORS.textSecondary,
+            }}
+          >
+            50
+          </span>
+          <span
+            style={{
+              fontFamily: FONT_FAMILY.mono,
+              fontSize: 11,
+              color: COLORS.textSecondary,
+            }}
+          >
+            100
+          </span>
+        </div>
       </div>
 
-      <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
-          opacity: interpolate(frame, [50, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+      {/* Right sidebar — layers + weather */}
+      <div
+        style={{
+          position: "absolute",
+          right: 40,
+          top: 80,
+          width: 240,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+          opacity: interpolate(frame, [25, 40], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          }),
+        }}
+      >
+        {[
+          "\uD83D\uDD25 154 fires",
+          "\u26A1 5 quakes",
+          "\uD83D\uDCA7 374 reservoirs",
+          "\uD83C\uDF0A 75 gauges",
+        ].map((item, i) => (
+          <div
+            key={i}
+            style={{
+              padding: "10px 14px",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              borderRadius: 8,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: FONT_FAMILY.mono,
+                fontSize: 15,
+                fontWeight: 500,
+                color: COLORS.text,
+              }}
+            >
+              {item}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom caption */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 30,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: FONT_FAMILY.sans,
+            fontSize: 34,
+            fontWeight: 600,
+            color: COLORS.text,
+            opacity: interpolate(frame, [50, 65], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            }),
+            textShadow: "0 2px 20px rgba(0,0,0,0.9)",
+          }}
+        >
           Every Province. Every Hazard. Every Hour.
         </span>
       </div>
