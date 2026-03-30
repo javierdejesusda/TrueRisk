@@ -1,18 +1,42 @@
 'use client';
 
-import { useState, useRef, useCallback, type KeyboardEvent, type ChangeEvent } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Lightbulb, Send } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations, useLocale } from 'next-intl';
 import { useChatStore } from '@/store/chat-store';
 import { useChat } from '@/hooks/use-chat';
 
 const MAX_CHARS = 500;
 const WARN_THRESHOLD = 450;
-const MAX_HEIGHT = 100;
+
+const PLACEHOLDERS_EN = [
+  "What's the flood risk in my area?",
+  'How should I prepare for a heatwave?',
+  'Explain the current weather alerts',
+  'What emergency supplies do I need?',
+  'Is my building safe in an earthquake?',
+  'Tell me about drought conditions',
+];
+
+const PLACEHOLDERS_ES = [
+  'Cual es el riesgo de inundacion en mi zona?',
+  'Como debo prepararme para una ola de calor?',
+  'Explicame las alertas meteorologicas actuales',
+  'Que suministros de emergencia necesito?',
+  'Es seguro mi edificio en un terremoto?',
+  'Cuentame sobre las condiciones de sequia',
+];
 
 export function ChatInput() {
   const t = useTranslations('Chat');
+  const locale = useLocale();
+  const placeholders = locale === 'es' ? PLACEHOLDERS_ES : PLACEHOLDERS_EN;
+
   const [value, setValue] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [thinkMode, setThinkMode] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isStreaming = useChatStore((s) => s.isStreaming);
   const canSend = useChatStore((s) => s.usage?.canSend ?? true);
@@ -21,36 +45,63 @@ export function ChatInput() {
   const isEmpty = value.trim().length === 0;
   const isDisabled = isEmpty || isStreaming || !canSend;
 
-  const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
-  }, []);
+  // --- Animated placeholder ---
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [displayedPlaceholder, setDisplayedPlaceholder] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleChange = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      const next = e.target.value;
-      if (next.length <= MAX_CHARS) {
-        setValue(next);
+  useEffect(() => {
+    if (isFocused || value.length > 0) return;
+
+    const target = placeholders[placeholderIndex];
+    let timer: ReturnType<typeof setTimeout>;
+
+    if (!isDeleting) {
+      if (displayedPlaceholder.length < target.length) {
+        timer = setTimeout(() => {
+          setDisplayedPlaceholder(target.slice(0, displayedPlaceholder.length + 1));
+        }, 30);
+      } else {
+        timer = setTimeout(() => setIsDeleting(true), 2000);
       }
-      requestAnimationFrame(autoResize);
-    },
-    [autoResize],
-  );
+    } else {
+      if (displayedPlaceholder.length > 0) {
+        timer = setTimeout(() => {
+          setDisplayedPlaceholder(displayedPlaceholder.slice(0, -1));
+        }, 20);
+      } else {
+        setIsDeleting(false);
+        setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayedPlaceholder, isDeleting, isFocused, value, placeholderIndex, placeholders]);
+
+  // Reset placeholder animation when focus leaves
+  useEffect(() => {
+    if (!isFocused && value.length === 0) {
+      setDisplayedPlaceholder('');
+      setIsDeleting(false);
+    }
+  }, [isFocused, value]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value;
+    if (next.length <= MAX_CHARS) {
+      setValue(next);
+    }
+  }, []);
 
   const handleSend = useCallback(() => {
     if (isDisabled) return;
     const msg = value.trim();
     setValue('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
     sendMessage(msg);
   }, [isDisabled, value, sendMessage]);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -61,65 +112,120 @@ export function ChatInput() {
 
   return (
     <div className="border-t border-border/30 p-3">
-      <div className="flex items-end gap-2">
-        <div className="relative flex-1">
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            maxLength={MAX_CHARS}
-            rows={1}
-            placeholder={t('inputPlaceholder')}
-            disabled={isStreaming}
+      <motion.div
+        className="relative overflow-hidden rounded-2xl border border-border/30 bg-bg-card"
+        animate={{
+          height: isFocused ? 128 : 68,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 30,
+        }}
+      >
+        {/* Input row */}
+        <div className="flex items-center gap-2 px-4 pt-3.5 pb-2">
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              maxLength={MAX_CHARS}
+              disabled={isStreaming || !canSend}
+              className={[
+                'w-full bg-transparent',
+                'font-[family-name:var(--font-sans)] text-sm text-text-primary leading-[1.6]',
+                'placeholder:text-transparent',
+                'focus:outline-none',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+              ].join(' ')}
+              aria-label={t('inputPlaceholder')}
+            />
+            {/* Animated placeholder overlay */}
+            {value.length === 0 && (
+              <div className="pointer-events-none absolute inset-0 flex items-center">
+                <AnimatePresence mode="wait">
+                  {displayedPlaceholder.split('').map((char, i) => (
+                    <motion.span
+                      key={`${placeholderIndex}-${i}`}
+                      initial={{ opacity: 0, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, filter: 'blur(4px)' }}
+                      transition={{ duration: 0.08, delay: i * 0.01 }}
+                      className="inline-block font-[family-name:var(--font-sans)] text-sm text-text-muted/60"
+                      style={{ whiteSpace: 'pre' }}
+                    >
+                      {char}
+                    </motion.span>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+
+          {/* Send button */}
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={isDisabled}
+            aria-label={t('send')}
             className={[
-              'w-full resize-none rounded-xl bg-white/[0.04] px-4 py-2.5',
-              'font-[family-name:var(--font-sans)] text-sm text-text-primary leading-[1.6]',
-              'placeholder:text-text-muted/60',
-              'border border-border/30',
-              'transition-colors duration-150',
-              'hover:border-border-hover/60',
-              'focus:outline-none focus:border-text-muted/40 focus:ring-1 focus:ring-text-muted/10',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-            ].join(' ')}
-            style={{ maxHeight: `${MAX_HEIGHT}px` }}
-          />
-          <span
-            className={[
-              'absolute bottom-1.5 right-3 font-[family-name:var(--font-mono)] text-[10px] select-none',
-              value.length > WARN_THRESHOLD ? 'text-accent-red' : 'text-text-muted/50',
+              'flex-shrink-0 flex items-center justify-center',
+              'h-9 w-9 rounded-xl',
+              'bg-text-primary text-bg-primary',
+              'transition-[transform,opacity] duration-150',
+              'hover:scale-105',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-muted/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card',
+              'active:scale-95',
+              'disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100',
             ].join(' ')}
           >
-            {value.length}/{MAX_CHARS}
-          </span>
+            <Send className="h-4 w-4" />
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={isDisabled}
-          aria-label={t('send')}
-          className={[
-            'flex-shrink-0 flex items-center justify-center',
-            'h-10 w-10 rounded-xl',
-            'bg-text-primary/90 text-bg-primary',
-            'transition-[transform,opacity] duration-150',
-            'hover:bg-text-primary hover:scale-105',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-muted/40 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
-            'active:scale-95',
-            'disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100',
-          ].join(' ')}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-4 w-4"
-          >
-            <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95l14.095-5.637a.75.75 0 0 0 0-1.395L3.105 2.288Z" />
-          </svg>
-        </button>
-      </div>
+        {/* Bottom row: Think button + character counter (visible when expanded) */}
+        <AnimatePresence>
+          {isFocused && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center justify-between px-4 pb-3"
+            >
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setThinkMode((prev) => !prev)}
+                className={[
+                  'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors duration-150',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-muted/40',
+                  thinkMode
+                    ? 'bg-accent-blue/10 border border-accent-blue/40 text-accent-blue'
+                    : 'bg-white/[0.06] text-text-secondary hover:bg-white/[0.1]',
+                ].join(' ')}
+              >
+                <Lightbulb className="h-3.5 w-3.5" />
+                {t('thinking').replace('...', '')}
+              </button>
+
+              <span
+                className={[
+                  'font-[family-name:var(--font-mono)] text-[10px] select-none',
+                  value.length > WARN_THRESHOLD ? 'text-accent-red' : 'text-text-muted/50',
+                ].join(' ')}
+              >
+                {value.length}/{MAX_CHARS}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
