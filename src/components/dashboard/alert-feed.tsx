@@ -15,16 +15,16 @@ interface UnifiedAlert {
   id: string;
   title: string;
   severity: number;
-  badgeVariant: 'success' | 'info' | 'warning' | 'danger' | 'neutral';
+  badgeVariant: 'success' | 'warning' | 'danger' | 'neutral';
   badgeLabel: string;
   source: string;
   time: string;
 }
 
-function severityVariant(severity: number): 'success' | 'info' | 'warning' | 'danger' {
+function severityVariant(severity: number): 'success' | 'warning' | 'danger' {
   if (severity >= 4) return 'danger';
   if (severity >= 3) return 'warning';
-  if (severity >= 2) return 'info';
+  if (severity >= 2) return 'warning';
   return 'success';
 }
 

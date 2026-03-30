@@ -23,6 +23,7 @@ function severityLabel(severity: number, t: TranslateFn): string {
 function severityVariant(severity: number): 'danger' | 'warning' | 'success' | 'neutral' {
   if (severity >= 4) return 'danger';
   if (severity >= 3) return 'warning';
+  if (severity >= 2) return 'warning';
   if (severity >= 1) return 'success';
   return 'neutral';
 }
@@ -133,6 +134,7 @@ export default function AlertsPage() {
                         variant={
                           alert.severity === 'red' ? 'danger' :
                           alert.severity === 'orange' ? 'warning' :
+                          alert.severity === 'yellow' ? 'warning' :
                           'info'
                         }
                         size="sm"

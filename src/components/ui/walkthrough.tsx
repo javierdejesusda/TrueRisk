@@ -149,10 +149,17 @@ function getTooltipPosition(
   const pad = 16;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+
+  // On mobile, force horizontal placements to bottom to prevent offscreen tooltips
+  const effectivePlacement =
+    vw < 640 && (placement === 'left' || placement === 'right')
+      ? 'bottom'
+      : placement;
+
   let top = 0;
   let left = 0;
 
-  switch (placement) {
+  switch (effectivePlacement) {
     case 'top':
       top = rect.top - tooltipH - pad;
       left = rect.left + rect.width / 2 - tooltipW / 2;
@@ -665,13 +672,13 @@ export function Walkthrough() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute z-[10002] w-[340px]"
+              className="absolute z-[10002] w-[min(340px,calc(100vw-24px))]"
               style={{
                 top: tooltipPos.top,
                 left: tooltipPos.left,
               }}
             >
-              <div className="glass-heavy rounded-2xl border border-white/[0.08] p-5 shadow-2xl overflow-hidden">
+              <div className="glass-heavy rounded-2xl border border-white/[0.08] p-5 shadow-2xl overflow-hidden max-h-[calc(100vh-24px)] overflow-y-auto">
                 {/* Decorative gradient */}
                 <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-green/8 rounded-full blur-2xl pointer-events-none" />
 

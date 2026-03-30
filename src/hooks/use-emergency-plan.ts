@@ -58,8 +58,13 @@ export function useEmergencyPlan() {
     }
     try {
       setIsLoading(true);
-      const res = await apiFetch('/api/emergency-plan/');
+      const res = await apiFetch('/api/emergency-plan');
       if (res.status === 401) {
+        setIsLoading(false);
+        return;
+      }
+      if (res.status === 404) {
+        // No plan yet — start fresh
         setIsLoading(false);
         return;
       }
@@ -85,7 +90,7 @@ export function useEmergencyPlan() {
       return null;
     }
     try {
-      const res = await apiFetch('/api/emergency-plan/', {
+      const res = await apiFetch('/api/emergency-plan', {
         method: 'PUT',
         body: JSON.stringify(data),
       });

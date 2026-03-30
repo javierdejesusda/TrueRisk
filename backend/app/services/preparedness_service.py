@@ -324,6 +324,14 @@ async def compute_score(db: AsyncSession, user_id: int) -> float:
         logger.exception("Failed to save preparedness snapshot")
         await db.rollback()
 
+    # Check for preparedness-related badges (prepared_citizen, safety_champion)
+    try:
+        from app.services.gamification_service import check_badges
+        await check_badges(db, user_id)
+        await db.commit()
+    except Exception:
+        logger.exception("Failed to check badges after score update")
+
     return total_score
 
 

@@ -37,6 +37,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.7, ease: 'easeOut' }}
               className="font-[family-name:var(--font-display)] text-6xl font-extrabold tracking-tighter text-text-primary sm:text-7xl lg:text-8xl"
+              style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.9)' }}
             >
               True
               <span
@@ -52,6 +53,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.5 }}
               className="mt-4 max-w-lg font-[family-name:var(--font-sans)] text-lg font-light text-text-primary sm:text-xl"
+              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.9)' }}
             >
               {t('subtitle')}
             </motion.p>
@@ -60,7 +62,8 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.5 }}
-              className="mt-2 max-w-md text-sm text-text-secondary"
+              className="mt-2 max-w-md text-sm text-text-primary/80"
+              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.9)' }}
             >
               {t('description')}
             </motion.p>

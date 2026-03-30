@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Package, Map, Bell, Users, BookOpen } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -99,12 +100,12 @@ export function CategoryCard({
             <div className="px-4 pb-4 border-t border-white/5 pt-3">
               <ChecklistItems items={items} onToggle={onToggle} />
               {cta && (
-                <a
+                <Link
                   href={cta.href}
                   className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-accent-green hover:text-accent-green/80 transition-colors"
                 >
                   {cta.label} →
-                </a>
+                </Link>
               )}
             </div>
           </motion.div>
