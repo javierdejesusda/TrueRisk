@@ -1,4 +1,5 @@
-import { AbsoluteFill, Img, staticFile, useCurrentFrame, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import { BrowserFrame } from "../../components/BrowserFrame";
 import { COLORS, FONT_FAMILY } from "../../lib/constants";
 
 export const MapDeepDive: React.FC = () => {
@@ -7,9 +8,14 @@ export const MapDeepDive: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
-      <Img
-        src={staticFile("prod-map.png")}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      <BrowserFrame
+        src="prod-map.png"
+        title="truerisk.cloud — Risk Map"
+        tiltX={8}
+        tiltY={3}
+        oscillationSpeed={0.025}
+        oscillationAmplitude={1.8}
+        scaleFrom={0.93}
       />
       <div style={{
         position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center",
