@@ -243,7 +243,10 @@ async def notify_user_email(
 
 async def send_password_reset_email(to_email: str, token: str) -> None:
     """Send a password reset email with a one-time link."""
-    reset_url = f"https://truerisk.cloud/reset-password?token={token}"
+    import os
+
+    base_url = os.environ.get("NEXTAUTH_URL", "http://localhost:3000")
+    reset_url = f"{base_url}/reset-password?token={token}"
     html = f"""
     <div style="font-family:system-ui,sans-serif;max-width:500px;margin:0 auto;padding:32px;background:#0a0a0a;color:#e5e5e5;border-radius:12px;">
         <h2 style="color:#fff;margin:0 0 16px;">Password Reset</h2>
