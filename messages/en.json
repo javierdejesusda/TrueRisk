@@ -1637,8 +1637,9 @@
       "content": "For accessibility-related concerns:",
       "email": "accessibility@truerisk.cloud"
     }
-  },
-  "Chat": {
+  }
+},
+"Chat": {
     "title": "AI Assistant",
     "placeholder": "Ask anything...",
     "send": "Send",
@@ -1668,5 +1669,4 @@
     "close": "Close",
     "thinking": "Thinking..."
   }
-}
 }

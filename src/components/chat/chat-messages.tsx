@@ -2,91 +2,153 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore, type ChatMessage } from '@/store/chat-store';
+import { Bot, User } from 'lucide-react';
 
 function StreamingDots() {
   return (
-    <span className="inline-flex items-center gap-1 py-1" aria-label="Loading">
+    <span className="inline-flex items-center gap-1.5 py-1">
       {[0, 1, 2].map((i) => (
-        <span
+        <motion.span
           key={i}
-          className="h-1.5 w-1.5 rounded-full bg-text-muted/60"
-          style={{
-            animation: 'chat-dot-pulse 1.2s ease-in-out infinite',
-            animationDelay: `${i * 0.15}s`,
+          className="h-1.5 w-1.5 rounded-full bg-accent-blue/60"
+          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
+          transition={{
+            duration: 1.2,
+            repeat: Infinity,
+            delay: i * 0.15,
+            ease: 'easeInOut',
           }}
         />
       ))}
-      <style jsx>{`
-        @keyframes chat-dot-pulse {
-          0%, 80%, 100% {
-            opacity: 0.3;
-            transform: scale(0.8);
-          }
-          40% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
     </span>
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, isLast }: { message: ChatMessage; isLast: boolean }) {
   const isUser = message.role === 'user';
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={[
-          'max-w-[85%] px-4 py-2.5',
-          isUser
-            ? 'bg-white/[0.08] rounded-2xl rounded-br-sm'
-            : 'bg-bg-card rounded-2xl rounded-bl-sm border border-border/30',
-        ].join(' ')}
-      >
-        {message.content ? (
-          <p
-            className={[
-              'font-[family-name:var(--font-sans)] text-sm leading-[1.7] whitespace-pre-wrap break-words',
-              isUser ? 'text-text-primary' : 'text-text-secondary',
-            ].join(' ')}
-          >
-            {message.content}
-          </p>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+    >
+      {/* Avatar */}
+      <div className={`flex-shrink-0 mt-0.5 ${isUser ? 'hidden sm:flex' : 'flex'}`}>
+        {isUser ? (
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] border border-border/30">
+            <User className="h-3.5 w-3.5 text-text-muted" />
+          </div>
         ) : (
-          <StreamingDots />
+          <div className="relative">
+            {isLast && !message.content && (
+              <div className="absolute -inset-1 rounded-lg bg-accent-blue/10 blur-sm animate-pulse" />
+            )}
+            <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent-blue/20 to-accent-purple/10 border border-white/[0.06]">
+              <Bot className="h-3.5 w-3.5 text-text-primary" />
+            </div>
+          </div>
         )}
       </div>
-    </div>
+
+      {/* Bubble */}
+      <div
+        className={`max-w-[80%] sm:max-w-[75%] ${isUser ? 'text-right' : 'text-left'}`}
+      >
+        <div
+          className={[
+            'inline-block px-4 py-2.5 text-left',
+            isUser
+              ? 'bg-white/[0.07] rounded-2xl rounded-tr-md border border-white/[0.04]'
+              : 'bg-bg-card/80 rounded-2xl rounded-tl-md border border-border/20',
+          ].join(' ')}
+        >
+          {message.content ? (
+            <p
+              className={[
+                'font-[family-name:var(--font-sans)] text-[13px] leading-[1.75] whitespace-pre-wrap break-words',
+                isUser ? 'text-text-primary' : 'text-text-secondary',
+              ].join(' ')}
+            >
+              {message.content}
+            </p>
+          ) : (
+            <StreamingDots />
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
 function EmptyState() {
   const t = useTranslations('Chat');
 
+  const suggestions = [
+    { icon: '🌊', text: 'Flood risk analysis' },
+    { icon: '🔥', text: 'Wildfire preparedness' },
+    { icon: '🌡️', text: 'Heatwave safety tips' },
+    { icon: '🏠', text: 'Building vulnerability' },
+  ];
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] border border-border/30">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          className="h-6 w-6 text-text-muted/60"
+    <div className="flex-1 flex flex-col items-center justify-center px-6">
+      {/* Central glow */}
+      <div className="relative mb-8">
+        <div className="absolute -inset-12 rounded-full bg-accent-blue/[0.04] blur-3xl" />
+        <div className="absolute -inset-6 rounded-full bg-accent-purple/[0.03] blur-2xl" />
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-blue/15 to-accent-purple/10 border border-white/[0.06]"
+          style={{ boxShadow: '0 0 40px rgba(59, 130, 246, 0.08), inset 0 1px 0 rgba(255,255,255,0.04)' }}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
-          />
-        </svg>
+          <Bot className="h-7 w-7 text-text-primary/80" />
+        </motion.div>
       </div>
-      <p className="font-[family-name:var(--font-sans)] text-sm text-text-muted leading-[1.7]">
+
+      <motion.h2
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
+        className="font-[family-name:var(--font-display)] text-lg font-semibold text-text-primary tracking-[-0.02em] mb-2"
+      >
+        {t('title')}
+      </motion.h2>
+
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="font-[family-name:var(--font-sans)] text-sm text-text-muted max-w-sm text-center leading-relaxed mb-8"
+      >
         {t('emptyState')}
-      </p>
+      </motion.p>
+
+      {/* Suggestion chips */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
+        className="flex flex-wrap gap-2 justify-center max-w-md"
+      >
+        {suggestions.map((s, i) => (
+          <motion.span
+            key={i}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 + i * 0.05, duration: 0.3 }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-border/30 font-[family-name:var(--font-sans)] text-[11px] text-text-muted/70"
+          >
+            <span>{s.icon}</span>
+            {s.text}
+          </motion.span>
+        ))}
+      </motion.div>
     </div>
   );
 }
@@ -94,36 +156,35 @@ function EmptyState() {
 function ErrorPill({ message }: { message: string }) {
   const t = useTranslations('Chat');
 
-  // Map known error codes to i18n keys, fall back to raw message
-  const displayMessage = (() => {
-    const errorMap: Record<string, string> = {
-      rate_limited: t('errorRateLimited'),
-      token_limit: t('errorTokenLimit'),
-      connection_failed: t('errorConnection'),
-    };
-    return errorMap[message] ?? message;
-  })();
+  const errorMap: Record<string, string> = {
+    injection_detected: t('error_injection_detected'),
+    daily_message_limit: t('error_daily_limit'),
+    hourly_message_limit: t('error_hourly_limit'),
+    daily_token_limit: t('error_daily_token_budget'),
+    monthly_token_limit: t('error_monthly_token_budget'),
+    cooldown: t('error_cooldown'),
+    conversation_limit: t('error_conversation_limit'),
+    platform_disabled: t('error_platform_disabled'),
+    ai_error: t('error_stream_error'),
+    stream_error: t('error_stream_error'),
+  };
+
+  const errorCode = message.split('|')[0];
+  const displayMessage = errorMap[errorCode] ?? t('errorGeneric');
 
   return (
-    <div className="flex justify-center py-2">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-red/10 border border-accent-red/20 px-3 py-1.5">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-3.5 w-3.5 text-accent-red"
-        >
-          <path
-            fillRule="evenodd"
-            d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-            clipRule="evenodd"
-          />
-        </svg>
-        <span className="font-[family-name:var(--font-sans)] text-xs text-accent-red">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex justify-center py-2"
+    >
+      <span className="inline-flex items-center gap-2 rounded-xl bg-accent-red/[0.06] border border-accent-red/15 px-4 py-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent-red/80" />
+        <span className="font-[family-name:var(--font-sans)] text-xs text-accent-red/90">
           {displayMessage}
         </span>
       </span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -132,11 +193,10 @@ export function ChatMessages() {
   const error = useChatStore((s) => s.error);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, error]);
 
   if (messages.length === 0 && !error) {
@@ -146,11 +206,17 @@ export function ChatMessages() {
   return (
     <div
       ref={scrollRef}
-      className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-thin"
+      className="h-full overflow-y-auto px-2 py-4 space-y-4 scrollbar-thin"
     >
-      {messages.map((msg) => (
-        <MessageBubble key={msg.id} message={msg} />
-      ))}
+      <AnimatePresence mode="popLayout">
+        {messages.map((msg, i) => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            isLast={i === messages.length - 1}
+          />
+        ))}
+      </AnimatePresence>
       {error && <ErrorPill message={error} />}
     </div>
   );
