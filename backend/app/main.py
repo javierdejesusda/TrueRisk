@@ -213,9 +213,20 @@ app.include_router(municipality_router)
 app.include_router(climate_router)
 
 
-@app.get("/health", tags=["system"], summary="Health check")
+@app.get("/health", tags=["system"], summary="Liveness check")
 async def health():
-    """Check API health, database connectivity, and uptime."""
+    """Lightweight liveness probe -- confirms the process is running."""
+    return {
+        "status": "ok",
+        "version": "2.0.0",
+        "uptime_seconds": round(time.time() - _start_time, 1),
+    }
+
+
+@app.get("/ready", tags=["system"], summary="Readiness check")
+async def readiness():
+    """Deep readiness probe -- checks database and model availability."""
+    from pathlib import Path
     from sqlalchemy import text
     from app.database import async_session
 
@@ -226,10 +237,14 @@ async def health():
     except Exception:
         db_status = "unavailable"
 
+    models_dir = Path(__file__).parent / "ml" / "saved_models"
+    models_loaded = len(list(models_dir.glob("*.joblib"))) + len(list(models_dir.glob("*.pt"))) + len(list(models_dir.glob("*.ckpt"))) if models_dir.exists() else 0
+
+    ready = db_status == "ok"
     return {
-        "status": "ok",
-        "version": "2.0.0",
+        "ready": ready,
         "database": db_status,
+        "models_loaded": models_loaded,
+        "version": "2.0.0",
         "uptime_seconds": round(time.time() - _start_time, 1),
-        "models_loaded": 7,
     }
