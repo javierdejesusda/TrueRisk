@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.middleware.csrf import CSRFMiddleware
 from fastapi.responses import JSONResponse
 from pythonjsonlogger.json import JsonFormatter
 from slowapi import _rate_limit_exceeded_handler
@@ -183,6 +185,8 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 )
+
+app.add_middleware(CSRFMiddleware, allowed_origins=settings.backend_cors_origins)
 
 app.include_router(provinces.router, prefix="/api/v1/provinces", tags=["provinces"])
 app.include_router(weather.router, prefix="/api/v1/weather", tags=["weather"])
