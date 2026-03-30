@@ -35,6 +35,7 @@ export function NavPill() {
     { href: '/prediction', label: t('predictions') },
     { href: '/alerts', label: t('alerts') },
     { href: '/emergency', label: t('sos') },
+    { href: '/chat', label: t('chat') },
     { href: '/phrases', label: t('phrases') },
   ];
 

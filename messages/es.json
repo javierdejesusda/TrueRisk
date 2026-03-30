@@ -25,7 +25,8 @@
     "report": "Informe",
     "settings": "Ajustes",
     "admin": "Admin",
-    "phrases": "Frases"
+    "phrases": "Frases",
+    "chat": "Chat"
   },
   "Home": {
     "subtitle": "Plataforma de Gestion de Emergencias Climaticas",
@@ -1634,6 +1635,29 @@
       "content": "Para asuntos relacionados con la accesibilidad:",
       "email": "accessibility@truerisk.cloud"
     }
+  },
+  "Chat": {
+    "title": "Asistente de Riesgos",
+    "placeholder": "Pregunta sobre riesgos, clima, emergencias...",
+    "send": "Enviar",
+    "newConversation": "Nuevo chat",
+    "usageMessages": "{count}/{limit} mensajes hoy",
+    "usageTokens": "Uso de tokens: {percent}%",
+    "error_injection_detected": "Tu mensaje fue marcado por razones de seguridad.",
+    "error_off_topic": "Solo puedo ayudar con temas de riesgo y emergencias.",
+    "error_daily_limit": "Limite diario alcanzado. Intenta manana.",
+    "error_hourly_limit": "Limite por hora alcanzado. Espera un momento.",
+    "error_daily_token_budget": "Limite de uso diario alcanzado.",
+    "error_monthly_token_budget": "Limite de uso mensual alcanzado.",
+    "error_cooldown": "Espera unos segundos entre mensajes.",
+    "error_conversation_limit": "Limite de conversacion alcanzado. Inicia un nuevo chat.",
+    "error_platform_disabled": "El asistente de IA no esta disponible temporalmente.",
+    "error_stream_error": "Algo salio mal. Intentalo de nuevo.",
+    "errorGeneric": "Algo salio mal. Intentalo de nuevo.",
+    "characterCount": "{count}/500",
+    "conversationLimitHint": "{count}/{limit} mensajes",
+    "close": "Cerrar",
+    "thinking": "Pensando..."
   }
 }
 }

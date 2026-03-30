@@ -25,7 +25,8 @@
     "report": "Report",
     "settings": "Settings",
     "admin": "Admin",
-    "phrases": "Phrases"
+    "phrases": "Phrases",
+    "chat": "Chat"
   },
   "Home": {
     "subtitle": "Climate Emergency Management Platform",
@@ -1636,6 +1637,29 @@
       "content": "For accessibility-related concerns:",
       "email": "accessibility@truerisk.cloud"
     }
+  },
+  "Chat": {
+    "title": "Risk Assistant",
+    "placeholder": "Ask about risks, weather, emergencies...",
+    "send": "Send",
+    "newConversation": "New chat",
+    "usageMessages": "{count}/{limit} messages today",
+    "usageTokens": "Token usage: {percent}%",
+    "error_injection_detected": "Your message was flagged for safety reasons.",
+    "error_off_topic": "I can only help with risk and emergency topics.",
+    "error_daily_limit": "Daily message limit reached. Try again tomorrow.",
+    "error_hourly_limit": "Hourly limit reached. Please wait.",
+    "error_daily_token_budget": "Daily usage limit reached.",
+    "error_monthly_token_budget": "Monthly usage limit reached.",
+    "error_cooldown": "Please wait a few seconds between messages.",
+    "error_conversation_limit": "Conversation limit reached. Start a new chat.",
+    "error_platform_disabled": "AI assistant is temporarily unavailable.",
+    "error_stream_error": "Something went wrong. Please try again.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "characterCount": "{count}/500",
+    "conversationLimitHint": "{count}/{limit} messages",
+    "close": "Close",
+    "thinking": "Thinking..."
   }
 }
 }
