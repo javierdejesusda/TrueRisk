@@ -46,6 +46,10 @@ backend/lightning_logs/
 
 # playwright
 .playwright-mcp/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # debug
 npm-debug.log*
