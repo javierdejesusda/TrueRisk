@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://truerisk.cloud wss://truerisk.cloud https://basemaps.cartocdn.com https://tiles.basemaps.cartocdn.com https://cdn.jsdelivr.net",
+              "connect-src 'self' https://truerisk.cloud wss://truerisk.cloud https://*.basemaps.cartocdn.com https://*.cartocdn.com https://cdn.jsdelivr.net",
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
