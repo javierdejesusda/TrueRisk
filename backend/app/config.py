@@ -19,6 +19,18 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4.1-nano"
 
+    # Chat abuse prevention limits
+    chat_max_messages_per_hour: int = 10
+    chat_max_messages_per_day: int = 30
+    chat_max_input_chars: int = 500
+    chat_max_output_tokens: int = 800
+    chat_daily_token_budget: int = 50_000
+    chat_monthly_token_budget: int = 500_000
+    chat_cooldown_seconds: int = 10
+    chat_max_conversation_messages: int = 20
+    chat_context_window_messages: int = 10
+    chat_platform_daily_cost_limit: float = 50.0
+
     # Auth / JWT
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
