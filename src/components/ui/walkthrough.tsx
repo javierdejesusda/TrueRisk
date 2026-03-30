@@ -202,29 +202,119 @@ function useElevateElement(selector: string | null, active: boolean) {
   }, []);
 
   useEffect(() => {
-    // Clean up previous element first
     cleanup();
 
     if (!active || !selector) return;
 
-    const el = document.querySelector<HTMLElement>(selector);
-    if (!el) return;
-
-    // Save original styles
-    prevStylesRef.current = {
-      position: el.style.position,
-      zIndex: el.style.zIndex,
-      pointerEvents: el.style.pointerEvents,
+    // Retry finding the element (it may not be rendered yet after navigation)
+    let attempts = 0;
+    const maxAttempts = 15;
+    const tryElevate = () => {
+      const el = document.querySelector<HTMLElement>(selector);
+      if (el) {
+        prevStylesRef.current = {
+          position: el.style.position,
+          zIndex: el.style.zIndex,
+          pointerEvents: el.style.pointerEvents,
+        };
+        prevElRef.current = el;
+        el.style.position = 'relative';
+        el.style.zIndex = '10001';
+        el.style.pointerEvents = 'none';
+        return;
+      }
+      attempts++;
+      if (attempts < maxAttempts) {
+        retryTimer = window.setTimeout(tryElevate, 100);
+      }
     };
-    prevElRef.current = el;
 
-    // Elevate above overlay (z-[9999])
-    el.style.position = 'relative';
-    el.style.zIndex = '10001';
-    el.style.pointerEvents = 'none';
+    let retryTimer: number | undefined;
+    tryElevate();
 
-    return cleanup;
+    return () => {
+      window.clearTimeout(retryTimer);
+      cleanup();
+    };
   }, [selector, active, cleanup]);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Hook: find and measure a DOM element with retry                    */
+/* ------------------------------------------------------------------ */
+
+function useMeasureElement(
+  selector: string | null,
+  step: number,
+  active: boolean,
+) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // Reset immediately on step change
+    setRect(null);
+    setReady(false);
+
+    if (!selector || !active) {
+      // Full-screen steps are immediately "ready"
+      if (!selector) setReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 30; // 3 seconds max wait
+    let retryTimer: number | undefined;
+
+    function measure() {
+      if (cancelled) return;
+      const el = document.querySelector(selector!);
+      if (!el) {
+        attempts++;
+        if (attempts < maxAttempts) {
+          retryTimer = window.setTimeout(measure, 100);
+        }
+        return;
+      }
+
+      // Scroll into view, then measure after scroll settles
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Wait for scroll to finish, then measure
+      retryTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        const r = el.getBoundingClientRect();
+        setRect(r);
+        setReady(true);
+      }, 300);
+    }
+
+    // Start measuring on next frame to allow DOM to settle
+    const rafId = requestAnimationFrame(measure);
+
+    // Keep rect updated on resize/scroll
+    function onLayout() {
+      if (cancelled) return;
+      const el = document.querySelector(selector!);
+      if (el) {
+        setRect(el.getBoundingClientRect());
+      }
+    }
+
+    window.addEventListener('resize', onLayout);
+    window.addEventListener('scroll', onLayout, true);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(retryTimer);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', onLayout);
+      window.removeEventListener('scroll', onLayout, true);
+    };
+  }, [selector, step, active]);
+
+  return { rect, ready };
 }
 
 /* ------------------------------------------------------------------ */
@@ -238,16 +328,24 @@ export function Walkthrough() {
   const pathname = usePathname();
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
   const [visible, setVisible] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipSize, setTooltipSize] = useState({ w: 340, h: 200 });
 
   const current = STEPS[step];
   const isFullScreen = !current?.selector;
+  const selector = current?.selector ?? null;
+
+  // Measure the target element with retry logic
+  const { rect, ready } = useMeasureElement(
+    selector,
+    step,
+    visible && !hasSeenWalkthrough,
+  );
 
   // Elevate the targeted DOM element above the overlay so it's actually visible
-  useElevateElement(current?.selector ?? null, visible && !hasSeenWalkthrough);
+  useElevateElement(selector, visible && !hasSeenWalkthrough);
 
   // Redirect to dashboard if walkthrough needs dashboard elements
   useEffect(() => {
@@ -264,47 +362,21 @@ export function Walkthrough() {
     }
   }, [hasSeenWalkthrough]);
 
-  // Clear rect for full-screen steps (no selector)
-  const selector = STEPS[step]?.selector ?? null;
-  if (!selector && rect !== null) {
-    setRect(null);
-  }
-
-  // Scroll into view, measure, and keep measured on resize/scroll
-  useEffect(() => {
-    if (!selector) return;
-
-    function measure() {
-      const el = document.querySelector(selector!);
-      if (el) {
-        setRect(el.getBoundingClientRect());
-      }
-    }
-
-    const el = document.querySelector(selector);
-    if (!el) return;
-
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    // Wait for scroll to settle then measure
-    const timer = setTimeout(measure, 350);
-
-    window.addEventListener('resize', measure);
-    window.addEventListener('scroll', measure, true);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', measure);
-      window.removeEventListener('scroll', measure, true);
-    };
-  }, [step, selector]);
-
   // Measure tooltip size for positioning
   useEffect(() => {
     if (tooltipRef.current) {
       const { offsetWidth, offsetHeight } = tooltipRef.current;
       setTooltipSize({ w: offsetWidth, h: offsetHeight });
     }
-  }, [step]);
+  }, [step, ready]);
+
+  // Clear transitioning flag after animation settles
+  useEffect(() => {
+    if (transitioning) {
+      const timer = setTimeout(() => setTransitioning(false), 80);
+      return () => clearTimeout(timer);
+    }
+  }, [transitioning]);
 
   if (hasSeenWalkthrough || !visible) return null;
 
@@ -317,16 +389,23 @@ export function Walkthrough() {
       ? getTooltipPosition(rect, current.placement, tooltipSize.w, tooltipSize.h)
       : null;
 
+  // Whether to show spotlight + tooltip (need both rect measured AND not transitioning)
+  const showTargeted = !isFullScreen && rect && ready && !transitioning;
+
   const handleNext = () => {
     if (isLast) {
       dismissWalkthrough();
     } else {
+      setTransitioning(true);
       setStep((s) => s + 1);
     }
   };
 
   const handleBack = () => {
-    if (step > 0) setStep((s) => s - 1);
+    if (step > 0) {
+      setTransitioning(true);
+      setStep((s) => s - 1);
+    }
   };
 
   const handleSkip = () => {
@@ -334,267 +413,144 @@ export function Walkthrough() {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div
+        key="walkthrough-root"
         className="fixed inset-0 z-[9999]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Dark overlay — NO backdrop-blur so highlighted elements stay crisp */}
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/75" onClick={handleSkip} />
 
         {/* Spotlight cutout for targeted steps */}
-        {rect && !isFullScreen && (
-          <>
-            {/* The cutout hole — punches through the dark overlay */}
+        <AnimatePresence mode="wait">
+          {showTargeted && rect && (
             <motion.div
-              key={`spotlight-${step}`}
-              className="absolute rounded-xl pointer-events-none"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                top: rect.top - 8,
-                left: rect.left - 8,
-                width: rect.width + 16,
-                height: rect.height + 16,
-                boxShadow: '0 0 0 9999px rgba(0,0,0,0.75)',
-              }}
-            />
-
-            {/* Green ring border */}
-            <motion.div
-              key={`ring-${step}`}
-              className="absolute rounded-xl pointer-events-none ring-2 ring-accent-green/70"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                top: rect.top - 8,
-                left: rect.left - 8,
-                width: rect.width + 16,
-                height: rect.height + 16,
-              }}
-            />
-
-            {/* Pulsing glow ring */}
-            <motion.div
-              key={`pulse-${step}`}
-              className="absolute rounded-xl pointer-events-none"
-              style={{
-                top: rect.top - 12,
-                left: rect.left - 12,
-                width: rect.width + 24,
-                height: rect.height + 24,
-                border: '2px solid rgba(34,197,94,0.25)',
-              }}
-              animate={{
-                scale: [1, 1.03, 1],
-                opacity: [0.5, 0.15, 0.5],
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            />
-
-            {/* Animated pointer arrow from tooltip to element */}
-            <motion.div
-              key={`arrow-${step}`}
-              className="absolute pointer-events-none z-[10002]"
+              key={`spotlight-group-${step}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.3 }}
-              style={{
-                top:
-                  current.placement === 'bottom'
-                    ? rect.bottom + 4
-                    : current.placement === 'top'
-                      ? rect.top - 12
-                      : rect.top + rect.height / 2 - 4,
-                left:
-                  current.placement === 'left'
-                    ? rect.left - 12
-                    : current.placement === 'right'
-                      ? rect.right + 4
-                      : rect.left + rect.width / 2 - 4,
-              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
+              {/* The cutout hole */}
               <motion.div
-                animate={{
-                  y:
-                    current.placement === 'bottom'
-                      ? [0, 4, 0]
-                      : current.placement === 'top'
-                        ? [0, -4, 0]
-                        : 0,
-                  x:
-                    current.placement === 'left'
-                      ? [0, -4, 0]
-                      : current.placement === 'right'
-                        ? [0, 4, 0]
-                        : 0,
+                className="absolute rounded-xl pointer-events-none"
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  top: rect.top - 8,
+                  left: rect.left - 8,
+                  width: rect.width + 16,
+                  height: rect.height + 16,
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.75)',
                 }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+
+              {/* Green ring border */}
+              <motion.div
+                className="absolute rounded-xl pointer-events-none ring-2 ring-accent-green/70"
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  top: rect.top - 8,
+                  left: rect.left - 8,
+                  width: rect.width + 16,
+                  height: rect.height + 16,
+                }}
+              />
+
+              {/* Pulsing glow ring */}
+              <motion.div
+                className="absolute rounded-xl pointer-events-none"
+                style={{
+                  top: rect.top - 12,
+                  left: rect.left - 12,
+                  width: rect.width + 24,
+                  height: rect.height + 24,
+                  border: '2px solid rgba(34,197,94,0.25)',
+                }}
+                animate={{
+                  scale: [1, 1.03, 1],
+                  opacity: [0.5, 0.15, 0.5],
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+
+              {/* Animated pointer dot */}
+              <motion.div
+                className="absolute pointer-events-none z-[10002]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.25 }}
+                style={{
+                  top:
+                    current.placement === 'bottom'
+                      ? rect.bottom + 4
+                      : current.placement === 'top'
+                        ? rect.top - 12
+                        : rect.top + rect.height / 2 - 4,
+                  left:
+                    current.placement === 'left'
+                      ? rect.left - 12
+                      : current.placement === 'right'
+                        ? rect.right + 4
+                        : rect.left + rect.width / 2 - 4,
+                }}
               >
-                <svg width="8" height="8" viewBox="0 0 8 8">
-                  <circle cx="4" cy="4" r="4" fill="rgb(34,197,94)" />
-                </svg>
+                <motion.div
+                  animate={{
+                    y:
+                      current.placement === 'bottom'
+                        ? [0, 4, 0]
+                        : current.placement === 'top'
+                          ? [0, -4, 0]
+                          : 0,
+                    x:
+                      current.placement === 'left'
+                        ? [0, -4, 0]
+                        : current.placement === 'right'
+                          ? [0, 4, 0]
+                          : 0,
+                  }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <svg width="8" height="8" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="4" fill="rgb(34,197,94)" />
+                  </svg>
+                </motion.div>
               </motion.div>
             </motion.div>
-          </>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* ============================================================ */}
         {/*  FULL-SCREEN CARD (welcome + features)                        */}
         {/* ============================================================ */}
-        {isFullScreen && (
-          <div className="absolute inset-0 flex items-center justify-center p-6">
-            <motion.div
-              key={`fullscreen-${step}`}
-              initial={{ opacity: 0, scale: 0.92, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: -20 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-lg"
-            >
-              <div className="glass-heavy rounded-2xl border border-white/[0.08] p-8 shadow-2xl overflow-hidden">
-                {/* Decorative gradient orbs */}
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-accent-green/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-accent-blue/8 rounded-full blur-3xl pointer-events-none" />
+        <AnimatePresence mode="wait">
+          {isFullScreen && ready && (
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <motion.div
+                key={`fullscreen-${step}`}
+                initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: -20 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="relative w-full max-w-lg"
+              >
+                <div className="glass-heavy rounded-2xl border border-white/[0.08] p-8 shadow-2xl overflow-hidden">
+                  {/* Decorative gradient orbs */}
+                  <div className="absolute -top-20 -right-20 w-40 h-40 bg-accent-green/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-accent-blue/8 rounded-full blur-3xl pointer-events-none" />
 
-                {/* Icon */}
-                <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-accent-green/10 border border-accent-green/20 mb-6">
-                  <svg
-                    className="w-7 h-7 text-accent-green"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d={current.icon} />
-                  </svg>
-                </div>
-
-                {/* Title */}
-                <h2 className="relative font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary mb-2 tracking-tight">
-                  {t(current.titleKey)}
-                </h2>
-                <p className="relative font-[family-name:var(--font-sans)] text-sm text-text-secondary leading-relaxed mb-6">
-                  {t(current.descKey)}
-                </p>
-
-                {/* Feature cards grid */}
-                {isFeatureStep && (
-                  <div className="relative grid grid-cols-2 gap-2.5 mb-6">
-                    {FEATURE_CARDS.map((card, i) => (
-                      <motion.div
-                        key={card.titleKey}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: 0.1 + i * 0.06,
-                          duration: 0.35,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        className={`group cursor-default rounded-xl bg-gradient-to-br ${card.color} border border-white/[0.1] p-3 transition-all duration-200 hover:border-white/[0.2] hover:scale-[1.02]`}
-                      >
-                        <svg
-                          className="w-4 h-4 text-white/70 mb-1.5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d={card.icon} />
-                        </svg>
-                        <p className="font-[family-name:var(--font-display)] text-[11px] font-bold text-white leading-tight">
-                          {t(card.titleKey)}
-                        </p>
-                        <p className="font-[family-name:var(--font-sans)] text-[10px] text-white/75 leading-snug mt-0.5">
-                          {t(card.descKey)}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Progress bar */}
-                <div className="relative w-full h-1 rounded-full bg-white/[0.06] mb-4 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-accent-green/80 to-accent-green"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                  />
-                </div>
-
-                {/* Controls */}
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
-                      {step + 1} / {STEPS.length}
-                    </span>
-                    <button
-                      onClick={handleSkip}
-                      className="cursor-pointer font-[family-name:var(--font-sans)] text-[11px] text-text-muted hover:text-text-primary transition-colors duration-200"
-                    >
-                      {t('skip')}
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    {step > 0 && (
-                      <button
-                        onClick={handleBack}
-                        className="cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 py-2 font-[family-name:var(--font-sans)] text-xs font-medium text-text-secondary transition-all duration-200 hover:bg-white/[0.08] hover:text-text-primary"
-                      >
-                        {t('back')}
-                      </button>
-                    )}
-                    <button
-                      onClick={handleNext}
-                      className="cursor-pointer rounded-lg bg-accent-green/15 px-5 py-2 font-[family-name:var(--font-sans)] text-xs font-semibold text-accent-green transition-all duration-200 hover:bg-accent-green/25 active:scale-[0.97]"
-                    >
-                      {isLast ? t('finish') : t('next')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/*  TOOLTIP CARD (positioned next to highlighted element)         */}
-        {/* ============================================================ */}
-        {!isFullScreen && (
-          <motion.div
-            ref={tooltipRef}
-            key={`tooltip-${step}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.35, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute z-[10002] w-[340px]"
-            style={{
-              top: tooltipPos?.top ?? '50%',
-              left: tooltipPos?.left ?? '50%',
-              transform: tooltipPos ? undefined : 'translate(-50%, -50%)',
-            }}
-          >
-            <div className="glass-heavy rounded-2xl border border-white/[0.08] p-5 shadow-2xl overflow-hidden">
-              {/* Decorative gradient */}
-              <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-green/8 rounded-full blur-2xl pointer-events-none" />
-
-              {/* Header */}
-              <div className="relative flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-green/10 border border-accent-green/20 shrink-0">
+                  {/* Icon */}
+                  <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-accent-green/10 border border-accent-green/20 mb-6">
                     <svg
-                      className="w-[18px] h-[18px] text-accent-green"
+                      className="w-7 h-7 text-accent-green"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -605,58 +561,189 @@ export function Walkthrough() {
                       <path d={current.icon} />
                     </svg>
                   </div>
-                  <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary leading-tight">
+
+                  {/* Title */}
+                  <h2 className="relative font-[family-name:var(--font-display)] text-2xl font-extrabold text-text-primary mb-2 tracking-tight">
                     {t(current.titleKey)}
-                  </h3>
-                </div>
-                <button
-                  onClick={handleSkip}
-                  className="cursor-pointer font-[family-name:var(--font-sans)] text-[10px] text-text-muted hover:text-text-primary transition-colors duration-200 shrink-0 mt-1"
-                >
-                  {t('skip')}
-                </button>
-              </div>
+                  </h2>
+                  <p className="relative font-[family-name:var(--font-sans)] text-sm text-text-secondary leading-relaxed mb-6">
+                    {t(current.descKey)}
+                  </p>
 
-              {/* Description */}
-              <p className="relative font-[family-name:var(--font-sans)] text-[12px] text-text-secondary leading-relaxed mb-4">
-                {t(current.descKey)}
-              </p>
-
-              {/* Progress bar */}
-              <div className="relative w-full h-0.5 rounded-full bg-white/[0.06] mb-3 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-accent-green/80 to-accent-green"
-                  initial={false}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
-                />
-              </div>
-
-              {/* Controls */}
-              <div className="relative flex items-center justify-between">
-                <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
-                  {step + 1} / {STEPS.length}
-                </span>
-                <div className="flex gap-2">
-                  {step > 0 && (
-                    <button
-                      onClick={handleBack}
-                      className="cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[11px] font-medium text-text-secondary transition-all duration-200 hover:bg-white/[0.08] hover:text-text-primary"
-                    >
-                      {t('back')}
-                    </button>
+                  {/* Feature cards grid */}
+                  {isFeatureStep && (
+                    <div className="relative grid grid-cols-2 gap-2.5 mb-6">
+                      {FEATURE_CARDS.map((card, i) => (
+                        <motion.div
+                          key={card.titleKey}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            delay: 0.1 + i * 0.06,
+                            duration: 0.35,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                          className={`group cursor-default rounded-xl bg-gradient-to-br ${card.color} border border-white/[0.1] p-3 transition-all duration-200 hover:border-white/[0.2] hover:scale-[1.02]`}
+                        >
+                          <svg
+                            className="w-4 h-4 text-white/70 mb-1.5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d={card.icon} />
+                          </svg>
+                          <p className="font-[family-name:var(--font-display)] text-[11px] font-bold text-white leading-tight">
+                            {t(card.titleKey)}
+                          </p>
+                          <p className="font-[family-name:var(--font-sans)] text-[10px] text-white/75 leading-snug mt-0.5">
+                            {t(card.descKey)}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
                   )}
+
+                  {/* Progress bar */}
+                  <div className="relative w-full h-1 rounded-full bg-white/[0.06] mb-4 overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-accent-green/80 to-accent-green"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                    />
+                  </div>
+
+                  {/* Controls */}
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
+                        {step + 1} / {STEPS.length}
+                      </span>
+                      <button
+                        onClick={handleSkip}
+                        className="cursor-pointer font-[family-name:var(--font-sans)] text-[11px] text-text-muted hover:text-text-primary transition-colors duration-200"
+                      >
+                        {t('skip')}
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      {step > 0 && (
+                        <button
+                          onClick={handleBack}
+                          className="cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 py-2 font-[family-name:var(--font-sans)] text-xs font-medium text-text-secondary transition-all duration-200 hover:bg-white/[0.08] hover:text-text-primary"
+                        >
+                          {t('back')}
+                        </button>
+                      )}
+                      <button
+                        onClick={handleNext}
+                        className="cursor-pointer rounded-lg bg-accent-green/15 px-5 py-2 font-[family-name:var(--font-sans)] text-xs font-semibold text-accent-green transition-all duration-200 hover:bg-accent-green/25 active:scale-[0.97]"
+                      >
+                        {isLast ? t('finish') : t('next')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ============================================================ */}
+        {/*  TOOLTIP CARD (positioned next to highlighted element)         */}
+        {/* ============================================================ */}
+        <AnimatePresence mode="wait">
+          {showTargeted && tooltipPos && (
+            <motion.div
+              ref={tooltipRef}
+              key={`tooltip-${step}`}
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute z-[10002] w-[340px]"
+              style={{
+                top: tooltipPos.top,
+                left: tooltipPos.left,
+              }}
+            >
+              <div className="glass-heavy rounded-2xl border border-white/[0.08] p-5 shadow-2xl overflow-hidden">
+                {/* Decorative gradient */}
+                <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-green/8 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Header */}
+                <div className="relative flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-green/10 border border-accent-green/20 shrink-0">
+                      <svg
+                        className="w-[18px] h-[18px] text-accent-green"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d={current.icon} />
+                      </svg>
+                    </div>
+                    <h3 className="font-[family-name:var(--font-display)] text-sm font-bold text-text-primary leading-tight">
+                      {t(current.titleKey)}
+                    </h3>
+                  </div>
                   <button
-                    onClick={handleNext}
-                    className="cursor-pointer rounded-lg bg-accent-green/15 px-4 py-1.5 font-[family-name:var(--font-sans)] text-[11px] font-semibold text-accent-green transition-all duration-200 hover:bg-accent-green/25 active:scale-[0.97]"
+                    onClick={handleSkip}
+                    className="cursor-pointer font-[family-name:var(--font-sans)] text-[10px] text-text-muted hover:text-text-primary transition-colors duration-200 shrink-0 mt-1"
                   >
-                    {isLast ? t('finish') : t('next')}
+                    {t('skip')}
                   </button>
                 </div>
+
+                {/* Description */}
+                <p className="relative font-[family-name:var(--font-sans)] text-[12px] text-text-secondary leading-relaxed mb-4">
+                  {t(current.descKey)}
+                </p>
+
+                {/* Progress bar */}
+                <div className="relative w-full h-0.5 rounded-full bg-white/[0.06] mb-3 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-accent-green/80 to-accent-green"
+                    initial={false}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                  />
+                </div>
+
+                {/* Controls */}
+                <div className="relative flex items-center justify-between">
+                  <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted">
+                    {step + 1} / {STEPS.length}
+                  </span>
+                  <div className="flex gap-2">
+                    {step > 0 && (
+                      <button
+                        onClick={handleBack}
+                        className="cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[11px] font-medium text-text-secondary transition-all duration-200 hover:bg-white/[0.08] hover:text-text-primary"
+                      >
+                        {t('back')}
+                      </button>
+                    )}
+                    <button
+                      onClick={handleNext}
+                      className="cursor-pointer rounded-lg bg-accent-green/15 px-4 py-1.5 font-[family-name:var(--font-sans)] text-[11px] font-semibold text-accent-green transition-all duration-200 hover:bg-accent-green/25 active:scale-[0.97]"
+                    >
+                      {isLast ? t('finish') : t('next')}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );
