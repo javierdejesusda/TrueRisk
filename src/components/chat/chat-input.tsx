@@ -117,7 +117,7 @@ export function ChatInput() {
   return (
     <div ref={wrapperRef}>
       <div
-        className="flex items-center gap-2 rounded-full bg-bg-card border border-border/30 px-2 py-1.5 transition-all duration-200 focus-within:border-border-hover/60 focus-within:ring-1 focus-within:ring-white/[0.04]"
+        className="flex items-center gap-2 rounded-full bg-bg-card border border-border/30 px-2 py-1.5 transition-all duration-200 focus-within:border-border-hover/60"
         style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}
       >
         {/* Input + placeholder */}
