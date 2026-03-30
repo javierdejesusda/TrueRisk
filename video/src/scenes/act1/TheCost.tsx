@@ -9,6 +9,11 @@ export const TheCost: React.FC = () => {
     extrapolateRight: "clamp",
   })), 229);
 
+  // Flash white when counter lands on 229
+  const impactFlash = count === 229
+    ? interpolate(frame, [40, 46, 52], [0, 0.15, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 0;
+
   // "lives lost." fades in after counter reaches 229
   const livesLostOpacity = interpolate(frame, [45, 55], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
@@ -26,6 +31,9 @@ export const TheCost: React.FC = () => {
         opacity: interpolate(frame, [50, 60], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
       }} />
       <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 64, fontWeight: 300, color: COLORS.text, opacity: singleNightOpacity }}>In a single night.</span>
+
+      {/* Impact flash overlay */}
+      <div style={{ position: "absolute", inset: 0, backgroundColor: "white", opacity: impactFlash, pointerEvents: "none" }} />
     </AbsoluteFill>
   );
 };

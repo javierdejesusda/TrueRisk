@@ -7,7 +7,7 @@ export const TheQuestion: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 56, fontWeight: 400, color: COLORS.textSecondary, opacity }}>
+      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 72, fontWeight: 700, color: COLORS.text, opacity }}>
         What if they had warning?
       </span>
     </AbsoluteFill>

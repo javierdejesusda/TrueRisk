@@ -4,7 +4,6 @@ import { TransitionSeries, linearTiming, springTiming } from "@remotion/transiti
 import { fade } from "@remotion/transitions/fade";
 
 import { SCENE_DURATIONS as D } from "./lib/constants";
-import { CinematicWrapper } from "./components/CinematicWrapper";
 
 import { TheDate } from "./scenes/act1/TheDate";
 import { TheCost } from "./scenes/act1/TheCost";
@@ -23,19 +22,28 @@ import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
 import { ProgressBar } from "./components/ProgressBar";
 
-const shortFade = () => ({
+// Opening: slow, breathing fades
+const slowFade = () => ({
   presentation: fade(),
-  timing: linearTiming({ durationInFrames: 12 }),
+  timing: linearTiming({ durationInFrames: 40 }),
 });
 
-const mediumFade = () => ({
+// Product showcase: snappy fades
+const quickFade = () => ({
+  presentation: fade(),
+  timing: linearTiming({ durationInFrames: 10 }),
+});
+
+// Between sections: medium
+const medFade = () => ({
   presentation: fade(),
   timing: springTiming({ config: { damping: 200 }, durationInFrames: 18 }),
 });
 
-const longFade = () => ({
+// Closing: slow again
+const closingFade = () => ({
   presentation: fade(),
-  timing: linearTiming({ durationInFrames: 28 }),
+  timing: linearTiming({ durationInFrames: 35 }),
 });
 
 export const TrueRiskDemo: React.FC = () => {
@@ -54,96 +62,96 @@ export const TrueRiskDemo: React.FC = () => {
       <ProgressBar />
 
       <TransitionSeries>
-        {/* === OPENING === */}
+        {/* === OPENING — slow, emotional === */}
         <TransitionSeries.Sequence durationInFrames={D.theDate}>
-          <CinematicWrapper><TheDate /></CinematicWrapper>
+          <TheDate />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...longFade()} />
+        <TransitionSeries.Transition {...slowFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theCost}>
-          <CinematicWrapper><TheCost /></CinematicWrapper>
+          <TheCost />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...longFade()} />
+        <TransitionSeries.Transition {...slowFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theQuestion}>
-          <CinematicWrapper><TheQuestion /></CinematicWrapper>
+          <TheQuestion />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...longFade()} />
+        <TransitionSeries.Transition {...slowFade()} />
 
-        {/* === HERO === */}
+        {/* === HERO — fade from black into hero video === */}
         <TransitionSeries.Sequence durationInFrames={D.heroVideo}>
           <HeroVideo />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...longFade()} />
+        <TransitionSeries.Transition {...medFade()} />
 
-        {/* === PRODUCT SHOWCASE === */}
+        {/* === PRODUCT SHOWCASE — snappy transitions === */}
         <TransitionSeries.Sequence durationInFrames={D.dashboardAndAlerts}>
-          <CinematicWrapper><DashboardAndAlerts /></CinematicWrapper>
+          <DashboardAndAlerts />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.map}>
-          <CinematicWrapper><MapDeepDive /></CinematicWrapper>
+          <MapDeepDive />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.evacuationAndPreparedness}>
-          <CinematicWrapper><EvacuationAndPreparedness /></CinematicWrapper>
+          <EvacuationAndPreparedness />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.emergencyAndAI}>
-          <CinematicWrapper><EmergencyAndAI /></CinematicWrapper>
+          <EmergencyAndAI />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.droughtAndPredictions}>
-          <CinematicWrapper><DroughtAndPredictions /></CinematicWrapper>
+          <DroughtAndPredictions />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...shortFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.profileAndReport}>
-          <CinematicWrapper><ProfileAndReport /></CinematicWrapper>
+          <ProfileAndReport />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...shortFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.phrasesAndBilingual}>
-          <CinematicWrapper><PhrasesAndBilingual /></CinematicWrapper>
+          <PhrasesAndBilingual />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...quickFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.platformFeatures}>
-          <CinematicWrapper><PlatformFeatures /></CinematicWrapper>
+          <PlatformFeatures />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...longFade()} />
+        <TransitionSeries.Transition {...closingFade()} />
 
-        {/* === CLOSING — black pause for breathing room === */}
+        {/* === CLOSING — slow, deliberate === */}
         <TransitionSeries.Sequence durationInFrames={D.blackPause}>
           <BlackPause />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...longFade()} />
+        <TransitionSeries.Transition {...closingFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.callback}>
-          <CinematicWrapper><Callback /></CinematicWrapper>
+          <Callback />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...closingFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.logoClose}>
-          <CinematicWrapper><LogoClose /></CinematicWrapper>
+          <LogoClose />
         </TransitionSeries.Sequence>
       </TransitionSeries>
     </AbsoluteFill>
