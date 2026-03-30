@@ -20,13 +20,16 @@ function severityLabel(severity: number, t: TranslateFn): string {
   return t('none');
 }
 
-function severityVariant(severity: number): 'danger' | 'warning' | 'success' | 'neutral' {
-  if (severity >= 4) return 'danger';
-  if (severity >= 3) return 'warning';
-  if (severity >= 2) return 'warning';
-  if (severity >= 1) return 'success';
-  return 'neutral';
+function clampSeverity(severity: number): 1 | 2 | 3 | 4 | 5 {
+  return Math.max(1, Math.min(5, Math.round(severity))) as 1 | 2 | 3 | 4 | 5;
 }
+
+const AEMET_SEVERITY_MAP: Record<string, 1 | 2 | 3 | 4 | 5> = {
+  red: 5,
+  orange: 4,
+  yellow: 2,
+  green: 1,
+};
 
 function formatTime(iso: string | null): string {
   if (!iso) return '—';
@@ -102,7 +105,7 @@ export default function AlertsPage() {
                 {alerts.map((alert) => (
                   <Card key={alert.id} variant="glass" hoverable>
                     <div className="flex items-start gap-3">
-                      <Badge variant={severityVariant(alert.severity)} size="sm">
+                      <Badge severity={clampSeverity(alert.severity)} size="sm">
                         {severityLabel(alert.severity, t)}
                       </Badge>
                       <div className="flex-1 min-w-0">
@@ -131,12 +134,7 @@ export default function AlertsPage() {
                   <Card key={`aemet-${i}`} variant="glass" hoverable>
                     <div className="flex items-start gap-3">
                       <Badge
-                        variant={
-                          alert.severity === 'red' ? 'danger' :
-                          alert.severity === 'orange' ? 'warning' :
-                          alert.severity === 'yellow' ? 'warning' :
-                          'info'
-                        }
+                        severity={AEMET_SEVERITY_MAP[alert.severity] ?? 2}
                         size="sm"
                       >
                         {alert.severity}

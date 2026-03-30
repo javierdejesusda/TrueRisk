@@ -15,17 +15,14 @@ interface UnifiedAlert {
   id: string;
   title: string;
   severity: number;
-  badgeVariant: 'success' | 'warning' | 'danger' | 'neutral';
+  badgeSeverity: 1 | 2 | 3 | 4 | 5;
   badgeLabel: string;
   source: string;
   time: string;
 }
 
-function severityVariant(severity: number): 'success' | 'warning' | 'danger' {
-  if (severity >= 4) return 'danger';
-  if (severity >= 3) return 'warning';
-  if (severity >= 2) return 'warning';
-  return 'success';
+function clampSeverity(severity: number): 1 | 2 | 3 | 4 | 5 {
+  return Math.max(1, Math.min(5, Math.round(severity))) as 1 | 2 | 3 | 4 | 5;
 }
 
 function formatRelativeTime(iso: string | null): string {
@@ -56,7 +53,7 @@ function unifyAlerts(
       id: `tr-${a.id}`,
       title: a.title,
       severity: a.severity,
-      badgeVariant: severityVariant(a.severity),
+      badgeSeverity: clampSeverity(a.severity),
       badgeLabel: severityLabel(a.severity, t),
       source: 'TrueRisk',
       time: formatRelativeTime(a.onset ?? a.created_at),
@@ -69,7 +66,7 @@ function unifyAlerts(
       id: `aemet-${a.identifier}-${a.geocode}`,
       title: a.headline || a.event,
       severity: sev,
-      badgeVariant: severityVariant(sev),
+      badgeSeverity: clampSeverity(sev),
       badgeLabel: a.severity.toUpperCase(),
       source: 'AEMET',
       time: formatRelativeTime(a.onset),
@@ -141,7 +138,7 @@ export function AlertFeed() {
               key={alert.id}
               className="flex items-center gap-3 rounded-lg bg-bg-secondary/50 px-3 py-2.5"
             >
-              <Badge variant={alert.badgeVariant} size="sm">
+              <Badge severity={alert.badgeSeverity} size="sm">
                 {alert.badgeLabel}
               </Badge>
               <div className="flex-1 min-w-0">
