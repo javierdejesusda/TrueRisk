@@ -12,6 +12,15 @@ from app.api.errors import register_error_handlers
 from app.config import settings
 from app.database import engine, Base
 from app.rate_limit import limiter
+
+if settings.sentry_dsn:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        traces_sample_rate=0.1,
+        environment="production" if "truerisk.cloud" in settings.backend_cors_origins else "development",
+    )
+
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
 from app.api import ai_summary, sms, data_sources, email
 from app.api import auth, suggestions, preparedness, emergency_plan, safety

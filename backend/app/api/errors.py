@@ -53,6 +53,11 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         request.url.path,
         exc,
     )
+    try:
+        import sentry_sdk
+        sentry_sdk.capture_exception(exc)
+    except ImportError:
+        pass
     return JSONResponse(
         status_code=500,
         content=ErrorResponse.build(500, "InternalServerError", "An unexpected error occurred"),
