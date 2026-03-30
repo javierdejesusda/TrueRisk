@@ -3,7 +3,8 @@ import { Audio } from "@remotion/media";
 import { TransitionSeries, linearTiming, springTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 
-import { SCENE_DURATIONS as D, TRANSITION_DURATIONS as T } from "./lib/constants";
+import { SCENE_DURATIONS as D } from "./lib/constants";
+import { CinematicWrapper } from "./components/CinematicWrapper";
 
 import { TheDate } from "./scenes/act1/TheDate";
 import { TheCost } from "./scenes/act1/TheCost";
@@ -18,17 +19,13 @@ import { AiAdvisor } from "./scenes/act3/AiAdvisor";
 import { Drought } from "./scenes/act3/Drought";
 import { Predictions } from "./scenes/act3/Predictions";
 import { Preparedness } from "./scenes/act3/Preparedness";
-import { CommunityReports } from "./scenes/act3/CommunityReports";
-import { DataSources } from "./scenes/act3/DataSources";
-import { Profile } from "./scenes/act3/Profile";
-import { Report } from "./scenes/act3/Report";
-import { Phrases } from "./scenes/act3/Phrases";
-import { Bilingual } from "./scenes/act3/Bilingual";
+import { ProfileAndReport } from "./scenes/act3/ProfileAndReport";
+import { PhrasesAndBilingual } from "./scenes/act3/PhrasesAndBilingual";
 import { Notifications } from "./scenes/act3/Notifications";
+import { DataSources } from "./scenes/act3/DataSources";
 import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
 
-// Clean crossfade — the only transition type for a professional look
 const shortFade = () => ({
   presentation: fade(),
   timing: linearTiming({ durationInFrames: 12 }),
@@ -41,7 +38,7 @@ const mediumFade = () => ({
 
 const longFade = () => ({
   presentation: fade(),
-  timing: linearTiming({ durationInFrames: 25 }),
+  timing: linearTiming({ durationInFrames: 28 }),
 });
 
 export const TrueRiskDemo: React.FC = () => {
@@ -50,7 +47,7 @@ export const TrueRiskDemo: React.FC = () => {
       <Audio
         src={staticFile("music.mp3")}
         volume={(f) =>
-          interpolate(f, [0, 45, 2400, 2600], [0, 0.7, 0.7, 0], {
+          interpolate(f, [0, 45, 2300, 2500], [0, 0.7, 0.7, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           })
@@ -58,21 +55,27 @@ export const TrueRiskDemo: React.FC = () => {
       />
 
       <TransitionSeries>
-        {/* === OPENING === */}
+        {/* === OPENING — emotional weight === */}
         <TransitionSeries.Sequence durationInFrames={D.theDate}>
-          <TheDate />
+          <CinematicWrapper>
+            <TheDate />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...longFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theCost}>
-          <TheCost />
+          <CinematicWrapper zoomFrom={1.02} zoomTo={1.0}>
+            <TheCost />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...mediumFade()} />
+        <TransitionSeries.Transition {...longFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theQuestion}>
-          <TheQuestion />
+          <CinematicWrapper>
+            <TheQuestion />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...longFade()} />
@@ -85,111 +88,137 @@ export const TrueRiskDemo: React.FC = () => {
         <TransitionSeries.Transition {...longFade()} />
 
         {/* === PRODUCT SHOWCASE === */}
+
+        {/* Dashboard — no bottom caption, content speaks */}
         <TransitionSeries.Sequence durationInFrames={D.dashboard}>
-          <Dashboard />
+          <CinematicWrapper zoomFrom={1.0} zoomTo={1.025}>
+            <Dashboard />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Map — screenshot in BrowserFrame */}
         <TransitionSeries.Sequence durationInFrames={D.map}>
-          <MapDeepDive />
+          <CinematicWrapper zoomFrom={1.0} zoomTo={1.02}>
+            <MapDeepDive />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Alerts */}
         <TransitionSeries.Sequence durationInFrames={D.alerts}>
-          <Alerts />
+          <CinematicWrapper>
+            <Alerts />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Evacuation */}
         <TransitionSeries.Sequence durationInFrames={D.evacuation}>
-          <Evacuation />
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...shortFade()} />
-
-        <TransitionSeries.Sequence durationInFrames={D.emergency}>
-          <Emergency />
+          <CinematicWrapper zoomFrom={1.0} zoomTo={1.025}>
+            <Evacuation />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...mediumFade()} />
 
+        {/* Emergency */}
+        <TransitionSeries.Sequence durationInFrames={D.emergency}>
+          <CinematicWrapper zoomFrom={1.02} zoomTo={1.0}>
+            <Emergency />
+          </CinematicWrapper>
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition {...mediumFade()} />
+
+        {/* AI Advisor */}
         <TransitionSeries.Sequence durationInFrames={D.aiAdvisor}>
-          <AiAdvisor />
+          <CinematicWrapper>
+            <AiAdvisor />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Drought */}
         <TransitionSeries.Sequence durationInFrames={D.drought}>
-          <Drought />
+          <CinematicWrapper zoomFrom={1.0} zoomTo={1.02}>
+            <Drought />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Predictions — 8 ML models */}
         <TransitionSeries.Sequence durationInFrames={D.predictions}>
-          <Predictions />
+          <CinematicWrapper zoomFrom={1.02} zoomTo={1.0}>
+            <Predictions />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Preparedness */}
         <TransitionSeries.Sequence durationInFrames={D.preparedness}>
-          <Preparedness />
+          <CinematicWrapper>
+            <Preparedness />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
-        <TransitionSeries.Sequence durationInFrames={D.communityReports}>
-          <CommunityReports />
+        {/* Profile + Report (merged) */}
+        <TransitionSeries.Sequence durationInFrames={D.profileAndReport}>
+          <CinematicWrapper zoomFrom={1.0} zoomTo={1.025}>
+            <ProfileAndReport />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
+        {/* Data Sources */}
         <TransitionSeries.Sequence durationInFrames={D.dataSources}>
-          <DataSources />
+          <CinematicWrapper zoomFrom={1.02} zoomTo={1.0}>
+            <DataSources />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...shortFade()} />
 
-        <TransitionSeries.Sequence durationInFrames={D.profile}>
-          <Profile />
+        {/* Phrases + Bilingual (merged) */}
+        <TransitionSeries.Sequence durationInFrames={D.phrasesAndBilingual}>
+          <CinematicWrapper>
+            <PhrasesAndBilingual />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...shortFade()} />
+        <TransitionSeries.Transition {...mediumFade()} />
 
-        <TransitionSeries.Sequence durationInFrames={D.report}>
-          <Report />
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...shortFade()} />
-
-        <TransitionSeries.Sequence durationInFrames={D.phrases}>
-          <Phrases />
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...shortFade()} />
-
-        <TransitionSeries.Sequence durationInFrames={D.bilingual}>
-          <Bilingual />
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...shortFade()} />
-
+        {/* Notifications */}
         <TransitionSeries.Sequence durationInFrames={D.notifications}>
-          <Notifications />
+          <CinematicWrapper zoomFrom={1.0} zoomTo={1.02}>
+            <Notifications />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...longFade()} />
 
         {/* === CLOSING === */}
         <TransitionSeries.Sequence durationInFrames={D.callback}>
-          <Callback />
+          <CinematicWrapper zoomFrom={1.02} zoomTo={1.0}>
+            <Callback />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...mediumFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.logoClose}>
-          <LogoClose />
+          <CinematicWrapper>
+            <LogoClose />
+          </CinematicWrapper>
         </TransitionSeries.Sequence>
       </TransitionSeries>
     </AbsoluteFill>
