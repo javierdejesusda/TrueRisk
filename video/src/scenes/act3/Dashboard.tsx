@@ -1,19 +1,119 @@
 import { AbsoluteFill, useCurrentFrame, spring, interpolate } from "remotion";
-import { BrowserFrame } from "../../components/BrowserFrame";
 import { COLORS, FONT_FAMILY, VIDEO } from "../../lib/constants";
+
+const HAZARDS = [
+  { name: "Flood / DANA", score: 3 },
+  { name: "Wildfire", score: 17 },
+  { name: "Drought", score: 5 },
+  { name: "Heatwave", score: 4 },
+  { name: "Seismic", score: 1 },
+  { name: "Cold Wave", score: 4 },
+  { name: "Windstorm", score: 12 },
+];
+
+const WEATHER = [
+  { label: "Temp", value: "12.3°C" },
+  { label: "Humidity", value: "24%" },
+  { label: "Wind", value: "18.3 km/h" },
+  { label: "Pressure", value: "1013 hPa" },
+];
+
+const QUICK_ACTIONS = ["Risk Map", "Predictions", "Alerts", "Emergency"];
 
 export const Dashboard: React.FC = () => {
   const frame = useCurrentFrame();
-  const textOpacity = interpolate(frame, [40, 55], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+
+  const titleOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
+
+  // Risk score counter
+  const scoreProgress = spring({ frame: frame - 5, fps: VIDEO.fps, config: { damping: 30, stiffness: 60 } });
+  const riskScore = Math.round(interpolate(scoreProgress, [0, 1], [0, 15]));
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
-      <BrowserFrame src="prod-dashboard.png" title="truerisk.cloud — Dashboard" tiltX={10} tiltY={-3} oscillationSpeed={0.018} oscillationAmplitude={1.2} scaleFrom={0.9} />
-      <div style={{
-        position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center",
-        opacity: textOpacity,
-      }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 36, fontWeight: 600, color: COLORS.text, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "50px 120px", gap: 20 }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+          Risk Dashboard
+        </span>
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 400, color: COLORS.textSecondary, opacity: titleOpacity }}>
+          Province: Madrid
+        </span>
+      </div>
+
+      <div style={{ display: "flex", gap: 20, flex: 1 }}>
+        {/* Left column */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Risk Score Card */}
+          <div style={{
+            padding: "28px 32px", backgroundColor: "#111119", borderRadius: 14,
+            display: "flex", alignItems: "center", gap: 32,
+            opacity: interpolate(frame, [5, 18], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 72, fontWeight: 700, color: COLORS.text }}>{riskScore}</span>
+              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 400, color: COLORS.textSecondary }}>Composite Risk</span>
+            </div>
+            <div style={{ width: 1, height: 80, backgroundColor: "#2A2A2E" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 24, fontWeight: 600, color: COLORS.text }}>Low Risk</span>
+              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 400, color: COLORS.textSecondary }}>Overall risk level for your province is low. Fire risk is the dominant factor.</span>
+            </div>
+          </div>
+
+          {/* Weather Card */}
+          <div style={{
+            padding: "20px 28px", backgroundColor: "#111119", borderRadius: 14,
+            display: "flex", gap: 24,
+            opacity: interpolate(frame, [15, 28], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+          }}>
+            {WEATHER.map((w, i) => (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 13, fontWeight: 400, color: COLORS.textSecondary }}>{w.label}</span>
+                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 22, fontWeight: 600, color: COLORS.text }}>{w.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{
+            display: "flex", gap: 12,
+            opacity: interpolate(frame, [30, 42], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+          }}>
+            {QUICK_ACTIONS.map((action, i) => (
+              <div key={i} style={{ flex: 1, padding: "16px", backgroundColor: "#111119", borderRadius: 10, textAlign: "center" as const }}>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 500, color: COLORS.text }}>{action}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right column — Hazard Breakdown */}
+        <div style={{
+          width: 420, padding: "24px 28px", backgroundColor: "#111119", borderRadius: 14,
+          display: "flex", flexDirection: "column", gap: 14,
+          opacity: interpolate(frame, [12, 25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+        }}>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Hazard Breakdown</span>
+          {HAZARDS.map((h, i) => {
+            const barProgress = spring({ frame: frame - 20 - i * 4, fps: VIDEO.fps, config: { damping: 28, stiffness: 80 } });
+            const barWidth = interpolate(barProgress, [0, 1], [0, h.score]);
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 400, color: COLORS.textSecondary, width: 120, textAlign: "right" as const }}>{h.name}</span>
+                <div style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: "#1C1C1E" }}>
+                  <div style={{ width: `${barWidth}%`, height: "100%", borderRadius: 4, backgroundColor: COLORS.text }} />
+                </div>
+                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 14, fontWeight: 600, color: COLORS.text, width: 28 }}>{h.score}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
+          opacity: interpolate(frame, [50, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
           Real-time Risk Dashboard
         </span>
       </div>
