@@ -16,7 +16,6 @@ import { EmergencyAndAI } from "./scenes/act3/EmergencyAndAI";
 import { DroughtAndPredictions } from "./scenes/act3/DroughtAndPredictions";
 import { ProfileAndReport } from "./scenes/act3/ProfileAndReport";
 import { PhrasesAndBilingual } from "./scenes/act3/PhrasesAndBilingual";
-import { PlatformFeatures } from "./scenes/act3/PlatformFeatures";
 import { StatsLine } from "./scenes/act4/StatsLine";
 import { BlackPause } from "./scenes/act4/BlackPause";
 import { Callback } from "./scenes/act4/Callback";
@@ -125,12 +124,6 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Sequence durationInFrames={D.phrasesAndBilingual}>
           <PhrasesAndBilingual />
-        </TransitionSeries.Sequence>
-
-        <TransitionSeries.Transition {...quickFade()} />
-
-        <TransitionSeries.Sequence durationInFrames={D.platformFeatures}>
-          <PlatformFeatures />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...quickFade()} />
