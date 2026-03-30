@@ -25,7 +25,7 @@ export const VIDEO = {
   width: 1920,
   height: 1080,
   fps: 30,
-  durationInFrames: 2193,
+  durationInFrames: 2238,
 } as const;
 
 export const SCENE_DURATIONS = {
@@ -41,6 +41,7 @@ export const SCENE_DURATIONS = {
   profileAndReport: 170,
   phrasesAndBilingual: 150,
   platformFeatures: 160,
+  blackPause: 45,
   callback: 170,
   logoClose: 140,
 } as const;

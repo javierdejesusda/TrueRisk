@@ -18,8 +18,10 @@ import { DroughtAndPredictions } from "./scenes/act3/DroughtAndPredictions";
 import { ProfileAndReport } from "./scenes/act3/ProfileAndReport";
 import { PhrasesAndBilingual } from "./scenes/act3/PhrasesAndBilingual";
 import { PlatformFeatures } from "./scenes/act3/PlatformFeatures";
+import { BlackPause } from "./scenes/act4/BlackPause";
 import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
+import { ProgressBar } from "./components/ProgressBar";
 
 const shortFade = () => ({
   presentation: fade(),
@@ -48,6 +50,8 @@ export const TrueRiskDemo: React.FC = () => {
           })
         }
       />
+
+      <ProgressBar />
 
       <TransitionSeries>
         {/* === OPENING === */}
@@ -125,7 +129,13 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition {...longFade()} />
 
-        {/* === CLOSING === */}
+        {/* === CLOSING — black pause for breathing room === */}
+        <TransitionSeries.Sequence durationInFrames={D.blackPause}>
+          <BlackPause />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition {...longFade()} />
+
         <TransitionSeries.Sequence durationInFrames={D.callback}>
           <CinematicWrapper><Callback /></CinematicWrapper>
         </TransitionSeries.Sequence>
