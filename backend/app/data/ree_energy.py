@@ -39,7 +39,9 @@ async def fetch_demand(date: str | None = None) -> dict[str, Any]:
             headers={"Accept": "application/json"},
             follow_redirects=True,
         )
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            logger.warning("REE API returned %s for demand data", resp.status_code)
+            return _cache.get(cache_key, {})
         data = resp.json()
 
         included = data.get("included", [])
@@ -92,7 +94,9 @@ async def fetch_generation_mix(date: str | None = None) -> dict[str, Any]:
             headers={"Accept": "application/json"},
             follow_redirects=True,
         )
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            logger.warning("REE API returned %s for generation mix data", resp.status_code)
+            return _cache.get(cache_key, {})
         data = resp.json()
 
         mix = {}

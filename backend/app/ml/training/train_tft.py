@@ -222,6 +222,8 @@ def train_single_hazard(
                 devices=1,
                 precision="bf16-mixed",
                 gradient_clip_val=TFT_GRADIENT_CLIP,
+                logger=False,
+                enable_checkpointing=False,
             )
             lr_result = trainer_lr.tuner.lr_find(  # type: ignore[attr-defined]
                 model,
@@ -276,6 +278,8 @@ def train_single_hazard(
         precision="bf16-mixed",
         devices=1,
         log_every_n_steps=50,
+        logger=False,
+        enable_checkpointing=False,
     )
 
     resume_path = ckpt_path if resume and Path(ckpt_path).exists() else None
