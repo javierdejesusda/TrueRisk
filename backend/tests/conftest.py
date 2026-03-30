@@ -1,7 +1,8 @@
 import os
 
-# Set JWT_SECRET before any app imports so config validation passes
+# Set secrets before any app imports so config validation passes
 os.environ.setdefault("JWT_SECRET", "test-secret-do-not-use-in-production")
+os.environ.setdefault("FIELD_ENCRYPTION_KEY", "NM73lE7_QLv-PMRqOgPffUUzqH8ljkBKJQe7PtJA874=")
 
 import pytest  # noqa: E402
 import respx  # noqa: E402
