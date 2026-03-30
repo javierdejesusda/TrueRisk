@@ -88,15 +88,15 @@ export const TrueRiskDemo: React.FC = () => {
 
         <TransitionSeries.Transition {...medFade()} />
 
-        {/* === PRODUCT SHOWCASE — snappy transitions === */}
-        <TransitionSeries.Sequence durationInFrames={D.dashboardAndAlerts}>
-          <DashboardAndAlerts />
+        {/* === PRODUCT SHOWCASE — map first, then dashboard === */}
+        <TransitionSeries.Sequence durationInFrames={D.map}>
+          <MapDeepDive />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...quickFade()} />
 
-        <TransitionSeries.Sequence durationInFrames={D.map}>
-          <MapDeepDive />
+        <TransitionSeries.Sequence durationInFrames={D.dashboardAndAlerts}>
+          <DashboardAndAlerts />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition {...quickFade()} />
@@ -148,7 +148,7 @@ export const TrueRiskDemo: React.FC = () => {
           <Callback />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition {...closingFade()} />
+        <TransitionSeries.Transition {...openingFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.logoClose}>
           <LogoClose />
