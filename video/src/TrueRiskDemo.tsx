@@ -2,9 +2,6 @@ import { AbsoluteFill, staticFile, interpolate } from "remotion";
 import { Audio } from "@remotion/media";
 import { TransitionSeries, linearTiming, springTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
-import { slide } from "@remotion/transitions/slide";
-import { wipe } from "@remotion/transitions/wipe";
-import { flip } from "@remotion/transitions/flip";
 
 import { SCENE_DURATIONS as D, TRANSITION_DURATIONS as T } from "./lib/constants";
 
@@ -31,14 +28,29 @@ import { Notifications } from "./scenes/act3/Notifications";
 import { Callback } from "./scenes/act4/Callback";
 import { LogoClose } from "./scenes/act4/LogoClose";
 
+// Clean crossfade — the only transition type for a professional look
+const shortFade = () => ({
+  presentation: fade(),
+  timing: linearTiming({ durationInFrames: 12 }),
+});
+
+const mediumFade = () => ({
+  presentation: fade(),
+  timing: springTiming({ config: { damping: 200 }, durationInFrames: 18 }),
+});
+
+const longFade = () => ({
+  presentation: fade(),
+  timing: linearTiming({ durationInFrames: 25 }),
+});
+
 export const TrueRiskDemo: React.FC = () => {
   return (
     <AbsoluteFill>
-      {/* Background music with fade in/out */}
       <Audio
         src={staticFile("music.mp3")}
         volume={(f) =>
-          interpolate(f, [0, 30, 2500, 2650], [0, 0.7, 0.7, 0], {
+          interpolate(f, [0, 45, 2400, 2600], [0, 0.7, 0.7, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           })
@@ -51,210 +63,130 @@ export const TrueRiskDemo: React.FC = () => {
           <TheDate />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...longFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theCost}>
           <TheCost />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeShort })}
-        />
+        <TransitionSeries.Transition {...mediumFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.theQuestion}>
           <TheQuestion />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeShort })}
-        />
+        <TransitionSeries.Transition {...longFade()} />
 
         {/* === HERO === */}
         <TransitionSeries.Sequence durationInFrames={D.heroVideo}>
           <HeroVideo />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-bottom" })}
-          timing={springTiming({ config: { damping: 15, stiffness: 120 }, durationInFrames: T.fadeLong })}
-        />
+        <TransitionSeries.Transition {...longFade()} />
 
-        {/* === PRODUCT SHOWCASE — varied transitions === */}
-
-        {/* Dashboard (screenshot) */}
+        {/* === PRODUCT SHOWCASE === */}
         <TransitionSeries.Sequence durationInFrames={D.dashboard}>
           <Dashboard />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 22, stiffness: 110 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Map (screenshot) */}
         <TransitionSeries.Sequence durationInFrames={D.map}>
           <MapDeepDive />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={wipe({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Alerts (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.alerts}>
           <Alerts />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-bottom" })}
-          timing={springTiming({ config: { damping: 18, stiffness: 130 }, durationInFrames: T.slideShort })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Evacuation (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.evacuation}>
           <Evacuation />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={flip({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Emergency (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.emergency}>
           <Emergency />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...mediumFade()} />
 
-        {/* AI Advisor (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.aiAdvisor}>
           <AiAdvisor />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={wipe({ direction: "from-left" })}
-          timing={springTiming({ config: { damping: 22 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Drought (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.drought}>
           <Drought />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20, stiffness: 120 }, durationInFrames: T.slideShort })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Predictions (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.predictions}>
           <Predictions />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-top" })}
-          timing={springTiming({ config: { damping: 18, stiffness: 130 }, durationInFrames: T.slideShort })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Preparedness (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.preparedness}>
           <Preparedness />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={wipe({ direction: "from-bottom" })}
-          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Community Reports (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.communityReports}>
           <CommunityReports />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={flip({ direction: "from-left" })}
-          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Data Sources (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.dataSources}>
           <DataSources />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 22, stiffness: 140 }, durationInFrames: T.slideShort })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Profile (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.profile}>
           <Profile />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={wipe({ direction: "from-right" })}
-          timing={springTiming({ config: { damping: 20 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Report (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.report}>
           <Report />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-bottom" })}
-          timing={springTiming({ config: { damping: 18, stiffness: 120 }, durationInFrames: T.slideShort })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Phrases (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.phrases}>
           <Phrases />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Bilingual (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.bilingual}>
           <Bilingual />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={wipe({ direction: "from-left" })}
-          timing={springTiming({ config: { damping: 22 }, durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...shortFade()} />
 
-        {/* Notifications (custom) */}
         <TransitionSeries.Sequence durationInFrames={D.notifications}>
           <Notifications />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeLong })}
-        />
+        <TransitionSeries.Transition {...longFade()} />
 
         {/* === CLOSING === */}
         <TransitionSeries.Sequence durationInFrames={D.callback}>
           <Callback />
         </TransitionSeries.Sequence>
 
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T.fadeMedium })}
-        />
+        <TransitionSeries.Transition {...mediumFade()} />
 
         <TransitionSeries.Sequence durationInFrames={D.logoClose}>
           <LogoClose />
