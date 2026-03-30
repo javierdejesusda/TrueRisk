@@ -11,7 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.rate_limit import limiter
+from app.models.alert_preference import AlertPreference
+from app.models.community_report import CommunityReport
 from app.models.password_reset_token import PasswordResetToken
+from app.models.property_report import PropertyReport
 from app.models.user import User
 from app.services.profile_completion_service import compute_profile_completion
 from app.schemas.auth import (
@@ -202,3 +205,54 @@ async def reset_password(
     reset_token.used_at = datetime.now(timezone.utc)  # type: ignore[assignment]
     await db.commit()
     return {"message": "Password has been reset successfully."}
+
+
+@router.get("/me/export")
+async def export_my_data(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """GDPR data portability -- export all user data as JSON."""
+    reports = (await db.execute(
+        select(PropertyReport).where(PropertyReport.user_id == user.id)
+    )).scalars().all()
+
+    community = (await db.execute(
+        select(CommunityReport).where(CommunityReport.reporter_user_id == user.id)
+    )).scalars().all()
+
+    prefs = (await db.execute(
+        select(AlertPreference).where(AlertPreference.user_id == user.id)
+    )).scalars().all()
+
+    return {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "profile": UserResponse.model_validate(user).model_dump(),
+        "property_reports": [
+            {
+                "address": r.address_text,
+                "composite_score": r.composite_score,
+                "created_at": str(r.created_at),
+            }
+            for r in reports
+        ],
+        "community_reports": [
+            {
+                "hazard_type": r.hazard_type,
+                "description": r.description,
+                "created_at": str(r.created_at),
+            }
+            for r in community
+        ],
+        "alert_preferences": [
+            {
+                "quiet_hours_start": p.quiet_hours_start,
+                "quiet_hours_end": p.quiet_hours_end,
+                "emergency_override": p.emergency_override,
+                "batch_interval_minutes": p.batch_interval_minutes,
+                "escalation_enabled": p.escalation_enabled,
+                "snoozed_hazards": p.snoozed_hazards,
+            }
+            for p in prefs
+        ],
+    }
