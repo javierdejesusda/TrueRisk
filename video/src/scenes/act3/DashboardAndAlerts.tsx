@@ -37,12 +37,22 @@ const QUICK_ACTIONS = [
 ];
 
 const DATA_SOURCES = [
-  { name: "AEMET", live: true },
-  { name: "NASA FIRMS", live: true },
-  { name: "Copernicus", live: true },
-  { name: "IGN Seismic", live: true },
-  { name: "SAIH", live: true },
-  { name: "Open-Meteo", live: true },
+  { name: "AEMET", desc: "Spanish Met Agency" },
+  { name: "NASA FIRMS", desc: "Fire Detection" },
+  { name: "Copernicus EFAS", desc: "Flood Awareness" },
+  { name: "Copernicus CAMS", desc: "Air Quality" },
+  { name: "IGN", desc: "Seismic Catalog" },
+  { name: "SAIH", desc: "River Gauges" },
+  { name: "Open-Meteo", desc: "Weather Data" },
+  { name: "NASA POWER", desc: "Solar Radiation" },
+  { name: "ECMWF", desc: "Seasonal Forecasts" },
+  { name: "Copernicus Land", desc: "Soil & Vegetation" },
+];
+
+const CHANNELS = [
+  { name: "SMS", icon: "💬" },
+  { name: "Telegram", icon: "✈️" },
+  { name: "Email", icon: "📧" },
 ];
 
 export const DashboardAndAlerts: React.FC = () => {
@@ -149,45 +159,77 @@ export const DashboardAndAlerts: React.FC = () => {
           </div>
         </div>
 
-        {/* Data Sources */}
-        <div style={{ width: 200, padding: "12px 16px", backgroundColor: "#111119", borderRadius: 12, display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 11, fontWeight: 600, color: COLORS.text }}>Data Sources</span>
-          {DATA_SOURCES.map((ds, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#4ade80" }} />
-              <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 11, color: COLORS.textSecondary }}>{ds.name}</span>
-            </div>
-          ))}
+      </div>
+
+      {/* ROW 3: Data Sources — big 5-column grid */}
+      <div style={{ opacity: interpolate(frame, [20, 33], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 600, color: COLORS.text }}>Data Sources</span>
+          <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 16, fontWeight: 700, color: COLORS.text }}>15+ Live</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10 }}>
+          {DATA_SOURCES.map((ds, i) => {
+            const delay = 22 + i * 2;
+            const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 24, stiffness: 140 } });
+            const opacity = interpolate(progress, [0, 1], [0, 1]);
+            return (
+              <div key={i} style={{ padding: "14px 16px", backgroundColor: "#111119", borderRadius: 10, opacity }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#4ade80" }} />
+                  <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 15, fontWeight: 600, color: COLORS.text }}>{ds.name}</span>
+                </div>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 12, color: COLORS.textSecondary }}>{ds.desc}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* ROW 3: Alerts */}
-      <div style={{
-        flex: 1, display: "flex", flexDirection: "column", gap: 7,
-        opacity: interpolate(frame, [20, 33], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 600, color: COLORS.text }}>Active Alerts</span>
-          <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 13, color: COLORS.textSecondary }}>145 active</span>
-        </div>
-        {ALERTS.map((a, i) => {
-          const delay = 22 + i * 4;
-          const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 22, stiffness: 120 } });
-          const translateX = interpolate(progress, [0, 1], [40, 0]);
-          const opacity = interpolate(progress, [0, 1], [0, 1]);
-          return (
-            <div key={i} style={{
-              padding: "12px 16px", backgroundColor: "#111119", borderRadius: 10,
-              borderLeft: `4px solid ${a.color}`, display: "flex", alignItems: "center", gap: 12,
-              transform: `translateX(${translateX}px)`, opacity,
-            }}>
-              <div style={{ padding: "2px 10px", borderRadius: 5, backgroundColor: a.color }}>
-                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 11, fontWeight: 600, color: "#000" }}>{a.level}</span>
+      {/* ROW 4: Alerts + Notifications */}
+      <div style={{ display: "flex", gap: 12, flex: 1, opacity: interpolate(frame, [30, 42], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+        {/* Alerts */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 600, color: COLORS.text }}>Active Alerts</span>
+            <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 12, color: COLORS.textSecondary }}>145 active</span>
+          </div>
+          {ALERTS.map((a, i) => {
+            const delay = 32 + i * 4;
+            const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 22, stiffness: 120 } });
+            const translateX = interpolate(progress, [0, 1], [40, 0]);
+            const opacity = interpolate(progress, [0, 1], [0, 1]);
+            return (
+              <div key={i} style={{
+                padding: "10px 14px", backgroundColor: "#111119", borderRadius: 8,
+                borderLeft: `4px solid ${a.color}`, display: "flex", alignItems: "center", gap: 10,
+                transform: `translateX(${translateX}px)`, opacity,
+              }}>
+                <div style={{ padding: "2px 8px", borderRadius: 4, backgroundColor: a.color }}>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 10, fontWeight: 600, color: "#000" }}>{a.level}</span>
+                </div>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, color: COLORS.text }}>{a.text}</span>
               </div>
-              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 17, color: COLORS.text }}>{a.text}</span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* Notification Channels */}
+        <div style={{ width: 300, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 16, padding: "16px", backgroundColor: "#111119", borderRadius: 12 }}>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 600, color: COLORS.textSecondary }}>Alert Channels</span>
+          <div style={{ display: "flex", gap: 24 }}>
+            {CHANNELS.map((ch, i) => {
+              const delay = 36 + i * 6;
+              const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 18, stiffness: 140 } });
+              const opacity = interpolate(progress, [0, 1], [0, 1]);
+              return (
+                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, opacity }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: "#1C1C1E", border: "1px solid #2A2A2E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{ch.icon}</div>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 500, color: COLORS.text }}>{ch.name}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
     </AbsoluteFill>
