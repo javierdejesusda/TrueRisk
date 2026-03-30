@@ -1,7 +1,7 @@
 """add password_reset_tokens table
 
 Revision ID: n4o5p6q7r8s9
-Revises: m3n4o5p6q7r8
+Revises: a4b5c6d7e8f9
 Create Date: 2026-03-30
 """
 from typing import Sequence, Union
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 
 revision: str = "n4o5p6q7r8s9"
-down_revision: Union[str, None] = "m3n4o5p6q7r8"
+down_revision: Union[str, None] = "a4b5c6d7e8f9"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
