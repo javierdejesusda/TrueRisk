@@ -58,14 +58,6 @@ export const AiAdvisor: React.FC = () => {
         </div>
       </div>
 
-      {/* Powered by badge */}
-      <div style={{ display: "flex", justifyContent: "center", opacity: badgeOpacity }}>
-        <div style={{ padding: "8px 20px", borderRadius: 20, backgroundColor: "#111119", border: "1px solid #2A2A2E" }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 400, color: COLORS.textSecondary }}>
-            Powered by Anthropic Claude API
-          </span>
-        </div>
-      </div>
 
       <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, textAlign: "center" }}>
         <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 36, fontWeight: 600, color: COLORS.text,

@@ -8,7 +8,6 @@ import { COLORS, FONT_FAMILY, VIDEO } from "../../lib/constants";
 
 const CHANNELS = [
   { name: "SMS", icon: "💬" },
-  { name: "WhatsApp", icon: "📱" },
   { name: "Telegram", icon: "✈️" },
   { name: "Email", icon: "📧" },
 ];

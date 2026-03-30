@@ -9,6 +9,7 @@ const MODELS = [
   { hazard: "Seismic", method: "Rule-based", accuracy: "92%", features: 8 },
   { hazard: "Cold Wave", method: "Rule-based", accuracy: "90%", features: 14 },
   { hazard: "Windstorm", method: "Rule-based", accuracy: "91%", features: 14 },
+  { hazard: "Multi-Horizon", method: "TFT + GNN", accuracy: "87%", features: 32 },
 ];
 
 export const Predictions: React.FC = () => {
@@ -19,7 +20,7 @@ export const Predictions: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "60px 160px", gap: 16 }}>
       <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 48, fontWeight: 700, color: COLORS.text, opacity: titleOpacity, marginBottom: 8 }}>
-        7 ML Models
+        8 ML Models
       </span>
 
       {/* Table header */}
