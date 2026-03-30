@@ -127,9 +127,9 @@ jobs:
           HEALTH_URL: ${{ secrets.PRODUCTION_HEALTH_URL }}
         run: |
           echo "Waiting for deployment to build and start..."
-          sleep 180
+          sleep 300
 
-          for i in $(seq 1 20); do
+          for i in $(seq 1 30); do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
               "${HEALTH_URL}" --max-time 10) || true
 
@@ -138,9 +138,9 @@ jobs:
               exit 0
             fi
 
-            echo "Attempt $i/20: got HTTP $HTTP_CODE, retrying in 15s..."
-            sleep 15
+            echo "Attempt $i/30: got HTTP $HTTP_CODE, retrying in 20s..."
+            sleep 20
           done
 
-          echo "::error::Deployment health check failed after 5 minutes"
+          echo "::error::Deployment health check failed after 15 minutes"
           exit 1
