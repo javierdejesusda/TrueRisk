@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
+import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -33,7 +34,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://truerisk.cloud wss://truerisk.cloud https://*.basemaps.cartocdn.com https://*.cartocdn.com https://cdn.jsdelivr.net",
+              "connect-src 'self' https://truerisk.cloud wss://truerisk.cloud https://*.basemaps.cartocdn.com https://*.cartocdn.com https://cdn.jsdelivr.net https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
@@ -75,4 +76,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  telemetry: false,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});

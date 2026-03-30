@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@sentry/nextjs": "^10.46.0",
     "@swc/helpers": "^0.5.19",
     "@types/topojson-client": "^3.1.5",
     "clsx": "^2.1.1",
