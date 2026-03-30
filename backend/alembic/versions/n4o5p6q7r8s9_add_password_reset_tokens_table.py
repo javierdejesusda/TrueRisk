@@ -17,30 +17,37 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "password_reset_tokens",
-        sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column(
-            "user_id",
-            sa.Integer(),
-            sa.ForeignKey("users.id", ondelete="CASCADE"),
-            nullable=False,
-        ),
-        sa.Column("token_hash", sa.String(), nullable=False),
-        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("used_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
-        ),
-    )
-    op.create_index(
-        "ix_password_reset_tokens_token_hash",
-        "password_reset_tokens",
-        ["token_hash"],
-        unique=True,
-    )
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if "password_reset_tokens" not in inspector.get_table_names():
+        op.create_table(
+            "password_reset_tokens",
+            sa.Column("id", sa.Integer(), primary_key=True),
+            sa.Column(
+                "user_id",
+                sa.Integer(),
+                sa.ForeignKey("users.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
+            sa.Column("token_hash", sa.String(), nullable=False),
+            sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+            sa.Column("used_at", sa.DateTime(timezone=True), nullable=True),
+            sa.Column(
+                "created_at",
+                sa.DateTime(timezone=True),
+                server_default=sa.func.now(),
+            ),
+        )
+    if not any(
+        idx["name"] == "ix_password_reset_tokens_token_hash"
+        for idx in inspector.get_indexes("password_reset_tokens")
+    ):
+        op.create_index(
+            "ix_password_reset_tokens_token_hash",
+            "password_reset_tokens",
+            ["token_hash"],
+            unique=True,
+        )
 
 
 def downgrade() -> None:
