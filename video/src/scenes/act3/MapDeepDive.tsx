@@ -62,11 +62,18 @@ export const MapDeepDive: React.FC = () => {
 
   if (!geoData) return null;
 
-  // Projection: center on mainland Spain, exclude Canary Islands from view
-  const projection = geoMercator()
-    .center([-3.5, 39.5])
-    .scale(3200)
-    .translate([960, 560]);
+  // Filter to mainland + Balearics only (exclude Canary Islands, Ceuta, Melilla for clean fit)
+  const EXCLUDE_CODES = new Set(["35", "38", "51", "52"]);
+  const mainlandFeatures = {
+    ...geoData,
+    features: geoData.features.filter((f) => !EXCLUDE_CODES.has(f.properties.cod_prov)),
+  };
+
+  // Auto-fit projection to viewport with padding
+  const projection = geoMercator().fitExtent(
+    [[350, 40], [1600, 1000]], // [[left, top], [right, bottom]] padding
+    mainlandFeatures
+  );
 
   const pathGenerator = geoPath().projection(projection);
 
@@ -79,7 +86,7 @@ export const MapDeepDive: React.FC = () => {
         <rect width={1920} height={1080} fill="#0C1424" />
 
         {/* Province paths */}
-        {geoData.features.map((feature, i) => {
+        {mainlandFeatures.features.map((feature, i) => {
           const code = feature.properties.cod_prov;
           const score = RISK_SCORES[code] ?? 10;
           const color = riskColor(score);
@@ -105,7 +112,7 @@ export const MapDeepDive: React.FC = () => {
         })}
 
         {/* Province name labels */}
-        {geoData.features.map((feature, i) => {
+        {mainlandFeatures.features.map((feature, i) => {
           const code = feature.properties.cod_prov;
           const labelInfo = LABELS[code];
           if (!labelInfo) return null;
