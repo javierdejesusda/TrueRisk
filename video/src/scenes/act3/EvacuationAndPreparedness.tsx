@@ -24,8 +24,8 @@ export const EvacuationAndPreparedness: React.FC = () => {
   const score = Math.round(interpolate(scoreProgress, [0, 1], [0, 67]));
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "50px 100px", gap: 18 }}>
-      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "40px 60px", gap: 18 }}>
+      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 52, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
         Safety & Readiness
       </span>
 
@@ -34,7 +34,7 @@ export const EvacuationAndPreparedness: React.FC = () => {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12,
           opacity: interpolate(frame, [5, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.textSecondary }}>Nearest Safe Points</span>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 22, fontWeight: 600, color: COLORS.textSecondary }}>Nearest Safe Points</span>
           {SAFE_POINTS.map((p, i) => {
             const delay = 8 + i * 6;
             const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 20, stiffness: 130 } });
@@ -46,12 +46,12 @@ export const EvacuationAndPreparedness: React.FC = () => {
                 backgroundColor: "#111119", borderRadius: 10,
                 transform: `translateY(${translateY}px)`, opacity,
               }}>
-                <span style={{ fontSize: 22 }}>{p.type}</span>
+                <span style={{ fontSize: 26 }}>{p.type}</span>
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 500, color: COLORS.text }}>{p.name}</span>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 500, color: COLORS.text }}>{p.name}</span>
                 </div>
-                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 20, fontWeight: 700, color: COLORS.text }}>{p.distance}</span>
-                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 13, color: COLORS.textSecondary }}>{p.time}</span>
+                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 24, fontWeight: 700, color: COLORS.text }}>{p.distance}</span>
+                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 16, color: COLORS.textSecondary }}>{p.time}</span>
               </div>
             );
           })}
@@ -64,9 +64,9 @@ export const EvacuationAndPreparedness: React.FC = () => {
           opacity: interpolate(frame, [10, 25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.textSecondary }}>Preparedness</span>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 22, fontWeight: 600, color: COLORS.textSecondary }}>Preparedness</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 36, fontWeight: 700, color: COLORS.text }}>{score}</span>
+              <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 44, fontWeight: 700, color: COLORS.text }}>{score}</span>
               <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, color: COLORS.textSecondary }}>/ 100</span>
             </div>
           </div>
@@ -80,10 +80,10 @@ export const EvacuationAndPreparedness: React.FC = () => {
                 padding: "12px 16px", backgroundColor: "#111119", borderRadius: 10,
                 display: "flex", alignItems: "center", gap: 14, opacity,
               }}>
-                <span style={{ fontSize: 20 }}>{cat.icon}</span>
+                <span style={{ fontSize: 26 }}>{cat.icon}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 15, fontWeight: 500, color: COLORS.text }}>{cat.name}</span>
+                    <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 500, color: COLORS.text }}>{cat.name}</span>
                     <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 13, color: COLORS.textSecondary }}>{cat.completed}/{cat.items}</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, backgroundColor: "#1C1C1E" }}>
@@ -98,7 +98,7 @@ export const EvacuationAndPreparedness: React.FC = () => {
 
       {/* Bottom caption */}
       <div style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 32, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           textShadow: "0 2px 20px rgba(0,0,0,0.9)",
         }}>

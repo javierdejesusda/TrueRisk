@@ -30,8 +30,8 @@ export const DroughtAndPredictions: React.FC = () => {
   const titleOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "50px 100px", gap: 18 }}>
-      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "40px 60px", gap: 18 }}>
+      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 52, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
         Hazard Analysis
       </span>
 
@@ -40,12 +40,12 @@ export const DroughtAndPredictions: React.FC = () => {
         <div style={{ width: 420, display: "flex", flexDirection: "column", gap: 14,
           opacity: interpolate(frame, [5, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.textSecondary }}>Drought Monitor</span>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 22, fontWeight: 600, color: COLORS.textSecondary }}>Drought Monitor</span>
           <div style={{ display: "flex", gap: 12 }}>
             {DROUGHT_METRICS.map((m, i) => (
               <div key={i} style={{ flex: 1, padding: "14px", backgroundColor: "#111119", borderRadius: 10 }}>
                 <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 11, color: COLORS.textSecondary, display: "block" }}>{m.label}</span>
-                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 28, fontWeight: 700, color: COLORS.text }}>{m.value}</span>
+                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 34, fontWeight: 700, color: COLORS.text }}>{m.value}</span>
               </div>
             ))}
           </div>
@@ -55,7 +55,7 @@ export const DroughtAndPredictions: React.FC = () => {
               const barWidth = interpolate(barProgress, [0, 1], [0, r.level]);
               return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, opacity: interpolate(barProgress, [0, 1], [0, 1]) }}>
-                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, color: COLORS.textSecondary, width: 100, textAlign: "right" as const }}>{r.name}</span>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 17, color: COLORS.textSecondary, width: 100, textAlign: "right" as const }}>{r.name}</span>
                   <div style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: "#1C1C1E" }}>
                     <div style={{ width: `${barWidth}%`, height: "100%", borderRadius: 4, backgroundColor: COLORS.text }} />
                   </div>
@@ -72,7 +72,7 @@ export const DroughtAndPredictions: React.FC = () => {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10,
           opacity: interpolate(frame, [10, 25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.textSecondary }}>8 ML Models</span>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 22, fontWeight: 600, color: COLORS.textSecondary }}>8 ML Models</span>
           <div style={{ display: "flex", padding: "6px 16px", gap: 12 }}>
             <span style={{ flex: 2, fontFamily: FONT_FAMILY.sans, fontSize: 11, fontWeight: 600, color: COLORS.textSecondary, textTransform: "uppercase" as const, letterSpacing: 1 }}>Hazard</span>
             <span style={{ flex: 2, fontFamily: FONT_FAMILY.sans, fontSize: 11, fontWeight: 600, color: COLORS.textSecondary, textTransform: "uppercase" as const, letterSpacing: 1 }}>Method</span>
@@ -86,9 +86,9 @@ export const DroughtAndPredictions: React.FC = () => {
               <div key={i} style={{
                 display: "flex", padding: "12px 16px", gap: 12, backgroundColor: "#111119", borderRadius: 8, alignItems: "center", opacity,
               }}>
-                <span style={{ flex: 2, fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 500, color: COLORS.text }}>{m.hazard}</span>
-                <span style={{ flex: 2, fontFamily: FONT_FAMILY.mono, fontSize: 14, color: COLORS.textSecondary }}>{m.method}</span>
-                <span style={{ flex: 1, fontFamily: FONT_FAMILY.mono, fontSize: 17, fontWeight: 700, color: COLORS.text, textAlign: "center" as const }}>{m.accuracy}</span>
+                <span style={{ flex: 2, fontFamily: FONT_FAMILY.sans, fontSize: 19, fontWeight: 500, color: COLORS.text }}>{m.hazard}</span>
+                <span style={{ flex: 2, fontFamily: FONT_FAMILY.mono, fontSize: 17, color: COLORS.textSecondary }}>{m.method}</span>
+                <span style={{ flex: 1, fontFamily: FONT_FAMILY.mono, fontSize: 20, fontWeight: 700, color: COLORS.text, textAlign: "center" as const }}>{m.accuracy}</span>
               </div>
             );
           })}
@@ -97,7 +97,7 @@ export const DroughtAndPredictions: React.FC = () => {
 
       {/* Bottom caption */}
       <div style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 32, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           textShadow: "0 2px 20px rgba(0,0,0,0.9)",
         }}>

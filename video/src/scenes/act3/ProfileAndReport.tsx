@@ -21,8 +21,8 @@ export const ProfileAndReport: React.FC = () => {
   const titleOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "60px 120px", gap: 24 }}>
-      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "40px 80px", gap: 24 }}>
+      <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 52, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
         Personalized Assessment
       </span>
 
@@ -32,7 +32,7 @@ export const ProfileAndReport: React.FC = () => {
           flex: 1, display: "flex", flexDirection: "column", gap: 14,
           opacity: interpolate(frame, [8, 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 600, color: COLORS.textSecondary }}>Your Building Profile</span>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 24, fontWeight: 600, color: COLORS.textSecondary }}>Your Building Profile</span>
           {PROFILE_FIELDS.map((field, i) => {
             const delay = 12 + i * 5;
             const progress = spring({ frame: frame - delay, fps: VIDEO.fps, config: { damping: 22, stiffness: 140 } });
@@ -44,8 +44,8 @@ export const ProfileAndReport: React.FC = () => {
                 display: "flex", justifyContent: "space-between", alignItems: "center",
                 transform: `translateY(${translateY}px)`, opacity,
               }}>
-                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 17, fontWeight: 400, color: COLORS.textSecondary }}>{field.label}</span>
-                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 19, fontWeight: 600, color: COLORS.text }}>{field.value}</span>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 400, color: COLORS.textSecondary }}>{field.label}</span>
+                <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 22, fontWeight: 600, color: COLORS.text }}>{field.value}</span>
               </div>
             );
           })}
@@ -71,7 +71,7 @@ export const ProfileAndReport: React.FC = () => {
           flex: 1, display: "flex", flexDirection: "column", gap: 14,
           opacity: interpolate(frame, [15, 28], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 600, color: COLORS.textSecondary }}>Climate Risk Report</span>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 24, fontWeight: 600, color: COLORS.textSecondary }}>Climate Risk Report</span>
           {/* Search bar */}
           <div style={{
             padding: "14px 20px", backgroundColor: "#111119", borderRadius: 10, border: "1px solid #2A2A2E",
@@ -95,9 +95,9 @@ export const ProfileAndReport: React.FC = () => {
                   display: "flex", flexDirection: "column", gap: 6,
                   transform: `scale(${scale})`, opacity,
                 }}>
-                  <span style={{ fontSize: 22 }}>{f.icon}</span>
-                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 600, color: COLORS.text }}>{f.title}</span>
-                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 13, fontWeight: 400, color: COLORS.textSecondary }}>{f.desc}</span>
+                  <span style={{ fontSize: 28 }}>{f.icon}</span>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 600, color: COLORS.text }}>{f.title}</span>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 400, color: COLORS.textSecondary }}>{f.desc}</span>
                 </div>
               );
             })}
@@ -106,7 +106,7 @@ export const ProfileAndReport: React.FC = () => {
       </div>
 
       <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 32, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
           Risk score adapts to your building profile with exportable PDF reports
         </span>

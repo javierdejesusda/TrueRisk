@@ -16,9 +16,9 @@ export const PhrasesAndBilingual: React.FC = () => {
   const titleOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "60px 160px", gap: 22 }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "40px 100px", gap: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 44, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 52, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
           Multilingual Support
         </span>
         {/* Language toggle */}
@@ -27,10 +27,10 @@ export const PhrasesAndBilingual: React.FC = () => {
           opacity: interpolate(frame, [5, 18], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
           <div style={{ padding: "8px 24px", backgroundColor: COLORS.text }}>
-            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 15, fontWeight: 600, color: "#000" }}>ES</span>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: "#000" }}>ES</span>
           </div>
           <div style={{ padding: "8px 24px", backgroundColor: "#111119" }}>
-            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 15, fontWeight: 600, color: COLORS.textSecondary }}>EN</span>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.textSecondary }}>EN</span>
           </div>
         </div>
       </div>
@@ -46,7 +46,7 @@ export const PhrasesAndBilingual: React.FC = () => {
             backgroundColor: i <= 1 ? "rgba(255,255,255,0.12)" : "#111119",
             border: "1px solid #2A2A2E",
           }}>
-            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 13, fontWeight: 500, color: i <= 1 ? COLORS.text : COLORS.textSecondary }}>{lang}</span>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, fontWeight: 500, color: i <= 1 ? COLORS.text : COLORS.textSecondary }}>{lang}</span>
           </div>
         ))}
       </div>
@@ -65,11 +65,11 @@ export const PhrasesAndBilingual: React.FC = () => {
               transform: `translateY(${translateY}px)`, opacity,
             }}>
               <div style={{ flex: 1 }}>
-                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 500, color: COLORS.text }}>{p.es}</span>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 24, fontWeight: 500, color: COLORS.text }}>{p.es}</span>
               </div>
               <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, color: COLORS.textSecondary }}>→</span>
               <div style={{ flex: 1 }}>
-                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, fontWeight: 500, color: COLORS.textSecondary }}>{p.en}</span>
+                <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 24, fontWeight: 500, color: COLORS.textSecondary }}>{p.en}</span>
               </div>
               <div style={{ padding: "5px 14px", borderRadius: 6, backgroundColor: "#1C1C1E", border: "1px solid #2A2A2E" }}>
                 <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>🔊</span>
@@ -80,7 +80,7 @@ export const PhrasesAndBilingual: React.FC = () => {
       </div>
 
       <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 32, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [50, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
           Emergency phrases in 12 languages with full Spanish and English interface
         </span>

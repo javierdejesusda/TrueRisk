@@ -56,10 +56,10 @@ export const DashboardAndAlerts: React.FC = () => {
   const prepScore = Math.round(interpolate(prepProgress, [0, 1], [0, 67]));
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "32px 60px", gap: 10 }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "32px 50px", gap: 10 }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 48, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 52, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
           Risk Intelligence
         </span>
         <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, fontWeight: 400, color: COLORS.textSecondary, opacity: titleOpacity }}>
@@ -75,7 +75,7 @@ export const DashboardAndAlerts: React.FC = () => {
         {/* Risk Score */}
         <div style={{ padding: "16px 22px", backgroundColor: "#111119", borderRadius: 12, display: "flex", alignItems: "center", gap: 18, width: 300 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 56, fontWeight: 700, color: COLORS.text }}>{riskScore}</span>
+            <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 60, fontWeight: 700, color: COLORS.text }}>{riskScore}</span>
             <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 11, color: COLORS.textSecondary }}>Composite Risk</span>
           </div>
           <div style={{ width: 1, height: 55, backgroundColor: "#2A2A2E" }} />
@@ -90,7 +90,7 @@ export const DashboardAndAlerts: React.FC = () => {
           {WEATHER.map((w, i) => (
             <div key={i}>
               <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 10, color: COLORS.textSecondary, display: "block" }}>{w.label}</span>
-              <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 18, fontWeight: 600, color: COLORS.text }}>{w.value}</span>
+              <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 20, fontWeight: 600, color: COLORS.text }}>{w.value}</span>
             </div>
           ))}
         </div>
@@ -125,7 +125,7 @@ export const DashboardAndAlerts: React.FC = () => {
             <span style={{ fontSize: 13 }}>🤖</span>
             <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 12, fontWeight: 600, color: COLORS.text }}>AI Risk Narrative</span>
           </div>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, color: COLORS.textSecondary, lineHeight: 1.6 }}>
             Risk for Madrid: low (15/100). Wildfire is the dominant factor. No immediate threats detected. Stay informed and follow civil protection guidelines.
           </span>
         </div>
@@ -184,7 +184,7 @@ export const DashboardAndAlerts: React.FC = () => {
               <div style={{ padding: "2px 10px", borderRadius: 5, backgroundColor: a.color }}>
                 <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 11, fontWeight: 600, color: "#000" }}>{a.level}</span>
               </div>
-              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 14, color: COLORS.text }}>{a.text}</span>
+              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 17, color: COLORS.text }}>{a.text}</span>
             </div>
           );
         })}

@@ -23,7 +23,7 @@ export const EmergencyAndAI: React.FC = () => {
   const isTyping = charsToShow < AI_RESPONSE.length && frame >= 40;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "50px 100px", gap: 20 }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.bg, display: "flex", flexDirection: "column", padding: "40px 60px", gap: 20 }}>
       <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 48, fontWeight: 700, color: COLORS.text, opacity: titleOpacity }}>
         Emergency Response
       </span>
@@ -38,7 +38,7 @@ export const EmergencyAndAI: React.FC = () => {
             transform: `scale(${buttonScale})`, display: "flex", alignItems: "center", gap: 12,
           }}>
             <span style={{ fontSize: 24 }}>📞</span>
-            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 700, color: "#FFF" }}>Call 112</span>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 36, fontWeight: 700, color: "#FFF" }}>Call 112</span>
           </div>
 
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
@@ -51,8 +51,8 @@ export const EmergencyAndAI: React.FC = () => {
                   padding: "14px 20px", backgroundColor: "#111119", borderRadius: 10,
                   display: "flex", justifyContent: "space-between", opacity,
                 }}>
-                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 17, color: COLORS.textSecondary }}>{c.name}</span>
-                  <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 18, fontWeight: 600, color: COLORS.text }}>{c.phone}</span>
+                  <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, color: COLORS.textSecondary }}>{c.name}</span>
+                  <span style={{ fontFamily: FONT_FAMILY.mono, fontSize: 22, fontWeight: 600, color: COLORS.text }}>{c.phone}</span>
                 </div>
               );
             })}
@@ -65,16 +65,16 @@ export const EmergencyAndAI: React.FC = () => {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14,
           opacity: interpolate(frame, [20, 35], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         }}>
-          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 18, fontWeight: 600, color: COLORS.textSecondary }}>AI Emergency Advisor</span>
+          <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 22, fontWeight: 600, color: COLORS.textSecondary }}>AI Emergency Advisor</span>
 
           <div style={{ padding: "14px 18px", borderRadius: "14px 14px 4px 14px", backgroundColor: "#1C1C1E", border: "1px solid #2A2A2E", alignSelf: "flex-end", maxWidth: 400 }}>
-            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, color: COLORS.text }}>What should I do? Strong winds in my area.</span>
+            <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, color: COLORS.text }}>What should I do? Strong winds in my area.</span>
           </div>
 
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: "#111119", border: "1px solid #2A2A2E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🤖</div>
             <div style={{ padding: "14px 18px", borderRadius: "4px 14px 14px 14px", backgroundColor: "#111119" }}>
-              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 16, color: COLORS.text, lineHeight: 1.6 }}>
+              <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 20, color: COLORS.text, lineHeight: 1.6 }}>
                 {displayedResponse}{isTyping && <span style={{ color: COLORS.textSecondary }}>▊</span>}
               </span>
             </div>
@@ -84,7 +84,7 @@ export const EmergencyAndAI: React.FC = () => {
 
       {/* Bottom caption */}
       <div style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 32, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           textShadow: "0 2px 20px rgba(0,0,0,0.9)",
         }}>
