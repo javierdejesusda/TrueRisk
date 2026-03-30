@@ -6,11 +6,14 @@ import { useChatStore } from '@/store/chat-store';
 import type { ChatUsage } from '@/store/chat-store';
 
 function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'X-Requested-With': 'XMLHttpRequest',
+  };
   const token = useAppStore.getState().backendToken;
   if (token) {
-    return { Authorization: `Bearer ${token}` };
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  return {};
+  return headers;
 }
 
 export function useChat() {

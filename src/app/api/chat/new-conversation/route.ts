@@ -3,7 +3,9 @@ import { NextRequest } from 'next/server';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 
 export async function POST(req: NextRequest) {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    'X-Requested-With': 'XMLHttpRequest',
+  };
   const auth = req.headers.get('authorization');
   if (auth) headers['Authorization'] = auth;
 

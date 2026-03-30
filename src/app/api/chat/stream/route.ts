@@ -6,6 +6,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   };
   const auth = req.headers.get('authorization');
   if (auth) headers['Authorization'] = auth;
