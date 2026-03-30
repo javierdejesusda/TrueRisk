@@ -130,7 +130,8 @@ export function ChatInput() {
             onKeyDown={handleKeyDown}
             maxLength={MAX_CHARS}
             disabled={isStreaming}
-            className="w-full bg-transparent font-[family-name:var(--font-sans)] text-sm text-text-primary leading-[1.6] placeholder:text-transparent focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full bg-transparent font-[family-name:var(--font-sans)] text-sm text-text-primary leading-[1.6] placeholder:text-transparent outline-none focus:outline-none focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ outline: 'none' }}
             aria-label={t('inputPlaceholder')}
           />
           {/* Animated placeholder */}
