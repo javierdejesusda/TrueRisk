@@ -70,8 +70,10 @@ export function ChatInput() {
           setDisplayedPlaceholder(displayedPlaceholder.slice(0, -1));
         }, 20);
       } else {
-        setIsDeleting(false);
-        setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+        timer = setTimeout(() => {
+          setIsDeleting(false);
+          setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+        }, 0);
       }
     }
 
@@ -79,11 +81,17 @@ export function ChatInput() {
   }, [displayedPlaceholder, isDeleting, isFocused, value, placeholderIndex, placeholders]);
 
   // Reset placeholder animation when focus leaves
+  const prevFocused = useRef(isFocused);
   useEffect(() => {
-    if (!isFocused && value.length === 0) {
-      setDisplayedPlaceholder('');
-      setIsDeleting(false);
+    if (prevFocused.current && !isFocused && value.length === 0) {
+      const t = setTimeout(() => {
+        setDisplayedPlaceholder('');
+        setIsDeleting(false);
+      }, 0);
+      prevFocused.current = isFocused;
+      return () => clearTimeout(t);
     }
+    prevFocused.current = isFocused;
   }, [isFocused, value]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
