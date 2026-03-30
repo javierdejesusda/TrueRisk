@@ -35,44 +35,35 @@ class TestJwtSecretValidation:
         assert s.demo_mode is True
 
 
-class TestFieldEncryptionKeyWarning:
-    """FIELD_ENCRYPTION_KEY logs a warning when empty outside demo mode."""
+class TestFieldEncryptionKeyValidation:
+    """FIELD_ENCRYPTION_KEY must be set when DEMO_MODE is False."""
 
-    def test_empty_encryption_key_warns(self, caplog):
-        import logging
-
-        with caplog.at_level(logging.WARNING, logger="app.config"):
+    def test_empty_encryption_key_raises_when_not_demo(self):
+        with pytest.raises(ValidationError, match="FIELD_ENCRYPTION_KEY must be set"):
             Settings(
                 jwt_secret="test-secret",
                 field_encryption_key="",
                 demo_mode=False,
                 _env_file=None,
             )
-        assert "FIELD_ENCRYPTION_KEY is empty" in caplog.text
 
-    def test_encryption_key_set_no_warning(self, caplog):
-        import logging
+    def test_encryption_key_set_passes(self):
+        s = Settings(
+            jwt_secret="test-secret",
+            field_encryption_key="some-key",
+            demo_mode=False,
+            _env_file=None,
+        )
+        assert s.field_encryption_key == "some-key"
 
-        with caplog.at_level(logging.WARNING, logger="app.config"):
-            Settings(
-                jwt_secret="test-secret",
-                field_encryption_key="some-key",
-                demo_mode=False,
-                _env_file=None,
-            )
-        assert "FIELD_ENCRYPTION_KEY" not in caplog.text
-
-    def test_demo_mode_no_encryption_warning(self, caplog):
-        import logging
-
-        with caplog.at_level(logging.WARNING, logger="app.config"):
-            Settings(
-                jwt_secret="",
-                field_encryption_key="",
-                demo_mode=True,
-                _env_file=None,
-            )
-        assert "FIELD_ENCRYPTION_KEY" not in caplog.text
+    def test_demo_mode_skips_encryption_key_validation(self):
+        s = Settings(
+            jwt_secret="",
+            field_encryption_key="",
+            demo_mode=True,
+            _env_file=None,
+        )
+        assert s.field_encryption_key == ""
 
 
 class TestSentryDsnField:

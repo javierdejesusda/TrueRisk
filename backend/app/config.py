@@ -79,9 +79,9 @@ class Settings(BaseSettings):
                     "Generate one with: openssl rand -hex 32"
                 )
             if not self.field_encryption_key:
-                logger.warning(
-                    "FIELD_ENCRYPTION_KEY is empty — encrypted fields will "
-                    "be stored in plain text. Set it for production use."
+                raise ValueError(
+                    "FIELD_ENCRYPTION_KEY must be set when DEMO_MODE is not enabled. "
+                    "Generate one with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
                 )
         return self
 

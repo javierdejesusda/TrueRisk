@@ -87,12 +87,14 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://truerisk:truerisk@localhost:5432/truerisk_test
           JWT_SECRET: ci-test-secret
+          FIELD_ENCRYPTION_KEY: NM73lE7_QLv-PMRqOgPffUUzqH8ljkBKJQe7PtJA874=
 
       - name: Run tests with coverage
         run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
         env:
           DATABASE_URL: sqlite+aiosqlite:///./test.db
           JWT_SECRET: ci-test-secret
+          FIELD_ENCRYPTION_KEY: NM73lE7_QLv-PMRqOgPffUUzqH8ljkBKJQe7PtJA874=
 
   deploy:
     runs-on: ubuntu-latest
