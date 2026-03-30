@@ -13,6 +13,7 @@ from app.models import (  # noqa: F401
     SafetyCheckIn, FamilyLink, SafePoint, WaterRestriction, RiskNarrative, ApiKey,
     UserPoints, Badge, UserBadge,
 )
+import app.models.chat  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
