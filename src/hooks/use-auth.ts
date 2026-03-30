@@ -25,15 +25,19 @@ export function useAuth() {
             const s = session as ExtendedSession;
             if (s.backendToken) {
                 setBackendToken(s.backendToken);
-            }
-            if (s.user) {
-                setAuthUser({
-                    id: Number(s.user.id),
-                    name: s.user.name || '',
-                    email: s.user.email || '',
-                    image: s.user.image || '',
-                    role: s.user.role || 'citizen',
-                });
+                if (s.user) {
+                    setAuthUser({
+                        id: Number(s.user.id),
+                        name: s.user.name || '',
+                        email: s.user.email || '',
+                        image: s.user.image || '',
+                        role: s.user.role || 'citizen',
+                    });
+                }
+            } else {
+                // Session exists but backendToken is null -- refresh failed
+                setBackendToken(null);
+                setAuthUser(null);
             }
         } else if (status === 'unauthenticated') {
             setBackendToken(null);

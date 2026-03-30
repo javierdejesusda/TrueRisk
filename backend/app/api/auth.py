@@ -17,11 +17,14 @@ from app.models.password_reset_token import PasswordResetToken
 from app.models.property_report import PropertyReport
 from app.models.user import User
 from app.services.profile_completion_service import compute_profile_completion
+from app.config import settings
 from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     OAuthLinkRequest,
     ProfileUpdateRequest,
+    RefreshRequest,
+    RefreshResponse,
     RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
@@ -33,6 +36,7 @@ from app.services.auth_service import (
     hash_password,
     verify_password,
 )
+from app.services import refresh_token_service
 
 router = APIRouter()
 
@@ -57,8 +61,11 @@ async def register(request: Request, body: RegisterRequest, db: AsyncSession = D
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    raw_refresh = await refresh_token_service.create_token(db, user.id)
     return TokenResponse(
         access_token=create_access_token(user.id),
+        refresh_token=raw_refresh,
+        expires_in=settings.jwt_expire_minutes * 60,
         user=UserResponse.model_validate(user),
     )
 
@@ -74,8 +81,11 @@ async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends
         or not verify_password(body.password, user.password_hash)
     ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    raw_refresh = await refresh_token_service.create_token(db, user.id)
     return TokenResponse(
         access_token=create_access_token(user.id),
+        refresh_token=raw_refresh,
+        expires_in=settings.jwt_expire_minutes * 60,
         user=UserResponse.model_validate(user),
     )
 
@@ -106,10 +116,38 @@ async def oauth_link(request: Request, body: OAuthLinkRequest, db: AsyncSession 
         user.avatar_url = body.avatar_url or user.avatar_url
         await db.commit()
         await db.refresh(user)
+    raw_refresh = await refresh_token_service.create_token(db, user.id)
     return TokenResponse(
         access_token=create_access_token(user.id),
+        refresh_token=raw_refresh,
+        expires_in=settings.jwt_expire_minutes * 60,
         user=UserResponse.model_validate(user),
     )
+
+
+@router.post("/refresh", response_model=RefreshResponse)
+@limiter.limit("30/minute")
+async def refresh_tokens(
+    request: Request, body: RefreshRequest, db: AsyncSession = Depends(get_db)
+):
+    new_refresh, new_access = await refresh_token_service.rotate_token(
+        db, body.refresh_token
+    )
+    return RefreshResponse(
+        access_token=new_access,
+        refresh_token=new_refresh,
+        expires_in=settings.jwt_expire_minutes * 60,
+    )
+
+
+@router.post("/logout")
+async def logout(
+    body: RefreshRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await refresh_token_service.revoke_all_for_user(db, user.id)
+    return {"message": "Logged out"}
 
 
 @router.get("/me", response_model=UserResponse)

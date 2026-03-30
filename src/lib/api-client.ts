@@ -6,7 +6,9 @@ function handle401() {
     if (isRedirecting) return;
     isRedirecting = true;
     useAppStore.getState().clearAuth();
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+    }
     setTimeout(() => { isRedirecting = false; }, 3000);
 }
 
@@ -23,11 +25,29 @@ export async function apiFetch(
         headers.set('Content-Type', 'application/json');
     }
     headers.set('X-Requested-With', 'XMLHttpRequest');
-    const response = await fetch(path, { ...options, headers });
-    // Only redirect on 401 if we actually sent a token (meaning it's expired/invalid).
-    // A 401 without a token just means auth hasn't hydrated yet — not an error.
+    let response = await fetch(path, { ...options, headers });
+
+    // On 401, try refreshing the session (which triggers JWT callback / token rotation)
     if (response.status === 401 && token) {
-        handle401();
+        try {
+            const { getSession } = await import('next-auth/react');
+            const session = await getSession();
+            const newToken = (session as Record<string, unknown> | null)?.backendToken as
+                | string
+                | undefined;
+            if (newToken && newToken !== token) {
+                useAppStore.getState().setBackendToken(newToken);
+                headers.set('Authorization', `Bearer ${newToken}`);
+                response = await fetch(path, { ...options, headers });
+            }
+        } catch {
+            // Session refresh failed
+        }
+
+        if (response.status === 401) {
+            handle401();
+        }
     }
+
     return response;
 }

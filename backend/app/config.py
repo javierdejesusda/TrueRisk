@@ -34,7 +34,9 @@ class Settings(BaseSettings):
     # Auth / JWT
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 10080  # 7 days
+    jwt_expire_minutes: int = 15  # short-lived access tokens
+    refresh_token_expire_days: int = 7
+    refresh_token_max_per_user: int = 10
 
     # Resend (email)
     resend_api_key: str = ""

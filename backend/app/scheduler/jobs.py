@@ -106,6 +106,20 @@ async def purge_stale_locations():
         logger.exception("Stale location purge failed")
 
 
+async def cleanup_expired_refresh_tokens():
+    """Daily cleanup of expired refresh tokens."""
+    from app.database import async_session
+    from app.services.refresh_token_service import cleanup_expired
+
+    try:
+        async with async_session() as db:
+            count = await cleanup_expired(db)
+            if count:
+                logger.info("Cleaned up %d expired refresh tokens", count)
+    except Exception:
+        logger.exception("Refresh token cleanup failed")
+
+
 def setup_scheduler():
     """Configure and start the scheduler."""
     # Run pipeline every 6 hours
@@ -165,11 +179,19 @@ def setup_scheduler():
         name="6h stale GPS location purge",
         replace_existing=True,
     )
+    scheduler.add_job(
+        cleanup_expired_refresh_tokens,
+        "interval",
+        hours=24,
+        id="cleanup_refresh_tokens",
+        name="Daily expired refresh token cleanup",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info(
         "Scheduler started: pipeline every 6h, flash flood every 10min, "
         "rapid severity every 15min, staleness check every 30min, "
-        "stale location purge every 6h"
+        "stale location purge every 6h, refresh token cleanup every 24h"
     )
 
 

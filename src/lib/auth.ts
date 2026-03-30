@@ -41,6 +41,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     email: data.user.email,
                     image: data.user.avatar_url,
                     backendToken: data.access_token,
+                    refreshToken: data.refresh_token,
+                    tokenExpiresAt: Date.now() + data.expires_in * 1000,
                     role: data.user.role,
                 };
             },
@@ -48,12 +50,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     callbacks: {
         async jwt({ token, user, account }) {
+            // Initial sign-in via credentials
             if (user) {
                 const u = user as Record<string, unknown>;
                 token.backendToken = u.backendToken;
+                token.refreshToken = u.refreshToken;
+                token.tokenExpiresAt = u.tokenExpiresAt;
                 token.role = u.role;
                 token.userId = user.id;
             }
+            // OAuth sign-in
             if (account && account.provider !== 'credentials') {
                 for (let attempt = 0; attempt < 2; attempt++) {
                     try {
@@ -71,6 +77,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         if (res.ok) {
                             const data = await res.json();
                             token.backendToken = data.access_token;
+                            token.refreshToken = data.refresh_token;
+                            token.tokenExpiresAt = Date.now() + data.expires_in * 1000;
                             token.role = data.user.role;
                             token.userId = String(data.user.id);
                             break;
@@ -82,6 +90,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     }
                 }
             }
+
+            // Token refresh: check if access token needs refreshing (3 min buffer)
+            const REFRESH_BUFFER_MS = 3 * 60 * 1000;
+            if (
+                token.tokenExpiresAt &&
+                Date.now() < (token.tokenExpiresAt as number) - REFRESH_BUFFER_MS
+            ) {
+                return token; // Still fresh
+            }
+            // Refresh needed
+            if (token.refreshToken) {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({
+                            refresh_token: token.refreshToken,
+                        }),
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        token.backendToken = data.access_token;
+                        token.refreshToken = data.refresh_token;
+                        token.tokenExpiresAt = Date.now() + data.expires_in * 1000;
+                        return token;
+                    }
+                } catch {
+                    // Refresh failed silently
+                }
+                // Refresh failed -- clear tokens so session knows auth is gone
+                token.backendToken = null;
+                token.refreshToken = null;
+                token.tokenExpiresAt = null;
+            }
+
             return token;
         },
         async session({ session, token }) {
