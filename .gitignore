@@ -72,15 +72,8 @@ next-env.d.ts
 
 # docs - keep technical report PDF public, ignore everything else
 docs/superpowers/
-docs/technical-report/*.tex
-docs/technical-report/*.bib
-docs/technical-report/*.sty
-docs/technical-report/*.drawio
-docs/technical-report/*.png
-docs/technical-report/*.aux
-docs/technical-report/*.log
-docs/technical-report/*.out
-docs/technical-report/*.synctex*
+docs/technical-report/*
+!docs/technical-report/main.pdf
 
 # AI / Claude artifacts
 CLAUDE.md
