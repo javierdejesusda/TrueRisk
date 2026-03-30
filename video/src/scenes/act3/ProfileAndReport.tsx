@@ -106,9 +106,9 @@ export const ProfileAndReport: React.FC = () => {
       </div>
 
       <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-          Personalized Assessment
+          Risk score adapts to your building profile with exportable PDF reports
         </span>
       </div>
     </AbsoluteFill>

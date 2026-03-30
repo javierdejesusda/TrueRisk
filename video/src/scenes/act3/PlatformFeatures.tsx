@@ -82,11 +82,11 @@ export const PlatformFeatures: React.FC = () => {
 
       {/* Bottom caption */}
       <div style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [55, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           textShadow: "0 2px 20px rgba(0,0,0,0.9)",
         }}>
-          Platform Infrastructure
+          15+ real-time data sources with SMS, Telegram, and email alerts
         </span>
       </div>
     </AbsoluteFill>

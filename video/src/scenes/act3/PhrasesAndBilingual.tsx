@@ -80,9 +80,9 @@ export const PhrasesAndBilingual: React.FC = () => {
       </div>
 
       <div style={{ position: "absolute", bottom: 40, left: 0, right: 0, textAlign: "center" }}>
-        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 34, fontWeight: 600, color: COLORS.text,
+        <span style={{ fontFamily: FONT_FAMILY.sans, fontSize: 28, fontWeight: 600, color: COLORS.text,
           opacity: interpolate(frame, [50, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-          Multilingual Support
+          Emergency phrases in 12 languages with full Spanish and English interface
         </span>
       </div>
     </AbsoluteFill>
