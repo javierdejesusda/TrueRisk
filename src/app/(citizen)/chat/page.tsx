@@ -51,7 +51,7 @@ export default function ChatPage() {
           <button
             type="button"
             onClick={startNewConversation}
-            className="flex items-center gap-1.5 rounded-xl px-3 py-2 font-[family-name:var(--font-sans)] text-[11px] font-medium text-text-muted bg-white/[0.03] border border-border/30 transition-all duration-200 hover:bg-white/[0.06] hover:text-text-secondary hover:border-border-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/30 active:scale-[0.97] cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 font-[family-name:var(--font-sans)] text-[11px] font-medium text-text-secondary bg-white/[0.04] border border-border/40 transition-all duration-200 hover:bg-white/[0.08] hover:text-text-primary hover:border-border-hover/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/30 active:scale-[0.97] cursor-pointer"
           >
             <RotateCcw className="h-3 w-3" />
             {t('newChat')}
@@ -68,7 +68,7 @@ export default function ChatPage() {
           {/* Conversation limit hint */}
           {messages.length > 0 && (
             <div className="py-1 text-center">
-              <span className="font-[family-name:var(--font-mono)] text-[9px] text-text-muted/30 tracking-wide uppercase">
+              <span className="font-[family-name:var(--font-mono)] text-[9px] text-text-secondary/60 tracking-wide uppercase">
                 {t('conversationLimitHint', { count: messages.length, limit: 20 })}
               </span>
             </div>

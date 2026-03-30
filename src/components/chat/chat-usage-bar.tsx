@@ -26,7 +26,7 @@ export function ChatUsageBar() {
 
   return (
     <div className="flex items-center gap-2 mt-0.5">
-      <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-muted/50">
+      <span className="font-[family-name:var(--font-mono)] text-[10px] text-text-secondary">
         {usage.messagesToday}/{usage.messagesLimitDaily}
       </span>
       <div className="h-[2px] w-16 rounded-full bg-border/30 overflow-hidden">
