@@ -317,6 +317,12 @@ async def _cache_lookup(addr_hash: str) -> GeocodingResult | None:
             row = result.scalar_one_or_none()
             if row is None:
                 return None
+            # Invalidate stale entries that failed province resolution
+            if row.province_code == "00":
+                await session.delete(row)
+                await session.commit()
+                logger.info("Evicted stale geocode cache (province_code=00) for hash=%s", addr_hash)
+                return None
             return GeocodingResult(
                 formatted_address=row.formatted_address,
                 latitude=row.latitude,
