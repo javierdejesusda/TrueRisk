@@ -70,7 +70,7 @@ function MessageBubble({ message, isLast }: { message: ChatMessage; isLast: bool
             <p
               className={[
                 'font-[family-name:var(--font-sans)] text-[13px] leading-[1.75] whitespace-pre-wrap break-words',
-                isUser ? 'text-text-primary' : 'text-text-secondary',
+                isUser ? 'text-text-primary' : 'text-text-primary',
               ].join(' ')}
             >
               {message.content}

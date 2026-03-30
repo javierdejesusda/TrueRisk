@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     chat_max_output_tokens: int = 800
     chat_daily_token_budget: int = 50_000
     chat_monthly_token_budget: int = 500_000
-    chat_cooldown_seconds: int = 10
+    chat_cooldown_seconds: int = 3
     chat_max_conversation_messages: int = 20
     chat_context_window_messages: int = 10
     chat_platform_daily_cost_limit: float = 50.0

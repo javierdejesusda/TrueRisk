@@ -40,11 +40,10 @@ export function ChatInput() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const isStreaming = useChatStore((s) => s.isStreaming);
-  const canSend = useChatStore((s) => s.usage?.canSend ?? true);
   const { sendMessage } = useChat();
 
   const isEmpty = value.trim().length === 0;
-  const isDisabled = isEmpty || isStreaming || !canSend;
+  const isDisabled = isEmpty || isStreaming;
 
   // Cycle placeholder text
   useEffect(() => {
@@ -118,8 +117,8 @@ export function ChatInput() {
   return (
     <div ref={wrapperRef}>
       <div
-        className="flex items-center gap-2 rounded-full bg-bg-card border border-border/30 px-2 py-1.5 transition-colors duration-200 focus-within:border-border-hover/50"
-        style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.02)' }}
+        className="flex items-center gap-2 rounded-full bg-bg-card border border-border/30 px-2 py-1.5 transition-all duration-200 focus-within:border-border-hover/60 focus-within:ring-1 focus-within:ring-white/[0.04]"
+        style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}
       >
         {/* Input + placeholder */}
         <div className="relative flex-1 ml-2">
@@ -130,7 +129,7 @@ export function ChatInput() {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             maxLength={MAX_CHARS}
-            disabled={isStreaming || !canSend}
+            disabled={isStreaming}
             className="w-full bg-transparent font-[family-name:var(--font-sans)] text-sm text-text-primary leading-[1.6] placeholder:text-transparent focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label={t('inputPlaceholder')}
           />
