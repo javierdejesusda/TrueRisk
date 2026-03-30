@@ -33,6 +33,7 @@ import app.models.arpsi_flood_zone  # noqa: F401
 import app.models.geocode_cache  # noqa: F401
 import app.models.api_key  # noqa: F401
 import app.models.password_reset_token  # noqa: F401
+import app.models.chat  # noqa: F401
 
 TEST_DATABASE_URL = "sqlite+aiosqlite://"
 
