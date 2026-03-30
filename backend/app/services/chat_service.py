@@ -189,24 +189,19 @@ async def check_rate_limits(
         next_month_dt = datetime.combine(next_month, datetime.min.time(), tzinfo=timezone.utc)
         return False, "monthly_token_limit", next_month_dt.isoformat()
 
-    # 5. Cooldown
-    last_msg_result = await db.execute(
-        select(ChatMessage.created_at)
-        .where(
+    # 5. Burst cooldown — only triggers after 5+ messages in 60 seconds
+    one_minute_ago = datetime.utcnow() - timedelta(seconds=60)
+    burst_result = await db.execute(
+        select(sa_func.count(ChatMessage.id)).where(
             ChatMessage.user_id == user_id,
             ChatMessage.role == "user",
+            ChatMessage.created_at >= one_minute_ago,
         )
-        .order_by(ChatMessage.created_at.desc())
-        .limit(1)
     )
-    last_msg_at = last_msg_result.scalar_one_or_none()
-    if last_msg_at is not None:
-        # SQLite returns naive datetimes — normalize to UTC-aware
-        if last_msg_at.tzinfo is None:
-            last_msg_at = last_msg_at.replace(tzinfo=timezone.utc)
-        cooldown_until = last_msg_at + timedelta(seconds=settings.chat_cooldown_seconds)
-        if now < cooldown_until:
-            return False, "cooldown", cooldown_until.isoformat()
+    burst_count = burst_result.scalar() or 0
+    if burst_count >= 5:
+        cooldown_until = now + timedelta(seconds=settings.chat_cooldown_seconds)
+        return False, "cooldown", cooldown_until.isoformat()
 
     return True, None, None
 
