@@ -22,6 +22,7 @@ from app.models.water_restriction import WaterRestriction
 from app.models.risk_narrative import RiskNarrative
 from app.models.api_key import ApiKey
 from app.models.gamification import UserPoints, Badge, UserBadge
+from app.models.refresh_token import RefreshToken
 from app.models.telegram_link_code import TelegramLinkCode
 
 __all__ = [
@@ -55,5 +56,6 @@ __all__ = [
     "UserPoints",
     "Badge",
     "UserBadge",
+    "RefreshToken",
     "TelegramLinkCode",
 ]

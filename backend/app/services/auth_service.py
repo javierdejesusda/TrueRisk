@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -44,3 +45,15 @@ def generate_reset_token() -> tuple[str, str]:
     plain = secrets.token_urlsafe(32)
     hashed = hashlib.sha256(plain.encode()).hexdigest()
     return plain, hashed
+
+
+def create_refresh_token_pair() -> tuple[str, str, str]:
+    """Return (raw_token, token_hash, family_id)."""
+    raw = secrets.token_urlsafe(32)
+    hashed = hashlib.sha256(raw.encode()).hexdigest()
+    family_id = str(uuid.uuid4())
+    return raw, hashed, family_id
+
+
+def hash_refresh_token(raw: str) -> str:
+    return hashlib.sha256(raw.encode()).hexdigest()

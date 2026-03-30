@@ -182,8 +182,21 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str
+    expires_in: int  # seconds until access token expires
     token_type: str = "bearer"
     user: UserResponse
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    expires_in: int
+    token_type: str = "bearer"
 
 
 class ForgotPasswordRequest(BaseModel):
