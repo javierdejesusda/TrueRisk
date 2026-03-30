@@ -102,6 +102,8 @@ PROVINCE_NAME_TO_CODE: dict[str, str] = {
     "málaga": "29",
     "melilla": "52",
     "murcia": "30",
+    "región de murcia": "30",
+    "region de murcia": "30",
     "navarra": "31",
     "nafarroa": "31",
     "ourense": "32",
@@ -119,6 +121,10 @@ PROVINCE_NAME_TO_CODE: dict[str, str] = {
     "toledo": "45",
     "valencia": "46",
     "valència": "46",
+    "valenciana": "46",
+    "comunitat valenciana": "46",
+    "comunidad valenciana": "46",
+    "principado de asturias": "33",
     "valladolid": "47",
     "zamora": "49",
     "zaragoza": "50",
@@ -161,7 +167,7 @@ def _province_code_from_state(state: str | None) -> str:
         return "00"
     key = state.lower().strip()
     # Some Nominatim responses include "Provincia de ..." or "Comunidad de ..."
-    for prefix in ("provincia de ", "comunidad de ", "comunitat ", "comunidad foral de "):
+    for prefix in ("provincia de ", "comunidad de ", "comunitat ", "comunidad foral de ", "región de ", "region de ", "comunidad autónoma de ", "comunidad autonoma de ", "principado de ", "principat d'"):
         if key.startswith(prefix):
             key = key[len(prefix):]
     return PROVINCE_NAME_TO_CODE.get(key, "00")
