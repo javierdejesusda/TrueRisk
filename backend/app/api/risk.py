@@ -728,7 +728,7 @@ async def trigger_pipeline():
 async def trigger_forecasts_only(db: AsyncSession = Depends(get_db)):
     """Run TFT forecast for one province (28/Madrid) and store results."""
     import traceback
-    from datetime import datetime as dt
+    from datetime import datetime as dt, timezone
 
     from app.ml.features.inference_features import enrich_daily_history
     from app.ml.training.config import TFT_ENCODER_LENGTH_PER_HAZARD
@@ -764,7 +764,7 @@ async def trigger_forecasts_only(db: AsyncSession = Depends(get_db)):
     } for r in daily_rows]
 
     history = enrich_daily_history(raw_days, terrain)
-    now = dt.utcnow()
+    now = dt.now(timezone.utc)
     results: dict[str, Any] = {}
     stored = 0
 

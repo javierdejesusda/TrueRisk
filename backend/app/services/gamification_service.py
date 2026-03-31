@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -190,7 +190,7 @@ async def award_points(
     row = await _get_or_create_user_points(db, user_id)
     row.total_points += pts
 
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     _update_streak(row, today)
 
     # Build context and enrich with the current action so badge evaluation

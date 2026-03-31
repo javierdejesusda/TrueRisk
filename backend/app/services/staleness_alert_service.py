@@ -31,6 +31,8 @@ def get_stale_sources(tracker=None) -> list[dict]:
             })
             continue
         last_dt = datetime.fromisoformat(last_success)
+        if last_dt.tzinfo is None:
+            last_dt = last_dt.replace(tzinfo=timezone.utc)
         age_minutes = (now - last_dt).total_seconds() / 60
         if age_minutes > threshold:
             stale.append({

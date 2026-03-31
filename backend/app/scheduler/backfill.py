@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import delete, select, func
 
@@ -50,7 +50,7 @@ async def _run_backfill(provinces: list[tuple[str, str, float, float]]):
     """Backfill 5 years of daily summaries. Each province uses its own DB session."""
     logger.info(f"Starting {BACKFILL_YEARS}-year historical backfill...")
 
-    end = date.today() - timedelta(days=1)
+    end = datetime.now(timezone.utc).date() - timedelta(days=1)
     start = end - timedelta(days=BACKFILL_YEARS * 365)
 
     logger.info(f"Backfilling {len(provinces)} provinces from {start} to {end}")

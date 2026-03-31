@@ -1,7 +1,15 @@
-"""6-hour data pipeline: fetch weather -> compute risk -> generate alerts."""
+"""6-hour data pipeline: fetch weather -> compute risk -> generate alerts.
+
+Session resilience
+------------------
+Each province is processed in its own database session so that an
+IntegrityError (e.g. a foreign-key violation from an invalid AEMET
+province code) cannot put the session into a ``PendingRollbackError``
+state and cascade-fail every subsequent province.
+"""
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.utils.time import utcnow
 
@@ -39,11 +47,17 @@ HAZARD_LABELS = {
 async def run_pipeline():
     """Main pipeline: runs every 6 hours."""
     logger.info("Starting data pipeline...")
+
+    # ------------------------------------------------------------------
+    # Phase 1: Fetch weather data and persist (shared session is fine
+    # because weather records use valid province codes from the DB).
+    # ------------------------------------------------------------------
+    province_codes: list[tuple[str, str]] = []  # (ine_code, name)
     async with async_session() as db:
         try:
-            # 1. Get all provinces
             result = await db.execute(select(Province))
             provinces = result.scalars().all()
+            province_codes = [(p.ine_code, p.name) for p in provinces]
             logger.info(f"Processing {len(provinces)} provinces")
 
             # 1b. Bulk-fetch current weather for all provinces and persist
@@ -81,7 +95,7 @@ async def run_pipeline():
                     recorded_at=now,
                 )
                 db.add(record)
-            await db.flush()
+            await db.commit()
             logger.info(f"Stored weather records for {len(weather_map)} provinces")
 
             # 1c. Fetch supplementary data sources (best-effort, non-blocking)
@@ -113,86 +127,109 @@ async def run_pipeline():
                 health_tracker.record_failure("ree_energy", str(e))
                 logger.error(f"REE fetch failed: {e}")
 
-            # 2. Compute risk for each province
-            for province in provinces:
-                try:
-                    risk = await compute_province_risk(db, province.ine_code)
-                    logger.info(
-                        f"  {province.name}: composite={risk['composite_score']:.1f} "
-                        f"dominant={risk['dominant_hazard']}"
-                    )
-
-                    # 3. Auto-generate alerts for high/critical scores
-                    await _check_and_create_alerts(db, province, risk)
-                except Exception as e:
-                    logger.error(f"  Error processing {province.name}: {e}")
-
-            # 4. Sync AEMET alerts
-            if settings.aemet_api_key:
-                try:
-                    aemet_alerts = await fetch_alerts(settings.aemet_api_key)
-                    health_tracker.record_success("aemet", records_count=len(aemet_alerts))
-                    logger.info(f"Fetched {len(aemet_alerts)} AEMET alerts")
-                except Exception as e:
-                    health_tracker.record_failure("aemet", str(e))
-                    logger.error(f"AEMET alert sync failed: {e}")
-
-            # 5. Compute TFT + GNN forecasts
-            from app.ml.training.config import ENABLE_TFT_FORECASTS
-            if ENABLE_TFT_FORECASTS:
-                try:
-                    from app.services.forecast_service import compute_all_forecasts
-                    await compute_all_forecasts(db)
-                    logger.info("Forecast computation complete")
-                except Exception:
-                    logger.exception("Forecast computation failed")
-
-            # 6. Flash flood monitoring
-            try:
-                from app.services.flash_flood_service import (
-                    process_flash_flood_alerts,
-                    store_river_readings,
-                )
-                readings_count = await store_river_readings(db)
-                flood_alert_count = await process_flash_flood_alerts(db)
-                health_tracker.record_success("saih", records_count=readings_count)
-                logger.info(
-                    "Flash flood check: %d readings stored, %d alerts created",
-                    readings_count, flood_alert_count,
-                )
-            except Exception as e:
-                health_tracker.record_failure("saih", str(e))
-                logger.exception("Flash flood monitoring failed (non-critical)")
-
-            # 7. Generate morning narratives (best-effort, non-blocking)
-            if settings.openai_api_key:
-                try:
-                    from app.services.narrative_service import generate_morning_narrative
-                    for province in provinces:
-                        try:
-                            await generate_morning_narrative(
-                                db, province.ine_code, province.name
-                            )
-                        except Exception as e:
-                            logger.error(
-                                f"Narrative generation failed for {province.name}: {e}"
-                            )
-                    logger.info("Morning narratives generated")
-                except Exception:
-                    logger.exception("Narrative generation failed (non-critical)")
-
-            await db.commit()
-
-            # Aggregate yesterday's hourly data into daily summaries
-            await _aggregate_daily_summaries(db)
-
-            # Purge weather records older than 90 days
-            await _purge_old_records(db)
-
-            logger.info("Pipeline complete.")
         except Exception as e:
-            logger.error(f"Pipeline failed: {e}")
+            logger.error(f"Pipeline phase 1 (weather fetch) failed: {e}")
             await db.rollback()
+            return  # Cannot continue without weather data
+
+    # ------------------------------------------------------------------
+    # Phase 2: Risk computation -- each province gets its own session so
+    # that one province's DB error cannot cascade to the rest.
+    # ------------------------------------------------------------------
+    succeeded = 0
+    failed = 0
+    for ine_code, name in province_codes:
+        try:
+            async with async_session() as province_db:
+                province = await province_db.get(Province, ine_code)
+                if not province:
+                    continue
+                risk = await compute_province_risk(province_db, ine_code)
+                logger.info(
+                    f"  {name}: composite={risk['composite_score']:.1f} "
+                    f"dominant={risk['dominant_hazard']}"
+                )
+                # Auto-generate alerts for high/critical scores
+                await _check_and_create_alerts(province_db, province, risk)
+                await province_db.commit()
+                succeeded += 1
+        except Exception as e:
+            failed += 1
+            logger.error(f"  Error processing {name} ({ine_code}): {e}")
+
+    logger.info(
+        "Risk computation: %d/%d provinces succeeded, %d failed",
+        succeeded, len(province_codes), failed,
+    )
+
+    # ------------------------------------------------------------------
+    # Phase 3: Supplementary pipeline steps (each in its own session).
+    # ------------------------------------------------------------------
+
+    # 4. Sync AEMET alerts
+    if settings.aemet_api_key:
+        try:
+            aemet_alerts = await fetch_alerts(settings.aemet_api_key)
+            health_tracker.record_success("aemet", records_count=len(aemet_alerts))
+            logger.info(f"Fetched {len(aemet_alerts)} AEMET alerts")
+        except Exception as e:
+            health_tracker.record_failure("aemet", str(e))
+            logger.error(f"AEMET alert sync failed: {e}")
+
+    # 5. Compute TFT + GNN forecasts
+    from app.ml.training.config import ENABLE_TFT_FORECASTS
+    if ENABLE_TFT_FORECASTS:
+        try:
+            async with async_session() as forecast_db:
+                from app.services.forecast_service import compute_all_forecasts
+                await compute_all_forecasts(forecast_db)
+                logger.info("Forecast computation complete")
+        except Exception:
+            logger.exception("Forecast computation failed")
+
+    # 6. Flash flood monitoring
+    try:
+        async with async_session() as flood_db:
+            from app.services.flash_flood_service import (
+                process_flash_flood_alerts,
+                store_river_readings,
+            )
+            readings_count = await store_river_readings(flood_db)
+            flood_alert_count = await process_flash_flood_alerts(flood_db)
+            health_tracker.record_success("saih", records_count=readings_count)
+            logger.info(
+                "Flash flood check: %d readings stored, %d alerts created",
+                readings_count, flood_alert_count,
+            )
+    except Exception as e:
+        health_tracker.record_failure("saih", str(e))
+        logger.exception("Flash flood monitoring failed (non-critical)")
+
+    # 7. Generate morning narratives (best-effort, non-blocking)
+    if settings.openai_api_key:
+        try:
+            from app.services.narrative_service import generate_morning_narrative
+            for ine_code, name in province_codes:
+                try:
+                    async with async_session() as narr_db:
+                        await generate_morning_narrative(narr_db, ine_code, name)
+                except Exception as e:
+                    logger.error(f"Narrative generation failed for {name}: {e}")
+            logger.info("Morning narratives generated")
+        except Exception:
+            logger.exception("Narrative generation failed (non-critical)")
+
+    # ------------------------------------------------------------------
+    # Phase 4: Maintenance (aggregation and purge).
+    # ------------------------------------------------------------------
+    try:
+        async with async_session() as maint_db:
+            await _aggregate_daily_summaries(maint_db)
+            await _purge_old_records(maint_db)
+    except Exception:
+        logger.exception("Post-pipeline maintenance failed (non-critical)")
+
+    logger.info("Pipeline complete.")
 
 
 async def _check_and_create_alerts(
@@ -333,7 +370,7 @@ async def _aggregate_daily_summaries(db: AsyncSession):
         if province.ine_code in existing_codes:
             continue
 
-        day_start = datetime.combine(yesterday, datetime.min.time())
+        day_start = datetime.combine(yesterday, datetime.min.time(), tzinfo=timezone.utc)
         day_end = day_start + timedelta(days=1)
         records = await db.execute(
             select(WeatherRecord).where(

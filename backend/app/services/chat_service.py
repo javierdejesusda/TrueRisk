@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator
 
 from openai import AsyncOpenAI
@@ -119,8 +119,8 @@ async def check_rate_limits(
     db: AsyncSession,
 ) -> tuple[bool, str | None, str | None]:
     """Check all rate limits. Returns ``(allowed, error_code, next_available_at)``."""
-    today = date.today()
     now = datetime.now(timezone.utc)
+    today = now.date()
 
     # Fetch today's usage row
     usage_row = (
@@ -138,13 +138,12 @@ async def check_rate_limits(
         return False, "daily_message_limit", tomorrow.isoformat()
 
     # 2. Hourly message limit
-    # Use naive datetime for SQLite compatibility in comparisons
-    one_hour_ago_naive = datetime.utcnow() - timedelta(hours=1)
+    one_hour_ago = now - timedelta(hours=1)
     hourly_count_result = await db.execute(
         select(sa_func.count(ChatMessage.id)).where(
             ChatMessage.user_id == user_id,
             ChatMessage.role == "user",
-            ChatMessage.created_at >= one_hour_ago_naive,
+            ChatMessage.created_at >= one_hour_ago,
         )
     )
     hourly_count = hourly_count_result.scalar() or 0
@@ -176,7 +175,7 @@ async def check_rate_limits(
         return False, "monthly_token_limit", next_month_dt.isoformat()
 
     # 5. Burst cooldown — only triggers after 5+ messages in 60 seconds
-    one_minute_ago = datetime.utcnow() - timedelta(seconds=60)
+    one_minute_ago = now - timedelta(seconds=60)
     burst_result = await db.execute(
         select(sa_func.count(ChatMessage.id)).where(
             ChatMessage.user_id == user_id,
@@ -195,7 +194,7 @@ async def check_rate_limits(
 # 4. Circuit breaker (platform-wide cost guard)
 async def check_circuit_breaker(db: AsyncSession) -> bool:
     """Return *True* if the platform cost limit has been hit for today."""
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     result = await db.execute(
         select(sa_func.coalesce(sa_func.sum(ChatUsage.total_tokens), 0)).where(
             ChatUsage.date == today,
@@ -265,7 +264,7 @@ PROVINCE CONTEXT:
 # 6. Usage stats
 async def get_usage(user_id: int, db: AsyncSession) -> dict:
     """Return current usage stats matching ``ChatUsageResponse`` schema."""
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
 
     # Today's usage row
     usage_row = (
@@ -438,7 +437,7 @@ async def stream_chat_response(
     db.add(assistant_msg)
 
     # Upsert today's usage row
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     usage_row = (
         await db.execute(
             select(ChatUsage).where(

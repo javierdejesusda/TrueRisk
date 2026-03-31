@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.utils.time import utcnow
 
@@ -52,7 +52,9 @@ def _is_hazard_snoozed(prefs: AlertPreference, hazard_type: str) -> bool:
     if not snooze_until:
         return False
     try:
-        until = datetime.fromisoformat(snooze_until).replace(tzinfo=None)
+        until = datetime.fromisoformat(snooze_until)
+        if until.tzinfo is None:
+            until = until.replace(tzinfo=timezone.utc)
         return utcnow() < until
     except (ValueError, TypeError):
         return False
