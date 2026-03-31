@@ -24,7 +24,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-        restart: true
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
       interval: 15s
@@ -128,6 +127,27 @@ services:
       resources:
         limits:
           cpus: '0.5'
+          memory: 256M
+
+  backup-cron:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-truerisk}
+      POSTGRES_USER: ${POSTGRES_USER:-truerisk}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: db
+    volumes:
+      - ./backend/scripts/backup.sh:/backup.sh:ro
+      - backups:/backups
+    entrypoint: ["/bin/sh", "-c", "chmod +x /backup.sh && echo '0 3 * * * /backup.sh >> /var/log/backup.log 2>&1' | crontab - && crond -f -l 2"]
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
           memory: 256M
 
 volumes:

@@ -1,7 +1,8 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import Link from 'next/link';
 
 export default function CitizenError({
   error,
@@ -10,14 +11,47 @@ export default function CitizenError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [retrying, setRetrying] = useState(true);
+  const retryCount = useRef(0);
+  const maxRetries = 2;
+
+  const attemptRetry = useCallback(() => {
+    if (retryCount.current < maxRetries) {
+      retryCount.current += 1;
+      const delay = retryCount.current * 2000; // 2s, 4s
+      setTimeout(() => {
+        reset();
+      }, delay);
+    } else {
+      setRetrying(false);
+    }
+  }, [reset]);
+
   useEffect(() => {
     Sentry.captureException(error);
-  }, [error]);
+    attemptRetry();
+  }, [error, attemptRetry]);
 
   const isNetwork = error.message?.includes('fetch') || error.message?.includes('network');
   const message = isNetwork
     ? 'Unable to connect to the server. Check your internet connection.'
     : error.message || 'Could not load the requested data.';
+
+  // Show minimal spinner while retrying
+  if (retrying) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-bg-primary">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-text-muted">Retrying... ({retryCount.current}/{maxRetries})</p>
+        </div>
+      </div>
+    );
+  }
+
+  const lastSynced = typeof window !== 'undefined'
+    ? localStorage.getItem('truerisk-last-synced')
+    : null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center px-4 bg-bg-primary">
@@ -38,6 +72,21 @@ export default function CitizenError({
         >
           Try again
         </button>
+        {isNetwork && (
+          <div className="flex flex-col items-center gap-1.5 pt-1">
+            <Link
+              href="/emergency"
+              className="text-sm text-accent-green hover:underline font-medium"
+            >
+              View offline emergency data
+            </Link>
+            {lastSynced && (
+              <p className="text-xs text-text-muted">
+                Last synced: {new Date(lastSynced).toLocaleString()}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
