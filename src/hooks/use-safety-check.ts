@@ -42,6 +42,7 @@ export interface FamilyMemberStatus {
 function authFetch(path: string, token: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
   headers.set('Authorization', `Bearer ${token}`);
+  headers.set('X-Requested-With', 'XMLHttpRequest');
   if (!headers.has('Content-Type') && options.body) {
     headers.set('Content-Type', 'application/json');
   }

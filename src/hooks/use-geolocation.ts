@@ -69,6 +69,7 @@ export function useGeolocation() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             Authorization: `Bearer ${backendToken}`,
           },
           body: JSON.stringify({ lat, lon }),

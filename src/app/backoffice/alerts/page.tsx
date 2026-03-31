@@ -90,7 +90,7 @@ export default function BackofficeAlertsPage() {
     try {
       const res = await fetch('/api/alerts', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({ id: alert.id, is_active: !alert.is_active }),
       });
       if (res.ok) {
@@ -115,7 +115,7 @@ export default function BackofficeAlertsPage() {
     try {
       const res = await fetch('/api/alerts', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({ id }),
       });
       if (res.ok) {

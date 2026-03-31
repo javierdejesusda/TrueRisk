@@ -59,6 +59,7 @@ export function OnboardingFlow() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             Authorization: `Bearer ${backendToken}`,
           },
           body: JSON.stringify({

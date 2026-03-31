@@ -43,6 +43,7 @@ export function StepLocation() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             Authorization: `Bearer ${backendToken}`,
           },
           body: JSON.stringify({ lat: latitude, lon: longitude }),
