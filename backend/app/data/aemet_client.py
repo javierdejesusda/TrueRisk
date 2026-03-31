@@ -201,7 +201,8 @@ async def fetch_alerts(
         logger.exception("Failed to fetch AEMET alerts for area=%s", area)
         return _alert_cache.get(cache_key, [])
 
-    all_alerts = [a for a in all_alerts if a.get("geocode")]
+    from app.data.province_data import is_valid_province_code
+    all_alerts = [a for a in all_alerts if is_valid_province_code(a.get("geocode"))]
 
     _alert_cache[cache_key] = all_alerts
     _alert_cache_ts[cache_key] = now

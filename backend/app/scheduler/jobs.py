@@ -42,6 +42,7 @@ async def run_rapid_severity_check():
     - SAIH gauge exceedances (P99)
     - DANA compound score > 80
     """
+    from app.config import settings
     from app.database import async_session
     from app.data.aemet_client import fetch_alerts as fetch_aemet_alerts
     from app.services.push_service import notify_province
@@ -50,7 +51,7 @@ async def run_rapid_severity_check():
         async with async_session() as db:
             # Check AEMET red alerts
             try:
-                aemet_alerts = await fetch_aemet_alerts()
+                aemet_alerts = await fetch_aemet_alerts(settings.aemet_api_key)
                 red_alerts = [a for a in (aemet_alerts or []) if a.get("severity", 0) >= 4]
                 for alert in red_alerts:
                     province_codes = alert.get("province_codes", [])

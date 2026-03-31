@@ -213,6 +213,8 @@ def train_single_hazard(
                 gradient_clip_val=TFT_GRADIENT_CLIP,
                 logger=False,
                 enable_checkpointing=False,
+                enable_progress_bar=False,
+                default_root_dir="/tmp/lightning_logs",
             )
             lr_result = trainer_lr.tuner.lr_find(  # type: ignore[attr-defined]
                 model,
@@ -263,6 +265,7 @@ def train_single_hazard(
         log_every_n_steps=50,
         logger=False,
         enable_checkpointing=False,
+        default_root_dir="/tmp/lightning_logs",
     )
 
     resume_path = ckpt_path if resume and Path(ckpt_path).exists() else None

@@ -165,12 +165,23 @@ async def process_flash_flood_alerts(db: AsyncSession) -> int:
 
     - Creates new alerts for new exceedances
     - Avoids duplicates (don't re-alert for the same gauge within 6 hours)
+    - Validates province codes before insert to avoid FK violations
     - Returns number of new alerts created
     """
+    from app.data.province_data import is_valid_province_code
+
     flood_alerts = await check_flash_flood_conditions(db)
     created_count = 0
 
     for fa in flood_alerts:
+        # Skip alerts with invalid province codes to avoid FK violations
+        if not is_valid_province_code(fa.province_code):
+            logger.warning(
+                "Skipping flash flood alert for gauge %s: invalid province_code '%s'",
+                fa.gauge_name, fa.province_code,
+            )
+            continue
+
         # Check for existing recent alert for this gauge
         six_hours_ago = datetime.now(tz=timezone.utc) - timedelta(hours=6)
         existing = await db.execute(

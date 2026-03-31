@@ -1006,6 +1006,15 @@ PROVINCES: dict[str, dict] = {
 }
 
 
+VALID_PROVINCE_CODES: frozenset[str] = frozenset(PROVINCES.keys())
+"""All valid 2-digit INE province codes (01-52)."""
+
+
+def is_valid_province_code(code: str | None) -> bool:
+    """Return True if *code* is a known INE province code."""
+    return code is not None and code in VALID_PROVINCE_CODES
+
+
 async def seed_provinces() -> None:
     """Insert all 52 provinces if the table is empty."""
     async with async_session() as session:

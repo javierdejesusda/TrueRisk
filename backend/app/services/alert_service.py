@@ -47,7 +47,18 @@ async def get_aemet_alerts() -> list[dict[str, Any]]:
 
 
 async def create_alert(db: AsyncSession, data: AlertCreate) -> Alert:
-    """Create a new alert record."""
+    """Create a new alert record.
+
+    Raises ``ValueError`` if *province_code* is not a valid INE code.
+    """
+    from app.data.province_data import is_valid_province_code
+
+    if data.province_code and not is_valid_province_code(data.province_code):
+        raise ValueError(
+            f"Invalid province_code '{data.province_code}': "
+            "not a known INE province code"
+        )
+
     alert = Alert(
         severity=data.severity,
         hazard_type=data.hazard_type,
