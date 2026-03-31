@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { apiFetch } from '@/lib/api-client';
 import { save, get } from '@/lib/offline-storage';
 import type { PropertyReportResponse, PropertyReportListItem } from '@/types/property';
 
@@ -14,7 +15,7 @@ export function usePropertyReport(reportId: string) {
     if (!reportId) return;
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/property/report/${reportId}`);
+      const res = await apiFetch(`/api/property/report/${reportId}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as PropertyReportResponse;
       setReport(data);
@@ -42,19 +43,12 @@ export function useCreateReport() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const backendToken = useAppStore((s) => s.backendToken);
-
   const createReport = useCallback(async (address: string): Promise<string> => {
     setIsCreating(true);
     setError(null);
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (backendToken) {
-        headers['Authorization'] = `Bearer ${backendToken}`;
-      }
-      const res = await fetch('/api/property/report', {
+      const res = await apiFetch('/api/property/report', {
         method: 'POST',
-        headers,
         body: JSON.stringify({ address }),
       });
       if (!res.ok) {
@@ -74,7 +68,7 @@ export function useCreateReport() {
     } finally {
       setIsCreating(false);
     }
-  }, [backendToken]);
+  }, []);
 
   return { createReport, isCreating, error };
 }
@@ -89,9 +83,7 @@ export function useReportHistory() {
     if (!backendToken) return;
     try {
       setIsLoading(true);
-      const res = await fetch('/api/property/reports?page=1&per_page=20', {
-        headers: { Authorization: `Bearer ${backendToken}` },
-      });
+      const res = await apiFetch('/api/property/reports?page=1&per_page=20');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as PropertyReportListItem[];
       setReports(data);

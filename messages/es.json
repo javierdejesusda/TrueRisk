@@ -1000,6 +1000,8 @@
     "errorRateLimit": "Demasiadas solicitudes. Espera un momento e intenta de nuevo.",
     "errorTimeout": "El servicio de geocodificacion tardo demasiado. Intenta de nuevo.",
     "errorServiceUnavailable": "Servicio de analisis de riesgo temporalmente no disponible. Intenta de nuevo en breve.",
+    "errorForbidden": "La solicitud fue bloqueada. Por favor, recarga la pagina e intenta de nuevo.",
+    "errorUnauthorized": "Tu sesion ha expirado. Por favor, inicia sesion de nuevo.",
     "feature1Title": "Cumplimiento ECM/599/2025",
     "feature1Desc": "Datos de riesgo climatico conformes con la nueva regulacion de valoraciones inmobiliarias",
     "feature2Title": "7 Riesgos Naturales",

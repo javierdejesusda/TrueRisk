@@ -1002,6 +1002,8 @@
     "errorRateLimit": "Too many requests. Please wait a moment and try again.",
     "errorTimeout": "The geocoding service timed out. Please try again.",
     "errorServiceUnavailable": "Risk analysis service temporarily unavailable. Please try again shortly.",
+    "errorForbidden": "Request was blocked. Please refresh the page and try again.",
+    "errorUnauthorized": "Your session has expired. Please log in again.",
     "feature1Title": "ECM/599/2025 Compliance",
     "feature1Desc": "Climate risk data compliant with Spain's new property valuation regulation",
     "feature2Title": "7 Natural Hazards",

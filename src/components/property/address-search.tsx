@@ -41,8 +41,10 @@ export function AddressSearch() {
           setError(t('errorRateLimit'));
         } else if (err.message.includes('504')) {
           setError(t('errorTimeout'));
-        } else if (err.message.includes('502') || err.message.includes('500')) {
-          setError(t('errorServiceUnavailable'));
+        } else if (err.message.includes('403')) {
+          setError(t('errorForbidden'));
+        } else if (err.message.includes('401')) {
+          setError(t('errorUnauthorized'));
         } else {
           setError(t('errorServiceUnavailable'));
         }
