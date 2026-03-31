@@ -104,9 +104,7 @@ def _rule_based_dana(f: dict[str, Any]) -> float:
     if isinstance(is_coastal, (int, float)):
         is_coastal = bool(is_coastal)
 
-    # ------------------------------------------------------------------
     # 1. Individual signal scores (each 0-20 range, total max ~100 raw)
-    # ------------------------------------------------------------------
     signal_scores: list[float] = []
     active_signals = 0
 
@@ -207,15 +205,10 @@ def _rule_based_dana(f: dict[str, Any]) -> float:
     if precip_forecast_pts >= 6:
         active_signals += 1
 
-    # ------------------------------------------------------------------
     # 2. Base score from individual signals
-    # ------------------------------------------------------------------
     base_score = sum(signal_scores)
-
-    # ------------------------------------------------------------------
     # 3. Compound amplification -- THIS is what makes DANA deadly
     #    3+ simultaneous signals => exponential risk increase
-    # ------------------------------------------------------------------
     if active_signals >= 5:
         compound_multiplier = 1.6
     elif active_signals >= 4:
@@ -227,9 +220,7 @@ def _rule_based_dana(f: dict[str, Any]) -> float:
 
     score = base_score * compound_multiplier
 
-    # ------------------------------------------------------------------
     # 4. Geographic modifiers
-    # ------------------------------------------------------------------
     # Mediterranean provinces are DANA's primary target
     if is_med:
         score += 8
@@ -242,11 +233,8 @@ def _rule_based_dana(f: dict[str, Any]) -> float:
         score += 5
     elif temperature > 18:
         score += 3
-
-    # ------------------------------------------------------------------
     # 5. Seasonal modulation
     #    Peak DANA season: Sep-Nov; extended: May-Dec; off-season: Jan-Apr
-    # ------------------------------------------------------------------
     if month in (9, 10, 11):
         # Peak season -- no damping
         pass

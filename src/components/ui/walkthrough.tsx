@@ -6,10 +6,6 @@ import { useTranslations } from 'next-intl';
 import { useAppStore } from '@/store/app-store';
 import { usePathname, useRouter } from 'next/navigation';
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
 interface TourStep {
   selector: string | null;
   titleKey: string;
@@ -17,10 +13,6 @@ interface TourStep {
   icon: string;
   placement?: 'bottom' | 'top' | 'left' | 'right';
 }
-
-/* ------------------------------------------------------------------ */
-/*  Steps                                                              */
-/* ------------------------------------------------------------------ */
 
 const STEPS: TourStep[] = [
   {
@@ -86,10 +78,6 @@ const STEPS: TourStep[] = [
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Feature cards                                                      */
-/* ------------------------------------------------------------------ */
-
 interface FeatureCard {
   titleKey: string;
   descKey: string;
@@ -135,10 +123,6 @@ const FEATURE_CARDS: FeatureCard[] = [
     color: 'from-teal-400/25 to-cyan-400/25',
   },
 ];
-
-/* ------------------------------------------------------------------ */
-/*  Positioning helper                                                 */
-/* ------------------------------------------------------------------ */
 
 function getTooltipPosition(
   rect: DOMRect,
@@ -187,10 +171,6 @@ function getTooltipPosition(
 
   return { top, left };
 }
-
-/* ------------------------------------------------------------------ */
-/*  Hook: elevate a DOM element above the overlay                      */
-/* ------------------------------------------------------------------ */
 
 function useElevateElement(selector: string | null, active: boolean) {
   const prevElRef = useRef<HTMLElement | null>(null);
@@ -245,10 +225,6 @@ function useElevateElement(selector: string | null, active: boolean) {
     };
   }, [selector, active, cleanup]);
 }
-
-/* ------------------------------------------------------------------ */
-/*  Hook: find and measure a DOM element with retry                    */
-/* ------------------------------------------------------------------ */
 
 function useMeasureElement(
   selector: string | null,
@@ -323,10 +299,6 @@ function useMeasureElement(
 
   return { rect, ready };
 }
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
 
 export function Walkthrough() {
   const t = useTranslations('Walkthrough');
@@ -535,9 +507,6 @@ export function Walkthrough() {
           )}
         </AnimatePresence>
 
-        {/* ============================================================ */}
-        {/*  FULL-SCREEN CARD (welcome + features)                        */}
-        {/* ============================================================ */}
         <AnimatePresence mode="wait">
           {isFullScreen && ready && (
             <div className="absolute inset-0 flex items-center justify-center p-6">
@@ -660,9 +629,6 @@ export function Walkthrough() {
           )}
         </AnimatePresence>
 
-        {/* ============================================================ */}
-        {/*  TOOLTIP CARD (positioned next to highlighted element)         */}
-        {/* ============================================================ */}
         <AnimatePresence mode="wait">
           {showTargeted && tooltipPos && (
             <motion.div

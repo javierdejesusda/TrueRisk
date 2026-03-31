@@ -37,9 +37,7 @@ from app.utils.cache import risk_cache
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
 # Terrain / geographic helpers
-# ---------------------------------------------------------------------------
 
 def get_terrain_features(province_code: str) -> dict[str, Any]:
     """Return static geographic features for a province from the seed data."""
@@ -81,9 +79,7 @@ def _compute_confidence(weather_record_age_hours: float, sources_used: int) -> f
     return round(freshness * 0.6 + source_coverage * 0.4, 2)
 
 
-# ---------------------------------------------------------------------------
 # Temporal feature engineering from weather history
-# ---------------------------------------------------------------------------
 
 def _safe(value: Any, default: float = 0.0) -> float:
     """Coerce *value* to float, falling back to *default* on None / error."""
@@ -308,9 +304,7 @@ def _record_to_dict(record: WeatherRecord) -> dict[str, Any]:
     }
 
 
-# ---------------------------------------------------------------------------
 # Heat-index helpers
-# ---------------------------------------------------------------------------
 
 def _compute_wind_chill(temperature: float, wind_speed_kmh: float) -> float:
     """Wind chill temperature (Celsius). Valid for temp<=10C, wind>=4.8km/h."""
@@ -334,9 +328,7 @@ def _compute_wbgt(temperature: float, humidity: float, wind_speed: float) -> flo
     return compute_wbgt(temperature, humidity, wind_speed)
 
 
-# ---------------------------------------------------------------------------
 # Core pipeline
-# ---------------------------------------------------------------------------
 
 async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     """Full pipeline: fetch weather -> compute features -> run 4 models -> composite -> store."""
@@ -707,9 +699,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     return composite
 
 
-# ---------------------------------------------------------------------------
 # Query helpers
-# ---------------------------------------------------------------------------
 
 async def get_latest_risk(db: AsyncSession, province_code: str) -> RiskScore | None:
     """Return the most recently computed RiskScore for a province, or None."""

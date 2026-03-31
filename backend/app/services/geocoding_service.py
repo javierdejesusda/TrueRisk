@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 _TIMEOUT = 30.0
 
-# ---------------------------------------------------------------------------
 # Result type
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -41,9 +39,7 @@ class GeocodingResult:
     source: str  # "nominatim", "ign", "fallback"
 
 
-# ---------------------------------------------------------------------------
 # Spanish province name -> 2-digit INE code
-# ---------------------------------------------------------------------------
 
 PROVINCE_NAME_TO_CODE: dict[str, str] = {
     "a coruna": "15",
@@ -130,9 +126,7 @@ PROVINCE_NAME_TO_CODE: dict[str, str] = {
     "zaragoza": "50",
 }
 
-# ---------------------------------------------------------------------------
 # Address normalisation
-# ---------------------------------------------------------------------------
 
 _ABBREVIATIONS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bC/\s*", re.IGNORECASE), "Calle "),
@@ -156,9 +150,7 @@ def normalize_spanish_address(address: str) -> str:
     return text
 
 
-# ---------------------------------------------------------------------------
 # Nominatim (OpenStreetMap)
-# ---------------------------------------------------------------------------
 
 
 def _province_code_from_state(state: str | None) -> str:
@@ -230,9 +222,7 @@ async def nominatim_geocode(address: str) -> GeocodingResult | None:
         return None
 
 
-# ---------------------------------------------------------------------------
 # CartoCiudad (IGN)
-# ---------------------------------------------------------------------------
 
 
 async def cartociudad_geocode(address: str) -> GeocodingResult | None:
@@ -295,9 +285,7 @@ async def cartociudad_geocode(address: str) -> GeocodingResult | None:
         return None
 
 
-# ---------------------------------------------------------------------------
 # Cache helpers
-# ---------------------------------------------------------------------------
 
 
 def _address_hash(normalized: str) -> str:
@@ -364,9 +352,7 @@ async def _cache_store(
         logger.warning("Geocode cache store failed for hash=%s", addr_hash, exc_info=True)
 
 
-# ---------------------------------------------------------------------------
 # Main cascade
-# ---------------------------------------------------------------------------
 
 
 async def geocode_address(

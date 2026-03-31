@@ -20,9 +20,7 @@ def _contrib(feature: str, value: float, points: float, description: str) -> dic
     }
 
 
-# ---------------------------------------------------------------------------
 # Per-hazard explainers
-# ---------------------------------------------------------------------------
 
 def explain_flood(f: dict[str, Any]) -> list[dict]:
     contributions: list[dict] = []
@@ -410,9 +408,7 @@ def explain_windstorm(f: dict[str, Any]) -> list[dict]:
     return contributions
 
 
-# ---------------------------------------------------------------------------
 # Main entry point
-# ---------------------------------------------------------------------------
 
 def explain_dana(f: dict[str, Any]) -> list[dict]:
     contributions: list[dict] = []

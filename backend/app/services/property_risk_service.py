@@ -31,9 +31,7 @@ _GEO_BASELINE_SCALE = 45.0
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
 # Result types
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -65,9 +63,7 @@ class PropertyRiskResult:
     terrain: ElevationResult
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _clamp(value: float, lo: float = 0.0, hi: float = 100.0) -> float:
@@ -109,9 +105,7 @@ def compute_composite_score(hazard_scores: dict[str, float]) -> tuple[float, str
     return round(composite, 2), dominant
 
 
-# ---------------------------------------------------------------------------
 # Hazard refinement functions
-# ---------------------------------------------------------------------------
 
 
 def refine_flood_risk(
@@ -333,9 +327,7 @@ def refine_seismic_risk(
     return round(score, 2), round(modifier, 2), explanation
 
 
-# ---------------------------------------------------------------------------
 # Province score retrieval
-# ---------------------------------------------------------------------------
 
 
 async def _get_latest_province_scores(
@@ -352,9 +344,7 @@ async def _get_latest_province_scores(
     return result.scalar_one_or_none()
 
 
-# ---------------------------------------------------------------------------
 # Main orchestration
-# ---------------------------------------------------------------------------
 
 
 async def compute_property_risk(

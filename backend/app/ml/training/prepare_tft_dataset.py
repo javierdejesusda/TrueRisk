@@ -115,9 +115,7 @@ TARGET_COLS = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Continuous score helpers (sigmoid-like mapping from raw signals to 0-100)
-# ---------------------------------------------------------------------------
 
 
 def _sigmoid_scale(x: float, midpoint: float, steepness: float = 0.15) -> float:
@@ -209,9 +207,7 @@ SCORE_FUNCS = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Data loading and transformation
-# ---------------------------------------------------------------------------
 
 
 def load_combined_tft_dataframe() -> pd.DataFrame:
@@ -342,9 +338,7 @@ def build_tft_dataset(hazard: str, combined: pd.DataFrame | None = None):
     return dataset
 
 
-# ---------------------------------------------------------------------------
 # Persist processed data
-# ---------------------------------------------------------------------------
 
 
 def save_processed(combined: pd.DataFrame) -> Path:
@@ -356,9 +350,7 @@ def save_processed(combined: pd.DataFrame) -> Path:
     return out_path
 
 
-# ---------------------------------------------------------------------------
 # CLI entry point
-# ---------------------------------------------------------------------------
 
 
 def main() -> None:

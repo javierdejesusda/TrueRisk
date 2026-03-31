@@ -101,13 +101,9 @@ class RiverNetwork:
         return warnings
 
 
-# ---------------------------------------------------------------------------
 # Module-level singleton pre-seeded with known Spanish river topology
-# ---------------------------------------------------------------------------
 
 river_network = RiverNetwork()
-
-# ------------------------------------------------------------------
 # Jucar basin (Valencia region)
 # Cabecera (headwaters, Cuenca province) → mid-valley → coastal plain
 #
@@ -115,8 +111,6 @@ river_network = RiverNetwork()
 #   Alarcón reservoir gauge → Tous reservoir gauge → Sueca (coastal)
 # Magro tributary (feeds into Jucar near Tous):
 #   Requena gauge → Tous reservoir gauge
-# ------------------------------------------------------------------
-
 river_network.add_connection(
     "J011",  # Alarcon (headwaters, Cuenca)
     "J021",  # Tous reservoir (mid-valley, Valencia)
@@ -144,12 +138,8 @@ river_network.add_connection(
     "J071",  # Valencia city gauge (coastal)
     travel_time_hours=2.0,
 )
-
-# ------------------------------------------------------------------
 # Guadalquivir basin (Andalusia)
 # Headwaters (Jaen) → Cordoba → Sevilla (tidal limit)
-# ------------------------------------------------------------------
-
 river_network.add_connection(
     "G011",  # Marmolejo / Andújar (upper Guadalquivir, Jaen)
     "G021",  # Montoro gauge (Cordoba province)

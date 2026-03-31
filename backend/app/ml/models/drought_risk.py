@@ -55,9 +55,7 @@ def _load_model():
     return _model
 
 
-# ---------------------------------------------------------------------------
 # SPEI -> score mapping (piecewise-linear interpolation)
-# ---------------------------------------------------------------------------
 
 _SPEI_THRESHOLDS: list[tuple[float, float]] = [
     # (spei_upper_bound, score)
@@ -91,9 +89,7 @@ def spei_to_score(spei: float) -> float:
     return 0.0
 
 
-# ---------------------------------------------------------------------------
 # LSTM inference helper
-# ---------------------------------------------------------------------------
 
 def _lstm_predict(sequence: list[list[float]]) -> float:
     """Run the LSTM model on a 90-day sequence and return P(drought persists).
@@ -138,9 +134,7 @@ def _lstm_predict(sequence: list[list[float]]) -> float:
         return 0.0
 
 
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 
 def predict_drought_risk(features: dict, sequence: list[list[float]] | None = None) -> float:
     """Return a drought-risk score in the range 0--100.
@@ -182,9 +176,7 @@ def predict_drought_risk(features: dict, sequence: list[list[float]] | None = No
     return _rule_based_drought(features)
 
 
-# ---------------------------------------------------------------------------
 # Rule-based fallback
-# ---------------------------------------------------------------------------
 
 def _rule_based_drought(f: dict) -> float:
     """Heuristic drought score from consecutive dry days and soil moisture."""

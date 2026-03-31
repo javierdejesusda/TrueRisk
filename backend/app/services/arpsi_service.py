@@ -32,9 +32,7 @@ _RETURN_PERIOD_SEVERITY: dict[str, int] = {
 _DEG_TO_M = 111_320.0
 
 
-# ---------------------------------------------------------------------------
 # Result type
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -50,9 +48,7 @@ class FloodZoneResult:
     distance_to_nearest_zone_m: float | None = None
 
 
-# ---------------------------------------------------------------------------
 # Internal helpers
-# ---------------------------------------------------------------------------
 
 
 def _parse_geometry(geojson_str: str):
@@ -75,9 +71,7 @@ def _return_period_rank(period: str | None) -> int:
     return _RETURN_PERIOD_SEVERITY.get(period.upper().strip(), 500)
 
 
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 
 
 async def check_flood_zone(

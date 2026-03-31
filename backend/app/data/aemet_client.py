@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 _AEMET_BASE = "https://opendata.aemet.es/opendata/api"
 
-# ---- In-memory cache with 5-minute TTL ----
 _alert_cache: dict[str, Any] = {}
 _alert_cache_ts: dict[str, float] = {}
 _CACHE_TTL = 300  # seconds
@@ -163,7 +162,6 @@ async def fetch_alerts(
     all_alerts: list[dict[str, Any]] = []
 
     try:
-        # Step 1 -- metadata request
         meta_resp = await resilient_get(
             f"{_AEMET_BASE}/avisos_cap/ultimoelaborado/area/{area}",
             source="aemet",
@@ -176,12 +174,10 @@ async def fetch_alerts(
             logger.warning("AEMET metadata has no datos URL: %s", meta)
             return []
 
-        # Step 2 -- fetch TAR archive
         tar_resp = await resilient_get(datos_url, source="aemet")
         tar_resp.raise_for_status()
         tar_bytes = tar_resp.content
 
-        # Step 3 -- extract XML from TAR
         buf = io.BytesIO(tar_bytes)
         with tarfile.open(fileobj=buf, mode="r:*") as tf:
             for member in tf.getmembers():
@@ -205,10 +201,8 @@ async def fetch_alerts(
         logger.exception("Failed to fetch AEMET alerts for area=%s", area)
         return _alert_cache.get(cache_key, [])
 
-    # Filter out alerts with empty/invalid geocodes
     all_alerts = [a for a in all_alerts if a.get("geocode")]
 
-    # Update cache
     _alert_cache[cache_key] = all_alerts
     _alert_cache_ts[cache_key] = now
     return all_alerts

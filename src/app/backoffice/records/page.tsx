@@ -8,8 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// ── Types ────────────────────────────────────────────────────────────────
-
 interface WeatherRecord {
   id: number;
   temperature: number;
@@ -31,8 +29,6 @@ type SortField =
   | 'pressure'
   | 'risk_score';
 type SortDir = 'asc' | 'desc';
-
-// ── Component ────────────────────────────────────────────────────────────
 
 export default function BackofficeRecordsPage() {
   const t = useTranslations('Backoffice');

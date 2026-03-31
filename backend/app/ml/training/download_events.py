@@ -56,9 +56,7 @@ def _nearest_province(lat: float, lon: float) -> str | None:
     return best_code
 
 
-# ---------------------------------------------------------------------------
 # 1. WILDFIRE: NASA FIRMS active fire detections
-# ---------------------------------------------------------------------------
 
 _FIRMS_URL = "https://firms.modaps.eosdis.nasa.gov/api/country/csv"
 _FIRMS_MAP_KEY = "FIRMS_MAP_KEY"  # Free key from https://firms.modaps.eosdis.nasa.gov/api/area/
@@ -149,9 +147,7 @@ def _detect_fire_events_proxy() -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
 # 2. FLOOD: GloFAS river discharge exceedances
-# ---------------------------------------------------------------------------
 
 _FLOOD_API = "https://flood-api.open-meteo.com/v1/flood"
 
@@ -223,9 +219,7 @@ def download_flood_events() -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
 # 3. HEATWAVE: ERA5 percentile-based extreme heat
-# ---------------------------------------------------------------------------
 
 def download_heatwave_events() -> pd.DataFrame:
     """Identify heatwave events using climatological percentile exceedances.
@@ -279,9 +273,7 @@ def download_heatwave_events() -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
 # 4. DROUGHT: Observed soil moisture deficit persistence
-# ---------------------------------------------------------------------------
 
 def download_drought_events() -> pd.DataFrame:
     """Identify drought events from observed soil moisture persistence.
@@ -334,9 +326,7 @@ def download_drought_events() -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
 # 5. COLD WAVE: Province-specific P5 Tmin exceedances
-# ---------------------------------------------------------------------------
 
 def download_coldwave_events() -> pd.DataFrame:
     """Identify cold wave events from province-specific P5 Tmin exceedances.
@@ -387,9 +377,7 @@ def download_coldwave_events() -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
 # 6. WINDSTORM: Province-specific P99 gusts + pressure dynamics
-# ---------------------------------------------------------------------------
 
 def download_windstorm_events() -> pd.DataFrame:
     """Identify windstorm events from extreme gust + pressure dynamics.
@@ -432,9 +420,7 @@ def download_windstorm_events() -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------------
 
 def main() -> None:
     import os

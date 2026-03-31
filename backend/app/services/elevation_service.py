@@ -21,9 +21,7 @@ _ELEVATION_URL = "https://api.open-meteo.com/v1/elevation"
 # Delta in degrees (~111 m) used to sample neighbouring points for slope.
 _DELTA = 0.001
 
-# ---------------------------------------------------------------------------
 # Result type
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -34,9 +32,7 @@ class ElevationResult:
     slope_pct: float  # percent slope (0-100+)
 
 
-# ---------------------------------------------------------------------------
 # In-memory cache  (key = "lat,lon" rounded to 4 decimals)
-# ---------------------------------------------------------------------------
 
 _cache: dict[str, ElevationResult] = {}
 
@@ -46,9 +42,7 @@ def _cache_key(lat: float, lon: float) -> str:
     return f"{round(lat, 4)},{round(lon, 4)}"
 
 
-# ---------------------------------------------------------------------------
 # Low-level API helpers
-# ---------------------------------------------------------------------------
 
 
 async def _fetch_elevations(lats: list[float], lons: list[float]) -> list[float]:
@@ -81,9 +75,7 @@ async def _fetch_elevations(lats: list[float], lons: list[float]) -> list[float]
         return [0.0] * len(lats)
 
 
-# ---------------------------------------------------------------------------
 # Public helpers
-# ---------------------------------------------------------------------------
 
 
 async def get_elevation(lat: float, lon: float) -> float:
@@ -123,9 +115,7 @@ async def get_terrain_slope(lat: float, lon: float) -> float:
     return slope_pct
 
 
-# ---------------------------------------------------------------------------
 # Main entry point
-# ---------------------------------------------------------------------------
 
 
 async def get_elevation_and_slope(lat: float, lon: float) -> ElevationResult:

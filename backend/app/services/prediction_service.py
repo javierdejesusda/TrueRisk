@@ -71,9 +71,7 @@ def _safe(val: Any, default: float = 0.0) -> float:
         return default
 
 
-# ---------------------------------------------------------------------------
 # C1/C2: GEV extreme-value distribution (replaces Gumbel method-of-moments)
-# ---------------------------------------------------------------------------
 
 def _gev_fallback(current: float) -> dict:
     return {
@@ -179,9 +177,7 @@ def _gev_analysis(values: list[float], current: float) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # Linear regression (simple OLS on recent hourly steps)
-# ---------------------------------------------------------------------------
 
 def _linear_regression(values: list[float]) -> dict:
     n = len(values)
@@ -225,9 +221,7 @@ def _linear_regression(values: list[float]) -> dict:
     return result
 
 
-# ---------------------------------------------------------------------------
 # C4: Bayesian event classification (KDE likelihood when >=20 obs)
-# ---------------------------------------------------------------------------
 
 _EVENT_THRESHOLDS: dict[str, dict[str, Any]] = {
     "flood": {"field": "precipitation", "threshold": 10.0},
@@ -311,9 +305,7 @@ def _bayesian_analysis(records: list[dict], baseline: list[dict] | None = None) 
     return results
 
 
-# ---------------------------------------------------------------------------
 # C11: Exponential Moving Average with EWMA control charts
-# ---------------------------------------------------------------------------
 
 def _ema_analysis(values: list[float], alpha: float = 0.3) -> dict:
     if not values:
@@ -375,9 +367,7 @@ def _ema_analysis(values: list[float], alpha: float = 0.3) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # C3: Distribution-appropriate z-score anomaly detection
-# ---------------------------------------------------------------------------
 
 def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
     field_map = {
@@ -470,9 +460,7 @@ def _zscore_analysis(records: list[dict], latest: dict) -> list[dict]:
     return results
 
 
-# ---------------------------------------------------------------------------
 # C5: Rule-based classifier (renamed from decision tree)
-# ---------------------------------------------------------------------------
 
 def _rule_based_classifier(latest: dict) -> dict:
     rules: list[str] = []
@@ -527,9 +515,7 @@ def _rule_based_classifier(latest: dict) -> dict:
 _decision_tree = _rule_based_classifier
 
 
-# ---------------------------------------------------------------------------
 # C6/C7: K-Nearest Neighbors (6D, z-normalized, full analog pool)
-# ---------------------------------------------------------------------------
 
 _HISTORICAL_EVENTS: list[dict[str, Any]] = [
     {"year": 2019, "event": "DANA Alicante", "outcome": "catastrophic flooding",
@@ -658,9 +644,7 @@ def _knn_matches(latest: dict, k: int = 5, events: list[dict] | None = None) -> 
     return scored[:k]
 
 
-# ---------------------------------------------------------------------------
 # C8: Mann-Kendall trend test
-# ---------------------------------------------------------------------------
 
 def _mann_kendall_test(values: list[float]) -> dict:
     """Mann-Kendall trend test with Sen's slope."""
@@ -704,9 +688,7 @@ def _mann_kendall_test(values: list[float]) -> dict:
         }
 
 
-# ---------------------------------------------------------------------------
 # C9: Peaks Over Threshold + GPD
-# ---------------------------------------------------------------------------
 
 def _pot_gpd_analysis(
     values: list[float], current: float, threshold_pct: int = 95
@@ -767,9 +749,7 @@ def _pot_gpd_analysis(
         }
 
 
-# ---------------------------------------------------------------------------
 # C10: Bootstrap confidence intervals
-# ---------------------------------------------------------------------------
 
 def _bootstrap_ci(
     values: list[float],
@@ -799,10 +779,6 @@ def _bootstrap_ci(
     hi = boot_stats[int(n_boot * (1 - alpha / 2))]
     return (round(lo, 4), round(hi, 4))
 
-
-# ---------------------------------------------------------------------------
-# Main orchestrator
-# ---------------------------------------------------------------------------
 
 async def compute_predictions(db: AsyncSession, province_code: str) -> dict:
     """Compute all statistical prediction models for a province."""

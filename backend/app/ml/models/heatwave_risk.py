@@ -75,9 +75,7 @@ def predict_heatwave_risk(features: dict) -> float:
     return _rule_based_heatwave(features)
 
 
-# ---------------------------------------------------------------------------
 # Rule-based fallback
-# ---------------------------------------------------------------------------
 
 def _rule_based_heatwave(f: dict) -> float:
     """Heuristic heatwave score driven by heat index and consecutive hot days."""

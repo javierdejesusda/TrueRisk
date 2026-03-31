@@ -376,9 +376,7 @@ def _load_and_enrich(code: str) -> pd.DataFrame | None:
     return df
 
 
-# ---------------------------------------------------------------------------
 # Label generation -- ground truth from real event data
-# ---------------------------------------------------------------------------
 
 _EVENTS_DIR = DATA_DIR / "events"
 
@@ -408,15 +406,9 @@ def _load_event_labels(event_file: str, combined: pd.DataFrame) -> pd.Series:
     return labels
 
 
-# ---------------------------------------------------------------------------
 # Dataset builders
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
 # Feature names -- must match inference files exactly.
 # Same 23/18/20/6 features the inference code expects.
-# ---------------------------------------------------------------------------
-
 FLOOD_FEATURES = [
     "precip_1h", "precip_6h", "precip_24h", "precip_48h",
     "precip_momentum", "humidity", "soil_moisture",
@@ -493,9 +485,7 @@ def main() -> None:
     # Replace inf with NaN, then fill
     combined.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    # ===================================================================
     # Labels from real event data (no data leakage)
-    # ===================================================================
     print("\nLoading ground-truth event labels...")
 
     # --- Flood dataset (real GloFAS discharge exceedance labels) ---

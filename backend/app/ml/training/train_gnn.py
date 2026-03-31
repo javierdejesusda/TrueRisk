@@ -161,9 +161,7 @@ def train_gnn() -> str:
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 
-    # ------------------------------------------------------------------
     # 1. Load data
-    # ------------------------------------------------------------------
     X, y = _load_training_data()
     num_snapshots = X.shape[0]
 
@@ -173,14 +171,10 @@ def train_gnn() -> str:
     y_train, y_val = y[:split], y[split:]
     logger.info("Split: %d train / %d val snapshots", split, num_snapshots - split)
 
-    # ------------------------------------------------------------------
     # 2. Build graph
-    # ------------------------------------------------------------------
     edge_index = get_edge_index()
 
-    # ------------------------------------------------------------------
     # 3. Create model
-    # ------------------------------------------------------------------
     model = SpatialRefinementGAT(
         in_channels=IN_CHANNELS,
         hidden_channels=GNN_HIDDEN_CHANNELS,
@@ -196,9 +190,7 @@ def train_gnn() -> str:
     optimizer = torch.optim.Adam(model.parameters(), lr=GNN_LR)
     criterion = nn.MSELoss()
 
-    # ------------------------------------------------------------------
     # 4. Training loop
-    # ------------------------------------------------------------------
     best_val_loss = float("inf")
     best_state = None
     patience_counter = 0
@@ -249,9 +241,7 @@ def train_gnn() -> str:
                 logger.info("Early stopping at epoch %d", epoch)
                 break
 
-    # ------------------------------------------------------------------
     # 5. Save best model
-    # ------------------------------------------------------------------
     SAVED_MODELS_DIR.mkdir(parents=True, exist_ok=True)
     save_path = SAVED_MODELS_DIR / "spatial_gnn.pt"
 
@@ -264,9 +254,7 @@ def train_gnn() -> str:
     return str(save_path)
 
 
-# ---------------------------------------------------------------------------
 # CLI
-# ---------------------------------------------------------------------------
 
 
 def main() -> None:

@@ -9,8 +9,6 @@ import { Select } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { PROVINCES } from '@/lib/provinces';
 
-// ── Zod schema ───────────────────────────────────────────────────────────
-
 const HAZARD_TYPES = [
   'flood',
   'wildfire',
@@ -28,10 +26,6 @@ const alertFormSchema = z.object({
 
 type AlertFormData = z.infer<typeof alertFormSchema>;
 
-// ── Select options (built inside component for i18n) ─────────────────────
-
-// ── Props ────────────────────────────────────────────────────────────────
-
 export interface CreateAlertFormProps {
   defaultValues?: {
     severity?: number;
@@ -42,8 +36,6 @@ export interface CreateAlertFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
-
-// ── Component ────────────────────────────────────────────────────────────
 
 export function CreateAlertForm({
   defaultValues,

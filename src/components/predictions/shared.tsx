@@ -4,8 +4,6 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// ── Types ──────────────────────────────────────────────────────────
-
 export interface GumbelData {
   params: { mu: number; beta: number; shape?: number; loc?: number; scale?: number };
   currentValue: number;
@@ -121,8 +119,6 @@ export interface ForecastResponse {
 
 export type GumbelTab = 'precipitation' | 'temperature' | 'windSpeed';
 
-// ── Constants ──────────────────────────────────────────────────────
-
 export const GUMBEL_CONFIG: Record<GumbelTab, { nameKey: string; unit: string; stroke: string; gradId: string }> = {
   precipitation: { nameKey: 'precipitation', unit: 'mm', stroke: '#8b5cf6', gradId: 'gumbelPrecip' },
   temperature: { nameKey: 'temperature', unit: '°C', stroke: '#f97316', gradId: 'gumbelTemp' },
@@ -170,8 +166,6 @@ export const staggerItem = {
   }),
 };
 
-// ── Helpers ────────────────────────────────────────────────────────
-
 export function getZScoreColor(z: number): string {
   const abs = Math.abs(z);
   if (abs >= 2) return '#ef4444';
@@ -189,8 +183,6 @@ export function getConfidenceColor(c: number): string {
 export function capitalizeField(field: string): string {
   return field.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
 }
-
-// ── Shared components ──────────────────────────────────────────────
 
 export function StatBox({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
@@ -237,8 +229,6 @@ export function DarkTooltip({
   );
 }
 
-// ── Chart Annotation ──────────────────────────────────────────────
-
 export function ChartAnnotation({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-3 border-l-2 border-text-muted/20 pl-3">
@@ -246,8 +236,6 @@ export function ChartAnnotation({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-// ── Semi-Circle Gauge ─────────────────────────────────────────────
 
 function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
   const x1 = cx + r * Math.cos(startAngle);
@@ -292,8 +280,6 @@ export function SemiCircleGauge({ value, max = 100, size = 120, label }: { value
     </div>
   );
 }
-
-// ── Loading skeleton ───────────────────────────────────────────────
 
 export function LoadingSkeleton() {
   return (

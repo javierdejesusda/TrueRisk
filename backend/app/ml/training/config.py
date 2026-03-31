@@ -2,23 +2,17 @@
 
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
 # Date range (5 years of daily data)
-# ---------------------------------------------------------------------------
 START_DATE = "2021-01-01"
 END_DATE = "2025-12-31"
 
-# ---------------------------------------------------------------------------
 # Data directories
-# ---------------------------------------------------------------------------
 DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "historical"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 SAVED_MODELS_DIR = Path(__file__).parent.parent / "saved_models"
 
-# ---------------------------------------------------------------------------
 # Open-Meteo archive API -- extended daily parameters
-# ---------------------------------------------------------------------------
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 ARCHIVE_DAILY_PARAMS = (
@@ -30,9 +24,7 @@ ARCHIVE_DAILY_PARAMS = (
     "uv_index_max,et0_fao_evapotranspiration"
 )
 
-# ---------------------------------------------------------------------------
 # Domain-threshold label constants
-# ---------------------------------------------------------------------------
 
 # Flood: precip_24h > 30mm OR (precip > 15mm AND soil_moisture > 0.5)
 FLOOD_PRECIP_HEAVY = 30.0  # mm
@@ -62,9 +54,7 @@ WINDSTORM_GUST_PERCENTILE = 0.99  # P99
 WINDSTORM_GUST_ABSOLUTE = 80.0  # km/h
 WINDSTORM_PRESSURE_DROP = -6.0  # hPa
 
-# ---------------------------------------------------------------------------
 # Training hyperparameters
-# ---------------------------------------------------------------------------
 RANDOM_SEED = 42
 TEST_SPLIT = 0.2
 
@@ -93,9 +83,7 @@ LSTM_LR = 1e-3
 LSTM_WEIGHT_DECAY = 1e-5
 LSTM_PATIENCE = 10
 
-# ---------------------------------------------------------------------------
 # Forecast horizons (hours ahead)
-# ---------------------------------------------------------------------------
 FORECAST_HORIZONS = [6, 12, 24, 48, 72, 168]
 TFT_MAX_PREDICTION_LENGTH = len(FORECAST_HORIZONS)  # 6 steps
 TFT_MAX_ENCODER_LENGTH = 168  # Default: ~5.5 months of daily lookback

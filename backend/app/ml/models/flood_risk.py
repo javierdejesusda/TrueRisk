@@ -82,9 +82,7 @@ def predict_flood_risk(features: dict) -> float:
     return _rule_based_flood(features)
 
 
-# ---------------------------------------------------------------------------
 # Rule-based fallback
-# ---------------------------------------------------------------------------
 
 def _rule_based_flood(f: dict) -> float:
     """Heuristic flood-risk score driven primarily by recent precipitation."""

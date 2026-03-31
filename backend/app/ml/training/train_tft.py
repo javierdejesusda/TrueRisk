@@ -143,9 +143,6 @@ def train_single_hazard(
         logger.error("Unknown hazard '%s'. Valid: %s", hazard, ALL_HAZARDS)
         return None
 
-    # ------------------------------------------------------------------
-    # 1. Build train/val datasets with proper temporal split
-    # ------------------------------------------------------------------
     try:
         if combined is None:
             combined = load_combined_tft_dataframe()
@@ -160,9 +157,7 @@ def train_single_hazard(
         len(val_ds),
     )
 
-    # ------------------------------------------------------------------
-    # 2. Dataloaders (num_workers=0 on Windows to avoid spawn issues)
-    # ------------------------------------------------------------------
+    # num_workers=0 on Windows to avoid multiprocessing spawn issues
     batch_size = TFT_BATCH_SIZE if not optimized else min(TFT_BATCH_SIZE, 128)
 
     train_dataloader = train_ds.to_dataloader(
@@ -178,9 +173,6 @@ def train_single_hazard(
         persistent_workers=_PERSISTENT_WORKERS,
     )
 
-    # ------------------------------------------------------------------
-    # 3. Create model
-    # ------------------------------------------------------------------
     pl.seed_everything(RANDOM_SEED)
 
     hidden_size = TFT_HIDDEN_SIZE if not optimized else 128
@@ -211,9 +203,6 @@ def train_single_hazard(
     n_params = sum(p.numel() for p in model.parameters())
     logger.info("Model: %d parameters (hidden=%d, heads=%d, lr=%.1e)", n_params, hidden_size, attention_heads, lr)
 
-    # ------------------------------------------------------------------
-    # 4. Optimal learning rate (optimized mode only)
-    # ------------------------------------------------------------------
     if optimized:
         logger.info("Running learning rate finder...")
         try:
@@ -242,9 +231,6 @@ def train_single_hazard(
         except Exception:
             logger.warning("LR finder failed, using default lr=%.2e", lr, exc_info=True)
 
-    # ------------------------------------------------------------------
-    # 5. Callbacks
-    # ------------------------------------------------------------------
     SAVED_MODELS_DIR.mkdir(parents=True, exist_ok=True)
     suffix = "_tft_optimized" if optimized else "_tft"
     ckpt_path = str(SAVED_MODELS_DIR / f"{hazard}{suffix}.ckpt")
@@ -266,9 +252,6 @@ def train_single_hazard(
     )
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
-    # ------------------------------------------------------------------
-    # 6. Train
-    # ------------------------------------------------------------------
     trainer = pl.Trainer(
         max_epochs=epochs,
         gradient_clip_val=TFT_GRADIENT_CLIP,
@@ -326,9 +309,6 @@ def train_single_hazard(
     return ckpt_path
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
 
 
 def main() -> None:

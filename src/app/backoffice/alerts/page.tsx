@@ -12,8 +12,6 @@ import { Modal } from '@/components/ui/modal';
 import { CreateAlertForm } from '@/components/alerts/create-alert-form';
 import type { AlertSeverity } from '@/types/alert';
 
-// ── Types ────────────────────────────────────────────────────────────────
-
 interface AlertRow {
   id: number;
   severity: number;
@@ -25,8 +23,6 @@ interface AlertRow {
   source: string;
   created_at: string;
 }
-
-// ── Component ────────────────────────────────────────────────────────────
 
 export default function BackofficeAlertsPage() {
   const t = useTranslations('Backoffice');

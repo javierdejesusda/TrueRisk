@@ -11,10 +11,7 @@ Spain's DANA, flood, wildfire and heatwave risk profiles.
 
 from __future__ import annotations
 
-# ---------------------------------------------------------------------------
-# Province population data (INE 2023 census estimates, thousands)
-# Source: derived from pop_density_km2 * province area km2 approximations
-# ---------------------------------------------------------------------------
+# Province population (INE 2023 census, thousands; derived from pop_density_km2 * province area km2)
 
 # Maps province INE code -> approximate total population
 _PROVINCE_POPULATION: dict[str, int] = {
@@ -75,10 +72,6 @@ _PROVINCE_POPULATION: dict[str, int] = {
 _DEFAULT_POPULATION = 300_000  # fallback for unknown province codes
 
 
-# ---------------------------------------------------------------------------
-# Impact level bands (score → level)
-# ---------------------------------------------------------------------------
-
 def _score_to_impact_level(score: float) -> str:
     """Map a 0-100 risk score to one of four impact levels."""
     if score <= 20:
@@ -90,10 +83,6 @@ def _score_to_impact_level(score: float) -> str:
     else:
         return "extreme"
 
-
-# ---------------------------------------------------------------------------
-# Population affected scaling
-# ---------------------------------------------------------------------------
 
 def _population_affected(score: float, province_code: str) -> int:
     """Estimate number of people directly impacted.
@@ -122,10 +111,6 @@ def _population_affected(score: float, province_code: str) -> int:
 
     return int(total * pct)
 
-
-# ---------------------------------------------------------------------------
-# Recommended actions — per hazard + severity
-# ---------------------------------------------------------------------------
 
 # Structure: {hazard_type: {impact_level: {"citizens": [...], "authorities": [...]}}}
 _ACTIONS: dict[str, dict[str, dict[str, list[str]]]] = {
@@ -565,10 +550,6 @@ _ACTIONS: dict[str, dict[str, dict[str, list[str]]]] = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Expected disruptions — per hazard + severity
-# ---------------------------------------------------------------------------
-
 _DISRUPTIONS: dict[str, dict[str, list[str]]] = {
     "flood": {
         "minor": ["Posibles anegaciones puntuales en zonas bajas."],
@@ -774,10 +755,6 @@ _GENERIC_DISRUPTIONS: dict[str, list[str]] = {
     "extreme": ["Disrupciones graves en servicios esenciales e infraestructuras críticas."],
 }
 
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
 
 
 def assess_impact(

@@ -105,9 +105,7 @@ def predict_wildfire_risk(features: dict) -> float:
     return _rule_based_wildfire(features)
 
 
-# ---------------------------------------------------------------------------
 # Rule-based fallback
-# ---------------------------------------------------------------------------
 
 def _rule_based_wildfire(f: dict) -> float:
     """Heuristic wildfire-risk score driven primarily by the FWI system."""

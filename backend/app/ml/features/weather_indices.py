@@ -24,12 +24,8 @@ import math
 
 import numpy as np
 from scipy import stats
-
-
-# ---------------------------------------------------------------------------
 # Day-length adjustment factors used by the FWI system (Northern Hemisphere)
 # Index 0 = January, 11 = December
-# ---------------------------------------------------------------------------
 _DMC_DAY_LENGTH: list[float] = [
     6.5, 7.5, 9.0, 12.8, 13.9, 13.9, 12.4, 10.9, 9.4, 8.0, 7.0, 6.0,
 ]
@@ -39,9 +35,7 @@ _DC_DAY_LENGTH: list[float] = [
 ]
 
 
-# ===================================================================
 # 1. Canadian Fire Weather Index (FWI) system -- Van Wagner 1987
-# ===================================================================
 
 def compute_ffmc(
     temp: float,
@@ -313,9 +307,7 @@ def compute_fwi_system(
     }
 
 
-# ===================================================================
 # 2. Heat Index -- Lu & Romps 2022 Extended Heat Index polynomial
-# ===================================================================
 
 def compute_heat_index(temp_c: float, rh: float) -> float:
     """Extended Heat Index (Lu & Romps 2022).
@@ -355,9 +347,7 @@ def compute_heat_index(temp_c: float, rh: float) -> float:
     return round(max(hi_c, temp_c), 2)
 
 
-# ===================================================================
 # 3. WBGT -- Kong & Huber 2024 analytic approximation
-# ===================================================================
 
 def compute_wbgt(
     temp_c: float,
@@ -395,9 +385,7 @@ def compute_wbgt(
     return round(wbgt, 2)
 
 
-# ===================================================================
 # 4. SPI -- Standardized Precipitation Index
-# ===================================================================
 
 def compute_spi(precip_series: list[float]) -> float:
     """Standardized Precipitation Index.
@@ -451,9 +439,7 @@ def compute_spi(precip_series: list[float]) -> float:
     return round(spi, 4)
 
 
-# ===================================================================
 # 5. SPEI -- Standardized Precipitation-Evapotranspiration Index
-# ===================================================================
 
 def compute_pet_thornthwaite(
     temp_monthly: list[float],
@@ -668,9 +654,7 @@ def compute_spei(
     return round(spei, 4)
 
 
-# ===================================================================
 # 7. UTCI -- Universal Thermal Climate Index (Brode et al. 2012)
-# ===================================================================
 
 def compute_utci(temp_c: float, rh: float, wind_ms: float, mrt: float | None = None) -> float:
     """Universal Thermal Climate Index (Brode et al. 2012 polynomial).

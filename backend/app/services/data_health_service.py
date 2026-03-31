@@ -79,9 +79,7 @@ class DataHealthTracker:
         """Return a shallow copy of all tracked source statuses."""
         return {name: dict(entry) for name, entry in self._sources.items()}
 
-    # ------------------------------------------------------------------
     # Internal helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _empty_entry() -> dict[str, Any]:

@@ -1,6 +1,5 @@
 """Tests for upgraded weather indices (B1-B5)."""
 
-import math
 
 from app.ml.features.weather_indices import (
     compute_heat_index,

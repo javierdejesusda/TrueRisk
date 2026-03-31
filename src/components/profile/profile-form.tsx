@@ -23,8 +23,6 @@ import { InfrastructureSection } from './sections/infrastructure-section';
 import { DisasterExperienceSection } from './sections/disaster-experience-section';
 import { LocationMapSection } from './sections/location-map-section';
 
-// ── Schema ──────────────────────────────────────────────────────────────
-
 const householdMemberSchema = z.object({
   name: z.string().default(''),
   ageRange: z.string().default('18-64'),
@@ -93,8 +91,6 @@ const profileSchema = z.object({
 });
 
 export type ProfileFormData = z.output<typeof profileSchema>;
-
-// ── camelCase to snake_case conversion ──────────────────────────────────
 
 function toSnakeCase(key: string): string {
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
@@ -209,7 +205,6 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
   return result as Partial<ProfileFormData>;
 }
 
-// ── Component ───────────────────────────────────────────────────────────
 
 export function ProfileForm() {
   const t = useTranslations('Profile');

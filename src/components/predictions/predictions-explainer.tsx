@@ -5,8 +5,6 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 
-// ── Inline SVG Icons ────────────────────────────────────────────────
-
 function WeatherStationIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -72,8 +70,6 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
-// ── Section heading ─────────────────────────────────────────────────
-
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="font-[family-name:var(--font-display)] text-xs font-semibold text-text-primary uppercase tracking-wider mb-3">
@@ -81,8 +77,6 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
     </h3>
   );
 }
-
-// ── Data Sources ────────────────────────────────────────────────────
 
 function DataSourcesSection() {
   const t = useTranslations('Predictions');
@@ -118,8 +112,6 @@ function DataSourcesSection() {
     </div>
   );
 }
-
-// ── ML Pipeline ─────────────────────────────────────────────────────
 
 function MLPipelineSection() {
   const t = useTranslations('Predictions');
@@ -162,8 +154,6 @@ function MLPipelineSection() {
     </div>
   );
 }
-
-// ── Model Inventory ─────────────────────────────────────────────────
 
 function ModelInventorySection() {
   const t = useTranslations('Predictions');
@@ -212,8 +202,6 @@ function ModelInventorySection() {
   );
 }
 
-// ── Statistical Methods ─────────────────────────────────────────────
-
 function StatisticalMethodsSection() {
   const t = useTranslations('Predictions');
   const tStat = useTranslations('StatisticalModels');
@@ -246,8 +234,6 @@ function StatisticalMethodsSection() {
     </div>
   );
 }
-
-// ── Main Component ──────────────────────────────────────────────────
 
 export function PredictionsExplainer() {
   const [expanded, setExpanded] = useState(false);

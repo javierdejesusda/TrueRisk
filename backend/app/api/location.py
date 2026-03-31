@@ -22,9 +22,7 @@ find_nearest_province = find_province
 _haversine = haversine
 
 
-# ---------------------------------------------------------------------------
 # Schemas
-# ---------------------------------------------------------------------------
 
 class LocationUpdateRequest(BaseModel):
     lat: float
@@ -36,9 +34,7 @@ class LocationUpdateResponse(BaseModel):
     distance_km: float
 
 
-# ---------------------------------------------------------------------------
 # Endpoints
-# ---------------------------------------------------------------------------
 
 @router.post("/update", response_model=LocationUpdateResponse)
 async def update_location(

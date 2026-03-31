@@ -461,9 +461,7 @@ def _parse_embedded_js_flows(
     return []
 
 
-# ---------------------------------------------------------------------------
 # Basin-specific known coordinates
-# ---------------------------------------------------------------------------
 
 _TAJO_KNOWN_COORDS: dict[str, tuple[float, float]] = {
     "aranjuez": (40.033, -3.603), "toledo": (39.858, -4.024),
@@ -503,9 +501,7 @@ _SUR_KNOWN_COORDS: dict[str, tuple[float, float]] = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Basin fetchers for previously-stubbed basins
-# ---------------------------------------------------------------------------
 
 async def _fetch_tajo_flows(client: httpx.AsyncClient) -> list[dict[str, Any]]:
     """Fetch river flow readings from SAIH Tajo."""

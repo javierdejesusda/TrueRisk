@@ -69,9 +69,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
     """Simple template rendering - replace {{variable}} with values."""
     flat: dict[str, str] = {}
 
-    # ------------------------------------------------------------------
     # Top-level fields
-    # ------------------------------------------------------------------
     flat["report_id"] = str(data.get("report_id", ""))
     flat["formatted_address"] = str(data.get("formatted_address", ""))
     flat["address_text"] = str(data.get("address_text", ""))
@@ -102,9 +100,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
     flat["expires_at"] = str(data.get("expires_at", "N/A"))
     flat["current_year"] = str(datetime.now(timezone.utc).year)
 
-    # ------------------------------------------------------------------
     # Per-hazard scores, bars, and explanations
-    # ------------------------------------------------------------------
     for hazard_key in ("flood", "wildfire", "heatwave", "drought", "coldwave", "windstorm", "seismic"):
         hazard = data.get(hazard_key, {})
         if isinstance(hazard, dict):
@@ -134,9 +130,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
             flat[f"{hazard_key}_score_pct"] = "0.0"
             flat[f"{hazard_key}_province_pct"] = "0.0"
 
-    # ------------------------------------------------------------------
     # Flood zone details
-    # ------------------------------------------------------------------
     fz = data.get("flood_zone", {})
     if isinstance(fz, dict):
         in_zone = bool(fz.get("in_arpsi_zone"))
@@ -170,9 +164,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
         flat["flood_zone_distance_display"] = "N/A"
         flat["flood_zone_distance_m"] = "N/A"
 
-    # ------------------------------------------------------------------
     # Terrain details
-    # ------------------------------------------------------------------
     terrain = data.get("terrain", {})
     if isinstance(terrain, dict):
         flat["elevation_m"] = f"{terrain.get('elevation_m', 0.0):.0f}"
@@ -187,9 +179,7 @@ def _render_template(html: str, data: dict[str, Any]) -> str:
         flat["wildfire_modifier"] = f"x{wp.get('modifier', 1.0):.2f}"
         flat["wildfire_explanation"] = str(wp.get("explanation", ""))
 
-    # ------------------------------------------------------------------
     # Do the replacements
-    # ------------------------------------------------------------------
     for key, value in flat.items():
         html = html.replace("{{" + key + "}}", value)
 

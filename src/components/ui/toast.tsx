@@ -26,8 +26,6 @@ const severityLabels: Record<number, string> = {
   5: 'Critical',
 };
 
-// ── Singleton toast state ────────────────────────────────────────────────
-
 type Listener = (toasts: ToastItem[]) => void;
 
 let toasts: ToastItem[] = [];
@@ -48,8 +46,6 @@ export function showToast(item: Omit<ToastItem, 'id'>) {
     notify();
   }, 5_000);
 }
-
-// ── Toast container component ────────────────────────────────────────────
 
 export function ToastContainer() {
   const [items, setItems] = useState<ToastItem[]>([]);

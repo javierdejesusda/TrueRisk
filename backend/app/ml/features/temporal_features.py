@@ -105,12 +105,9 @@ def compute_temporal_features(
     n = len(weather_records)
     if n == 0:
         return _empty_features()
-
-    # ------------------------------------------------------------------
     # Precipitation rolling sums
     # Treat each record as roughly one period; callers decide granularity
     # (e.g., hourly records -> 6 records = 6h, daily -> 6 days).
-    # ------------------------------------------------------------------
     precip_key = "precipitation"
 
     precip_6h = _rolling_sum(weather_records, precip_key, 6)
@@ -119,9 +116,7 @@ def compute_temporal_features(
     precip_7d = _rolling_sum(weather_records, precip_key, 7 * 24)
     precip_30d = _rolling_sum(weather_records, precip_key, 30 * 24)
 
-    # ------------------------------------------------------------------
     # Consecutive-day streaks (daily granularity expected)
-    # ------------------------------------------------------------------
     consecutive_dry = _consecutive_days(
         weather_records, precip_key, lambda v: v < 1.0,
     )
@@ -135,9 +130,7 @@ def compute_temporal_features(
         weather_records, "temperature_min", lambda v: v > 20.0,
     )
 
-    # ------------------------------------------------------------------
     # Pressure tendencies
-    # ------------------------------------------------------------------
     pressure_tendency_1d = 0.0
     pressure_tendency_3d = 0.0
     if n >= 2:
@@ -148,9 +141,7 @@ def compute_temporal_features(
             p_3d = _safe_get(weather_records[3], "pressure")
             pressure_tendency_3d = round(p_now - p_3d, 2)
 
-    # ------------------------------------------------------------------
     # Soil moisture trend (linear slope over last 7 records, oldest-first)
-    # ------------------------------------------------------------------
     sm_window = min(n, 7)
     sm_values = [
         _safe_get(weather_records[i], "soil_moisture")
@@ -158,9 +149,7 @@ def compute_temporal_features(
     ]
     soil_moisture_trend = _linear_slope(sm_values)
 
-    # ------------------------------------------------------------------
     # Temperature anomaly: current temp minus mean of last 30 records
-    # ------------------------------------------------------------------
     temp_now = _safe_get(weather_records[0], "temperature")
     temp_window = min(n, 30)
     temp_values = [
@@ -170,9 +159,7 @@ def compute_temporal_features(
     temp_mean = sum(temp_values) / len(temp_values) if temp_values else 0.0
     temperature_anomaly = round(temp_now - temp_mean, 2)
 
-    # ------------------------------------------------------------------
     # Cyclical month encoding
-    # ------------------------------------------------------------------
     current_month = _extract_month(weather_records[0])
     month_sin = round(math.sin(2.0 * math.pi * current_month / 12.0), 6)
     month_cos = round(math.cos(2.0 * math.pi * current_month / 12.0), 6)
@@ -196,9 +183,7 @@ def compute_temporal_features(
     }
 
 
-# ------------------------------------------------------------------
 # Helpers
-# ------------------------------------------------------------------
 
 def _extract_month(record: dict) -> int:
     """Best-effort extraction of the month (1-12) from a record."""

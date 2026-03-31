@@ -38,9 +38,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ---------------------------------------------------------------------------
 # Rate-limit key helpers
-# ---------------------------------------------------------------------------
 
 
 def _rate_key_report(request: Request) -> str:
@@ -62,9 +60,7 @@ def _rate_key_geocode(request: Request) -> str:
     return get_real_ip(request)
 
 
-# ---------------------------------------------------------------------------
 # POST /report -- create a new property risk report
-# ---------------------------------------------------------------------------
 
 
 class _ReportRateLimit:
@@ -183,9 +179,7 @@ async def create_report(
     return _build_report_response(report, risk)
 
 
-# ---------------------------------------------------------------------------
 # GET /report/{report_id} -- public shareable link
-# ---------------------------------------------------------------------------
 
 
 @router.get("/report/{report_id}", response_model=PropertyReportResponse)
@@ -209,9 +203,7 @@ async def get_report(
     return _build_report_response_from_db(report)
 
 
-# ---------------------------------------------------------------------------
 # GET /reports -- authenticated paginated user history
-# ---------------------------------------------------------------------------
 
 
 @router.get("/reports", response_model=list[PropertyReportListItem])
@@ -246,9 +238,7 @@ async def list_reports(
     ]
 
 
-# ---------------------------------------------------------------------------
 # POST /geocode -- address geocoding only
-# ---------------------------------------------------------------------------
 
 
 class GeocodeRequest(BaseModel):
@@ -281,9 +271,7 @@ async def geocode(
     )
 
 
-# ---------------------------------------------------------------------------
 # GET /arpsi/check -- flood zone check by coordinates
-# ---------------------------------------------------------------------------
 
 
 @router.get("/arpsi/check", response_model=FloodZoneDetail)
@@ -316,9 +304,7 @@ async def arpsi_check(
     )
 
 
-# ---------------------------------------------------------------------------
 # GET /report/{report_id}/pdf -- PDF report download
-# ---------------------------------------------------------------------------
 
 
 @router.get("/report/{report_id}/pdf")
@@ -347,9 +333,7 @@ async def get_report_pdf(report_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=501, detail=str(e))
 
 
-# ---------------------------------------------------------------------------
 # PDF data builder
-# ---------------------------------------------------------------------------
 
 
 def _build_report_data_for_pdf(report: PropertyReport) -> dict:
@@ -448,9 +432,7 @@ def _build_report_data_for_pdf(report: PropertyReport) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # Response builders
-# ---------------------------------------------------------------------------
 
 
 def _build_report_response(

@@ -10,8 +10,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Modal } from '@/components/ui/modal';
 import { CreateAlertForm } from '@/components/alerts/create-alert-form';
 
-// ── Types ────────────────────────────────────────────────────────────────
-
 interface DetectionResult {
   detected: boolean;
   suggestion?: {
@@ -42,8 +40,6 @@ interface Stats {
   monitoredProvinces: number;
   totalConsultations: number;
 }
-
-// ── Component ────────────────────────────────────────────────────────────
 
 export default function BackofficeDashboardPage() {
   const t = useTranslations('Backoffice');

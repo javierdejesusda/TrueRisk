@@ -18,9 +18,7 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # OpenAI client (singleton)
-# ---------------------------------------------------------------------------
 _client: AsyncOpenAI | None = None
 
 
@@ -31,9 +29,7 @@ def _get_client() -> AsyncOpenAI:
     return _client
 
 
-# ---------------------------------------------------------------------------
 # Prompt-injection patterns (compiled once)
-# ---------------------------------------------------------------------------
 _INJECTION_PATTERNS = [
     re.compile(
         r"(?i)(ignore|forget|disregard)\s+(all\s+)?"
@@ -68,9 +64,7 @@ _INJECTION_PATTERNS = [
     ),
 ]
 
-# ---------------------------------------------------------------------------
 # Topic relevance keyword allowlist (EN + ES)
-# ---------------------------------------------------------------------------
 _TOPIC_KEYWORDS: set[str] = {
     "risk", "weather", "emergency", "flood", "fire", "wildfire", "earthquake",
     "evacuate", "evacuation", "prepare", "preparedness", "safety", "hazard",
@@ -89,15 +83,11 @@ _TOPIC_KEYWORDS: set[str] = {
     "tornado", "huracan", "huracán",
 }
 
-# ---------------------------------------------------------------------------
 # Canary token — must never be leaked in assistant responses
-# ---------------------------------------------------------------------------
 _CANARY = "CANARY_TR_7x9Kp2mQ"
 
 
-# ===================================================================
 # 1. Input validation
-# ===================================================================
 def validate_input(message: str) -> tuple[bool, str | None]:
     """Validate user message. Returns ``(is_valid, error_reason)``."""
     if not message or not message.strip():
@@ -113,9 +103,7 @@ def validate_input(message: str) -> tuple[bool, str | None]:
     return True, None
 
 
-# ===================================================================
 # 2. Topic relevance
-# ===================================================================
 def check_topic_relevance(message: str) -> bool:
     """Return *True* if the message is on-topic (risk/weather/emergency)."""
     lower = message.lower()
@@ -125,9 +113,7 @@ def check_topic_relevance(message: str) -> bool:
     return False
 
 
-# ===================================================================
 # 3. Rate limiting
-# ===================================================================
 async def check_rate_limits(
     user_id: int,
     db: AsyncSession,
@@ -206,9 +192,7 @@ async def check_rate_limits(
     return True, None, None
 
 
-# ===================================================================
 # 4. Circuit breaker (platform-wide cost guard)
-# ===================================================================
 async def check_circuit_breaker(db: AsyncSession) -> bool:
     """Return *True* if the platform cost limit has been hit for today."""
     today = date.today()
@@ -222,9 +206,7 @@ async def check_circuit_breaker(db: AsyncSession) -> bool:
     return estimated_cost >= settings.chat_platform_daily_cost_limit
 
 
-# ===================================================================
 # 5. System prompt builder
-# ===================================================================
 def _build_system_prompt(
     user: User,
     locale: str,
@@ -280,9 +262,7 @@ PROVINCE CONTEXT:
     return prompt
 
 
-# ===================================================================
 # 6. Usage stats
-# ===================================================================
 async def get_usage(user_id: int, db: AsyncSession) -> dict:
     """Return current usage stats matching ``ChatUsageResponse`` schema."""
     today = date.today()
@@ -326,9 +306,7 @@ async def get_usage(user_id: int, db: AsyncSession) -> dict:
     }
 
 
-# ===================================================================
 # 7. Main streaming function
-# ===================================================================
 async def stream_chat_response(
     message: str,
     conversation_id: str | None,

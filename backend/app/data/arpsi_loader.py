@@ -22,9 +22,7 @@ from app.models.arpsi_flood_zone import ArpsiFloodZone
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Common GeoJSON property name mappings
-# ---------------------------------------------------------------------------
 
 # ARPSI data from MITECO may use different property keys depending on the
 # download format.  We try several alternatives for each field.
@@ -67,9 +65,7 @@ def _get_first(props: dict, keys: tuple[str, ...], default=None):
     return default
 
 
-# ---------------------------------------------------------------------------
 # Bounding-box computation
-# ---------------------------------------------------------------------------
 
 
 def compute_bounding_box(geometry: dict) -> tuple[float, float, float, float]:
@@ -117,9 +113,7 @@ def _flatten_coords(
         _flatten_coords(item, out)
 
 
-# ---------------------------------------------------------------------------
 # Risk-level inference
-# ---------------------------------------------------------------------------
 
 
 def _infer_risk_level(return_period: str | None) -> str:
@@ -134,9 +128,7 @@ def _infer_risk_level(return_period: str | None) -> str:
     return "low"
 
 
-# ---------------------------------------------------------------------------
 # Main loader
-# ---------------------------------------------------------------------------
 
 
 async def load_arpsi_from_geojson(file_path: str, db: AsyncSession) -> int:
