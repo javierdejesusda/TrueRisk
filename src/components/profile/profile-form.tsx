@@ -361,6 +361,7 @@ export function ProfileForm() {
           if (mapped.specialNeeds) setSpecialNeeds(mapped.specialNeeds as string[]);
           reset(data);
           showToast({ title: t('saved'), severity: 1 });
+          window.dispatchEvent(new Event('profile-updated'));
         } else if (res.status === 409) {
           setError('email', { type: 'server', message: t('emailTaken') });
         } else {

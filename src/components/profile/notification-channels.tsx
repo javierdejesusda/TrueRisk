@@ -30,13 +30,29 @@ export function NotificationChannels() {
 
   useEffect(() => {
     if (!backendToken) return;
-    apiFetch('/api/auth/me').then(async (res) => {
+    apiFetch('/api/account/me').then(async (res) => {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
         setPhone(data.phone_number || '');
       }
     });
+  }, [backendToken]);
+
+  // Re-fetch profile when ProfileForm saves (dispatches 'profile-updated' event)
+  useEffect(() => {
+    function handleProfileUpdated() {
+      if (!backendToken) return;
+      apiFetch('/api/account/me').then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+          setPhone(data.phone_number || '');
+        }
+      });
+    }
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    return () => window.removeEventListener('profile-updated', handleProfileUpdated);
   }, [backendToken]);
 
   async function patchProfile(data: Record<string, unknown>) {
