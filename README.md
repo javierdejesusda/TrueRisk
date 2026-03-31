@@ -18,7 +18,7 @@
 ## Features
 
 - **7 ML risk models** — Flood, wildfire, drought, heatwave, seismic, cold wave, and windstorm risk scored 0–100 for all 52 Spanish provinces
-- **Real-time weather monitoring** — Live data from AEMET (Spanish Weather Agency), Open-Meteo forecasts, and IGN seismic catalog
+- **Real-time data fusion** — 16 live data sources including AEMET weather alerts, Open-Meteo forecasts, IGN and USGS seismic feeds, NASA FIRMS fire hotspots, Copernicus CAMS/EFAS/EMS, OpenAQ air quality, SAIH river gauges (9 basins), MITECO reservoirs, REE energy grid, and ECMWF seasonal outlooks
 - **Interactive risk map** — Province-level risk visualization with MapLibre GL, alert overlays, and seismic activity markers
 - **AI emergency advisor** — Context-aware safety guidance powered by OpenAI, tailored to current conditions and location
 - **Community hazard reports** — Citizens can submit and view local hazard observations with photo evidence
@@ -36,10 +36,35 @@
 
 ```mermaid
 graph LR
-    A[AEMET API] --> D[FastAPI Backend]
-    B[Open-Meteo API] --> D
-    C[IGN Seismic Catalog] --> D
-    D --> E[Feature Engineering]
+    subgraph Weather
+        A1[AEMET]
+        A2[Open-Meteo]
+        A3[ECMWF Seasonal]
+    end
+    subgraph Hazards
+        B1[IGN Seismic]
+        B2[USGS Earthquake]
+        B3[NASA FIRMS]
+        B4[Copernicus EMS]
+    end
+    subgraph Environment
+        C1[Copernicus CAMS]
+        C2[Copernicus EFAS]
+        C3[Copernicus Land / NDVI]
+        C4[OpenAQ]
+        C5[NASA POWER]
+    end
+    subgraph Infrastructure
+        D1[REE Energy Grid]
+        D2[MITECO Reservoirs]
+        D3[SAIH River Basins]
+        D4[INE Demographics]
+    end
+    Weather --> BE[FastAPI Backend]
+    Hazards --> BE
+    Environment --> BE
+    Infrastructure --> BE
+    BE --> E[Feature Engineering]
     E --> F1[XGBoost — Flood]
     E --> F2[RF + LightGBM — Wildfire]
     E --> F3[SPEI + LSTM — Drought]
@@ -56,7 +81,7 @@ graph LR
     F7 --> G
     G --> H[Risk Scores 0-100]
     H --> I[Next.js Frontend]
-    D --> I
+    BE --> I
 ```
 
 ## Model Performance
@@ -73,7 +98,7 @@ graph LR
 
 ### ML Pipeline
 
-1. **Data Ingestion** — Current weather from Open-Meteo, alerts from AEMET CAP, earthquakes from IGN
+1. **Data Ingestion** — Weather from AEMET and Open-Meteo, seismic data from IGN and USGS, fire hotspots from NASA FIRMS, air quality from OpenAQ and Copernicus CAMS, flood indicators from Copernicus EFAS and SAIH river gauges, vegetation health from Copernicus Land NDVI, reservoir levels from MITECO, seasonal outlooks from ECMWF, and energy grid state from REE
 2. **Feature Engineering** — 26+ temporal features from hourly history (precipitation accumulation, consecutive hot/cold/dry days, pressure dynamics, soil moisture trends)
 3. **Model Inference** — 7 hazard-specific models run independently, each producing a 0-100 risk score
 4. **Composite Scoring** — Dominant hazard weighting with diminishing secondary contributions, province-specific hazard weights
@@ -133,18 +158,78 @@ graph LR
 
 ### Data Sources
 
-| Source | Data |
-|--------|------|
-| [AEMET](https://opendata.aemet.es) | Real-time weather, CAP alerts |
-| [Open-Meteo](https://open-meteo.com) | Forecast and historical weather |
-| [IGN](https://www.ign.es) | Seismic catalog |
+#### Weather & Climate
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [AEMET](https://opendata.aemet.es) | Real-time weather observations, CAP alerts, wildfire danger index | `AEMET_API_KEY` (required) |
+| [Open-Meteo](https://open-meteo.com) | Hourly/daily forecasts, historical archive, ensemble forecasts, flood river discharge | Free |
+| [ECMWF Seasonal](https://cds.climate.copernicus.eu) | 3–6 month temperature and precipitation anomaly outlooks (via Copernicus CDS) | `CDSAPI_KEY` |
+
+#### Seismic
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [IGN](https://www.ign.es) | Spanish seismic catalog — earthquake locations, magnitudes, depths (90-day window) | Free |
+| [USGS](https://earthquake.usgs.gov) | Iberian Peninsula earthquake data, GeoJSON feed | Free |
+
+#### Fire & Vegetation
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov) | Active fire hotspots from VIIRS and MODIS satellites (1-day data, Spain bbox) | `FIRMS_MAP_KEY` (required) |
+| [Copernicus Land / NDVI](https://land.copernicus.eu) | NDVI300 vegetation health index via WMS for fire and drought stress | Free |
+| [NASA POWER](https://power.larc.nasa.gov) | Solar irradiance, temperature extremes, precipitation, and evapotranspiration (30-day lag) | Free |
+
+#### Air Quality
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [OpenAQ](https://openaq.org) | Ground-level sensor measurements: PM2.5, PM10, NO2, O3, CO, SO2, NO (25 km radius) | `OPENAQ_API_KEY` |
+| [Copernicus CAMS](https://atmosphere.copernicus.eu) | Atmospheric quality forecasts: PM2.5, PM10, O3, NO2, CO | Free |
+
+#### Flood & Water
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [Copernicus EFAS](https://www.efas.eu) | European flood indicators and 7-day river discharge forecasts | Free |
+| [MITECO / ArcGIS](https://www.miteco.gob.es) | Live reservoir capacity for 374 reservoirs across 16 peninsular basins (weekly) | Free |
+| [SAIH — Ebro](https://www.saihebro.com) | Real-time river flow and gauge readings — Ebro basin | Free |
+| [SAIH — Segura](https://www.chsegura.es) | Real-time river flow and gauge readings — Segura basin | Free |
+| [SAIH — Júcar](https://saih.chj.es) | Real-time river flow and gauge readings — Júcar basin | Free |
+| [SAIH — Guadalquivir](https://www.chguadalquivir.es) | Real-time river flow and gauge readings — Guadalquivir basin | Free |
+| [SAIH — Tajo](https://saihtajo.chtajo.es) | Real-time river flow and gauge readings — Tajo basin | Free |
+| [SAIH — Duero](https://www.saihduero.es) | Real-time river flow and gauge readings — Duero basin | Free |
+| [SAIH — Cantábrico](https://www.chcantabrico.es) | Real-time river flow and gauge readings — Norte basin | Free |
+| [SAIH — Guadiana](https://saihguadiana.chguadiana.es) | Real-time river flow and gauge readings — Guadiana basin | Free |
+| [SAIH — Mediterráneo](https://www.chmediterraneo.es) | Real-time river flow and gauge readings — Sur basin | Free |
+
+#### Emergency & Infrastructure
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [Copernicus EMS](https://emergency.copernicus.eu) | Active disaster and emergency activation perimeters (RSS) | Free |
+| [REE](https://www.ree.es) | Spanish electricity demand and generation mix (solar, wind, nuclear, hydro, etc.) | Free |
+
+#### Demographics & Geography
+
+| Source | Data | API Key |
+|--------|------|---------|
+| [INE](https://www.ine.es) | Province population, age distribution, and gender breakdown for all 52 provinces | Free |
+| [IGN GeoJSON](https://www.ign.es) | Spain province boundaries (WGS84, INE-coded) — bundled static file | — |
+| [ARPSI / MITECO](https://www.miteco.gob.es) | Areas of Significant Flood Risk (ARPSI) zone polygons (GeoJSON, EPSG:25830 / 4326) | — |
 
 ## Prerequisites
 
 - **Node.js** 22+
 - **Python** 3.12+
 - **PostgreSQL** 16+ (or use Docker)
-- **API keys:** [AEMET OpenData](https://opendata.aemet.es/centrodedescargas/inicio) (free, required for weather data)
+- **API keys (required):**
+  - [AEMET OpenData](https://opendata.aemet.es/centrodedescargas/inicio) — weather data and CAP alerts
+  - [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/area/) — active fire hotspots
+- **API keys (optional — enhance coverage):**
+  - [OpenAQ](https://openaq.org) — ground-level air quality measurements
+  - [Copernicus CDS](https://cds.climate.copernicus.eu) — ECMWF seasonal forecasts
 
 ## Getting Started
 
