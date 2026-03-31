@@ -9,7 +9,7 @@
 
 **Multi-hazard risk intelligence platform with real-time weather monitoring, ML-powered risk scoring, and personalized emergency guidance for every province in Spain.**
 
-[Live Platform](https://truerisk.cloud) · [API Docs](https://truerisk.cloud/docs) · [Technical Report](docs/technical-report/main.pdf)
+[Live Platform](https://truerisk.cloud) · [API Docs](https://truerisk.cloud/docs) · [Legal](https://truerisk.cloud/privacy) · [Technical Report](docs/technical-report/main.pdf)
 
 </div>
 

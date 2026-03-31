@@ -1670,5 +1670,62 @@
     "conversationLimitHint": "{count}/{limit} messages",
     "close": "Close",
     "thinking": "Thinking..."
+  },
+  "Docs": {
+    "backToHome": "Back to home",
+    "title": "API Documentation",
+    "subtitle": "REST API for multi-hazard risk intelligence across all 52 Spanish provinces. Real-time risk scoring powered by 7 ML models, live weather data from AEMET and Open-Meteo, and community-sourced hazard reports.",
+    "baseUrl": "Base URL",
+    "authLabel": "Auth",
+    "formatLabel": "Format",
+    "quickStart": "Quick Start",
+    "quickStartDesc": "No authentication required for public read endpoints. Fetch risk scores for any province in seconds.",
+    "authTitle": "Authentication",
+    "authDesc": "Public endpoints (risk scores, weather, provinces) require no authentication. Write operations and user-specific data require a JWT token obtained via /auth/login or /auth/register. Include the token in the Authorization header.",
+    "endpointsTitle": "API Endpoints",
+    "endpointsDesc": "All endpoints are prefixed with /api. Parameters in braces are path variables (e.g. province_code is the 2-digit INE code like 28 for Madrid).",
+    "categories": {
+      "risk": {
+        "name": "Risk & Analysis",
+        "desc": "Real-time composite risk scores, forecasts, AI-generated summaries, and model explainability for all provinces."
+      },
+      "weather": {
+        "name": "Weather & Environment",
+        "desc": "Live data from multiple sources: earthquakes, wildfires, air quality, reservoirs, river gauges, drought, and flash flood monitoring."
+      },
+      "geography": {
+        "name": "Geography & Climate",
+        "desc": "Province and municipality data, climate projections, and location services for reverse geocoding."
+      },
+      "alerts": {
+        "name": "Alerts & Safety",
+        "desc": "Active alerts, real-time AEMET warnings via SSE streaming, emergency planning, evacuation routes, and safety tips."
+      },
+      "community": {
+        "name": "Community & AI",
+        "desc": "Citizen hazard reports with upvoting and verification, AI chat assistant, and location-based suggestions."
+      },
+      "data": {
+        "name": "Data Sources",
+        "desc": "Demographic, vegetation, seismic, energy, and weather station data for detailed environmental analysis."
+      },
+      "notifications": {
+        "name": "Notifications",
+        "desc": "Push notification subscriptions, SMS and email alerts, and Telegram bot integration."
+      },
+      "auth": {
+        "name": "Auth & User",
+        "desc": "User registration, JWT authentication, profile management, property risk reports, and insurance estimates."
+      }
+    },
+    "rateLimitTitle": "Rate Limiting",
+    "rateLimitDesc": "API requests are rate-limited to ensure fair usage. Limits are applied per IP address for public endpoints and per user for authenticated endpoints.",
+    "rateLimitPublic": "Public: 60 req/min",
+    "rateLimitAuth": "Authenticated: 120 req/min",
+    "errorsTitle": "Error Responses",
+    "errorsDesc": "All errors follow a consistent JSON format with an error type, human-readable detail, HTTP status code, and ISO 8601 timestamp.",
+    "interactiveTitle": "Interactive API Explorer",
+    "interactiveDesc": "Try out endpoints directly in the browser with the auto-generated Swagger UI documentation.",
+    "interactiveButton": "Open Swagger UI"
   }
 }

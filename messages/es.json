@@ -1668,5 +1668,62 @@
     "conversationLimitHint": "{count}/{limit} mensajes",
     "close": "Cerrar",
     "thinking": "Pensando..."
+  },
+  "Docs": {
+    "backToHome": "Volver al inicio",
+    "title": "Documentacion de la API",
+    "subtitle": "API REST para inteligencia de riesgos multi-amenaza en las 52 provincias espanolas. Puntuacion de riesgo en tiempo real con 7 modelos de ML, datos meteorologicos de AEMET y Open-Meteo, e informes de peligros de la comunidad.",
+    "baseUrl": "URL base",
+    "authLabel": "Auth",
+    "formatLabel": "Formato",
+    "quickStart": "Inicio rapido",
+    "quickStartDesc": "Los endpoints publicos de lectura no requieren autenticacion. Obtiene puntuaciones de riesgo para cualquier provincia en segundos.",
+    "authTitle": "Autenticacion",
+    "authDesc": "Los endpoints publicos (riesgo, meteorologia, provincias) no requieren autenticacion. Las operaciones de escritura y datos de usuario requieren un token JWT obtenido via /auth/login o /auth/register. Incluye el token en la cabecera Authorization.",
+    "endpointsTitle": "Endpoints de la API",
+    "endpointsDesc": "Todos los endpoints tienen el prefijo /api. Los parametros entre llaves son variables de ruta (ej: province_code es el codigo INE de 2 digitos, como 28 para Madrid).",
+    "categories": {
+      "risk": {
+        "name": "Riesgo y analisis",
+        "desc": "Puntuaciones de riesgo compuesto en tiempo real, previsiones, resumenes generados por IA y explicabilidad de modelos para todas las provincias."
+      },
+      "weather": {
+        "name": "Meteorologia y medio ambiente",
+        "desc": "Datos en vivo de multiples fuentes: terremotos, incendios, calidad del aire, embalses, caudalimetros, sequia y monitorizacion de inundaciones."
+      },
+      "geography": {
+        "name": "Geografia y clima",
+        "desc": "Datos de provincias y municipios, proyecciones climaticas y servicios de localizacion para geocodificacion inversa."
+      },
+      "alerts": {
+        "name": "Alertas y seguridad",
+        "desc": "Alertas activas, avisos AEMET en tiempo real via SSE, planificacion de emergencias, rutas de evacuacion y consejos de seguridad."
+      },
+      "community": {
+        "name": "Comunidad e IA",
+        "desc": "Informes ciudadanos de peligros con votos y verificacion, asistente IA por chat y sugerencias basadas en ubicacion."
+      },
+      "data": {
+        "name": "Fuentes de datos",
+        "desc": "Datos demograficos, de vegetacion, sismicos, energeticos y de estaciones meteorologicas para analisis ambiental detallado."
+      },
+      "notifications": {
+        "name": "Notificaciones",
+        "desc": "Suscripciones push, alertas por SMS y email, e integracion con bot de Telegram."
+      },
+      "auth": {
+        "name": "Auth y usuario",
+        "desc": "Registro de usuarios, autenticacion JWT, gestion de perfil, informes de riesgo de propiedades y estimaciones de seguros."
+      }
+    },
+    "rateLimitTitle": "Limites de peticiones",
+    "rateLimitDesc": "Las peticiones a la API estan limitadas para garantizar un uso justo. Los limites se aplican por direccion IP para endpoints publicos y por usuario para endpoints autenticados.",
+    "rateLimitPublic": "Publico: 60 pet/min",
+    "rateLimitAuth": "Autenticado: 120 pet/min",
+    "errorsTitle": "Respuestas de error",
+    "errorsDesc": "Todos los errores siguen un formato JSON consistente con tipo de error, detalle legible, codigo de estado HTTP y marca de tiempo ISO 8601.",
+    "interactiveTitle": "Explorador interactivo de la API",
+    "interactiveDesc": "Prueba los endpoints directamente en el navegador con la documentacion Swagger UI autogenerada.",
+    "interactiveButton": "Abrir Swagger UI"
   }
 }
