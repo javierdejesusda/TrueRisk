@@ -1,5 +1,8 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
+
 export default function CitizenError({
   error,
   reset,
@@ -7,6 +10,10 @@ export default function CitizenError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   const isNetwork = error.message?.includes('fetch') || error.message?.includes('network');
   const message = isNetwork
     ? 'Unable to connect to the server. Check your internet connection.'
