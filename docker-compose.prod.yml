@@ -24,13 +24,19 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+        restart: true
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 40s
     deploy:
+      update_config:
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        order: stop-first
       resources:
         limits:
           cpus: '1.0'
@@ -65,13 +71,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+        restart: true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 60s
     deploy:
+      update_config:
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        order: stop-first
       resources:
         limits:
           cpus: '2.0'
