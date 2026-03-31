@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import math
-from app.utils.time import utcnow
+from app.utils.time import ensure_aware, utcnow
 from typing import Any
 
 from sqlalchemy import func, select
@@ -688,9 +688,7 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         latest_result = await db.execute(latest_stmt)
         latest_ts = latest_result.scalar_one_or_none()
         if latest_ts:
-            age_delta = utcnow() - (
-                latest_ts
-            )
+            age_delta = utcnow() - ensure_aware(latest_ts)
             weather_age_hours = age_delta.total_seconds() / 3600.0
 
     composite["confidence"] = _compute_confidence(weather_age_hours, sources_used)

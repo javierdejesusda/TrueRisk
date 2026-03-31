@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api-client';
@@ -22,7 +22,7 @@ export function UserEmergencyCard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showFirstResponder, setShowFirstResponder] = useState(false);
 
-  useEffect(() => {
+  const fetchProfile = useCallback(() => {
     apiFetch('/api/account/me')
       .then((res) => {
         if (res.ok) return res.json();
@@ -33,6 +33,17 @@ export function UserEmergencyCard() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Refetch when profile is saved from the profile form
+  useEffect(() => {
+    const handler = () => fetchProfile();
+    window.addEventListener('profile-updated', handler);
+    return () => window.removeEventListener('profile-updated', handler);
+  }, [fetchProfile]);
 
   if (!profile) return null;
 

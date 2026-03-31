@@ -19,7 +19,9 @@ COPY . .
 
 RUN chmod +x entrypoint.sh
 
-RUN useradd --create-home --shell /bin/bash appuser
+RUN useradd --create-home --shell /bin/bash appuser \
+    && mkdir -p /app/lightning_logs \
+    && chown -R appuser:appuser /app/lightning_logs
 USER appuser
 
 EXPOSE 8000

@@ -45,6 +45,7 @@ async def run_rapid_severity_check():
     from app.config import settings
     from app.database import async_session
     from app.data.aemet_client import fetch_alerts as fetch_aemet_alerts
+    from app.data.province_data import is_valid_province_code
     from app.services.push_service import notify_province
 
     try:
@@ -54,8 +55,10 @@ async def run_rapid_severity_check():
                 aemet_alerts = await fetch_aemet_alerts(settings.aemet_api_key)
                 red_alerts = [a for a in (aemet_alerts or []) if a.get("severity", 0) >= 4]
                 for alert in red_alerts:
-                    province_codes = alert.get("province_codes", [])
-                    for pc in province_codes:
+                    geocode = alert.get("geocode", "")
+                    if not is_valid_province_code(geocode):
+                        continue
+                    for pc in [geocode]:
                         await notify_province(db, pc, {
                             "title": f"AEMET Red Alert: {alert.get('event', 'Severe Weather')}",
                             "body": alert.get("headline", ""),

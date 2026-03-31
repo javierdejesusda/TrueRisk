@@ -173,46 +173,49 @@ async def process_flash_flood_alerts(db: AsyncSession) -> int:
     flood_alerts = await check_flash_flood_conditions(db)
     created_count = 0
 
-    for fa in flood_alerts:
-        # Skip alerts with invalid province codes to avoid FK violations
-        if not is_valid_province_code(fa.province_code):
+    # Use no_autoflush to prevent premature flushes during the SELECT
+    # queries below — autoflush of pending adds can cascade-fail the session.
+    with db.no_autoflush:
+        for fa in flood_alerts:
+            # Skip alerts with invalid province codes to avoid FK violations
+            if not is_valid_province_code(fa.province_code):
+                logger.warning(
+                    "Skipping flash flood alert for gauge %s: invalid province_code '%s'",
+                    fa.gauge_name, fa.province_code,
+                )
+                continue
+
+            # Check for existing recent alert for this gauge
+            six_hours_ago = datetime.now(tz=timezone.utc) - timedelta(hours=6)
+            existing = await db.execute(
+                select(Alert).where(
+                    Alert.hazard_type == "flash_flood",
+                    Alert.province_code == fa.province_code,
+                    Alert.is_active == True,  # noqa: E712
+                    Alert.created_at >= six_hours_ago,
+                    Alert.title.contains(fa.gauge_name),
+                )
+            )
+            if existing.scalar_one_or_none():
+                continue  # Already alerted recently
+
+            # Create new alert
+            alert = Alert(
+                severity=fa.severity,
+                hazard_type="flash_flood",
+                province_code=fa.province_code,
+                title=f"Flash Flood Warning: {fa.river_name or fa.gauge_name} ({fa.threshold_exceeded})",
+                description=fa.message,
+                source="auto_detected",
+                is_active=True,
+                expires=datetime.now(tz=timezone.utc) + timedelta(hours=12),
+            )
+            db.add(alert)
+            created_count += 1
             logger.warning(
-                "Skipping flash flood alert for gauge %s: invalid province_code '%s'",
-                fa.gauge_name, fa.province_code,
+                "Flash flood alert: %s at %s (%.1f m\u00b3/s, %s)",
+                fa.gauge_name, fa.basin, fa.flow_m3s, fa.threshold_exceeded,
             )
-            continue
-
-        # Check for existing recent alert for this gauge
-        six_hours_ago = datetime.now(tz=timezone.utc) - timedelta(hours=6)
-        existing = await db.execute(
-            select(Alert).where(
-                Alert.hazard_type == "flash_flood",
-                Alert.province_code == fa.province_code,
-                Alert.is_active == True,  # noqa: E712
-                Alert.created_at >= six_hours_ago,
-                Alert.title.contains(fa.gauge_name),
-            )
-        )
-        if existing.scalar_one_or_none():
-            continue  # Already alerted recently
-
-        # Create new alert
-        alert = Alert(
-            severity=fa.severity,
-            hazard_type="flash_flood",
-            province_code=fa.province_code,
-            title=f"Flash Flood Warning: {fa.river_name or fa.gauge_name} ({fa.threshold_exceeded})",
-            description=fa.message,
-            source="auto_detected",
-            is_active=True,
-            expires=datetime.now(tz=timezone.utc) + timedelta(hours=12),
-        )
-        db.add(alert)
-        created_count += 1
-        logger.warning(
-            "Flash flood alert: %s at %s (%.1f m\u00b3/s, %s)",
-            fa.gauge_name, fa.basin, fa.flow_m3s, fa.threshold_exceeded,
-        )
 
     if created_count > 0:
         await db.commit()

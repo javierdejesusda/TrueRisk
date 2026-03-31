@@ -129,6 +129,8 @@ def compute_province_seismic_exposure(
         if isinstance(ts, str) and ts:
             try:
                 dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
                 if (now - dt).days <= 30:
                     quakes_30d.append(q)
             except (ValueError, TypeError):

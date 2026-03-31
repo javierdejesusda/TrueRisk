@@ -63,6 +63,7 @@ def upgrade() -> None:
         ("telegram_link_codes", "created_at"),
         ("users", "last_location_at"), ("users", "created_at"), ("users", "updated_at"),
         ("water_restrictions", "effective_date"), ("water_restrictions", "created_at"),
+        ("weather_daily_summary", "created_at"),
         ("weather_records", "recorded_at"), ("weather_records", "created_at"),
         ("weather_records", "deleted_at"),
     ]

@@ -187,22 +187,34 @@ async def run_pipeline():
         except Exception:
             logger.exception("Forecast computation failed")
 
-    # 6. Flash flood monitoring
+    # 6. Flash flood monitoring — use separate sessions so a failure in
+    #    river readings storage cannot taint the alert-creation session.
+    readings_count = 0
+    flood_alert_count = 0
     try:
-        async with async_session() as flood_db:
-            from app.services.flash_flood_service import (
-                process_flash_flood_alerts,
-                store_river_readings,
-            )
-            readings_count = await store_river_readings(flood_db)
-            flood_alert_count = await process_flash_flood_alerts(flood_db)
-            health_tracker.record_success("saih", records_count=readings_count)
-            logger.info(
-                "Flash flood check: %d readings stored, %d alerts created",
-                readings_count, flood_alert_count,
-            )
-    except Exception as e:
-        health_tracker.record_failure("saih", str(e))
+        from app.services.flash_flood_service import (
+            process_flash_flood_alerts,
+            store_river_readings,
+        )
+        try:
+            async with async_session() as readings_db:
+                readings_count = await store_river_readings(readings_db)
+                health_tracker.record_success("saih", records_count=readings_count)
+        except Exception as e:
+            health_tracker.record_failure("saih", str(e))
+            logger.error("River readings storage failed: %s", e)
+
+        try:
+            async with async_session() as alert_db:
+                flood_alert_count = await process_flash_flood_alerts(alert_db)
+        except Exception as e:
+            logger.error("Flash flood alert processing failed: %s", e)
+
+        logger.info(
+            "Flash flood check: %d readings stored, %d alerts created",
+            readings_count, flood_alert_count,
+        )
+    except Exception:
         logger.exception("Flash flood monitoring failed (non-critical)")
 
     # 7. Generate morning narratives (best-effort, non-blocking)

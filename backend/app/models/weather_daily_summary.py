@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from sqlalchemy import Index, UniqueConstraint, func
+from sqlalchemy import DateTime, Index, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -31,7 +31,9 @@ class WeatherDailySummary(Base):
     cloud_cover_avg: Mapped[float | None] = mapped_column(nullable=True)
 
     source: Mapped[str] = mapped_column(default="aggregated")  # "aggregated" or "archive"
-    created_at: Mapped[dt.datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     __table_args__ = (
         UniqueConstraint("province_code", "date", name="uq_province_date"),

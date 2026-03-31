@@ -104,14 +104,27 @@ function objectToSnakeCase(obj: Record<string, unknown>): Record<string, unknown
   return result;
 }
 
+// Fields where the frontend camelCase→snake_case name differs from the backend field name
+const FRONTEND_TO_BACKEND_FIELD: Record<string, string> = {
+  pets: 'pet_details',
+  has_medical_devices: 'has_power_dependent_medical',
+  has_generator: 'has_generator_or_solar',
+  home_lat: 'home_latitude',
+  home_lng: 'home_longitude',
+  work_lat: 'work_latitude',
+  work_lng: 'work_longitude',
+  disaster_experiences: 'disaster_experience',
+};
+
 function toSnakeCasePayload(data: ProfileFormData): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     const snakeKey = toSnakeCase(key);
+    const backendKey = FRONTEND_TO_BACKEND_FIELD[snakeKey] || snakeKey;
     if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
-      result[snakeKey] = value.map((item) => objectToSnakeCase(item as Record<string, unknown>));
+      result[backendKey] = value.map((item) => objectToSnakeCase(item as Record<string, unknown>));
     } else {
-      result[snakeKey] = value;
+      result[backendKey] = value;
     }
   }
   // Convert empty string floor_level to null for backend
@@ -160,7 +173,7 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
     alert_delivery: 'alertDelivery',
     hazard_preferences: 'hazardPreferences',
     household_members: 'householdMembers',
-    pets: 'pets',
+    pet_details: 'pets',
     construction_year: 'constructionYear',
     building_materials: 'buildingMaterials',
     building_stories: 'buildingStories',
@@ -172,20 +185,20 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
     has_life_insurance: 'hasLifeInsurance',
     property_value_range: 'propertyValueRange',
     has_emergency_savings: 'hasEmergencySavings',
-    has_medical_devices: 'hasMedicalDevices',
+    has_power_dependent_medical: 'hasMedicalDevices',
     has_water_storage: 'hasWaterStorage',
-    has_generator: 'hasGenerator',
+    has_generator_or_solar: 'hasGenerator',
     depends_public_water: 'dependsPublicWater',
-    disaster_experiences: 'disasterExperiences',
-    home_lat: 'homeLat',
-    home_lng: 'homeLng',
-    work_lat: 'workLat',
-    work_lng: 'workLng',
+    disaster_experience: 'disasterExperiences',
+    home_latitude: 'homeLat',
+    home_longitude: 'homeLng',
+    work_latitude: 'workLat',
+    work_longitude: 'workLng',
     work_province_code: 'workProvinceCode',
     work_address: 'workAddress',
   };
 
-  const arrayObjectFields = new Set(['household_members', 'pets', 'disaster_experiences']);
+  const arrayObjectFields = new Set(['household_members', 'pet_details', 'disaster_experience']);
 
   const result: Record<string, unknown> = {};
   for (const [snakeKey, camelKey] of Object.entries(mapping)) {
