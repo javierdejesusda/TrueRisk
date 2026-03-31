@@ -236,10 +236,6 @@ export function ProfileForm() {
   const defaultsRef = useRef({ provinceCode, residenceType, specialNeeds });
   defaultsRef.current = { provinceCode, residenceType, specialNeeds };
 
-  // Baseline values after the last reset — used to compute which fields the
-  // user actually changed at submit time.  Avoids relying on the closure-
-  // captured formState.dirtyFields proxy which can be stale.
-  const baselineRef = useRef<ProfileFormData | null>(null);
 
   const {
     control,
@@ -347,7 +343,6 @@ export function ProfileForm() {
           workAddress: (mapped.workAddress as string) || '',
         };
         reset(resetValues);
-        baselineRef.current = resetValues;
       }
     } catch {
       // Silently fail — form will use Zustand defaults
@@ -374,21 +369,7 @@ export function ProfileForm() {
     if (backendToken) {
       setSaving(true);
       try {
-        // Only send fields the user actually changed to avoid overwriting
-        // values set by other components (e.g. NotificationChannels toggles).
-        // Compare current values against the baseline snapshot (set at last
-        // reset) instead of relying on formState.dirtyFields from a closure.
-        const baseline = baselineRef.current;
-        const dirtyData: Partial<ProfileFormData> = {};
-        for (const key of Object.keys(data) as (keyof ProfileFormData)[]) {
-          const cur = data[key];
-          const prev = baseline?.[key];
-          if (JSON.stringify(cur) !== JSON.stringify(prev)) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (dirtyData as any)[key] = cur;
-          }
-        }
-        const payload = toSnakeCasePayload(dirtyData as ProfileFormData);
+        const payload = toSnakeCasePayload(data);
         const res = await apiFetch('/api/account/me', {
           method: 'PATCH',
           body: JSON.stringify(payload),
@@ -400,7 +381,6 @@ export function ProfileForm() {
           if (mapped.residenceType) setResidenceType(mapped.residenceType as string);
           if (mapped.specialNeeds) setSpecialNeeds(mapped.specialNeeds as string[]);
           reset(data);
-          baselineRef.current = data;
           showToast({ title: t('saved'), severity: 1 });
           window.dispatchEvent(new Event('profile-updated'));
         } else if (res.status === 409) {
