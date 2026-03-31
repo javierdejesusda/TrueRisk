@@ -1,4 +1,4 @@
-const CACHE_NAME = 'truerisk-v4';
+const CACHE_NAME = 'truerisk-v5';
 const API_CACHE_MAX_AGE = 30 * 60 * 1000; // 30 minutes
 const OFFLINE_ASSETS = [
   '/map',
@@ -87,15 +87,35 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() =>
           caches.match(cacheKey).then((cached) => {
-            if (!cached) return cached;
-            const cachedAt = parseInt(cached.headers.get('sw-cached-at') || '0');
-            if (Date.now() - cachedAt > API_CACHE_MAX_AGE) {
-              // Cache expired — remove and return undefined so browser handles the error
-              caches.open(CACHE_NAME).then((cache) => cache.delete(cacheKey));
-              return undefined;
+            if (!cached) {
+              return new Response(JSON.stringify({ error: 'offline', stale: true }), {
+                status: 503,
+                headers: { 'Content-Type': 'application/json', 'X-Cache-Status': 'miss' },
+              });
             }
-            return cached;
+            // Always return cached data when offline — stale data > no data
+            return new Response(cached.body, {
+              status: cached.status,
+              statusText: cached.statusText,
+              headers: (() => {
+                const h = new Headers(cached.headers);
+                const cachedAt = parseInt(h.get('sw-cached-at') || '0');
+                h.set('X-Cache-Status', Date.now() - cachedAt > API_CACHE_MAX_AGE ? 'stale' : 'hit');
+                return h;
+              })(),
+            });
           })
+        )
+    );
+    return;
+  }
+
+  // Navigation requests: network-first with offline fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request)
+          .then((cached) => cached || caches.match('/dashboard'))
         )
     );
     return;

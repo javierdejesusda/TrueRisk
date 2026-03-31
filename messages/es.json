@@ -862,7 +862,8 @@
   "NotFound": {
     "title": "Página no encontrada",
     "description": "La página que buscas no existe o ha sido movida.",
-    "goToMap": "Ir al Mapa"
+    "goToMap": "Ir al Mapa",
+    "redirecting": "Redirigiendo al panel en {seconds}s..."
   },
   "AiSummary": {
     "title": "Analisis Meteorologico IA",
