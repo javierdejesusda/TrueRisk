@@ -1,11 +1,15 @@
 #!/bin/sh
 set -e
-
 export PYTHONPATH=/app
-
-echo "Running database migrations..."
 cd /app
-alembic upgrade head
 
-echo "Starting uvicorn..."
-exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+WORKERS=${WORKERS:-2}
+echo "Starting gunicorn with $WORKERS uvicorn workers..."
+exec gunicorn app.main:app \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --workers "$WORKERS" \
+  --bind 0.0.0.0:${PORT:-8000} \
+  --timeout 120 \
+  --graceful-timeout 30 \
+  --keep-alive 5 \
+  --access-logfile -
