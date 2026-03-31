@@ -272,3 +272,54 @@ async def readiness():
     if not ready:
         return JSONResponse(content=payload, status_code=503)
     return payload
+
+
+@app.get("/status", tags=["system"], summary="Full system status")
+async def system_status():
+    """Comprehensive status for monitoring dashboards and uptime checkers."""
+    from pathlib import Path
+    from sqlalchemy import text
+    from app.database import async_session
+    from app.services.data_health_service import health_tracker
+
+    # Database check
+    db_status = "ok"
+    db_latency_ms = None
+    try:
+        t0 = time.time()
+        async with async_session() as session:
+            await session.execute(text("SELECT 1"))
+        db_latency_ms = round((time.time() - t0) * 1000, 1)
+    except Exception:
+        db_status = "unavailable"
+
+    # Scheduler check
+    from app.scheduler.jobs import scheduler
+    scheduler_status = "running" if scheduler.running else "stopped"
+    scheduler_jobs = len(scheduler.get_jobs()) if scheduler.running else 0
+
+    # Data freshness
+    source_health = {}
+    for name, info in health_tracker.get_all_statuses().items():
+        source_health[name] = {
+            "consecutive_failures": info.get("consecutive_failures", 0),
+            "last_success": info.get("last_success"),
+        }
+
+    # Models
+    models_dir = Path(__file__).parent / "ml" / "saved_models"
+    models_count = (
+        len(list(models_dir.glob("*.joblib")))
+        + len(list(models_dir.glob("*.pt")))
+        + len(list(models_dir.glob("*.ckpt")))
+    ) if models_dir.exists() else 0
+
+    return {
+        "status": "ok" if db_status == "ok" else "degraded",
+        "version": "2.0.0",
+        "uptime_seconds": round(time.time() - _start_time, 1),
+        "database": {"status": db_status, "latency_ms": db_latency_ms},
+        "scheduler": {"status": scheduler_status, "active_jobs": scheduler_jobs},
+        "models_loaded": models_count,
+        "data_sources": source_health,
+    }
