@@ -849,7 +849,12 @@
     "email": "Email",
     "emailDesc": "Receive alerts directly in your inbox",
     "emailNoEmail": "No email on your account",
-    "testEmail": "Send Test"
+    "testEmail": "Send Test",
+    "testEmailSent": "Test email sent — check your inbox",
+    "testEmailFailed": "Failed to send test email",
+    "emailNotConfigured": "Email delivery is not yet configured on this server",
+    "testPushSent": "Test notification sent",
+    "testPushFailed": "Failed to send test notification"
   },
   "Language": {
     "es": "ES",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -127,17 +127,17 @@ function toSnakeCasePayload(data: ProfileFormData): Record<string, unknown> {
       result[backendKey] = value;
     }
   }
-  // Convert empty string floor_level to null for backend
-  if (result.floor_level === '' || result.floor_level === undefined) {
+  // Convert empty string floor_level to null for backend (only if field is present)
+  if ('floor_level' in result && (result.floor_level === '' || result.floor_level === undefined)) {
     result.floor_level = null;
   }
-  // Convert empty strings to null for optional string fields
+  // Convert empty strings to null for optional string fields (only if present)
   const nullableStringFields = [
     'building_materials', 'income_bracket', 'property_value_range',
     'work_province_code', 'work_address',
   ];
   for (const field of nullableStringFields) {
-    if (result[field] === '') result[field] = null;
+    if (field in result && result[field] === '') result[field] = null;
   }
   return result;
 }
@@ -231,13 +231,18 @@ export function ProfileForm() {
 
   const [saving, setSaving] = useState(false);
 
+  // Refs for Zustand defaults — used as fallbacks in fetchProfile without
+  // triggering re-fetches (which would wipe in-progress user edits).
+  const defaultsRef = useRef({ provinceCode, residenceType, specialNeeds });
+  defaultsRef.current = { provinceCode, residenceType, specialNeeds };
+
   const {
     control,
     handleSubmit,
     reset,
     watch,
     setError,
-    formState: { isDirty },
+    formState: { isDirty, dirtyFields },
   } = useForm<ProfileFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(profileSchema) as any,
@@ -293,11 +298,12 @@ export function ProfileForm() {
       if (res.ok) {
         const data = await res.json();
         const mapped = fromSnakeCasePayload(data);
+        const defaults = defaultsRef.current;
         reset({
           email: (mapped.email as string) || '',
-          provinceCode: (mapped.provinceCode as string) || provinceCode,
-          residenceType: (mapped.residenceType as string) || residenceType,
-          specialNeeds: (mapped.specialNeeds as string[]) || specialNeeds,
+          provinceCode: (mapped.provinceCode as string) || defaults.provinceCode,
+          residenceType: (mapped.residenceType as string) || defaults.residenceType,
+          specialNeeds: (mapped.specialNeeds as string[]) || defaults.specialNeeds,
           phoneNumber: (mapped.phoneNumber as string) || '',
           emergencyContactName: (mapped.emergencyContactName as string) || '',
           emergencyContactPhone: (mapped.emergencyContactPhone as string) || '',
@@ -339,7 +345,7 @@ export function ProfileForm() {
     } catch {
       // Silently fail — form will use Zustand defaults
     }
-  }, [backendToken, provinceCode, residenceType, specialNeeds, reset]);
+  }, [backendToken, reset]);
 
   useEffect(() => {
     fetchProfile();
@@ -361,7 +367,14 @@ export function ProfileForm() {
     if (backendToken) {
       setSaving(true);
       try {
-        const payload = toSnakeCasePayload(data);
+        // Only send fields the user actually changed to avoid overwriting
+        // values set by other components (e.g. NotificationChannels toggles).
+        const dirtyData: Partial<ProfileFormData> = {};
+        for (const key of Object.keys(dirtyFields) as (keyof ProfileFormData)[]) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (dirtyData as any)[key] = data[key];
+        }
+        const payload = toSnakeCasePayload(dirtyData as ProfileFormData);
         const res = await apiFetch('/api/account/me', {
           method: 'PATCH',
           body: JSON.stringify(payload),

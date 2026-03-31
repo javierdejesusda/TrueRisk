@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
+import { showToast } from '@/components/ui/toast';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { apiFetch } from '@/lib/api-client';
 import { useAppStore } from '@/store/app-store';
@@ -153,9 +154,11 @@ export function NotificationChannels() {
                 type="button"
                 onClick={async () => {
                   const res = await apiFetch('/api/push/test', { method: 'POST' });
-                  if (!res.ok) {
+                  if (res.ok) {
+                    showToast({ title: t('testPushSent'), severity: 1 });
+                  } else {
                     const data = await res.json().catch(() => ({}));
-                    alert(data.detail || 'Test failed');
+                    showToast({ title: data.detail || t('testPushFailed'), severity: 4 });
                   }
                 }}
                 className="shrink-0 rounded-lg border border-border bg-bg-secondary px-3 py-1.5 text-xs font-medium text-text-primary transition-all duration-150 hover:border-accent-green/60 hover:bg-accent-green/5"
@@ -187,9 +190,15 @@ export function NotificationChannels() {
                 type="button"
                 onClick={async () => {
                   const res = await apiFetch('/api/email/test', { method: 'POST' });
-                  if (!res.ok) {
+                  if (res.ok) {
+                    showToast({ title: t('testEmailSent'), severity: 1 });
+                  } else {
                     const data = await res.json().catch(() => ({}));
-                    alert(data.detail || 'Test failed');
+                    if (res.status === 503) {
+                      showToast({ title: t('emailNotConfigured'), severity: 4 });
+                    } else {
+                      showToast({ title: data.detail || t('testEmailFailed'), severity: 4 });
+                    }
                   }
                 }}
                 className="shrink-0 rounded-lg border border-border bg-bg-secondary px-3 py-1.5 text-xs font-medium text-text-primary transition-all duration-150 hover:border-accent-green/60 hover:bg-accent-green/5"

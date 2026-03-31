@@ -847,7 +847,12 @@
     "email": "Email",
     "emailDesc": "Recibir alertas directamente en tu bandeja de entrada",
     "emailNoEmail": "No tienes email en tu cuenta",
-    "testEmail": "Enviar prueba"
+    "testEmail": "Enviar prueba",
+    "testEmailSent": "Email de prueba enviado — revisa tu bandeja de entrada",
+    "testEmailFailed": "Error al enviar el email de prueba",
+    "emailNotConfigured": "El envio de emails no esta configurado en este servidor",
+    "testPushSent": "Notificacion de prueba enviada",
+    "testPushFailed": "Error al enviar la notificacion de prueba"
   },
   "Language": {
     "es": "ES",
