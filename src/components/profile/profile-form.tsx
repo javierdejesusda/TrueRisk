@@ -135,6 +135,8 @@ function toSnakeCasePayload(data: ProfileFormData): Record<string, unknown> {
   const nullableStringFields = [
     'building_materials', 'income_bracket', 'property_value_range',
     'work_province_code', 'work_address',
+    'emergency_contact_name', 'emergency_contact_phone',
+    'phone_number', 'medical_conditions',
   ];
   for (const field of nullableStringFields) {
     if (field in result && result[field] === '') result[field] = null;
@@ -377,10 +379,57 @@ export function ProfileForm() {
         if (res.ok) {
           const responseData = await res.json();
           const mapped = fromSnakeCasePayload(responseData);
+
+          // Reset form with the server response so we reflect what was
+          // actually persisted — not the locally-submitted optimistic values.
+          const defaults = defaultsRef.current;
+          const serverValues: ProfileFormData = {
+            email: (mapped.email as string) || '',
+            provinceCode: (mapped.provinceCode as string) || defaults.provinceCode,
+            residenceType: (mapped.residenceType as string) || defaults.residenceType,
+            specialNeeds: (mapped.specialNeeds as string[]) || defaults.specialNeeds,
+            phoneNumber: (mapped.phoneNumber as string) || '',
+            emergencyContactName: (mapped.emergencyContactName as string) || '',
+            emergencyContactPhone: (mapped.emergencyContactPhone as string) || '',
+            medicalConditions: (mapped.medicalConditions as string) || '',
+            mobilityLevel: (mapped.mobilityLevel as string) || 'full',
+            hasVehicle: (mapped.hasVehicle as boolean) || false,
+            hasAc: mapped.hasAc !== undefined ? (mapped.hasAc as boolean) : true,
+            floorLevel: mapped.floorLevel != null ? (mapped.floorLevel as number) : '',
+            ageRange: (mapped.ageRange as string) || '18-64',
+            alertSeverityThreshold: (mapped.alertSeverityThreshold as number) || 3,
+            alertDelivery: (mapped.alertDelivery as string) || 'push',
+            hazardPreferences: (mapped.hazardPreferences as string[]) || [],
+            householdMembers: (mapped.householdMembers as ProfileFormData['householdMembers']) || [],
+            pets: (mapped.pets as ProfileFormData['pets']) || [],
+            constructionYear: (mapped.constructionYear as number | null) ?? null,
+            buildingMaterials: (mapped.buildingMaterials as string) || '',
+            buildingStories: (mapped.buildingStories as number | null) ?? null,
+            hasBasement: (mapped.hasBasement as boolean) || false,
+            hasElevator: (mapped.hasElevator as boolean) || false,
+            buildingCondition: (mapped.buildingCondition as number | null) ?? null,
+            incomeBracket: (mapped.incomeBracket as string) || '',
+            hasPropertyInsurance: (mapped.hasPropertyInsurance as boolean) || false,
+            hasLifeInsurance: (mapped.hasLifeInsurance as boolean) || false,
+            propertyValueRange: (mapped.propertyValueRange as string) || '',
+            hasEmergencySavings: (mapped.hasEmergencySavings as boolean) || false,
+            hasMedicalDevices: (mapped.hasMedicalDevices as boolean) || false,
+            hasWaterStorage: (mapped.hasWaterStorage as boolean) || false,
+            hasGenerator: (mapped.hasGenerator as boolean) || false,
+            dependsPublicWater: mapped.dependsPublicWater !== undefined ? (mapped.dependsPublicWater as boolean) : true,
+            disasterExperiences: (mapped.disasterExperiences as ProfileFormData['disasterExperiences']) || [],
+            homeLat: (mapped.homeLat as number | null) ?? null,
+            homeLng: (mapped.homeLng as number | null) ?? null,
+            workLat: (mapped.workLat as number | null) ?? null,
+            workLng: (mapped.workLng as number | null) ?? null,
+            workProvinceCode: (mapped.workProvinceCode as string) || '',
+            workAddress: (mapped.workAddress as string) || '',
+          };
+
           if (mapped.provinceCode) setProvinceCode(mapped.provinceCode as string);
           if (mapped.residenceType) setResidenceType(mapped.residenceType as string);
           if (mapped.specialNeeds) setSpecialNeeds(mapped.specialNeeds as string[]);
-          reset(data);
+          reset(serverValues);
           showToast({ title: t('saved'), severity: 1 });
           window.dispatchEvent(new Event('profile-updated'));
         } else if (res.status === 409) {

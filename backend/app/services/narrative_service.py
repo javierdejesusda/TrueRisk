@@ -1,5 +1,6 @@
 """Risk narrative generation service -- pre-generated daily briefings."""
 
+import asyncio
 import logging
 
 from sqlalchemy import select, delete
@@ -79,6 +80,8 @@ async def generate_morning_narrative(
         )
         content_en = en_response.choices[0].message.content or ""
 
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         logger.warning("Narrative generation failed for %s: %s", province_code, e)
         return None
@@ -155,6 +158,8 @@ async def generate_emergency_narrative(
         )
         content_en = en_response.choices[0].message.content or ""
 
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         logger.warning("Emergency narrative failed: %s", e)
         return None
