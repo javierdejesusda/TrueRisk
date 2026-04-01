@@ -267,10 +267,19 @@ export function useSafetyCheck() {
   // transient 5xx / network hiccups during deployment).
   useEffect(() => {
     if (!isAuthResolved) return; // Auth still loading, wait
-    // If session is authenticated but token hasn't hydrated to Zustand yet, wait
-    if (sessionStatus === 'authenticated' && !token) return;
     if (!token) {
-      // Auth resolved but no token — user is genuinely not logged in
+      // No token yet. If session says authenticated, the token might still be
+      // hydrating — but don't hang the spinner forever. Set a short timeout
+      // so that if hydration fails, we show auth_required instead of infinite spin.
+      if (sessionStatus === 'authenticated') {
+        const timeout = setTimeout(() => {
+          if (!tokenRef.current) {
+            setError('auth_required');
+            setIsLoading(false);
+          }
+        }, 3000);
+        return () => clearTimeout(timeout);
+      }
       setError('auth_required');
       setIsLoading(false);
       return;
