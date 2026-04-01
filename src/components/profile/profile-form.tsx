@@ -233,10 +233,12 @@ export function ProfileForm() {
 
   const [saving, setSaving] = useState(false);
 
-  // Refs for Zustand defaults — used as fallbacks in fetchProfile without
-  // triggering re-fetches (which would wipe in-progress user edits).
+  // Refs for values used in fetchProfile — avoids re-creating the callback
+  // on every token refresh, which would re-fetch and wipe in-progress edits.
   const defaultsRef = useRef({ provinceCode, residenceType, specialNeeds });
   defaultsRef.current = { provinceCode, residenceType, specialNeeds };
+  const backendTokenRef = useRef(backendToken);
+  backendTokenRef.current = backendToken;
 
 
   const {
@@ -293,9 +295,11 @@ export function ProfileForm() {
     },
   });
 
-  // Fetch profile from backend on mount if authenticated
+  // Fetch profile from backend on mount if authenticated.
+  // Uses refs for backendToken so token refreshes don't recreate this callback
+  // and trigger re-fetches that wipe unsaved form edits.
   const fetchProfile = useCallback(async () => {
-    if (!backendToken) return;
+    if (!backendTokenRef.current) return;
     try {
       const res = await apiFetch('/api/account/me');
       if (res.ok) {
@@ -349,11 +353,12 @@ export function ProfileForm() {
     } catch {
       // Silently fail — form will use Zustand defaults
     }
-  }, [backendToken, reset]);
+  }, [reset]);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  // Fetch profile once on mount. fetchProfile uses refs for backendToken
+  // so it doesn't need to be in the dependency array for token changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchProfile(); }, []);
 
   // Sync form with store when store values change (e.g. hydration) and not authenticated
   useEffect(() => {
