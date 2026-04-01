@@ -1,7 +1,7 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function CitizenError({
@@ -11,43 +11,14 @@ export default function CitizenError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [retrying, setRetrying] = useState(true);
-  const retryCount = useRef(0);
-  const maxRetries = 2;
-
-  const attemptRetry = useCallback(() => {
-    if (retryCount.current < maxRetries) {
-      retryCount.current += 1;
-      const delay = retryCount.current * 2000; // 2s, 4s
-      setTimeout(() => {
-        reset();
-      }, delay);
-    } else {
-      setRetrying(false);
-    }
-  }, [reset]);
-
   useEffect(() => {
     Sentry.captureException(error);
-    attemptRetry();
-  }, [error, attemptRetry]);
+  }, [error]);
 
   const isNetwork = error.message?.includes('fetch') || error.message?.includes('network');
   const message = isNetwork
     ? 'Unable to connect to the server. Check your internet connection.'
     : error.message || 'Could not load the requested data.';
-
-  // Show minimal spinner while retrying
-  if (retrying) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-bg-primary">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-text-muted">Retrying... ({retryCount.current}/{maxRetries})</p>
-        </div>
-      </div>
-    );
-  }
 
   const lastSynced = typeof window !== 'undefined'
     ? localStorage.getItem('truerisk-last-synced')
