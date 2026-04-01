@@ -23,11 +23,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             credentials: {
                 nickname: { label: 'Nickname', type: 'text' },
                 password: { label: 'Password', type: 'password' },
+                tokenData: { label: 'Token Data', type: 'text' },
             },
             async authorize(credentials) {
+                // If pre-authenticated token data is provided (e.g. from registration),
+                // use it directly instead of making another login request.
+                if (credentials?.tokenData) {
+                    const data = JSON.parse(credentials.tokenData as string);
+                    return {
+                        id: String(data.user.id),
+                        name: data.user.nickname || data.user.display_name,
+                        email: data.user.email,
+                        image: data.user.avatar_url,
+                        backendToken: data.access_token,
+                        refreshToken: data.refresh_token,
+                        tokenExpiresAt: Date.now() + data.expires_in * 1000,
+                        role: data.user.role,
+                    };
+                }
+
                 const res = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({
                         nickname: credentials?.nickname,
                         password: credentials?.password,
@@ -65,7 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     try {
                         const res = await fetch(`${BACKEND_URL}/api/v1/auth/oauth`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                             body: JSON.stringify({
                                 provider: account.provider,
                                 provider_account_id: account.providerAccountId,

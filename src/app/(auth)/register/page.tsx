@@ -76,8 +76,9 @@ export default function RegisterPage() {
                 }),
             });
 
+            const body = await res.json().catch(() => null);
+
             if (!res.ok) {
-                const body = await res.json().catch(() => null);
                 if (body?.detail?.includes('nickname')) {
                     setError(t('nicknameTaken'));
                 } else if (body?.detail?.includes('email')) {
@@ -89,9 +90,9 @@ export default function RegisterPage() {
                 return;
             }
 
+            // Sign in directly using the tokens from registration (no second login request)
             const signInRes = await signIn('credentials', {
-                nickname: data.nickname,
-                password: data.password,
+                tokenData: JSON.stringify(body),
                 redirect: false,
             });
 

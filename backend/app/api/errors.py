@@ -36,9 +36,14 @@ async def validation_exception_handler(
     _request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     errors = exc.errors()
-    detail = "; ".join(
-        f"{'.'.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in errors
-    )
+    messages: list[str] = []
+    for e in errors:
+        msg = e["msg"]
+        # Strip Pydantic's "Value error, " prefix for cleaner user-facing messages
+        if msg.startswith("Value error, "):
+            msg = msg[len("Value error, "):]
+        messages.append(msg)
+    detail = "; ".join(messages)
     return JSONResponse(
         status_code=422,
         content=ErrorResponse.build(422, "ValidationError", detail),
