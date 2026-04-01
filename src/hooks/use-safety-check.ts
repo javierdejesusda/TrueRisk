@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSession } from 'next-auth/react';
 import { useAppStore } from '@/store/app-store';
+import { apiFetch } from '@/lib/api-client';
 
 export type SafetyStatus = 'safe' | 'need_help' | 'evacuating' | 'sheltering';
 
@@ -38,17 +38,6 @@ export interface FamilyMemberStatus {
   relationship: string;
 }
 
-/** Helper: fetch with explicit Bearer token (avoids Zustand hydration race) */
-function authFetch(path: string, token: string, options: RequestInit = {}): Promise<Response> {
-  const headers = new Headers(options.headers);
-  headers.set('Authorization', `Bearer ${token}`);
-  headers.set('X-Requested-With', 'XMLHttpRequest');
-  if (!headers.has('Content-Type') && options.body) {
-    headers.set('Content-Type', 'application/json');
-  }
-  return fetch(path, { ...options, headers });
-}
-
 /** Extract error detail from a non-ok backend response. */
 async function extractErrorDetail(res: Response): Promise<string> {
   try {
@@ -61,24 +50,16 @@ async function extractErrorDetail(res: Response): Promise<string> {
 }
 
 export function useSafetyCheck() {
-  const { data: session, status: sessionStatus } = useSession();
-  const storeToken = useAppStore((s) => s.backendToken);
-  // Use session token as fallback when Zustand store hasn't hydrated yet
-  const token = storeToken || (session as Record<string, unknown> | null)?.backendToken as string | null;
-  const isAuthResolved = sessionStatus !== 'loading';
+  const backendToken = useAppStore((s) => s.backendToken);
   const [familyStatus, setFamilyStatus] = useState<FamilyMemberStatus[]>([]);
   const [checkIns, setCheckIns] = useState<SafetyCheckIn[]>([]);
   const [pendingLinks, setPendingLinks] = useState<FamilyLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Keep a ref so callback closures always see the latest resolved token
-  const tokenRef = useRef(token);
-  tokenRef.current = token;
 
   const checkIn = useCallback(async (status: SafetyStatus, message?: string, latitude?: number, longitude?: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) {
+    if (!useAppStore.getState().backendToken) {
       setError('auth_required');
       throw new Error('Not authenticated');
     }
@@ -88,7 +69,7 @@ export function useSafetyCheck() {
       if (latitude !== undefined) body.latitude = latitude;
       if (longitude !== undefined) body.longitude = longitude;
 
-      const res = await authFetch('/api/safety/check-in', currentToken, {
+      const res = await apiFetch('/api/safety/check-in', {
         method: 'POST',
         body: JSON.stringify(body),
       });
@@ -107,10 +88,9 @@ export function useSafetyCheck() {
   }, []);
 
   const getFamilyStatus = useCallback(async () => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return;
+    if (!useAppStore.getState().backendToken) return;
     try {
-      const res = await authFetch('/api/safety/family-status', currentToken);
+      const res = await apiFetch('/api/safety/family-status');
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
         const detail = await extractErrorDetail(res);
@@ -125,10 +105,9 @@ export function useSafetyCheck() {
   }, []);
 
   const fetchCheckIns = useCallback(async () => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return;
+    if (!useAppStore.getState().backendToken) return;
     try {
-      const res = await authFetch('/api/safety/check-ins?limit=20', currentToken);
+      const res = await apiFetch('/api/safety/check-ins?limit=20');
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
         const detail = await extractErrorDetail(res);
@@ -142,13 +121,11 @@ export function useSafetyCheck() {
   }, []);
 
   const fetchPendingLinks = useCallback(async () => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) return;
+    if (!useAppStore.getState().backendToken) return;
     try {
-      const res = await authFetch('/api/safety/links', currentToken);
+      const res = await apiFetch('/api/safety/links');
       if (!res.ok) {
         if (res.status === 401) { setError('auth_required'); return; }
-        // Don't throw — pending links are supplementary
         return;
       }
       const data = await res.json() as FamilyLink[];
@@ -159,8 +136,7 @@ export function useSafetyCheck() {
   }, []);
 
   const createLink = useCallback(async (nickname: string, relationship?: string) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) {
+    if (!useAppStore.getState().backendToken) {
       setError('auth_required');
       throw new Error('Not authenticated');
     }
@@ -168,15 +144,12 @@ export function useSafetyCheck() {
       const body: Record<string, string> = { nickname };
       if (relationship) body.relationship = relationship;
 
-      const res = await authFetch('/api/safety/links', currentToken, {
+      const res = await apiFetch('/api/safety/links', {
         method: 'POST',
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        if (res.status === 401) {
-          setError('auth_required');
-          throw new Error('Not authenticated');
-        }
+        if (res.status === 401) { setError('auth_required'); throw new Error('Not authenticated'); }
         const detail = await extractErrorDetail(res);
         throw new Error(detail);
       }
@@ -185,7 +158,6 @@ export function useSafetyCheck() {
         if (prev.some((l) => l.id === data.id)) return prev;
         return [...prev, data];
       });
-      // Refresh in background without blocking — no await, no isLoading flash
       getFamilyStatus();
       fetchPendingLinks();
       return data;
@@ -196,13 +168,12 @@ export function useSafetyCheck() {
   }, [getFamilyStatus, fetchPendingLinks]);
 
   const acceptLink = useCallback(async (linkId: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) {
+    if (!useAppStore.getState().backendToken) {
       setError('auth_required');
       throw new Error('Not authenticated');
     }
     try {
-      const res = await authFetch(`/api/safety/links/${linkId}/accept`, currentToken, {
+      const res = await apiFetch(`/api/safety/links/${linkId}/accept`, {
         method: 'PATCH',
       });
       if (!res.ok) {
@@ -219,13 +190,12 @@ export function useSafetyCheck() {
   }, [getFamilyStatus]);
 
   const deleteLink = useCallback(async (linkId: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) {
+    if (!useAppStore.getState().backendToken) {
       setError('auth_required');
       throw new Error('Not authenticated');
     }
     try {
-      const res = await authFetch(`/api/safety/links/${linkId}`, currentToken, {
+      const res = await apiFetch(`/api/safety/links/${linkId}`, {
         method: 'DELETE',
       });
       if (!res.ok) {
@@ -242,13 +212,12 @@ export function useSafetyCheck() {
   }, [getFamilyStatus]);
 
   const requestCheckIn = useCallback(async (userId: number) => {
-    const currentToken = tokenRef.current;
-    if (!currentToken) {
+    if (!useAppStore.getState().backendToken) {
       setError('auth_required');
       throw new Error('Not authenticated');
     }
     try {
-      const res = await authFetch(`/api/safety/request/${userId}`, currentToken, {
+      const res = await apiFetch(`/api/safety/request/${userId}`, {
         method: 'POST',
       });
       if (!res.ok) {
@@ -262,13 +231,9 @@ export function useSafetyCheck() {
     }
   }, []);
 
-  // Initial fetch — wait for auth to resolve before deciding state.
-  // Retries once after a short delay if the first attempt fails (handles
-  // transient 5xx / network hiccups during deployment).
+  // Load data when backendToken becomes available
   useEffect(() => {
-    if (!isAuthResolved) return; // Auth still loading, wait
-    if (!token) {
-      setError('auth_required');
+    if (!backendToken) {
       setIsLoading(false);
       return;
     }
@@ -281,7 +246,6 @@ export function useSafetyCheck() {
       try {
         await Promise.all([getFamilyStatus(), fetchCheckIns(), fetchPendingLinks()]);
       } catch {
-        // First attempt failed — wait 1.5s and retry once
         if (!cancelled) {
           await new Promise((r) => setTimeout(r, 1500));
           if (!cancelled) {
@@ -295,31 +259,28 @@ export function useSafetyCheck() {
 
     loadWithRetry();
     return () => { cancelled = true; };
-  }, [token, isAuthResolved, sessionStatus, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
+  }, [backendToken, getFamilyStatus, fetchCheckIns, fetchPendingLinks]);
 
   // Auto-refresh family status every 30 seconds
   useEffect(() => {
-    if (!token) return;
+    if (!backendToken) return;
 
     intervalRef.current = setInterval(() => {
-      const currentToken = tokenRef.current;
-      if (!currentToken) return;
-      authFetch('/api/safety/family-status', currentToken)
+      if (!useAppStore.getState().backendToken) return;
+      apiFetch('/api/safety/family-status')
         .then((res) => {
           if (res.ok) return res.json();
         })
         .then((data) => {
           if (data) setFamilyStatus(data as FamilyMemberStatus[]);
         })
-        .catch(() => {
-          // silent refresh failure
-        });
+        .catch(() => {});
     }, 30_000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [token]);
+  }, [backendToken]);
 
   return {
     familyStatus,
