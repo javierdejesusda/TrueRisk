@@ -239,6 +239,7 @@ export function ProfileForm() {
   defaultsRef.current = { provinceCode, residenceType, specialNeeds };
   const backendTokenRef = useRef(backendToken);
   backendTokenRef.current = backendToken;
+  const hasFetchedProfileRef = useRef(false);
 
 
   const {
@@ -355,10 +356,14 @@ export function ProfileForm() {
     }
   }, [reset]);
 
-  // Fetch profile once on mount. fetchProfile uses refs for backendToken
-  // so it doesn't need to be in the dependency array for token changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchProfile(); }, []);
+  // Fetch profile once when backendToken first becomes available.
+  // Uses a ref gate so token refreshes don't re-fetch and wipe edits.
+  useEffect(() => {
+    if (backendToken && !hasFetchedProfileRef.current) {
+      hasFetchedProfileRef.current = true;
+      fetchProfile();
+    }
+  }, [backendToken, fetchProfile]);
 
   // Sync form with store when store values change (e.g. hydration) and not authenticated
   useEffect(() => {
