@@ -44,6 +44,8 @@ services:
     entrypoint: ["/bin/sh", "/app/migrate-entrypoint.sh"]
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-truerisk}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-truerisk}
+      JWT_SECRET: ${JWT_SECRET}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY}
     depends_on:
       db:
         condition: service_healthy
