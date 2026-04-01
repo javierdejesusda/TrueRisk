@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.get("/stream/{province_code}")
-@limiter.limit("5/minute", key_func=get_real_ip)
+@limiter.limit("20/minute", key_func=get_real_ip)
 async def stream_summary(
     request: Request,
     province_code: str,

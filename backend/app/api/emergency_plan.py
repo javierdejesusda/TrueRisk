@@ -49,7 +49,7 @@ async def update_plan(
 
 
 @router.get("/kit-recommendations", summary="AI kit recommendations")
-@limiter.limit("3/minute", key_func=get_real_ip)
+@limiter.limit("20/minute", key_func=get_real_ip)
 async def stream_kit_recommendations(
     request: Request,
     locale: str = Query(default="es", pattern="^(es|en)$"),

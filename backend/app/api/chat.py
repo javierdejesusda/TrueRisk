@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.post("/send")
-@limiter.limit("10/minute", key_func=get_real_ip)
+@limiter.limit("30/minute", key_func=get_real_ip)
 async def send_message(
     request: Request,
     body: ChatSendRequest,

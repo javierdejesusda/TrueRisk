@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.get("/stream/{province_code}")
-@limiter.limit("3/minute", key_func=get_real_ip)
+@limiter.limit("20/minute", key_func=get_real_ip)
 async def stream_suggestions(
     request: Request,
     province_code: str,
