@@ -21,7 +21,10 @@ async def test_email(
     from app.services.email_service import send_alert_email
 
     if not settings.resend_api_key:
-        raise HTTPException(status_code=503, detail="Email not configured")
+        # Return directly instead of raising HTTPException so Sentry
+        # does not capture this expected 503 as an error.
+        from starlette.responses import JSONResponse
+        return JSONResponse(status_code=503, content={"detail": "Email not configured"})
 
     if not user.email:
         raise HTTPException(status_code=400, detail="No email address on your account")

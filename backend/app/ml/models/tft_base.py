@@ -133,7 +133,10 @@ class HazardTFT:
             )
             dataloader = dataset.to_dataloader(batch_size=1, train=False)
 
-            raw = self._model.predict(dataloader, return_x=True, mode="raw")
+            raw = self._model.predict(
+                dataloader, return_x=True, mode="raw",
+                trainer_kwargs={"logger": False, "enable_progress_bar": False},
+            )
 
             if hasattr(raw, "output"):
                 prediction = raw.output

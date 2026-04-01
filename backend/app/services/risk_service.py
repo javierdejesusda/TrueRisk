@@ -688,8 +688,15 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
         latest_result = await db.execute(latest_stmt)
         latest_ts = latest_result.scalar_one_or_none()
         if latest_ts:
-            age_delta = utcnow() - ensure_aware(latest_ts)
-            weather_age_hours = age_delta.total_seconds() / 3600.0
+            try:
+                age_delta = now - ensure_aware(latest_ts)
+                weather_age_hours = age_delta.total_seconds() / 3600.0
+            except TypeError:
+                logger.warning(
+                    "Naive/aware datetime mismatch for %s recorded_at; "
+                    "using pessimistic default",
+                    province_code,
+                )
 
     composite["confidence"] = _compute_confidence(weather_age_hours, sources_used)
     composite["data_sources_used"] = sources_used
