@@ -80,7 +80,7 @@ async def generate_morning_narrative(
         content_en = en_response.choices[0].message.content or ""
 
     except Exception as e:
-        logger.error("Narrative generation failed for %s: %s", province_code, e)
+        logger.warning("Narrative generation failed for %s: %s", province_code, e)
         return None
 
     # Delete old morning narrative for this province
@@ -156,7 +156,7 @@ async def generate_emergency_narrative(
         content_en = en_response.choices[0].message.content or ""
 
     except Exception as e:
-        logger.error("Emergency narrative failed: %s", e)
+        logger.warning("Emergency narrative failed: %s", e)
         return None
 
     narrative = RiskNarrative(
