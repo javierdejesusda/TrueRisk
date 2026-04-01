@@ -39,7 +39,7 @@ export default function DroughtPage() {
 
   return (
     <PageTransition transitionKey="drought">
-      <div className="h-screen pt-20 px-4 sm:px-6 lg:px-12 pb-12 max-w-6xl mx-auto overflow-y-auto">
+      <div className="h-full pt-20 px-4 sm:px-6 lg:px-12 pb-12 max-w-6xl mx-auto overflow-y-auto">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
           <div>

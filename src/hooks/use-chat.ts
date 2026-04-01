@@ -1,15 +1,22 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { useAppStore } from '@/store/app-store';
 import { useChatStore } from '@/store/chat-store';
 import type { ChatUsage } from '@/store/chat-store';
 
-function getAuthHeaders(): Record<string, string> {
+/** Resolve backend token with session fallback (avoids Zustand hydration race). */
+function resolveToken(session: ReturnType<typeof useSession>['data']): string | null {
+  const storeToken = useAppStore.getState().backendToken;
+  if (storeToken) return storeToken;
+  return (session as Record<string, unknown> | null)?.backendToken as string | null;
+}
+
+function getAuthHeaders(token: string | null): Record<string, string> {
   const headers: Record<string, string> = {
     'X-Requested-With': 'XMLHttpRequest',
   };
-  const token = useAppStore.getState().backendToken;
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -17,7 +24,10 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 export function useChat() {
+  const { data: session } = useSession();
   const abortRef = useRef<AbortController | null>(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
   const cancel = useCallback(() => {
     abortRef.current?.abort();
@@ -26,8 +36,9 @@ export function useChat() {
 
   const fetchUsage = useCallback(async () => {
     try {
+      const token = resolveToken(sessionRef.current);
       const res = await fetch('/api/chat/usage', {
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders(token),
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -85,13 +96,14 @@ export function useChat() {
       cancel();
       const controller = new AbortController();
       abortRef.current = controller;
+      const token = resolveToken(sessionRef.current);
 
       try {
         const res = await fetch('/api/chat/stream', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(),
+            ...getAuthHeaders(token),
           },
           body: JSON.stringify({
             message: trimmed,
@@ -204,9 +216,10 @@ export function useChat() {
     useChatStore.getState().clearMessages();
 
     try {
+      const token = resolveToken(sessionRef.current);
       const res = await fetch('/api/chat/new-conversation', {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders(token),
       });
       if (!res.ok) return;
       const data = await res.json();

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -138,7 +139,7 @@ class HazardTFT:
                 trainer_kwargs={
                     "logger": False,
                     "enable_progress_bar": False,
-                    "default_root_dir": "/tmp/lightning_logs",
+                    "default_root_dir": os.environ.get("PL_TRAINER_DEFAULT_ROOT_DIR", "/tmp/lightning_logs"),
                 },
             )
 

@@ -43,7 +43,7 @@ export default function PredictionPage() {
   if (error || !data) {
     const provinceName = PROVINCES.find(p => p.code === provinceCode)?.name ?? provinceCode;
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-3">
+      <div className="flex h-full flex-col items-center justify-center gap-3">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-red/10">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-red)" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
@@ -78,7 +78,7 @@ export default function PredictionPage() {
 
   return (
     <motion.div
-      className="h-screen pt-20 px-6 lg:px-12 pb-12 max-w-7xl mx-auto overflow-y-auto"
+      className="h-full pt-20 px-6 lg:px-12 pb-12 max-w-7xl mx-auto overflow-y-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, staggerChildren: 0.05 }}

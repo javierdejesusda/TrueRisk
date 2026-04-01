@@ -42,7 +42,7 @@ export default function HistoryPage() {
 
   return (
     <motion.div
-      className="h-screen pt-20 px-6 overflow-y-auto"
+      className="h-full pt-20 px-6 overflow-y-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

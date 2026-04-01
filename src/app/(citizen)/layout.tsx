@@ -59,7 +59,7 @@ export default function CitizenLayout({
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-bg-primary">
+      <div className="flex h-dvh w-screen items-center justify-center bg-bg-primary">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
       </div>
     );
@@ -71,14 +71,14 @@ export default function CitizenLayout({
 
   if (!hasSeenOnboarding) {
     return (
-      <div className="relative h-screen w-screen overflow-hidden bg-bg-primary grain">
+      <div className="relative h-dvh w-screen overflow-hidden bg-bg-primary grain">
         <OnboardingFlow />
       </div>
     );
   }
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-bg-primary grain">
+    <div className="relative h-dvh w-screen overflow-hidden bg-bg-primary grain">
       <NavPill />
       <PushBanner />
       <EmergencyBanner />

@@ -34,16 +34,20 @@ async def send_message(
     """Stream a chat response via SSE. Rate limited to 10/minute per real IP."""
 
     async def event_generator():
-        async for event in stream_chat_response(
-            message=body.message,
-            conversation_id=body.conversation_id,
-            locale=body.locale,
-            user=user,
-            db=db,
-        ):
-            if await request.is_disconnected():
-                break
-            yield event
+        try:
+            async for event in stream_chat_response(
+                message=body.message,
+                conversation_id=body.conversation_id,
+                locale=body.locale,
+                user=user,
+                db=db,
+            ):
+                if await request.is_disconnected():
+                    break
+                yield event
+        except Exception:
+            logger.exception("Chat stream failed")
+            yield {"event": "error", "data": "stream_error"}
 
     return EventSourceResponse(event_generator())
 

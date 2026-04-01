@@ -42,7 +42,7 @@ export default function ReportViewPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen pt-20 px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto overflow-y-auto">
+      <div className="h-full pt-20 px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto overflow-y-auto">
         <p className="pt-6 text-sm text-text-muted text-center font-[family-name:var(--font-sans)]">
           {t('loading')}
         </p>
@@ -53,7 +53,7 @@ export default function ReportViewPage() {
 
   if (error && !report) {
     return (
-      <div className="h-screen pt-20 flex items-center justify-center">
+      <div className="h-full pt-20 flex items-center justify-center">
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -80,7 +80,7 @@ export default function ReportViewPage() {
 
   return (
     <motion.div
-      className="h-screen pt-20 px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto overflow-y-auto"
+      className="h-full pt-20 px-4 sm:px-6 lg:px-12 pb-16 max-w-4xl mx-auto overflow-y-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

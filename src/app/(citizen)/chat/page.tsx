@@ -21,7 +21,7 @@ export default function ChatPage() {
 
   return (
     <motion.div
-      className="h-screen pt-20 overflow-hidden bg-bg-primary"
+      className="h-full pt-20 overflow-hidden bg-bg-primary"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}

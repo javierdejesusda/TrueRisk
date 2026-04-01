@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import shutil
 import sys
 import time
@@ -214,7 +215,7 @@ def train_single_hazard(
                 logger=False,
                 enable_checkpointing=False,
                 enable_progress_bar=False,
-                default_root_dir="/tmp/lightning_logs",
+                default_root_dir=os.environ.get("PL_TRAINER_DEFAULT_ROOT_DIR", "/tmp/lightning_logs"),
             )
             lr_result = trainer_lr.tuner.lr_find(  # type: ignore[attr-defined]
                 model,
@@ -265,7 +266,7 @@ def train_single_hazard(
         log_every_n_steps=50,
         logger=False,
         enable_checkpointing=False,
-        default_root_dir="/tmp/lightning_logs",
+        default_root_dir=os.environ.get("PL_TRAINER_DEFAULT_ROOT_DIR", "/tmp/lightning_logs"),
     )
 
     resume_path = ckpt_path if resume and Path(ckpt_path).exists() else None
