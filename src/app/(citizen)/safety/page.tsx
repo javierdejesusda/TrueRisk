@@ -60,11 +60,6 @@ export default function SafetyPage() {
               {t('loginButton')}
             </a>
           </div>
-        ) : error === 'auth_required' ? (
-          /* Auth still resolving (token hydrating) — show spinner, not login */
-          <div className="h-full flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
-          </div>
         ) : (
         <div className="flex flex-col gap-5">
           <SafetyCheckButton
