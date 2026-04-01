@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { apiFetch } from '@/lib/api-client';
 
@@ -15,6 +15,16 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+/** Await navigator.serviceWorker.ready with a timeout. */
+function swReady(ms = 8000): Promise<ServiceWorkerRegistration> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Service Worker activation timed out')), ms)
+    ),
+  ]);
+}
+
 export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -22,6 +32,7 @@ export function usePushNotifications() {
   const [error, setError] = useState<string | null>(null);
   const provinceCode = useAppStore((s) => s.provinceCode);
   const setPushEnabled = useAppStore((s) => s.setPushEnabled);
+  const regRef = useRef<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) {
@@ -39,6 +50,7 @@ export function usePushNotifications() {
     setIsSupported(true);
 
     navigator.serviceWorker.register('/sw.js').then((reg) => {
+      regRef.current = reg;
       reg.pushManager.getSubscription().then((sub) => {
         const active = !!sub;
         setIsSubscribed(active);
@@ -54,14 +66,19 @@ export function usePushNotifications() {
     if (!isSupported || !VAPID_PUBLIC_KEY) return false;
     setIsLoading(true);
     try {
-      const reg = await navigator.serviceWorker.ready;
+      // Re-register if the earlier registration didn't stick, then wait
+      // for the SW to activate with a timeout so we never hang forever.
+      if (!regRef.current) {
+        regRef.current = await navigator.serviceWorker.register('/sw.js');
+      }
+      const reg = await swReady();
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
       const key = sub.getKey('p256dh');
       const auth = sub.getKey('auth');
-      if (!key || !auth) return false;
+      if (!key || !auth) throw new Error('Missing push subscription keys');
 
       const res = await apiFetch('/api/push/subscribe', {
         method: 'POST',
