@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class HouseholdMember(BaseModel):
@@ -28,6 +28,8 @@ class EmergencyContact(BaseModel):
 
 
 class EmergencyPlanResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     household_members: list[HouseholdMember]
     meeting_points: list[MeetingPoint]

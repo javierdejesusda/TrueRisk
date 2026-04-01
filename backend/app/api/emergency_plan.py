@@ -22,7 +22,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/",
+    "",
     response_model=EmergencyPlanResponse,
     summary="Get emergency plan",
 )
@@ -35,7 +35,7 @@ async def get_plan(
 
 
 @router.put(
-    "/",
+    "",
     response_model=EmergencyPlanResponse,
     summary="Update emergency plan",
 )

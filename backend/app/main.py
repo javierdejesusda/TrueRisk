@@ -126,6 +126,53 @@ def _fix_timestamp_columns(conn):
             ))
 
 
+def _fix_encrypted_column_sizes(conn):
+    """Ensure columns using EncryptedString are wide enough for Fernet tokens.
+
+    Fernet encryption produces ~100+ char tokens even for short plaintext.
+    If the Alembic migration hasn't been run, columns may still be sized for
+    plaintext, causing silent data truncation.
+    """
+    from sqlalchemy import inspect as sa_inspect, text
+
+    if conn.dialect.name != "postgresql":
+        return
+
+    log = logging.getLogger("truerisk.schema_sync")
+    inspector = sa_inspect(conn)
+
+    # Map of (table, column) → minimum size needed for encrypted data
+    encrypted_columns = {
+        ("users", "emergency_contact_name"): 500,
+        ("users", "emergency_contact_phone"): 500,
+        ("users", "phone_number"): 500,
+        ("users", "medical_conditions"): 2000,
+        ("users", "home_address"): 500,
+        ("users", "work_address"): 500,
+    }
+
+    for (table_name, col_name), min_size in encrypted_columns.items():
+        if not inspector.has_table(table_name):
+            continue
+        db_columns = {c["name"]: c for c in inspector.get_columns(table_name)}
+        db_col = db_columns.get(col_name)
+        if not db_col:
+            continue
+        col_type = str(db_col["type"]).upper()
+        # Extract length from VARCHAR(N) or CHARACTER VARYING(N)
+        import re as _re
+        m = _re.search(r"\((\d+)\)", col_type)
+        if m and int(m.group(1)) < min_size:
+            log.warning(
+                "Expanding %s.%s from %s to VARCHAR(%d) for encryption",
+                table_name, col_name, col_type, min_size,
+            )
+            conn.execute(text(
+                f"ALTER TABLE {table_name} ALTER COLUMN {col_name} "
+                f"TYPE VARCHAR({min_size})"
+            ))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # PyTorch Lightning's checkpoint loader creates a TensorBoardLogger that
@@ -147,6 +194,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_sync_missing_columns)
         await conn.run_sync(_fix_timestamp_columns)
+        await conn.run_sync(_fix_encrypted_column_sizes)
 
     # Seed province data on all database backends
     from app.data.province_data import seed_provinces

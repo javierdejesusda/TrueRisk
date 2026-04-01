@@ -68,7 +68,7 @@ export const useAppStore = create<AppState>()(
       setAlerts: (alerts) => set({ alerts }),
       risk: null,
       setRisk: (risk) => set({ risk }),
-      activeMapLayer: 'risk',
+      activeMapLayer: 'alerts',
       setActiveMapLayer: (activeMapLayer) => set({ activeMapLayer }),
       panelsVisible: { weather: true, risk: true, alerts: true },
       togglePanel: (panel) =>
