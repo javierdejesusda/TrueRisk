@@ -20,8 +20,9 @@ export function PushBanner() {
 
   const handleEnable = async () => {
     const ok = await subscribe();
-    if (!ok) localStorage.setItem(DISMISSED_KEY, '1');
-    setDismissed(true);
+    if (ok) {
+      setDismissed(true);
+    }
   };
 
   const handleDismiss = () => {

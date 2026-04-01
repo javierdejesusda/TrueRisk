@@ -65,6 +65,7 @@ export function usePushNotifications() {
   const subscribe = useCallback(async () => {
     if (!isSupported || !VAPID_PUBLIC_KEY) return false;
     setIsLoading(true);
+    setError(null);
     try {
       // Re-register if the earlier registration didn't stick, then wait
       // for the SW to activate with a timeout so we never hang forever.
@@ -97,6 +98,8 @@ export function usePushNotifications() {
       return true;
     } catch (err) {
       console.error('Push subscription failed:', err);
+      const message = err instanceof Error ? err.message : 'Push subscription failed';
+      setError(message);
       return false;
     } finally {
       setIsLoading(false);

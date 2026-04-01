@@ -5,7 +5,7 @@ import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 export function StepNotifications() {
   const t = useTranslations('Onboarding');
-  const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
+  const { isSupported, isSubscribed, isLoading, error, subscribe, unsubscribe } = usePushNotifications();
 
   const handleToggle = async () => {
     if (isSubscribed) {
@@ -68,6 +68,11 @@ export function StepNotifications() {
         {!isSupported && (
           <p className="font-[family-name:var(--font-sans)] text-xs text-text-muted text-center">
             Push notifications are not supported in this browser.
+          </p>
+        )}
+        {error && isSupported && (
+          <p className="font-[family-name:var(--font-sans)] text-xs text-accent-red text-center">
+            {error}
           </p>
         )}
       </div>

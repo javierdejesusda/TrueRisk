@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class PushKeys(BaseModel):
@@ -13,6 +13,8 @@ class PushSubscribeRequest(BaseModel):
 
 
 class PushSubscribeResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     province_code: str
     user_id: int | None = None
