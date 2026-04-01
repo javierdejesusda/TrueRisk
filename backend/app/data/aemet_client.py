@@ -189,9 +189,12 @@ async def fetch_alerts(
                 xml_text = f.read().decode("utf-8", errors="replace")
                 all_alerts.extend(parse_cap_xml(xml_text))
 
+    except RetryableHTTPStatusError as e:
+        # 429/5xx from AEMET is expected under rate-limiting; don't send to Sentry.
+        logger.warning("AEMET rate-limited (HTTP %s) for area=%s", e.response.status_code, area)
+        return _alert_cache.get(cache_key, [])
     except (
         httpx.HTTPStatusError,
-        RetryableHTTPStatusError,
         httpx.TransportError,
         httpx.TimeoutException,
         tarfile.ReadError,

@@ -39,46 +39,39 @@ async def generate_morning_narrative(
     context = _build_narrative_context(latest_risk, province_name)
 
     try:
-        from openai import AsyncOpenAI
+        from openai import AsyncOpenAI, BadRequestError
         client = AsyncOpenAI(api_key=settings.openai_api_key)
 
-        # Generate Spanish narrative
-        es_response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Eres un meteorologo experto espanol. Genera un informe matutino "
-                        "conciso (3-5 frases) sobre el riesgo climatico para ciudadanos. "
-                        "Se directo y practico. No uses encabezados ni vinetas, solo texto fluido."
-                    ),
-                },
-                {"role": "user", "content": context},
-            ],
-            max_tokens=300,
-            temperature=0.7,
-        )
-        content_es = es_response.choices[0].message.content or ""
+        async def _generate(system_prompt: str) -> str:
+            for attempt in range(2):
+                try:
+                    resp = await client.chat.completions.create(
+                        model=settings.openai_model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": context},
+                        ],
+                        max_tokens=300,
+                        temperature=0.7,
+                    )
+                    return resp.choices[0].message.content or ""
+                except BadRequestError:
+                    if attempt == 0:
+                        await asyncio.sleep(1)
+                        continue
+                    raise
+            return ""
 
-        # Generate English narrative
-        en_response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an expert meteorologist. Generate a concise morning briefing "
-                        "(3-5 sentences) about climate risk for citizens. Be direct and practical. "
-                        "No headers or bullets, just flowing text."
-                    ),
-                },
-                {"role": "user", "content": context},
-            ],
-            max_tokens=300,
-            temperature=0.7,
+        content_es = await _generate(
+            "Eres un meteorologo experto espanol. Genera un informe matutino "
+            "conciso (3-5 frases) sobre el riesgo climatico para ciudadanos. "
+            "Se directo y practico. No uses encabezados ni vinetas, solo texto fluido."
         )
-        content_en = en_response.choices[0].message.content or ""
+        content_en = await _generate(
+            "You are an expert meteorologist. Generate a concise morning briefing "
+            "(3-5 sentences) about climate risk for citizens. Be direct and practical. "
+            "No headers or bullets, just flowing text."
+        )
 
     except asyncio.CancelledError:
         raise
@@ -121,42 +114,37 @@ async def generate_emergency_narrative(
     )
 
     try:
-        from openai import AsyncOpenAI
+        from openai import AsyncOpenAI, BadRequestError
         client = AsyncOpenAI(api_key=settings.openai_api_key)
 
-        es_response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Eres un sistema de alerta de emergencias. Genera mensajes breves, "
-                        "urgentes y practicos para proteccion ciudadana."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=200,
-            temperature=0.3,
-        )
-        content_es = es_response.choices[0].message.content or ""
+        async def _generate(system_prompt: str) -> str:
+            for attempt in range(2):
+                try:
+                    resp = await client.chat.completions.create(
+                        model=settings.openai_model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt},
+                        ],
+                        max_tokens=200,
+                        temperature=0.3,
+                    )
+                    return resp.choices[0].message.content or ""
+                except BadRequestError:
+                    if attempt == 0:
+                        await asyncio.sleep(1)
+                        continue
+                    raise
+            return ""
 
-        en_response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an emergency alert system. Generate brief, urgent, "
-                        "practical messages for citizen safety."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=200,
-            temperature=0.3,
+        content_es = await _generate(
+            "Eres un sistema de alerta de emergencias. Genera mensajes breves, "
+            "urgentes y practicos para proteccion ciudadana."
         )
-        content_en = en_response.choices[0].message.content or ""
+        content_en = await _generate(
+            "You are an emergency alert system. Generate brief, urgent, "
+            "practical messages for citizen safety."
+        )
 
     except asyncio.CancelledError:
         raise

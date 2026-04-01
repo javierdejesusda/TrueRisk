@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import secrets
 from datetime import datetime, timezone, timedelta
@@ -64,18 +65,32 @@ async def register_webhook() -> bool:
         return False
     url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/setWebhook"
     async with httpx.AsyncClient(timeout=10) as client:
-        try:
-            r = await client.post(url, json={"url": settings.telegram_webhook_url})
-            r.raise_for_status()
-            data = r.json()
-            if data.get("ok"):
-                logger.info("Telegram webhook registered: %s", settings.telegram_webhook_url)
-                return True
-            logger.error("Telegram setWebhook returned ok=false: %s", data)
-            return False
-        except Exception:
-            logger.exception("Failed to register Telegram webhook")
-            return False
+        for attempt in range(3):
+            try:
+                r = await client.post(url, json={"url": settings.telegram_webhook_url})
+                if r.status_code == 429:
+                    wait = min(2 ** attempt * 5, 30)
+                    logger.warning("Telegram rate-limited, retrying in %ds (attempt %d/3)", wait, attempt + 1)
+                    await asyncio.sleep(wait)
+                    continue
+                r.raise_for_status()
+                data = r.json()
+                if data.get("ok"):
+                    logger.info("Telegram webhook registered: %s", settings.telegram_webhook_url)
+                    return True
+                logger.error("Telegram setWebhook returned ok=false: %s", data)
+                return False
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429 and attempt < 2:
+                    await asyncio.sleep(min(2 ** attempt * 5, 30))
+                    continue
+                logger.warning("Failed to register Telegram webhook: %s", e)
+                return False
+            except Exception:
+                logger.exception("Failed to register Telegram webhook")
+                return False
+    logger.warning("Telegram webhook registration exhausted retries")
+    return False
 
 
 async def send_telegram(chat_id: str, text: str) -> bool:
