@@ -248,6 +248,12 @@ async def _check_and_create_alerts(
     db: AsyncSession, province: Province, risk: dict
 ):
     """Create alerts when hazard scores cross thresholds."""
+    from app.data.province_data import is_valid_province_code
+
+    if not is_valid_province_code(province.ine_code):
+        logger.warning("Skipping alert creation: invalid province code %s", province.ine_code)
+        return
+
     for hazard in ["flood", "wildfire", "drought", "heatwave", "seismic", "coldwave", "windstorm"]:
         score = risk.get(f"{hazard}_score", 0)
         if score < ALERT_THRESHOLD_HIGH:

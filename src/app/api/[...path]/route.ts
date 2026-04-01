@@ -11,9 +11,17 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
 
   const headers = new Headers();
   for (const [k, v] of req.headers.entries()) {
-    if (!['host', 'connection'].includes(k.toLowerCase())) {
+    if (!['host', 'connection', 'content-length'].includes(k.toLowerCase())) {
       headers.set(k, v);
     }
+  }
+
+  // Read the full body as a buffer instead of streaming req.body which can
+  // silently produce an empty stream in some Next.js/Node.js environments.
+  let body: ArrayBuffer | undefined;
+  if (!['GET', 'HEAD'].includes(req.method)) {
+    body = await req.arrayBuffer();
+    headers.set('Content-Length', String(body.byteLength));
   }
 
   try {
@@ -23,17 +31,23 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     const res = await fetch(url.toString(), {
       method: req.method,
       headers,
-      body: ['GET', 'HEAD'].includes(req.method) ? undefined : req.body,
+      body,
       signal: controller.signal,
-      // @ts-expect-error -- Next.js supports duplex for streaming bodies
-      duplex: 'half',
     });
 
     clearTimeout(timeout);
+
+    const responseHeaders = new Headers();
+    for (const [k, v] of res.headers.entries()) {
+      if (!['transfer-encoding', 'content-encoding'].includes(k.toLowerCase())) {
+        responseHeaders.set(k, v);
+      }
+    }
+
     return new NextResponse(res.body, {
       status: res.status,
       statusText: res.statusText,
-      headers: Object.fromEntries(res.headers.entries()),
+      headers: responseHeaders,
     });
   } catch {
     return NextResponse.json(

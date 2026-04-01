@@ -93,16 +93,18 @@ def _sync_missing_columns(conn):
 async def lifespan(app: FastAPI):
     # PyTorch Lightning's checkpoint loader creates a TensorBoardLogger that
     # writes to CWD/lightning_logs.  In Docker, /app may be read-only.
+    # Ensure /tmp/lightning_logs exists first (always writable), then try CWD.
+    os.makedirs("/tmp/lightning_logs", exist_ok=True)
+    os.environ.setdefault("PL_TRAINER_DEFAULT_ROOT_DIR", "/tmp/lightning_logs")
     _ll = os.path.join(os.getcwd(), "lightning_logs")
     if not os.path.exists(_ll):
         try:
             os.makedirs(_ll, exist_ok=True)
         except OSError:
-            os.makedirs("/tmp/lightning_logs", exist_ok=True)
             try:
                 os.symlink("/tmp/lightning_logs", _ll)
             except OSError:
-                pass  # Non-fatal: Lightning errors will be caught per-model
+                pass  # Non-fatal: trainer_kwargs default_root_dir handles this
 
     # Create any missing tables on startup (idempotent — skips existing tables)
     async with engine.begin() as conn:

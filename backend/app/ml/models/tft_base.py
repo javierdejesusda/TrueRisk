@@ -135,7 +135,11 @@ class HazardTFT:
 
             raw = self._model.predict(
                 dataloader, return_x=True, mode="raw",
-                trainer_kwargs={"logger": False, "enable_progress_bar": False},
+                trainer_kwargs={
+                    "logger": False,
+                    "enable_progress_bar": False,
+                    "default_root_dir": "/tmp/lightning_logs",
+                },
             )
 
             if hasattr(raw, "output"):
