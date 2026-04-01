@@ -51,10 +51,33 @@ export function usePushNotifications() {
 
     navigator.serviceWorker.register('/sw.js').then((reg) => {
       regRef.current = reg;
-      reg.pushManager.getSubscription().then((sub) => {
-        const active = !!sub;
-        setIsSubscribed(active);
-        setPushEnabled(active);
+      reg.pushManager.getSubscription().then(async (sub) => {
+        if (!sub) {
+          setIsSubscribed(false);
+          setPushEnabled(false);
+          return;
+        }
+        setIsSubscribed(true);
+        setPushEnabled(true);
+
+        // Re-sync existing browser subscription with the backend.
+        // A previous subscribe attempt may have saved the browser subscription
+        // but failed to register it on the backend (e.g. server error).
+        const key = sub.getKey('p256dh');
+        const auth = sub.getKey('auth');
+        if (key && auth) {
+          apiFetch('/api/push/subscribe', {
+            method: 'POST',
+            body: JSON.stringify({
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: btoa(String.fromCharCode(...new Uint8Array(key))),
+                auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
+              },
+              province_code: useAppStore.getState().provinceCode,
+            }),
+          }).catch(() => {});
+        }
       });
     }).catch((err) => {
       console.error('SW registration failed:', err);
