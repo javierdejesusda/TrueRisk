@@ -55,6 +55,13 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
     ];
   },
   async rewrites() {
@@ -66,12 +73,7 @@ const nextConfig: NextConfig = {
         },
       ],
       afterFiles: [],
-      fallback: [
-        {
-          source: "/api/:path*",
-          destination: `${process.env.BACKEND_URL || "http://localhost:8000"}/api/v1/:path*`,
-        },
-      ],
+      fallback: [],
     };
   },
 };

@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir ".[ml-extras]" || echo "Optional ml-extras not av
 
 COPY . .
 
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh migrate-entrypoint.sh
 
 RUN useradd --create-home --shell /bin/bash appuser \
     && mkdir -p /app/lightning_logs \

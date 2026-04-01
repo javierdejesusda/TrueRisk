@@ -131,21 +131,21 @@ jobs:
         env:
           HEALTH_URL: ${{ secrets.PRODUCTION_HEALTH_URL }}
         run: |
-          echo "Waiting for deployment to build and start..."
-          sleep 300
+          echo "Polling for healthy deployment..."
+          sleep 30
 
-          for i in $(seq 1 30); do
+          for i in $(seq 1 60); do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
               "${HEALTH_URL}" --max-time 10) || true
 
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "Deployment healthy!"
+              echo "Deployment healthy after ~$((30 + i * 10))s!"
               exit 0
             fi
 
-            echo "Attempt $i/30: got HTTP $HTTP_CODE, retrying in 20s..."
-            sleep 20
+            echo "Attempt $i/60: HTTP $HTTP_CODE, retrying in 10s..."
+            sleep 10
           done
 
-          echo "::error::Deployment health check failed after 15 minutes"
+          echo "::error::Deployment health check failed after 10 minutes"
           exit 1

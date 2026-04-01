@@ -124,8 +124,20 @@ async def cleanup_expired_refresh_tokens():
         logger.exception("Refresh token cleanup failed")
 
 
+_lock_file = None
+
+
 def setup_scheduler():
-    """Configure and start the scheduler."""
+    """Configure and start the scheduler. File lock ensures only one worker runs jobs."""
+    global _lock_file
+    try:
+        _lock_file = open("/tmp/truerisk-scheduler.lock", "w")
+        import fcntl
+        fcntl.flock(_lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (OSError, BlockingIOError):
+        logger.info("Scheduler lock held by another worker — skipping")
+        return
+
     # Run pipeline every 6 hours
     scheduler.add_job(
         run_pipeline,
@@ -193,14 +205,18 @@ def setup_scheduler():
     )
     scheduler.start()
     logger.info(
-        "Scheduler started: pipeline every 6h, flash flood every 10min, "
-        "rapid severity every 15min, staleness check every 30min, "
-        "stale location purge every 6h, refresh token cleanup every 24h"
+        "Scheduler started (this worker holds the lock): pipeline every 6h, "
+        "flash flood every 10min, rapid severity every 15min, staleness check "
+        "every 30min, stale location purge every 6h, refresh token cleanup every 24h"
     )
 
 
 def shutdown_scheduler():
     """Gracefully shut down the scheduler."""
+    global _lock_file
     if scheduler.running:
         scheduler.shutdown(wait=False)
         logger.info("Scheduler shut down")
+    if _lock_file:
+        _lock_file.close()
+        _lock_file = None

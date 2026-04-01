@@ -1,12 +1,29 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 export default function NotFound() {
   const t = useTranslations('NotFound');
+  const router = useRouter();
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          router.push('/dashboard');
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
@@ -28,6 +45,9 @@ export default function NotFound() {
               {t('goToMap')}
             </Button>
           </Link>
+          <p className="text-text-secondary text-xs">
+            {t('redirecting', { seconds: countdown })}
+          </p>
         </div>
       </Card>
     </div>

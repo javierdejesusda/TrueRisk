@@ -2,6 +2,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function CitizenError({
   error,
@@ -18,6 +19,10 @@ export default function CitizenError({
   const message = isNetwork
     ? 'Unable to connect to the server. Check your internet connection.'
     : error.message || 'Could not load the requested data.';
+
+  const lastSynced = typeof window !== 'undefined'
+    ? localStorage.getItem('truerisk-last-synced')
+    : null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center px-4 bg-bg-primary">
@@ -38,6 +43,21 @@ export default function CitizenError({
         >
           Try again
         </button>
+        {isNetwork && (
+          <div className="flex flex-col items-center gap-1.5 pt-1">
+            <Link
+              href="/emergency"
+              className="text-sm text-accent-green hover:underline font-medium"
+            >
+              View offline emergency data
+            </Link>
+            {lastSynced && (
+              <p className="text-xs text-text-muted">
+                Last synced: {new Date(lastSynced).toLocaleString()}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

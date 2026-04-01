@@ -864,7 +864,8 @@
   "NotFound": {
     "title": "Page not found",
     "description": "The page you are looking for does not exist or has been moved.",
-    "goToMap": "Go to Map"
+    "goToMap": "Go to Map",
+    "redirecting": "Redirecting to dashboard in {seconds}s..."
   },
   "AiSummary": {
     "title": "AI Weather Analysis",
