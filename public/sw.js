@@ -11,7 +11,12 @@ const OFFLINE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      // Cache each asset individually so a single 404 doesn't block SW activation
+      Promise.all(
+        OFFLINE_ASSETS.map((url) => cache.add(url).catch(() => {}))
+      )
+    )
   );
   self.skipWaiting();
 });

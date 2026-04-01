@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Check, Plus, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { showToast } from '@/components/ui/toast';
 import { useEmergencyPlan } from '@/hooks/use-emergency-plan';
 import type { HouseholdMember, EmergencyContact, MeetingPoint } from '@/hooks/use-emergency-plan';
 import { MeetingPointPicker } from './meeting-point-picker';
@@ -52,7 +53,11 @@ export function PlanWizard() {
         evacuation_notes: evacNotes || null,
       });
       if (result) {
-        if (step < STEPS.length - 1) setStep(step + 1);
+        if (step < STEPS.length - 1) {
+          setStep(step + 1);
+        } else {
+          showToast({ title: 'Emergency plan saved!', severity: 1 });
+        }
       } else {
         setSaveError(error || 'Could not save — please sign in');
       }
