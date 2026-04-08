@@ -12,6 +12,15 @@ export default function CitizenError({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (error.name === 'ChunkLoadError') {
+      const key = `chunk-reload:${window.location.pathname}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return;
+      }
+      sessionStorage.removeItem(key);
+    }
     Sentry.captureException(error);
   }, [error]);
 
