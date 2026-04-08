@@ -81,15 +81,23 @@ async def notify_province(
             continue
         sub, outcome = item
         if isinstance(outcome, Exception):
-            # Check for 410 Gone -- subscription no longer valid
-            if hasattr(outcome, "response") and getattr(outcome.response, "status_code", None) == 410:
-                sub.is_active = False
-                logger.info("Deactivated gone subscription %s", sub.id)
+            _maybe_deactivate(sub, outcome)
         elif not outcome:
             # send_push returned False -- could be a transient or permanent error
             pass
 
     await db.commit()
+
+
+def _maybe_deactivate(sub: PushSubscription, exc: Exception) -> None:
+    """Deactivate a subscription if the push endpoint returned a permanent error."""
+    status = None
+    if hasattr(exc, "response"):
+        status = getattr(exc.response, "status_code", None)
+    # 400 = bad subscription data, 404 = endpoint gone, 410 = explicitly gone
+    if status in (400, 404, 410):
+        sub.is_active = False
+        logger.info("Deactivated subscription %s (HTTP %s)", sub.id, status)
 
 
 async def notify_user(
@@ -98,7 +106,7 @@ async def notify_user(
     """Send push notifications to all active subscriptions for a specific user.
 
     Returns number of notifications sent successfully.
-    Uses concurrent delivery and retires 410-Gone subscriptions.
+    Uses concurrent delivery and retires invalid subscriptions.
     """
     result = await db.execute(
         select(PushSubscription).where(
@@ -136,9 +144,7 @@ async def notify_user(
             continue
         sub, outcome = item
         if isinstance(outcome, Exception):
-            if hasattr(outcome, "response") and getattr(outcome.response, "status_code", None) == 410:
-                sub.is_active = False
-                logger.info("Deactivated gone subscription %s for user %s", sub.id, user_id)
+            _maybe_deactivate(sub, outcome)
         elif outcome:
             sent += 1
 

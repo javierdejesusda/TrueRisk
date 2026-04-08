@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -46,12 +47,26 @@ TIMEOUTS: dict[str, SourceTimeout] = {
 
 _RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 
+_MAX_RETRY_AFTER = 120.0  # Cap Retry-After to 2 minutes
+
 
 class RetryableHTTPStatusError(Exception):
     """Raised when an HTTP response has a retryable status code."""
     def __init__(self, response: httpx.Response):
         self.response = response
         super().__init__(f"HTTP {response.status_code}")
+
+
+def _parse_retry_after(response: httpx.Response) -> float | None:
+    """Extract the delay (in seconds) from a Retry-After header, if present."""
+    value = response.headers.get("retry-after")
+    if not value:
+        return None
+    try:
+        seconds = float(value)
+        return min(max(seconds, 0), _MAX_RETRY_AFTER)
+    except ValueError:
+        return None
 
 
 async def resilient_get(
@@ -69,6 +84,7 @@ async def resilient_get(
 
     Retries on: connection errors, timeouts, HTTP 429/5xx.
     Does NOT retry on: 4xx (except 429), JSON decode errors.
+    On 429, respects the Retry-After header if present.
     """
     timeout_cfg = TIMEOUTS.get(source, SourceTimeout())
     timeout = httpx.Timeout(
@@ -93,6 +109,14 @@ async def resilient_get(
         ) as client:
             resp = await client.get(url, params=params, headers=headers)
             if resp.status_code in _RETRYABLE_STATUS_CODES:
+                if resp.status_code == 429:
+                    delay = _parse_retry_after(resp)
+                    if delay:
+                        logger.info(
+                            "Rate limited by %s, waiting %.1fs (Retry-After)",
+                            source, delay,
+                        )
+                        await asyncio.sleep(delay)
                 raise RetryableHTTPStatusError(resp)
             return resp
 

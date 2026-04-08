@@ -94,6 +94,9 @@ def _fix_timestamp_columns(conn):
 
     Prevents asyncpg encoding errors when passing timezone-aware datetimes
     to columns that are still TIMESTAMP WITHOUT TIME ZONE in the database.
+
+    Uses a PostgreSQL advisory lock to prevent deadlocks when multiple
+    workers (e.g. gunicorn) run this concurrently at startup.
     """
     from sqlalchemy import inspect as sa_inspect, text, DateTime
 
@@ -101,6 +104,15 @@ def _fix_timestamp_columns(conn):
         return
 
     log = logging.getLogger("truerisk.schema_sync")
+
+    # Advisory lock prevents concurrent workers from deadlocking on ALTER TABLE.
+    # pg_try_advisory_xact_lock returns False if another session holds the lock;
+    # the lock is released automatically at transaction end.
+    got_lock = conn.execute(text("SELECT pg_try_advisory_xact_lock(8675309)")).scalar()
+    if not got_lock:
+        log.info("Another worker is running schema fixes — skipping")
+        return
+
     inspector = sa_inspect(conn)
 
     for table in Base.metadata.sorted_tables:

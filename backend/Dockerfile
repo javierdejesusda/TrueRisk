@@ -20,8 +20,14 @@ COPY . .
 RUN chmod +x entrypoint.sh migrate-entrypoint.sh
 
 RUN useradd --create-home --shell /bin/bash appuser \
-    && mkdir -p /app/lightning_logs \
-    && chown -R appuser:appuser /app/lightning_logs
+    && rm -rf /app/lightning_logs \
+    && mkdir -p /tmp/lightning_logs \
+    && ln -sf /tmp/lightning_logs /app/lightning_logs \
+    && chown -R appuser:appuser /tmp/lightning_logs
+
+ENV PL_TRAINER_DEFAULT_ROOT_DIR=/tmp/lightning_logs
+ENV LIGHTNING_LOGS_DIR=/tmp/lightning_logs
+
 USER appuser
 
 EXPOSE 8000
