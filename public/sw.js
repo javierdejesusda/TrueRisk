@@ -1,4 +1,4 @@
-const CACHE_NAME = 'truerisk-v5';
+const CACHE_NAME = 'truerisk-v6';
 const API_CACHE_MAX_AGE = 30 * 60 * 1000; // 30 minutes
 const OFFLINE_ASSETS = [
   '/map',
@@ -126,7 +126,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Next.js chunks are content-hashed and immutable — let the browser HTTP cache
+  // handle them. Caching them in the SW causes stale-chunk errors after deploys.
+  if (url.pathname.startsWith('/_next/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Cache-first for other static assets (icons, fonts, images)
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
