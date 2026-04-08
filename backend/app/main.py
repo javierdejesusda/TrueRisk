@@ -20,6 +20,24 @@ from app.config import settings
 from app.database import engine, Base
 from app.rate_limit import limiter
 
+if settings.sentry_dsn:
+    import sentry_sdk
+
+from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
+from app.api import ai_summary, sms, data_sources, email
+from app.api import auth, suggestions, preparedness, emergency_plan, safety
+from app.api import flash_flood, drought
+from app.api import gamification as gamification_api
+from app.api import telegram as telegram_api
+from app.api import property as property_api
+from app.api import location as location_api
+from app.api import evacuation as evacuation_api
+from app.api import insurance as insurance_api
+from app.api import chat as chat_api
+from app.api.municipality import router as municipality_router
+from app.api.climate import router as climate_router
+
+
 def _sentry_before_send(event, hint):
     if "exc_info" in hint:
         exc_type = hint["exc_info"][0]
@@ -37,27 +55,12 @@ def _sentry_before_send(event, hint):
 
 
 if settings.sentry_dsn:
-    import sentry_sdk
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
         traces_sample_rate=0.1,
         environment="production" if "truerisk.cloud" in settings.backend_cors_origins else "development",
         before_send=_sentry_before_send,
     )
-
-from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor
-from app.api import ai_summary, sms, data_sources, email
-from app.api import auth, suggestions, preparedness, emergency_plan, safety
-from app.api import flash_flood, drought
-from app.api import gamification as gamification_api
-from app.api import telegram as telegram_api
-from app.api import property as property_api
-from app.api import location as location_api
-from app.api import evacuation as evacuation_api
-from app.api import insurance as insurance_api
-from app.api import chat as chat_api
-from app.api.municipality import router as municipality_router
-from app.api.climate import router as climate_router
 
 handler = logging.StreamHandler()
 handler.setFormatter(JsonFormatter(
