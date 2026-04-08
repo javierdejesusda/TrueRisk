@@ -81,7 +81,7 @@ async def stream_personalized_suggestions(
         async with client.chat.completions.stream(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
-            max_tokens=600,
+            max_completion_tokens=600,
             temperature=0.4,
         ) as stream:
             async for event in stream:
@@ -91,7 +91,7 @@ async def stream_personalized_suggestions(
         response = await client.chat.completions.create(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
-            max_tokens=600,
+            max_completion_tokens=600,
             temperature=0.4,
             stream=True,
         )

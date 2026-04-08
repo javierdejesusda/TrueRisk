@@ -1,7 +1,10 @@
+import asyncio
 import logging
 import os
 import time
 from contextlib import asynccontextmanager
+
+import httpx
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,12 +20,29 @@ from app.config import settings
 from app.database import engine, Base
 from app.rate_limit import limiter
 
+def _sentry_before_send(event, hint):
+    if "exc_info" in hint:
+        exc_type = hint["exc_info"][0]
+        if exc_type is asyncio.CancelledError:
+            return None
+        if issubclass(exc_type, (httpx.ConnectError, httpx.ReadTimeout)):
+            return None
+        try:
+            from app.data._http import RetryableHTTPStatusError
+        except ImportError:
+            RetryableHTTPStatusError = None
+        if RetryableHTTPStatusError and issubclass(exc_type, RetryableHTTPStatusError):
+            return None
+    return event
+
+
 if settings.sentry_dsn:
     import sentry_sdk
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
         traces_sample_rate=0.1,
         environment="production" if "truerisk.cloud" in settings.backend_cors_origins else "development",
+        before_send=_sentry_before_send,
     )
 
 from app.api import provinces, weather, alerts, risk, backoffice, analysis, push, community, advisor

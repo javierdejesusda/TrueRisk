@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.data import open_meteo
 from app.models.province import Province
 from app.models.weather_record import WeatherRecord
+from app.utils.cache import weather_cache
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,11 @@ async def get_current_weather(
     db: AsyncSession, province_code: str
 ) -> dict:
     """Fetch current weather from Open-Meteo, persist a WeatherRecord, and return data."""
+    cache_key = f"weather:current:{province_code}"
+    cached = weather_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     province = await _get_province(db, province_code)
 
     data = await open_meteo.fetch_current(province.latitude, province.longitude)
@@ -41,7 +47,7 @@ async def get_current_weather(
         )
         record = result.scalar_one_or_none()
         if record:
-            return {
+            fallback = {
                 "temperature": record.temperature,
                 "humidity": record.humidity,
                 "precipitation": record.precipitation,
@@ -57,6 +63,8 @@ async def get_current_weather(
                 "recorded_at": record.recorded_at.isoformat(),
                 "cached": True,
             }
+            weather_cache.set(cache_key, fallback, ttl=60)
+            return fallback
         return {}
 
     now = utcnow()
@@ -82,6 +90,7 @@ async def get_current_weather(
 
     data["province_code"] = province_code
     data["recorded_at"] = now.isoformat()
+    weather_cache.set(cache_key, data)
     return data
 
 
@@ -89,17 +98,28 @@ async def get_forecast(
     db: AsyncSession, province_code: str
 ) -> dict:
     """Fetch hourly + daily forecast from Open-Meteo."""
+    cache_key = f"weather:forecast:{province_code}"
+    cached = weather_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     province = await _get_province(db, province_code)
     forecast = await open_meteo.fetch_forecast(province.latitude, province.longitude)
-    return {
+    result = {
         "province_code": province_code,
         "hourly": forecast.get("hourly", []),
         "daily": forecast.get("daily", []),
     }
+    weather_cache.set(cache_key, result)
+    return result
 
 
 async def get_all_current(db: AsyncSession) -> list[dict]:
     """Fetch current weather for all 52 Spanish provinces."""
+    cached = weather_cache.get("weather:all")
+    if cached is not None:
+        return cached
+
     result = await db.execute(select(Province))
     provinces = result.scalars().all()
 
@@ -117,6 +137,7 @@ async def get_all_current(db: AsyncSession) -> list[dict]:
         weather["province_name"] = p.name
         output.append(weather)
 
+    weather_cache.set("weather:all", output)
     return output
 
 

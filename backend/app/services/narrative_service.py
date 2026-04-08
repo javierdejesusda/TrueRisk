@@ -51,7 +51,7 @@ async def generate_morning_narrative(
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": context},
                         ],
-                        max_tokens=300,
+                        max_completion_tokens=300,
                         temperature=0.7,
                     )
                     return resp.choices[0].message.content or ""
@@ -126,7 +126,7 @@ async def generate_emergency_narrative(
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": prompt},
                         ],
-                        max_tokens=200,
+                        max_completion_tokens=200,
                         temperature=0.3,
                     )
                     return resp.choices[0].message.content or ""

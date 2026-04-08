@@ -167,6 +167,12 @@ function ErrorPill({ message }: { message: string }) {
     platform_disabled: t('error_platform_disabled'),
     ai_error: t('error_stream_error'),
     stream_error: t('error_stream_error'),
+    auth_error: t('error_auth'),
+    validation_error: t('error_validation'),
+    rate_limited: t('errorRateLimited'),
+    server_error: t('error_stream_error'),
+    timeout: t('error_timeout'),
+    connection_error: t('errorConnection'),
   };
 
   const errorCode = message.split('|')[0];

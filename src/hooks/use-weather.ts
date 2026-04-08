@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import type { CurrentWeather } from '@/types/weather';
 
-const REFRESH_INTERVAL = 60_000;
+const REFRESH_INTERVAL = 300_000;
 
 export function useWeather(provinceCode?: string) {
   const storeCode = useAppStore((s) => s.provinceCode);

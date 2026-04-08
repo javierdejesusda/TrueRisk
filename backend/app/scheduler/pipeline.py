@@ -144,7 +144,10 @@ async def run_pipeline():
                 province = await province_db.get(Province, ine_code)
                 if not province:
                     continue
-                risk = await compute_province_risk(province_db, ine_code)
+                risk = await compute_province_risk(
+                    province_db, ine_code,
+                    weather_override=weather_map.get(ine_code) or None,
+                )
                 logger.info(
                     f"  {name}: composite={risk['composite_score']:.1f} "
                     f"dominant={risk['dominant_hazard']}"

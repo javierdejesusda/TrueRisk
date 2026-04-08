@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     # OpenAI
     openai_api_key: str = ""
-    openai_model: str = "gpt-4.1-nano"
+    openai_model: str = "gpt-5-mini"
 
     # Chat abuse prevention limits
     chat_max_messages_per_hour: int = 10

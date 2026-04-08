@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator
 
+import openai
 from openai import AsyncOpenAI
 from sqlalchemy import func as sa_func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -400,7 +401,7 @@ async def stream_chat_response(
         response = await client.chat.completions.create(  # type: ignore[call-overload]
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
-            max_tokens=settings.chat_max_output_tokens,
+            max_completion_tokens=settings.chat_max_output_tokens,
             temperature=0.3,
             stream=True,
             stream_options={"include_usage": True},
@@ -418,6 +419,10 @@ async def stream_chat_response(
                 usage_input_tokens = chunk.usage.prompt_tokens
                 usage_output_tokens = chunk.usage.completion_tokens
 
+    except openai.BadRequestError as exc:
+        logger.error("OpenAI BadRequestError for user %s: %s", user.id, exc.message)
+        yield {"event": "error", "data": "ai_error"}
+        return
     except Exception:
         logger.exception("OpenAI streaming failed for user %s", user.id)
         yield {"event": "error", "data": "ai_error"}

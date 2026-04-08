@@ -21,6 +21,7 @@ export function NavPill() {
   const { user, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [imgError, setImgError] = useState(false);
 
   const isHighRisk = risk && risk.composite_score >= 60;
 
@@ -56,6 +57,10 @@ export function NavPill() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [user?.image]);
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
 
@@ -127,12 +132,13 @@ export function NavPill() {
               : 'ring-1 ring-white/10 hover:ring-white/30',
           ].join(' ')}
         >
-          {user?.image ? (
+          {user?.image && !imgError ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={user.image}
               alt={user?.name || ''}
               className="w-full h-full rounded-full object-cover"
+              onError={() => setImgError(true)}
             />
           ) : (
             <span className="flex items-center justify-center w-full h-full bg-accent-green/20 text-accent-green text-xs font-bold font-[family-name:var(--font-display)]">

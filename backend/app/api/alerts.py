@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -92,23 +93,30 @@ async def alert_stream(db: AsyncSession = Depends(get_db)):
 
     async def event_generator():
         last_count = 0
-        while True:
-            try:
-                alerts = await alert_service.get_alerts(db, active=True)
-                current_count = len(alerts)
-                if current_count != last_count:
-                    data = [
-                        AlertResponse.model_validate(a).model_dump(mode="json")
-                        for a in alerts
-                    ]
-                    yield {"event": "alerts", "data": json.dumps(data)}
-                    last_count = current_count
-                else:
-                    yield {"event": "ping", "data": ""}
-            except Exception:
-                logger.exception("Error in alert SSE stream")
-                yield {"event": "error", "data": "internal error"}
-            await asyncio.sleep(10)
+        start = time.monotonic()
+        max_duration = 1800  # 30 minutes
+        try:
+            while time.monotonic() - start < max_duration:
+                try:
+                    alerts = await alert_service.get_alerts(db, active=True)
+                    current_count = len(alerts)
+                    if current_count != last_count:
+                        data = [
+                            AlertResponse.model_validate(a).model_dump(mode="json")
+                            for a in alerts
+                        ]
+                        yield {"event": "alerts", "data": json.dumps(data)}
+                        last_count = current_count
+                    else:
+                        yield {"event": "ping", "data": ""}
+                except Exception:
+                    logger.exception("Error in alert SSE stream")
+                    yield {"event": "error", "data": "internal error"}
+                await asyncio.sleep(10)
+            yield {"event": "reconnect", "data": ""}
+        except asyncio.CancelledError:
+            logger.debug("Client disconnected from alert stream")
+            return
 
     return EventSourceResponse(event_generator())
 

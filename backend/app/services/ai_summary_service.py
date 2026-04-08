@@ -76,7 +76,7 @@ async def stream_weather_summary(
         async with client.chat.completions.stream(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
-            max_tokens=800,
+            max_completion_tokens=800,
             temperature=0.3,
         ) as stream:
             async for event in stream:
@@ -87,7 +87,7 @@ async def stream_weather_summary(
         response = await client.chat.completions.create(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
-            max_tokens=800,
+            max_completion_tokens=800,
             temperature=0.3,
             stream=True,
         )

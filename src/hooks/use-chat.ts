@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import * as Sentry from '@sentry/nextjs';
 import { useAppStore } from '@/store/app-store';
 import { useChatStore } from '@/store/chat-store';
 import type { ChatUsage } from '@/store/chat-store';
@@ -194,9 +195,12 @@ export function useChat() {
         useChatStore.getState().setStreaming(false);
       } catch (err) {
         if ((err as Error).name === 'AbortError') {
-          // Silently ignore cancellations
           return;
         }
+        Sentry.captureException(err, {
+          tags: { feature: 'chat' },
+          extra: { conversationId: useChatStore.getState().conversationId },
+        });
         useChatStore.getState().setError((err as Error).message || 'Connection failed');
         useChatStore.setState((s) => {
           const msgs = [...s.messages];

@@ -330,7 +330,11 @@ def _compute_wbgt(temperature: float, humidity: float, wind_speed: float) -> flo
 
 # Core pipeline
 
-async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
+async def compute_province_risk(
+    db: AsyncSession,
+    province_code: str,
+    weather_override: dict | None = None,
+) -> dict:
     """Full pipeline: fetch weather -> compute features -> run 4 models -> composite -> store."""
 
     # 1. Get province data
@@ -338,10 +342,13 @@ async def compute_province_risk(db: AsyncSession, province_code: str) -> dict:
     if not province:
         raise ValueError(f"Province {province_code} not found")
 
-    # 2. Fetch current weather from Open-Meteo
-    weather = await open_meteo.fetch_current(province.latitude, province.longitude)
-    if not weather:
-        weather = {}
+    # 2. Fetch current weather from Open-Meteo (or use pre-fetched data)
+    if weather_override is not None:
+        weather = weather_override
+    else:
+        weather = await open_meteo.fetch_current(province.latitude, province.longitude)
+        if not weather:
+            weather = {}
 
     # 3. Get recent weather history from DB for temporal features
     stmt = (
