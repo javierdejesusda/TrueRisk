@@ -52,10 +52,23 @@ export function useMapAlerts(aemetAlerts: AemetCapAlert[]): MapAlertData {
       }
     }
 
-    // 2. AEMET alerts by geocode (already INE 2-digit)
+    // 2. AEMET alerts by geocode (already INE 2-digit).
+    //    Deduplicate by base identifier per province so that multiple
+    //    <area> blocks within the same CAP alert that map to the same
+    //    province code only produce a single entry.
+    const seenAemetPerProvince = new Map<string, Set<string>>();
     for (const aemet of aemetAlerts) {
       const geocodes = aemet.geocode.split(',').map((g) => g.trim().padStart(2, '0'));
+      // Strip the area-block suffix (_0, _1, ...) to get the base alert id.
+      const baseId = aemet.identifier.replace(/_\d+$/, '');
       for (const gc of geocodes) {
+        if (!seenAemetPerProvince.has(gc)) {
+          seenAemetPerProvince.set(gc, new Set());
+        }
+        const seen = seenAemetPerProvince.get(gc)!;
+        if (seen.has(baseId)) continue;
+        seen.add(baseId);
+
         const numericSeverity = aemetSeverityToNumeric(aemet.severity);
         ensureProvince(gc);
         result[gc].alerts.push({

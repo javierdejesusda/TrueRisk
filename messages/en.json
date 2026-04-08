@@ -815,6 +815,8 @@
     "sectionEmergency": "Emergency",
     "sectionBuilding": "Building",
     "sectionEconomic": "Economic",
+    "nicknameLabel": "Username",
+    "nicknameHint": "Share this username with family members so they can link their account to yours.",
     "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
     "emailDescription": "Used for notifications and password recovery",

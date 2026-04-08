@@ -813,6 +813,8 @@
     "sectionEmergency": "Emergencia",
     "sectionBuilding": "Edificio",
     "sectionEconomic": "Economico",
+    "nicknameLabel": "Nombre de usuario",
+    "nicknameHint": "Comparte este nombre de usuario con tu familia para que puedan vincular su cuenta a la tuya.",
     "emailLabel": "Correo electronico",
     "emailPlaceholder": "tu@ejemplo.com",
     "emailDescription": "Se usa para notificaciones y recuperacion de contrasena",

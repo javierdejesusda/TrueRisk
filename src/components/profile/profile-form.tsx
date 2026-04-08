@@ -232,6 +232,7 @@ export function ProfileForm() {
   const backendToken = useAppStore((s) => s.backendToken);
 
   const [saving, setSaving] = useState(false);
+  const [nickname, setNickname] = useState<string | null>(null);
 
   // Refs for values used in fetchProfile — avoids re-creating the callback
   // on every token refresh, which would re-fetch and wipe in-progress edits.
@@ -305,6 +306,7 @@ export function ProfileForm() {
       const res = await apiFetch('/api/account/me');
       if (res.ok) {
         const data = await res.json();
+        if (data.nickname) setNickname(data.nickname);
         const mapped = fromSnakeCasePayload(data);
         const defaults = defaultsRef.current;
         const resetValues: ProfileFormData = {
@@ -460,6 +462,21 @@ export function ProfileForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      {/* Username / Nickname */}
+      {nickname && (
+        <Card variant="glass">
+          <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">
+            {t('nicknameLabel')}
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="font-[family-name:var(--font-mono)] text-sm text-text-primary bg-bg-secondary rounded-lg px-4 py-2.5 flex-1">
+              @{nickname}
+            </span>
+          </div>
+          <p className="text-xs text-text-muted mt-2">{t('nicknameHint')}</p>
+        </Card>
+      )}
+
       {/* Email */}
       <Card variant="glass">
         <h2 className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-wider text-text-secondary mb-4">

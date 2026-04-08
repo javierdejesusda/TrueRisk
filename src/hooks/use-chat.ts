@@ -97,14 +97,14 @@ export function useChat() {
       cancel();
       const controller = new AbortController();
       abortRef.current = controller;
-      const token = resolveToken(sessionRef.current);
+      let token = resolveToken(sessionRef.current);
 
-      try {
-        const res = await fetch('/api/chat/stream', {
+      const doFetch = (t: string | null) =>
+        fetch('/api/chat/stream', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(token),
+            ...getAuthHeaders(t),
           },
           body: JSON.stringify({
             message: trimmed,
@@ -113,6 +113,22 @@ export function useChat() {
           }),
           signal: controller.signal,
         });
+
+      try {
+        let res = await doFetch(token);
+
+        // Refresh token on 401 and retry once
+        if (res.status === 401 && token) {
+          const { getSession } = await import('next-auth/react');
+          const fresh = await getSession();
+          const newToken = (fresh as Record<string, unknown> | null)
+            ?.backendToken as string | undefined;
+          if (newToken && newToken !== token) {
+            token = newToken;
+            useAppStore.getState().setBackendToken(newToken);
+            res = await doFetch(newToken);
+          }
+        }
 
         if (!res.ok) {
           const text = await res.text().catch(() => '');

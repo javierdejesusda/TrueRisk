@@ -186,9 +186,9 @@ export function capitalizeField(field: string): string {
 
 export function StatBox({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
-    <div className="rounded-lg bg-bg-secondary px-3 py-2 text-center">
+    <div className="overflow-hidden min-w-0 rounded-lg bg-bg-secondary px-3 py-2 text-center">
       <p className="font-[family-name:var(--font-sans)] text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
-      <p className={`font-[family-name:var(--font-mono)] text-sm font-bold ${accent ?? 'text-text-primary'}`}>{value}</p>
+      <p title={value} className={`truncate font-[family-name:var(--font-mono)] text-sm font-bold ${accent ?? 'text-text-primary'}`}>{value}</p>
     </div>
   );
 }
