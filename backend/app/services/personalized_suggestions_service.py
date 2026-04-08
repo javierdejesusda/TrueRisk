@@ -82,7 +82,6 @@ async def stream_personalized_suggestions(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
             max_completion_tokens=600,
-            temperature=0.4,
         ) as stream:
             async for event in stream:
                 if event.type == "content.delta":
@@ -92,7 +91,6 @@ async def stream_personalized_suggestions(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
             max_completion_tokens=600,
-            temperature=0.4,
             stream=True,
         )
         async for chunk in response:  # type: ignore[union-attr]

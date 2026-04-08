@@ -77,7 +77,6 @@ async def stream_weather_summary(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
             max_completion_tokens=800,
-            temperature=0.3,
         ) as stream:
             async for event in stream:
                 if event.type == "content.delta":
@@ -88,7 +87,6 @@ async def stream_weather_summary(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
             max_completion_tokens=800,
-            temperature=0.3,
             stream=True,
         )
         async for chunk in response:  # type: ignore[union-attr]

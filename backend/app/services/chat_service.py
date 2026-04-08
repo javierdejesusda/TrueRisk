@@ -402,7 +402,6 @@ async def stream_chat_response(
             model=settings.openai_model,
             messages=messages,  # type: ignore[arg-type]
             max_completion_tokens=settings.chat_max_output_tokens,
-            temperature=0.3,
             stream=True,
             stream_options={"include_usage": True},
         )

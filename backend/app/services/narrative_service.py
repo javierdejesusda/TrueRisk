@@ -52,7 +52,6 @@ async def generate_morning_narrative(
                             {"role": "user", "content": context},
                         ],
                         max_completion_tokens=300,
-                        temperature=0.7,
                     )
                     return resp.choices[0].message.content or ""
                 except BadRequestError:
@@ -127,7 +126,6 @@ async def generate_emergency_narrative(
                             {"role": "user", "content": prompt},
                         ],
                         max_completion_tokens=200,
-                        temperature=0.3,
                     )
                     return resp.choices[0].message.content or ""
                 except BadRequestError:
