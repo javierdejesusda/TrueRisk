@@ -665,6 +665,7 @@
     "saveProfile": "Guardar Perfil",
     "saved": "Perfil guardado",
     "saveError": "Error al guardar el perfil",
+    "validationError": "Por favor corrige los errores del formulario antes de guardar",
     "notificationsTitle": "Notificaciones",
     "notificationsUnsupported": "Las notificaciones push no estan soportadas en este navegador",
     "pushNotifications": "Notificaciones Push",

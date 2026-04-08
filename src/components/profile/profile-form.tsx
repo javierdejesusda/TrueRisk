@@ -201,11 +201,20 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
   };
 
   const arrayObjectFields = new Set(['household_members', 'pet_details', 'disaster_experience']);
+  const arrayFields = new Set([
+    ...arrayObjectFields,
+    'special_needs', 'hazard_preferences',
+  ]);
 
   const result: Record<string, unknown> = {};
   for (const [snakeKey, camelKey] of Object.entries(mapping)) {
     if (snakeKey in data) {
-      const value = data[snakeKey];
+      let value = data[snakeKey];
+      // Backend JSON columns can return null or {} instead of [].
+      // Normalize to a proper array so Zod validation won't reject the form.
+      if (arrayFields.has(snakeKey) && !Array.isArray(value)) {
+        value = [];
+      }
       if (arrayObjectFields.has(snakeKey) && Array.isArray(value)) {
         result[camelKey] = value.map((item) =>
           typeof item === 'object' && item !== null
@@ -220,6 +229,59 @@ function fromSnakeCasePayload(data: Record<string, unknown>): Partial<ProfileFor
   return result as Partial<ProfileFormData>;
 }
 
+/** Build a complete ProfileFormData from a partial mapped payload + store defaults.
+ *  Uses ?? (nullish coalescing) for booleans/numbers to avoid dropping false/0.
+ *  Ensures arrays are always arrays (never null/object). */
+function buildResetValues(
+  mapped: Partial<ProfileFormData>,
+  storeDefaults: { provinceCode: string; residenceType: string; specialNeeds: string[] },
+): ProfileFormData {
+  const asArray = <T,>(v: unknown, fallback: T[]): T[] =>
+    Array.isArray(v) ? v : fallback;
+
+  return {
+    email: (mapped.email as string) ?? '',
+    provinceCode: (mapped.provinceCode as string) || storeDefaults.provinceCode,
+    residenceType: (mapped.residenceType as string) || storeDefaults.residenceType,
+    specialNeeds: asArray(mapped.specialNeeds, storeDefaults.specialNeeds),
+    phoneNumber: (mapped.phoneNumber as string) ?? '',
+    emergencyContactName: (mapped.emergencyContactName as string) ?? '',
+    emergencyContactPhone: (mapped.emergencyContactPhone as string) ?? '',
+    medicalConditions: (mapped.medicalConditions as string) ?? '',
+    mobilityLevel: (mapped.mobilityLevel as string) || 'full',
+    hasVehicle: (mapped.hasVehicle as boolean) ?? false,
+    hasAc: (mapped.hasAc as boolean) ?? true,
+    floorLevel: mapped.floorLevel != null ? (mapped.floorLevel as number) : '',
+    ageRange: (mapped.ageRange as string) || '18-64',
+    alertSeverityThreshold: (mapped.alertSeverityThreshold as number) ?? 3,
+    alertDelivery: (mapped.alertDelivery as string) || 'push',
+    hazardPreferences: asArray<string>(mapped.hazardPreferences, []),
+    householdMembers: asArray(mapped.householdMembers, []),
+    pets: asArray(mapped.pets, []),
+    constructionYear: (mapped.constructionYear as number | null) ?? null,
+    buildingMaterials: (mapped.buildingMaterials as string) ?? '',
+    buildingStories: (mapped.buildingStories as number | null) ?? null,
+    hasBasement: (mapped.hasBasement as boolean) ?? false,
+    hasElevator: (mapped.hasElevator as boolean) ?? false,
+    buildingCondition: (mapped.buildingCondition as number | null) ?? null,
+    incomeBracket: (mapped.incomeBracket as string) ?? '',
+    hasPropertyInsurance: (mapped.hasPropertyInsurance as boolean) ?? false,
+    hasLifeInsurance: (mapped.hasLifeInsurance as boolean) ?? false,
+    propertyValueRange: (mapped.propertyValueRange as string) ?? '',
+    hasEmergencySavings: (mapped.hasEmergencySavings as boolean) ?? false,
+    hasMedicalDevices: (mapped.hasMedicalDevices as boolean) ?? false,
+    hasWaterStorage: (mapped.hasWaterStorage as boolean) ?? false,
+    hasGenerator: (mapped.hasGenerator as boolean) ?? false,
+    dependsPublicWater: (mapped.dependsPublicWater as boolean) ?? true,
+    disasterExperiences: asArray(mapped.disasterExperiences, []),
+    homeLat: (mapped.homeLat as number | null) ?? null,
+    homeLng: (mapped.homeLng as number | null) ?? null,
+    workLat: (mapped.workLat as number | null) ?? null,
+    workLng: (mapped.workLng as number | null) ?? null,
+    workProvinceCode: (mapped.workProvinceCode as string) ?? '',
+    workAddress: (mapped.workAddress as string) ?? '',
+  };
+}
 
 export function ProfileForm() {
   const t = useTranslations('Profile');
@@ -241,12 +303,16 @@ export function ProfileForm() {
   const backendTokenRef = useRef(backendToken);
   backendTokenRef.current = backendToken;
   const hasFetchedProfileRef = useRef(false);
-
+  // Manual edit-tracking: RHF isDirty can miss changes in complex forms with
+  // 40+ fields, arrays, and mixed types. This ref is set via the onChange
+  // wrapper passed to every section and cleared after a successful save/reset.
+  const userEditedRef = useRef(false);
+  const [userEdited, setUserEdited] = useState(false);
 
   const {
-    control,
+    control: rawControl,
     handleSubmit,
-    reset,
+    reset: rawReset,
     watch,
     setError,
     formState: { isDirty },
@@ -297,6 +363,36 @@ export function ProfileForm() {
     },
   });
 
+  // Guard to suppress edit tracking during programmatic resets.
+  const isResettingRef = useRef(false);
+
+  // Wrap reset to clear manual edit tracking.
+  // Uses a setTimeout guard because useFieldArray hooks (householdMembers, pets,
+  // disasterExperiences) schedule async state updates that emit watch notifications
+  // across multiple renders — queueMicrotask alone is too narrow.
+  const reset = useCallback((...args: Parameters<typeof rawReset>) => {
+    isResettingRef.current = true;
+    userEditedRef.current = false;
+    setUserEdited(false);
+    const result = rawReset(...args);
+    setTimeout(() => { isResettingRef.current = false; }, 100);
+    return result;
+  }, [rawReset]);
+
+  const control = rawControl;
+
+  // Subscribe to ALL form value changes (native inputs, custom toggles, radio cards)
+  // to reliably detect when the user has edited the form.
+  useEffect(() => {
+    const sub = watch(() => {
+      if (!isResettingRef.current && !userEditedRef.current) {
+        userEditedRef.current = true;
+        setUserEdited(true);
+      }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
+
   // Fetch profile from backend on mount if authenticated.
   // Uses refs for backendToken so token refreshes don't recreate this callback
   // and trigger re-fetches that wipe unsaved form edits.
@@ -308,50 +404,7 @@ export function ProfileForm() {
         const data = await res.json();
         if (data.nickname) setNickname(data.nickname);
         const mapped = fromSnakeCasePayload(data);
-        const defaults = defaultsRef.current;
-        const resetValues: ProfileFormData = {
-          email: (mapped.email as string) || '',
-          provinceCode: (mapped.provinceCode as string) || defaults.provinceCode,
-          residenceType: (mapped.residenceType as string) || defaults.residenceType,
-          specialNeeds: (mapped.specialNeeds as string[]) || defaults.specialNeeds,
-          phoneNumber: (mapped.phoneNumber as string) || '',
-          emergencyContactName: (mapped.emergencyContactName as string) || '',
-          emergencyContactPhone: (mapped.emergencyContactPhone as string) || '',
-          medicalConditions: (mapped.medicalConditions as string) || '',
-          mobilityLevel: (mapped.mobilityLevel as string) || 'full',
-          hasVehicle: (mapped.hasVehicle as boolean) || false,
-          hasAc: mapped.hasAc !== undefined ? (mapped.hasAc as boolean) : true,
-          floorLevel: mapped.floorLevel != null ? (mapped.floorLevel as number) : '',
-          ageRange: (mapped.ageRange as string) || '18-64',
-          alertSeverityThreshold: (mapped.alertSeverityThreshold as number) || 3,
-          alertDelivery: (mapped.alertDelivery as string) || 'push',
-          hazardPreferences: (mapped.hazardPreferences as string[]) || [],
-          householdMembers: (mapped.householdMembers as ProfileFormData['householdMembers']) || [],
-          pets: (mapped.pets as ProfileFormData['pets']) || [],
-          constructionYear: (mapped.constructionYear as number | null) ?? null,
-          buildingMaterials: (mapped.buildingMaterials as string) || '',
-          buildingStories: (mapped.buildingStories as number | null) ?? null,
-          hasBasement: (mapped.hasBasement as boolean) || false,
-          hasElevator: (mapped.hasElevator as boolean) || false,
-          buildingCondition: (mapped.buildingCondition as number | null) ?? null,
-          incomeBracket: (mapped.incomeBracket as string) || '',
-          hasPropertyInsurance: (mapped.hasPropertyInsurance as boolean) || false,
-          hasLifeInsurance: (mapped.hasLifeInsurance as boolean) || false,
-          propertyValueRange: (mapped.propertyValueRange as string) || '',
-          hasEmergencySavings: (mapped.hasEmergencySavings as boolean) || false,
-          hasMedicalDevices: (mapped.hasMedicalDevices as boolean) || false,
-          hasWaterStorage: (mapped.hasWaterStorage as boolean) || false,
-          hasGenerator: (mapped.hasGenerator as boolean) || false,
-          dependsPublicWater: mapped.dependsPublicWater !== undefined ? (mapped.dependsPublicWater as boolean) : true,
-          disasterExperiences: (mapped.disasterExperiences as ProfileFormData['disasterExperiences']) || [],
-          homeLat: (mapped.homeLat as number | null) ?? null,
-          homeLng: (mapped.homeLng as number | null) ?? null,
-          workLat: (mapped.workLat as number | null) ?? null,
-          workLng: (mapped.workLng as number | null) ?? null,
-          workProvinceCode: (mapped.workProvinceCode as string) || '',
-          workAddress: (mapped.workAddress as string) || '',
-        };
-        reset(resetValues);
+        reset(buildResetValues(mapped, defaultsRef.current));
       }
     } catch {
       // Silently fail — form will use Zustand defaults
@@ -391,52 +444,7 @@ export function ProfileForm() {
         if (res.ok) {
           const responseData = await res.json();
           const mapped = fromSnakeCasePayload(responseData);
-
-          // Reset form with the server response so we reflect what was
-          // actually persisted — not the locally-submitted optimistic values.
-          const defaults = defaultsRef.current;
-          const serverValues: ProfileFormData = {
-            email: (mapped.email as string) || '',
-            provinceCode: (mapped.provinceCode as string) || defaults.provinceCode,
-            residenceType: (mapped.residenceType as string) || defaults.residenceType,
-            specialNeeds: (mapped.specialNeeds as string[]) || defaults.specialNeeds,
-            phoneNumber: (mapped.phoneNumber as string) || '',
-            emergencyContactName: (mapped.emergencyContactName as string) || '',
-            emergencyContactPhone: (mapped.emergencyContactPhone as string) || '',
-            medicalConditions: (mapped.medicalConditions as string) || '',
-            mobilityLevel: (mapped.mobilityLevel as string) || 'full',
-            hasVehicle: (mapped.hasVehicle as boolean) || false,
-            hasAc: mapped.hasAc !== undefined ? (mapped.hasAc as boolean) : true,
-            floorLevel: mapped.floorLevel != null ? (mapped.floorLevel as number) : '',
-            ageRange: (mapped.ageRange as string) || '18-64',
-            alertSeverityThreshold: (mapped.alertSeverityThreshold as number) || 3,
-            alertDelivery: (mapped.alertDelivery as string) || 'push',
-            hazardPreferences: (mapped.hazardPreferences as string[]) || [],
-            householdMembers: (mapped.householdMembers as ProfileFormData['householdMembers']) || [],
-            pets: (mapped.pets as ProfileFormData['pets']) || [],
-            constructionYear: (mapped.constructionYear as number | null) ?? null,
-            buildingMaterials: (mapped.buildingMaterials as string) || '',
-            buildingStories: (mapped.buildingStories as number | null) ?? null,
-            hasBasement: (mapped.hasBasement as boolean) || false,
-            hasElevator: (mapped.hasElevator as boolean) || false,
-            buildingCondition: (mapped.buildingCondition as number | null) ?? null,
-            incomeBracket: (mapped.incomeBracket as string) || '',
-            hasPropertyInsurance: (mapped.hasPropertyInsurance as boolean) || false,
-            hasLifeInsurance: (mapped.hasLifeInsurance as boolean) || false,
-            propertyValueRange: (mapped.propertyValueRange as string) || '',
-            hasEmergencySavings: (mapped.hasEmergencySavings as boolean) || false,
-            hasMedicalDevices: (mapped.hasMedicalDevices as boolean) || false,
-            hasWaterStorage: (mapped.hasWaterStorage as boolean) || false,
-            hasGenerator: (mapped.hasGenerator as boolean) || false,
-            dependsPublicWater: mapped.dependsPublicWater !== undefined ? (mapped.dependsPublicWater as boolean) : true,
-            disasterExperiences: (mapped.disasterExperiences as ProfileFormData['disasterExperiences']) || [],
-            homeLat: (mapped.homeLat as number | null) ?? null,
-            homeLng: (mapped.homeLng as number | null) ?? null,
-            workLat: (mapped.workLat as number | null) ?? null,
-            workLng: (mapped.workLng as number | null) ?? null,
-            workProvinceCode: (mapped.workProvinceCode as string) || '',
-            workAddress: (mapped.workAddress as string) || '',
-          };
+          const serverValues = buildResetValues(mapped, defaultsRef.current);
 
           if (mapped.provinceCode) setProvinceCode(mapped.provinceCode as string);
           if (mapped.residenceType) setResidenceType(mapped.residenceType as string);
@@ -460,8 +468,15 @@ export function ProfileForm() {
     }
   }
 
+  function onInvalid(errors: Record<string, unknown>) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[ProfileForm] validation errors:', errors);
+    }
+    showToast({ title: t('validationError'), severity: 4 });
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-6">
       {/* Username / Nickname */}
       {nickname && (
         <Card variant="glass">
@@ -516,7 +531,7 @@ export function ProfileForm() {
 
       {/* Submit */}
       <div className="flex justify-end">
-        <Button type="submit" disabled={!isDirty || saving}>
+        <Button type="submit" disabled={(!isDirty && !userEdited) || saving}>
           {t('saveProfile')}
         </Button>
       </div>

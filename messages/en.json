@@ -667,6 +667,7 @@
     "saveProfile": "Save Profile",
     "saved": "Profile saved",
     "saveError": "Failed to save profile",
+    "validationError": "Please fix the errors in the form before saving",
     "notificationsTitle": "Notifications",
     "notificationsUnsupported": "Push notifications are not supported in this browser",
     "pushNotifications": "Push Notifications",
