@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.services.prediction_service import compute_predictions
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -21,5 +25,6 @@ async def get_predictions(
         return await compute_predictions(db, province)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
+    except Exception:
+        logger.exception("Prediction failed for province %s", province)
+        raise HTTPException(status_code=500, detail="Prediction failed")
