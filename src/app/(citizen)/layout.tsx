@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as Sentry from '@sentry/nextjs';
 import { NavPill } from '@/components/layout/nav-pill';
@@ -25,14 +25,21 @@ export default function CitizenLayout({
   const hasSeenOnboarding = useAppStore((s) => s.hasSeenOnboarding);
   const authUser = useAppStore((s) => s.authUser);
   const provinceCode = useAppStore((s) => s.provinceCode);
+  const [timedOut, setTimedOut] = useState(false);
   useAlertStream();
   useOfflinePack(); // Auto-syncs on mount and every 30min
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setTimedOut(true), 4000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  useEffect(() => {
+    if ((!isLoading || timedOut) && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, timedOut, router]);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -57,7 +64,7 @@ export default function CitizenLayout({
     }
   }, [provinceCode]);
 
-  if (isLoading) {
+  if (isLoading && !timedOut) {
     return (
       <div className="flex h-dvh w-screen items-center justify-center bg-bg-primary">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-green border-t-transparent" />
