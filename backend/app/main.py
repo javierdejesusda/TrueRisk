@@ -47,10 +47,10 @@ def _sentry_before_send(event, hint):
             return None
         try:
             from app.data._http import RetryableHTTPStatusError
+            if issubclass(exc_type, RetryableHTTPStatusError):
+                return None
         except ImportError:
-            RetryableHTTPStatusError = None
-        if RetryableHTTPStatusError and issubclass(exc_type, RetryableHTTPStatusError):
-            return None
+            pass
     return event
 
 
