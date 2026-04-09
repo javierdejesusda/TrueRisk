@@ -17,9 +17,11 @@ _client: AsyncOpenAI | None = None
 def _get_client() -> AsyncOpenAI:
     global _client
     if _client is None:
+        # Long timeout: gpt-5-mini is a reasoning model, thinking phase can take
+        # 30+ seconds before any content tokens are emitted.
         _client = AsyncOpenAI(
             api_key=settings.openai_api_key,
-            timeout=30.0,
+            timeout=180.0,
         )
     return _client
 
@@ -75,10 +77,15 @@ async def stream_weather_summary(
         {"role": "user", "content": user_message},
     ]
 
-    response = await client.chat.completions.create(
+    # NOTE: max_completion_tokens for reasoning models INCLUDES reasoning tokens.
+    # 800 was too small — reasoning consumed the budget and left nothing (or a
+    # truncated fragment) for visible output. Give the model enough headroom for
+    # both phases and use minimal reasoning effort to cut latency.
+    response = await client.chat.completions.create(  # type: ignore[call-overload]
         model=settings.openai_model,
-        messages=messages,  # type: ignore[arg-type]
-        max_completion_tokens=800,
+        messages=messages,
+        max_completion_tokens=4000,
+        reasoning_effort="minimal",
         stream=True,
     )
     async for chunk in response:  # type: ignore[union-attr]

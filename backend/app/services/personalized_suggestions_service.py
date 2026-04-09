@@ -18,7 +18,12 @@ _client: AsyncOpenAI | None = None
 def _get_client() -> AsyncOpenAI:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(api_key=settings.openai_api_key)
+        # Long timeout: gpt-5-mini is a reasoning model, thinking phase can take
+        # 30+ seconds before any content tokens are emitted.
+        _client = AsyncOpenAI(
+            api_key=settings.openai_api_key,
+            timeout=180.0,
+        )
     return _client
 
 
@@ -77,22 +82,17 @@ async def stream_personalized_suggestions(
         {"role": "user", "content": user_context + risk_context},
     ]
 
-    try:
-        async with client.chat.completions.stream(
-            model=settings.openai_model,
-            messages=messages,  # type: ignore[arg-type]
-            max_completion_tokens=600,
-        ) as stream:
-            async for event in stream:
-                if event.type == "content.delta":
-                    yield event.delta
-    except (AttributeError, TypeError):
-        response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=messages,  # type: ignore[arg-type]
-            max_completion_tokens=600,
-            stream=True,
-        )
-        async for chunk in response:  # type: ignore[union-attr]
-            if chunk.choices and chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+    # NOTE: max_completion_tokens for reasoning models INCLUDES reasoning tokens.
+    # 600 was causing the stream to stop mid-response: reasoning consumed most
+    # of the budget, so only a few lines of content could be emitted before hitting
+    # the cap. Give the model enough headroom and use minimal reasoning effort.
+    response = await client.chat.completions.create(  # type: ignore[call-overload]
+        model=settings.openai_model,
+        messages=messages,
+        max_completion_tokens=3000,
+        reasoning_effort="minimal",
+        stream=True,
+    )
+    async for chunk in response:  # type: ignore[union-attr]
+        if chunk.choices and chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content

@@ -26,7 +26,9 @@ _client: AsyncOpenAI | None = None
 def _get_client() -> AsyncOpenAI:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=30.0)
+        # Long timeout: gpt-5-mini is a reasoning model, thinking phase can take
+        # 30+ seconds before any content tokens are emitted.
+        _client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=180.0)
     return _client
 
 
