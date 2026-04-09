@@ -90,6 +90,24 @@ def _extract_all_blocks(xml: str, tag: str) -> list[str]:
     return re.findall(rf"<{tag}[^>]*>.*?</{tag}>", xml, re.DOTALL)
 
 
+_MAX_DESCRIPTION_CHARS = 500
+_MAX_AREA_DESC_CHARS = 200
+
+
+def _truncate(text: str, limit: int) -> str:
+    """Truncate ``text`` to ``limit`` chars, appending an ellipsis when cut.
+
+    AEMET CAP descriptions can be several kilobytes of free-form Spanish
+    meteorological prose. When multiplied by ~100 active alerts the list
+    endpoint balloons to several MB per request (tracked in Sentry as
+    TRUERISK-FRONTEND-C). The frontend only needs a short summary; clients
+    can drill into a specific alert for the full text.
+    """
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "\u2026"
+
+
 def parse_cap_xml(xml_text: str) -> list[dict[str, Any]]:
     """Parse a CAP XML document into a list of alert dicts."""
     alerts: list[dict[str, Any]] = []
@@ -112,13 +130,17 @@ def parse_cap_xml(xml_text: str) -> list[dict[str, Any]]:
             severity = _SEVERITY_MAP.get(raw_severity, "green")
             event = _extract_tag(info_xml, "event")
             headline = _extract_tag(info_xml, "headline")
-            description = _extract_tag(info_xml, "description")
+            description = _truncate(
+                _extract_tag(info_xml, "description"), _MAX_DESCRIPTION_CHARS
+            )
             onset = _extract_tag(info_xml, "onset")
             expires = _extract_tag(info_xml, "expires")
 
             area_blocks = _extract_all_blocks(info_xml, "area")
             for area_idx, area_xml in enumerate(area_blocks):
-                area_desc = _extract_tag(area_xml, "areaDesc")
+                area_desc = _truncate(
+                    _extract_tag(area_xml, "areaDesc"), _MAX_AREA_DESC_CHARS
+                )
                 # geocode value is the zone code
                 geocode_value = _extract_tag(area_xml, "value")
                 ine_code = zone_code_to_ine_province(geocode_value) if geocode_value else ""

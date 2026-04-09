@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import Map, { Source, Layer, Popup, Marker, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre';
 import { loadProvinceGeoJSON, enrichGeoJSON, loadMunicipalitiesForProvinces, enrichMunicipalityGeoJSON } from '@/lib/geo-data';
@@ -61,6 +62,11 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
   const [hasGeolocated, setHasGeolocated] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lng: number; lat: number } | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  // Incrementing this key forces react-map-gl to unmount + remount the Map,
+  // which is the only way to fully recover from WebGL context loss or a
+  // fatal GL error (shader compile null, driver reset). See TRUERISK-FRONTEND-S.
+  const [mapKey, setMapKey] = useState(0);
+  const remountAttemptsRef = useRef(0);
   const [dataLayerVisibility, setDataLayerVisibility] = useState<DataLayerVisibility>({
     fires: false,
     earthquakes: false,
@@ -76,9 +82,128 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
   useEffect(() => {
     loadProvinceGeoJSON()
       .then(setBaseGeoJSON)
-      .catch((err) => console.error('Failed to load GeoJSON:', err))
+      .catch((err) => Sentry.captureException(err, { tags: { feature: 'map-geojson' } }))
       .finally(() => setGeoLoading(false));
   }, []);
+
+  // Force a map remount via key change. Used as the recovery path for
+  // WebGL context loss or fatal GL errors that leave the map in an
+  // unrecoverable state. Capped at 3 attempts so we don't spin if the
+  // user's GPU is fundamentally broken — the MapErrorBoundary will take
+  // over after the final attempt.
+  //
+  // Because ``SpainAlertMap`` itself is not remounted (only the inner
+  // ``<Map key={mapKey}>``), we must explicitly reset any state that
+  // describes the prior map instance — otherwise the remounted map would
+  // skip geolocation ("already done"), keep rendering a popup at stale
+  // screen coordinates, and show a hover highlight on a feature that no
+  // longer exists in the new render pass.
+  const remountMap = useCallback((reason: string) => {
+    const attempts = remountAttemptsRef.current + 1;
+    remountAttemptsRef.current = attempts;
+    Sentry.addBreadcrumb({
+      category: 'map',
+      level: 'warning',
+      message: `Remounting map (${reason}), attempt ${attempts}`,
+    });
+    if (attempts > 3) {
+      Sentry.captureMessage('Map remount budget exhausted', {
+        level: 'error',
+        tags: { feature: 'map', reason },
+      });
+      return;
+    }
+    setMapReady(false);
+    setHasGeolocated(false);
+    setPopupInfo(null);
+    setHoveredFeatureId(null);
+    // hoveredSourceRef resets naturally on the next onMouseMove; we do
+    // not mutate it here to avoid React Compiler's immutability rule.
+    setMapKey((k) => k + 1);
+  }, []);
+
+  // Listen for WebGL context loss on the underlying map. This is the
+  // root cause of TRUERISK-FRONTEND-S ("Could not compile fragment
+  // shader: null") — MapLibre's program.ts does not re-check
+  // gl.isContextLost() between shader create and compile, so a context
+  // reset mid-render surfaces as a cryptic shader compile failure.
+  // Handling the native event lets us remount cleanly instead of
+  // crashing into the error boundary.
+  useEffect(() => {
+    if (!mapReady) return;
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const onContextLost = (e: unknown) => {
+      // Prevent the default so the browser keeps the GL context slot
+      // available for the remounted map.
+      const evt = e as { preventDefault?: () => void };
+      evt.preventDefault?.();
+      Sentry.captureMessage('WebGL context lost on map', {
+        level: 'warning',
+        tags: { feature: 'map' },
+      });
+      remountMap('webglcontextlost');
+    };
+    const onContextRestored = () => {
+      Sentry.addBreadcrumb({
+        category: 'map',
+        level: 'info',
+        message: 'WebGL context restored',
+      });
+    };
+
+    map.on('webglcontextlost', onContextLost);
+    map.on('webglcontextrestored', onContextRestored);
+    return () => {
+      try {
+        map.off('webglcontextlost', onContextLost);
+        map.off('webglcontextrestored', onContextRestored);
+      } catch {
+        // Map already disposed — ignore.
+      }
+    };
+  }, [mapReady, mapKey, remountMap]);
+
+  // Map error handler. Routes MapLibre's asynchronous load / render /
+  // worker errors through Sentry with useful tags, and triggers a
+  // remount for errors we know are recoverable (shader compile, tile
+  // abort, null Worker message). Without this prop, these errors are
+  // caught only by Sentry's auto-instrumented requestAnimationFrame /
+  // addEventListener handlers, which makes them hard to diagnose and
+  // impossible to recover from in-place.
+  const onMapError = useCallback((e: { error?: Error }) => {
+    const err = e.error;
+    if (!err) return;
+    const message = err.message || '';
+
+    // Known recoverable: GL context was reset or driver dropped the
+    // shader program mid-render (TRUERISK-FRONTEND-S).
+    if (/compile fragment shader/i.test(message) || /compile vertex shader/i.test(message)) {
+      Sentry.captureException(err, {
+        tags: { feature: 'map', recoverable: 'true', kind: 'shader-compile' },
+      });
+      remountMap('shader-compile');
+      return;
+    }
+
+    // Known benign: MapLibre's Actor.receive crashes when a browser
+    // extension or service worker posts a null `message.data` to the
+    // tile worker (TRUERISK-FRONTEND-T). The error is reported so we
+    // keep visibility, but it does NOT need a remount — the tile
+    // worker recovers on the next message.
+    if (/Cannot read properties of null \(reading 'id'\)/i.test(message)) {
+      Sentry.captureException(err, {
+        tags: { feature: 'map', recoverable: 'true', kind: 'worker-null-message' },
+      });
+      return;
+    }
+
+    // Unknown error — escalate normally.
+    Sentry.captureException(err, {
+      tags: { feature: 'map', recoverable: 'false' },
+    });
+  }, [remountMap]);
 
   // Fly to user's location and set their province once map + geo + GeoJSON are all ready
   const geolocateUser = useCallback(() => {
@@ -474,6 +599,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
       )}
 
       <Map
+        key={mapKey}
         ref={mapRef}
         initialViewState={
           process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
@@ -495,6 +621,7 @@ export function SpainAlertMap({ alertData, riskByProvince, allWeather, fireHotsp
         onClick={onClick}
         onMoveEnd={onMoveEnd}
         onLoad={() => setMapReady(true)}
+        onError={onMapError}
         cursor={hoveredFeatureId ? 'pointer' : 'grab'}
       >
         {!isMobile && <NavigationControl position="bottom-right" />}

@@ -118,8 +118,8 @@ def _fix_timestamp_columns(conn):
     Prevents asyncpg encoding errors when passing timezone-aware datetimes
     to columns that are still TIMESTAMP WITHOUT TIME ZONE in the database.
 
-    Uses a PostgreSQL advisory lock to prevent deadlocks when multiple
-    workers (e.g. gunicorn) run this concurrently at startup.
+    The caller is expected to hold the schema-sync advisory lock (see
+    ``_run_schema_sync``).
     """
     from sqlalchemy import inspect as sa_inspect, text, DateTime
 
@@ -127,15 +127,6 @@ def _fix_timestamp_columns(conn):
         return
 
     log = logging.getLogger("truerisk.schema_sync")
-
-    # Advisory lock prevents concurrent workers from deadlocking on ALTER TABLE.
-    # pg_try_advisory_xact_lock returns False if another session holds the lock;
-    # the lock is released automatically at transaction end.
-    got_lock = conn.execute(text("SELECT pg_try_advisory_xact_lock(8675309)")).scalar()
-    if not got_lock:
-        log.info("Another worker is running schema fixes — skipping")
-        return
-
     inspector = sa_inspect(conn)
 
     for table in Base.metadata.sorted_tables:
@@ -159,6 +150,42 @@ def _fix_timestamp_columns(conn):
                 f"ALTER TABLE {table.name} ALTER COLUMN {col.name} "
                 f"TYPE TIMESTAMPTZ USING {col.name} AT TIME ZONE 'UTC'"
             ))
+
+
+# Shared advisory-lock ID for all startup schema-sync operations. Using a
+# single lock for every DDL step prevents concurrent gunicorn workers from
+# deadlocking against each other and against running scheduler queries.
+_SCHEMA_SYNC_LOCK_ID = 8675309
+
+
+def _run_schema_sync(conn):
+    """Run all schema-sync passes under a single advisory lock.
+
+    Multiple gunicorn workers start simultaneously; each one calls this on
+    lifespan startup. Without a lock, two workers running ``_sync_missing_columns``
+    or ``_fix_encrypted_column_sizes`` at once can deadlock — or worse, deadlock
+    with the scheduler's concurrent SELECTs on the same tables (seen in Sentry
+    as ``DeadlockDetectedError`` on ``weather_daily_summary``).
+
+    ``pg_try_advisory_xact_lock`` returns False if another session already
+    holds the lock; the lock is released automatically at transaction end.
+    """
+    from sqlalchemy import text
+
+    log = logging.getLogger("truerisk.schema_sync")
+
+    if conn.dialect.name == "postgresql":
+        got_lock = conn.execute(
+            text("SELECT pg_try_advisory_xact_lock(:lock_id)"),
+            {"lock_id": _SCHEMA_SYNC_LOCK_ID},
+        ).scalar()
+        if not got_lock:
+            log.info("Another worker holds the schema-sync lock — skipping")
+            return
+
+    _sync_missing_columns(conn)
+    _fix_timestamp_columns(conn)
+    _fix_encrypted_column_sizes(conn)
 
 
 def _fix_encrypted_column_sizes(conn):
@@ -227,9 +254,7 @@ async def lifespan(app: FastAPI):
     # Create any missing tables on startup (idempotent — skips existing tables)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.run_sync(_sync_missing_columns)
-        await conn.run_sync(_fix_timestamp_columns)
-        await conn.run_sync(_fix_encrypted_column_sizes)
+        await conn.run_sync(_run_schema_sync)
 
     # Seed province data on all database backends
     from app.data.province_data import seed_provinces
@@ -257,6 +282,14 @@ async def lifespan(app: FastAPI):
     yield
 
     shutdown_scheduler()
+
+    # Release pooled httpx clients used by data/_http.py so connections are
+    # not leaked on worker reload.
+    try:
+        from app.data._http import close_clients
+        await close_clients()
+    except Exception:  # noqa: BLE001 — best-effort shutdown
+        logger.exception("Failed to close pooled HTTP clients")
 
 
 app = FastAPI(

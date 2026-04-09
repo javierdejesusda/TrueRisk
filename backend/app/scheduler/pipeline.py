@@ -8,12 +8,14 @@ province code) cannot put the session into a ``PendingRollbackError``
 state and cascade-fail every subsequent province.
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
 from app.utils.time import utcnow
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session
@@ -28,6 +30,13 @@ from app.config import settings
 from app.services.data_health_service import health_tracker
 
 logger = logging.getLogger(__name__)
+
+
+def _is_deadlock(exc: BaseException) -> bool:
+    """Return True if ``exc`` is a Postgres deadlock (SQLSTATE 40P01)."""
+    orig = getattr(exc, "orig", None)
+    sqlstate = getattr(orig, "sqlstate", None) or getattr(orig, "pgcode", None)
+    return sqlstate == "40P01"
 
 ALERT_THRESHOLD_HIGH = 60
 ALERT_THRESHOLD_CRITICAL = 80
@@ -139,26 +148,43 @@ async def run_pipeline():
     succeeded = 0
     failed = 0
     for ine_code, name in province_codes:
-        try:
-            async with async_session() as province_db:
-                province = await province_db.get(Province, ine_code)
-                if not province:
+        # Retry once on transient deadlocks (SQLSTATE 40P01). Postgres aborts
+        # one side of a deadlock cycle; the second attempt almost always
+        # succeeds because the winner has already released its locks.
+        for attempt in (1, 2):
+            try:
+                async with async_session() as province_db:
+                    province = await province_db.get(Province, ine_code)
+                    if not province:
+                        break
+                    risk = await compute_province_risk(
+                        province_db, ine_code,
+                        weather_override=weather_map.get(ine_code) or None,
+                    )
+                    logger.info(
+                        f"  {name}: composite={risk['composite_score']:.1f} "
+                        f"dominant={risk['dominant_hazard']}"
+                    )
+                    # Auto-generate alerts for high/critical scores
+                    await _check_and_create_alerts(province_db, province, risk)
+                    await province_db.commit()
+                    succeeded += 1
+                break
+            except DBAPIError as e:
+                if _is_deadlock(e) and attempt == 1:
+                    logger.warning(
+                        "Deadlock processing %s (%s), retrying once",
+                        name, ine_code,
+                    )
+                    await asyncio.sleep(0.5)
                     continue
-                risk = await compute_province_risk(
-                    province_db, ine_code,
-                    weather_override=weather_map.get(ine_code) or None,
-                )
-                logger.info(
-                    f"  {name}: composite={risk['composite_score']:.1f} "
-                    f"dominant={risk['dominant_hazard']}"
-                )
-                # Auto-generate alerts for high/critical scores
-                await _check_and_create_alerts(province_db, province, risk)
-                await province_db.commit()
-                succeeded += 1
-        except Exception as e:
-            failed += 1
-            logger.error(f"  Error processing {name} ({ine_code}): {e}")
+                failed += 1
+                logger.error(f"  Error processing {name} ({ine_code}): {e}")
+                break
+            except Exception as e:
+                failed += 1
+                logger.error(f"  Error processing {name} ({ine_code}): {e}")
+                break
 
     logger.info(
         "Risk computation: %d/%d provinces succeeded, %d failed",

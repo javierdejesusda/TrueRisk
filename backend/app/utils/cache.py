@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
-from typing import Any
+from typing import Any, Awaitable, Callable, TypeVar
 
 
 class TTLCache:
@@ -35,7 +36,44 @@ class TTLCache:
         self._expiry.clear()
 
 
+T = TypeVar("T")
+
+
+class Singleflight:
+    """Coalesce concurrent calls for the same key into a single in-flight task.
+
+    When many clients request the same uncached upstream resource at once
+    (e.g. ``/api/v1/weather/current/03`` on a cold cache), without coalescing
+    each request triggers its own outbound API call, causing thundering herds
+    and upstream 429 rate limiting. Singleflight ensures only one call is in
+    flight per key; all other callers await the same result.
+    """
+
+    def __init__(self) -> None:
+        self._inflight: dict[str, asyncio.Future[Any]] = {}
+
+    async def do(self, key: str, fn: Callable[[], Awaitable[T]]) -> T:
+        existing = self._inflight.get(key)
+        if existing is not None:
+            return await existing  # type: ignore[return-value]
+
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[T] = loop.create_future()
+        self._inflight[key] = future  # type: ignore[assignment]
+        try:
+            result = await fn()
+        except BaseException as exc:  # noqa: BLE001 — propagate to waiters
+            future.set_exception(exc)
+            raise
+        else:
+            future.set_result(result)
+            return result
+        finally:
+            self._inflight.pop(key, None)
+
+
 # Shared cache instances
 risk_cache = TTLCache(default_ttl=3600)       # Risk scores: 1 hour
 province_cache = TTLCache(default_ttl=86400)  # Provinces: 24 hours (static data)
 weather_cache = TTLCache(default_ttl=600)     # Weather: 10 minutes
+weather_singleflight = Singleflight()

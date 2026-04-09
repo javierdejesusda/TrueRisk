@@ -129,9 +129,20 @@ class TestNotifyUser:
 
     @pytest.mark.asyncio
     async def test_notify_user_counts_only_successful_sends(self, client):
-        """notify_user counts only successful push sends."""
+        """notify_user counts only successful push sends.
+
+        Under the current contract ``send_push`` returns on success and
+        raises ``WebPushException`` on failure (rather than returning a
+        boolean). The mock uses ``side_effect`` to raise for the middle
+        call so ``notify_user`` records it as a failure and does not
+        include it in the success count.
+        """
         from tests.conftest import test_session_factory
         from app.services.push_service import notify_user
+        from pywebpush import WebPushException
+
+        class _FakeResponse:
+            status_code = 410  # Gone — should also trigger deactivation
 
         async with test_session_factory() as db:
             user = User(
@@ -154,8 +165,12 @@ class TestNotifyUser:
             await db.commit()
 
             with patch("app.services.push_service.send_push", new_callable=AsyncMock) as mock_send:
-                # First call succeeds, second fails, third succeeds
-                mock_send.side_effect = [True, False, True]
+                # First call succeeds, second raises, third succeeds
+                mock_send.side_effect = [
+                    None,
+                    WebPushException("fake failure", response=_FakeResponse()),
+                    None,
+                ]
                 sent = await notify_user(db, user.id, "Title", "Body")
                 assert sent == 2
 

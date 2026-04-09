@@ -23,22 +23,27 @@ except ImportError:
 
 
 async def send_push(subscription_info: dict, payload: dict) -> bool:
-    """Send a single Web Push notification. Returns True on success."""
+    """Send a single Web Push notification.
+
+    Returns True on success. Raises WebPushException (with .response.status_code)
+    on HTTP errors so callers can decide whether to deactivate the subscription.
+    Runs the blocking ``webpush()`` call in a thread executor to avoid stalling
+    the event loop when notifying many subscribers concurrently.
+    """
     if webpush is None:
         logger.warning("pywebpush not available, skipping push")
         return False
 
-    try:
+    def _blocking_send() -> None:
         webpush(
             subscription_info=subscription_info,
             data=json.dumps(payload),
             vapid_private_key=settings.vapid_private_key,
             vapid_claims={"sub": settings.vapid_contact_email},
         )
-        return True
-    except Exception as exc:
-        logger.error("Failed to send push notification: %s", exc)
-        return False
+
+    await asyncio.get_running_loop().run_in_executor(None, _blocking_send)
+    return True
 
 
 async def notify_province(
@@ -56,7 +61,7 @@ async def notify_province(
     if not subscriptions:
         return
 
-    async def _send_one(sub: PushSubscription) -> tuple[PushSubscription, bool | Exception]:
+    async def _send_one(sub: PushSubscription) -> tuple[PushSubscription, BaseException | None]:
         subscription_info = {
             "endpoint": sub.endpoint,
             "keys": {
@@ -65,39 +70,44 @@ async def notify_province(
             },
         }
         try:
-            success = await send_push(subscription_info, alert_data)
-            return sub, success
-        except Exception as exc:
+            await send_push(subscription_info, alert_data)
+            return sub, None
+        except BaseException as exc:  # noqa: BLE001 — surfaces WebPushException w/ response
             return sub, exc
 
-    results = await asyncio.gather(
-        *[_send_one(sub) for sub in subscriptions],
-        return_exceptions=True,
-    )
+    results = await asyncio.gather(*[_send_one(sub) for sub in subscriptions])
 
-    for item in results:
-        if isinstance(item, BaseException):
-            logger.error("Unexpected error sending push: %s", item)
+    for sub, outcome in results:
+        if outcome is None:
             continue
-        sub, outcome = item
-        if isinstance(outcome, Exception):
+        if isinstance(outcome, WebPushException):
             _maybe_deactivate(sub, outcome)
-        elif not outcome:
-            # send_push returned False -- could be a transient or permanent error
-            pass
+        else:
+            logger.error("Unexpected error sending push to sub %s: %s", sub.id, outcome)
 
     await db.commit()
 
 
-def _maybe_deactivate(sub: PushSubscription, exc: Exception) -> None:
-    """Deactivate a subscription if the push endpoint returned a permanent error."""
+def _maybe_deactivate(sub: PushSubscription, exc: BaseException) -> None:
+    """Deactivate a subscription if the push endpoint returned a permanent error.
+
+    On 400/404/410 the subscription is permanently invalid and must not be
+    retried — repeated failures would otherwise flood Sentry with the same
+    "WebPushException: Push failed: 400" error.
+    """
     status = None
-    if hasattr(exc, "response"):
-        status = getattr(exc.response, "status_code", None)
-    # 400 = bad subscription data, 404 = endpoint gone, 410 = explicitly gone
+    response = getattr(exc, "response", None)
+    if response is not None:
+        status = getattr(response, "status_code", None)
     if status in (400, 404, 410):
         sub.is_active = False
-        logger.info("Deactivated subscription %s (HTTP %s)", sub.id, status)
+        logger.info("Deactivated push subscription %s (HTTP %s)", sub.id, status)
+    else:
+        # Transient error (network, 5xx, etc.) — keep subscription active and log.
+        logger.warning(
+            "Transient push failure for sub %s (HTTP %s): %s",
+            sub.id, status or "?", exc,
+        )
 
 
 async def notify_user(
@@ -121,32 +131,28 @@ async def notify_user(
 
     payload = {"title": title, "body": body}
 
-    async def _send_one(sub: PushSubscription) -> tuple[PushSubscription, bool | Exception]:
+    async def _send_one(sub: PushSubscription) -> tuple[PushSubscription, BaseException | None]:
         subscription_info = {
             "endpoint": sub.endpoint,
             "keys": {"p256dh": sub.p256dh_key, "auth": sub.auth_key},
         }
         try:
-            success = await send_push(subscription_info, payload)
-            return sub, success
-        except Exception as exc:
+            await send_push(subscription_info, payload)
+            return sub, None
+        except BaseException as exc:  # noqa: BLE001 — surfaces WebPushException w/ response
             return sub, exc
 
-    results = await asyncio.gather(
-        *[_send_one(sub) for sub in subscriptions],
-        return_exceptions=True,
-    )
+    results = await asyncio.gather(*[_send_one(sub) for sub in subscriptions])
 
     sent = 0
-    for item in results:
-        if isinstance(item, BaseException):
-            logger.error("Unexpected error in notify_user: %s", item)
-            continue
-        sub, outcome = item
-        if isinstance(outcome, Exception):
-            _maybe_deactivate(sub, outcome)
-        elif outcome:
+    for sub, outcome in results:
+        if outcome is None:
             sent += 1
+            continue
+        if isinstance(outcome, WebPushException):
+            _maybe_deactivate(sub, outcome)
+        else:
+            logger.error("Unexpected error notifying user %s sub %s: %s", user_id, sub.id, outcome)
 
     await db.commit()
     return sent

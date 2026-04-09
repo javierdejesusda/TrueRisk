@@ -88,8 +88,18 @@ async def delete_alert(
 
 
 @router.get("/stream")
-async def alert_stream(db: AsyncSession = Depends(get_db)):
-    """SSE stream that pushes new alerts every 10 seconds."""
+async def alert_stream():
+    """SSE stream that pushes new alerts every 10 seconds.
+
+    Intentionally does NOT take a ``db`` dependency — holding a SQLAlchemy
+    session open for the full 30-minute stream lifetime meant the pool tried
+    to terminate a connection mid-query on client disconnect, surfacing as
+    ``CancelledError`` from ``do_terminate``/``greenlet_spawn`` (seen in
+    Sentry as TRUERISK-FRONTEND-Q). Each poll opens its own short-lived
+    session so the pool is never holding an in-flight query when the client
+    goes away.
+    """
+    from app.database import async_session
 
     async def event_generator():
         last_count = 0
@@ -98,17 +108,20 @@ async def alert_stream(db: AsyncSession = Depends(get_db)):
         try:
             while time.monotonic() - start < max_duration:
                 try:
-                    alerts = await alert_service.get_alerts(db, active=True)
-                    current_count = len(alerts)
-                    if current_count != last_count:
-                        data = [
-                            AlertResponse.model_validate(a).model_dump(mode="json")
-                            for a in alerts
-                        ]
-                        yield {"event": "alerts", "data": json.dumps(data)}
-                        last_count = current_count
-                    else:
-                        yield {"event": "ping", "data": ""}
+                    async with async_session() as poll_db:
+                        alerts = await alert_service.get_alerts(poll_db, active=True)
+                        current_count = len(alerts)
+                        if current_count != last_count:
+                            data = [
+                                AlertResponse.model_validate(a).model_dump(mode="json")
+                                for a in alerts
+                            ]
+                            yield {"event": "alerts", "data": json.dumps(data)}
+                            last_count = current_count
+                        else:
+                            yield {"event": "ping", "data": ""}
+                except asyncio.CancelledError:
+                    raise
                 except Exception:
                     logger.exception("Error in alert SSE stream")
                     yield {"event": "error", "data": "internal error"}
