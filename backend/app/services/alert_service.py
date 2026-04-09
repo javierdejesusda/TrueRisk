@@ -38,12 +38,19 @@ async def get_alerts(
 
 
 async def get_aemet_alerts() -> list[dict[str, Any]]:
-    """Fetch live CAP alerts from the AEMET API."""
+    """Fetch live CAP alerts from the AEMET API.
+
+    Drops "green" (Minor/Unknown) severity entries server-side: they
+    represent *no actual hazard* and are filtered out on the client
+    anyway, but they dominate the raw AEMET payload and pushed the
+    response past Sentry's large-payload threshold (TRUERISK-FRONTEND-C).
+    """
     api_key = settings.aemet_api_key
     if not api_key:
         logger.warning("AEMET API key is not configured")
         return []
-    return await aemet_client.fetch_alerts(api_key)
+    alerts = await aemet_client.fetch_alerts(api_key)
+    return [a for a in alerts if a.get("severity") != "green"]
 
 
 async def create_alert(db: AsyncSession, data: AlertCreate) -> Alert:

@@ -1,28 +1,44 @@
 import * as Sentry from "@sentry/nextjs";
 
-// Known upstream bug pattern: MapLibre GL's internal Actor.receive() crashes
-// with "Cannot read properties of null (reading 'id')" when a Worker receives
-// a MessageEvent whose data is null. This happens when browser extensions or
-// service workers broadcast null messages to every in-page worker. MapLibre
-// lacks a null guard in src/util/actor.ts (confirmed in 5.22.0). See
-// TRUERISK-FRONTEND-T. The tile worker recovers on its next message, so the
-// error is functionally benign — but we still want it grouped separately
-// and de-prioritised so it does not drown real errors.
-const MAPLIBRE_WORKER_NULL_MSG =
-  /Cannot read properties of null \(reading 'id'\)/i;
+// Upstream/third-party noise patterns. These errors originate outside our
+// code (MapLibre GL internals, browser extensions, transient network
+// failures) and produce high-volume events that drown real bugs. Drop them
+// entirely at the edge so they never reach the Sentry project.
+//
+// - MapLibre worker null-data race (TRUERISK-FRONTEND-T): Actor.receive()
+//   has no null guard in 5.22.0; extensions/service workers that broadcast
+//   null MessageEvents trip it. The worker recovers on its next message.
+// - MapLibre fragment shader compile (TRUERISK-FRONTEND-S): WebGL
+//   driver/GPU-state failures during requestAnimationFrame. Recoverable
+//   via the map error boundary; nothing we can patch in-process.
+// - MetaMask connection (TRUERISK-FRONTEND-W): injected by the wallet
+//   extension when the page has no EIP-1193 provider; not our code.
+// - Generic "Load failed" (TRUERISK-FRONTEND-V): Safari's opaque fetch
+//   network-failure message, almost always a client connectivity drop.
+const DROP_PATTERNS: Array<{ re: RegExp; needsWorkerFrame?: boolean }> = [
+  { re: /Cannot read properties of null \(reading 'id'\)/i, needsWorkerFrame: true },
+  { re: /Could not compile (fragment|vertex) shader/i },
+  { re: /Failed to connect to MetaMask/i },
+  { re: /^(TypeError: )?Load failed$/i },
+];
 
-function isMapLibreWorkerNullMessage(event: Sentry.ErrorEvent): boolean {
+function shouldDrop(event: Sentry.ErrorEvent): boolean {
   const values = event.exception?.values ?? [];
   return values.some((v) => {
     const message = v.value ?? "";
-    if (!MAPLIBRE_WORKER_NULL_MSG.test(message)) return false;
-    const mech = v.mechanism?.type ?? "";
-    return (
-      mech.includes("addEventListener") ||
-      (v.stacktrace?.frames ?? []).some((f) =>
-        (f.function ?? "").toLowerCase().includes("worker")
-      )
-    );
+    for (const { re, needsWorkerFrame } of DROP_PATTERNS) {
+      if (!re.test(message)) continue;
+      if (!needsWorkerFrame) return true;
+      // For the MapLibre null-id case, require a Worker frame so we don't
+      // accidentally swallow an unrelated null-id bug in our own code.
+      const mech = v.mechanism?.type ?? "";
+      if (mech.includes("addEventListener")) return true;
+      const frames = v.stacktrace?.frames ?? [];
+      if (frames.some((f) => (f.function ?? "").toLowerCase().includes("worker"))) {
+        return true;
+      }
+    }
+    return false;
   });
 }
 
@@ -37,16 +53,8 @@ Sentry.init({
       delete event.user.email;
       delete event.user.ip_address;
     }
-    // Route known-upstream MapLibre worker races to their own fingerprint
-    // and downgrade to warning so alerting rules don't escalate on them.
-    if (isMapLibreWorkerNullMessage(event)) {
-      event.level = "warning";
-      event.fingerprint = ["maplibre-actor-null-data"];
-      event.tags = {
-        ...(event.tags ?? {}),
-        upstream_known_bug: "maplibre-actor-null-data",
-        feature: "map",
-      };
+    if (shouldDrop(event)) {
+      return null;
     }
     return event;
   },

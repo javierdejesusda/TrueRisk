@@ -147,15 +147,23 @@ async def run_pipeline():
     # ------------------------------------------------------------------
     succeeded = 0
     failed = 0
+    # Retry transient deadlocks (SQLSTATE 40P01) with exponential backoff.
+    # Postgres aborts one side of a deadlock cycle; retries almost always
+    # succeed once the winning transaction releases its locks. Deadlocks
+    # on weather_daily_summary have been observed when Phase 4 maintenance
+    # or Alembic migrations overlap with Phase 2 SELECTs, so give the
+    # conflicting transaction time to finish.
+    DEADLOCK_BACKOFF_S = (0.5, 1.5, 4.0)
     for ine_code, name in province_codes:
-        # Retry once on transient deadlocks (SQLSTATE 40P01). Postgres aborts
-        # one side of a deadlock cycle; the second attempt almost always
-        # succeeds because the winner has already released its locks.
-        for attempt in (1, 2):
+        last_exc: BaseException | None = None
+        for attempt in range(len(DEADLOCK_BACKOFF_S) + 1):
             try:
                 async with async_session() as province_db:
                     province = await province_db.get(Province, ine_code)
                     if not province:
+                        # Absent province is a data gap, not a retry target;
+                        # clear any prior deadlock so it isn't misreported.
+                        last_exc = None
                         break
                     risk = await compute_province_risk(
                         province_db, ine_code,
@@ -169,22 +177,26 @@ async def run_pipeline():
                     await _check_and_create_alerts(province_db, province, risk)
                     await province_db.commit()
                     succeeded += 1
+                last_exc = None
                 break
             except DBAPIError as e:
-                if _is_deadlock(e) and attempt == 1:
+                last_exc = e
+                if _is_deadlock(e) and attempt < len(DEADLOCK_BACKOFF_S):
+                    delay = DEADLOCK_BACKOFF_S[attempt]
                     logger.warning(
-                        "Deadlock processing %s (%s), retrying once",
-                        name, ine_code,
+                        "Deadlock processing %s (%s), retry %d/%d in %.1fs",
+                        name, ine_code, attempt + 1,
+                        len(DEADLOCK_BACKOFF_S), delay,
                     )
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(delay)
                     continue
-                failed += 1
-                logger.error(f"  Error processing {name} ({ine_code}): {e}")
                 break
             except Exception as e:
-                failed += 1
-                logger.error(f"  Error processing {name} ({ine_code}): {e}")
+                last_exc = e
                 break
+        if last_exc is not None:
+            failed += 1
+            logger.error(f"  Error processing {name} ({ine_code}): {last_exc}")
 
     logger.info(
         "Risk computation: %d/%d provinces succeeded, %d failed",
