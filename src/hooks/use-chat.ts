@@ -119,7 +119,7 @@ export function useChat() {
 
         // Refresh token on 401 and retry once
         if (res.status === 401 && token) {
-          const { getSession } = await import('next-auth/react');
+          const { getSession, signOut } = await import('next-auth/react');
           const fresh = await getSession();
           const newToken = (fresh as Record<string, unknown> | null)
             ?.backendToken as string | undefined;
@@ -127,6 +127,10 @@ export function useChat() {
             token = newToken;
             useAppStore.getState().setBackendToken(newToken);
             res = await doFetch(newToken);
+          } else {
+            // Token refresh failed — session is dead, force re-login
+            signOut({ callbackUrl: '/login' });
+            return;
           }
         }
 

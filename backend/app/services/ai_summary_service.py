@@ -17,7 +17,10 @@ _client: AsyncOpenAI | None = None
 def _get_client() -> AsyncOpenAI:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(api_key=settings.openai_api_key)
+        _client = AsyncOpenAI(
+            api_key=settings.openai_api_key,
+            timeout=30.0,
+        )
     return _client
 
 
@@ -72,23 +75,12 @@ async def stream_weather_summary(
         {"role": "user", "content": user_message},
     ]
 
-    try:
-        async with client.chat.completions.stream(
-            model=settings.openai_model,
-            messages=messages,  # type: ignore[arg-type]
-            max_completion_tokens=800,
-        ) as stream:
-            async for event in stream:
-                if event.type == "content.delta":
-                    yield event.delta
-    except (AttributeError, TypeError):
-        logger.info("Falling back to standard streaming API")
-        response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=messages,  # type: ignore[arg-type]
-            max_completion_tokens=800,
-            stream=True,
-        )
-        async for chunk in response:  # type: ignore[union-attr]
-            if chunk.choices and chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+    response = await client.chat.completions.create(
+        model=settings.openai_model,
+        messages=messages,  # type: ignore[arg-type]
+        max_completion_tokens=800,
+        stream=True,
+    )
+    async for chunk in response:  # type: ignore[union-attr]
+        if chunk.choices and chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content

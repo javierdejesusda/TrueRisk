@@ -116,34 +116,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             ) {
                 return token; // Still fresh
             }
-            // Refresh needed
-            if (token.refreshToken) {
-                try {
-                    const res = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                        body: JSON.stringify({
-                            refresh_token: token.refreshToken,
-                        }),
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        token.backendToken = data.access_token;
-                        token.refreshToken = data.refresh_token;
-                        token.tokenExpiresAt = Date.now() + data.expires_in * 1000;
-                        return token;
-                    }
-                } catch {
-                    // Refresh failed silently
-                }
-                // Refresh failed -- clear tokens so session knows auth is gone
-                token.backendToken = null;
-                token.refreshToken = null;
-                token.tokenExpiresAt = null;
+
+            // Already cleared from a previous failed refresh — nothing to retry
+            if (!token.refreshToken) {
+                return token;
             }
+
+            // Refresh needed
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        refresh_token: token.refreshToken,
+                    }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    token.backendToken = data.access_token;
+                    token.refreshToken = data.refresh_token;
+                    token.tokenExpiresAt = Date.now() + data.expires_in * 1000;
+                    return token;
+                }
+                console.warn('[auth] Token refresh failed:', res.status);
+            } catch (err) {
+                console.warn('[auth] Token refresh error:', err);
+            }
+            // Refresh failed -- clear tokens so useAuth triggers sign-out
+            token.backendToken = null;
+            token.refreshToken = null;
+            token.tokenExpiresAt = null;
 
             return token;
         },
