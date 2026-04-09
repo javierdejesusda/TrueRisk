@@ -186,6 +186,7 @@ async def run_pipeline():
             async with async_session() as forecast_db:
                 from app.services.forecast_service import compute_all_forecasts
                 await compute_all_forecasts(forecast_db)
+                await forecast_db.commit()
                 logger.info("Forecast computation complete")
         except Exception:
             logger.exception("Forecast computation failed")

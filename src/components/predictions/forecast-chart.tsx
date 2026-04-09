@@ -16,6 +16,8 @@ const HAZARD_COLORS: Record<string, string> = {
   wildfire: '#f97316',
   heatwave: '#ef4444',
   drought: '#eab308',
+  coldwave: '#06b6d4',
+  windstorm: '#8b5cf6',
 };
 
 const HORIZON_LABELS: Record<number, string> = {
@@ -43,6 +45,8 @@ function HazardForecastMini({ hazard, horizons, color }: {
     wildfire: tHaz('wildfire'),
     heatwave: tHaz('heatwave'),
     drought: tHaz('drought'),
+    coldwave: tHaz('coldwave'),
+    windstorm: tHaz('windstorm'),
   };
 
   const chartData = useMemo(() => {
