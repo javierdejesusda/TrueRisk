@@ -202,7 +202,12 @@ export function RotatingEarth({ className, onIntroComplete }: RotatingEarthProps
       renderLand(geoDataRef.current);
       startAfterLoad();
     } else {
-      d3.json<Topology>('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then((data) => {
+      const loadTopology = async () => {
+        const remote = await d3.json<Topology>('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').catch(() => null);
+        if (remote) return remote;
+        return d3.json<Topology>('/geo/countries-110m.json').catch(() => null);
+      };
+      loadTopology().then((data) => {
         if (!data) return;
         const land = topojson.feature(data, data.objects.countries) as FeatureCollection<GeometryObject, GeoJsonProperties>;
         geoDataRef.current = land;
