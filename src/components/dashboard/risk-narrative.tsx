@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNarrative } from '@/hooks/use-narrative';
 import { useAppStore } from '@/store/app-store';
+import { isFeatureDisabled } from '@/lib/feature-flags';
+import { MaintenanceCard } from '@/components/ui/maintenance-card';
 
 function formatTimestamp(iso: string): string {
   try {
@@ -21,8 +23,22 @@ function formatTimestamp(iso: string): string {
 
 export function RiskNarrative() {
   const t = useTranslations('Narrative');
+
+  if (isFeatureDisabled('narrative')) {
+    return <MaintenanceCard feature={t('morningBriefing')} />;
+  }
+
+  return <RiskNarrativeInner />;
+}
+
+function RiskNarrativeInner() {
+  const t = useTranslations('Narrative');
   const locale = useAppStore((s) => s.locale);
-  const { narrative, isLoading } = useNarrative();
+  const { narrative, isLoading, disabled } = useNarrative();
+
+  if (disabled) {
+    return <MaintenanceCard feature={t('morningBriefing')} />;
+  }
 
   if (isLoading) {
     return (

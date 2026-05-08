@@ -1737,5 +1737,10 @@
     "interactiveTitle": "Explorador interactivo de la API",
     "interactiveDesc": "Prueba los endpoints directamente en el navegador con la documentacion Swagger UI autogenerada.",
     "interactiveButton": "Abrir Swagger UI"
+  },
+  "maintenance": {
+    "title": "Función en pausa",
+    "body": "TrueRisk está en modo de mantenimiento mínimo y esta función está desactivada temporalmente. El resto del sitio sigue funcionando con normalidad.",
+    "featureBody": "{feature} está desactivada mientras TrueRisk está en modo de mantenimiento mínimo."
   }
 }

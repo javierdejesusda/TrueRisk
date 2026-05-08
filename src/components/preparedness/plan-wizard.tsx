@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Check, Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ import { useEmergencyPlan } from '@/hooks/use-emergency-plan';
 import type { HouseholdMember, EmergencyContact, MeetingPoint } from '@/hooks/use-emergency-plan';
 import { MeetingPointPicker } from './meeting-point-picker';
 import { KitBuilder } from './kit-builder';
+import { isFeatureDisabled } from '@/lib/feature-flags';
+import { MaintenanceCard } from '@/components/ui/maintenance-card';
 
 const STEPS = [
   { key: 'household', label: 'Household' },
@@ -21,7 +24,18 @@ const STEPS = [
 ];
 
 export function PlanWizard() {
-  const { plan, isLoading, error, updatePlan, kitContent, isStreamingKit, streamKitRecs } = useEmergencyPlan();
+  const t = useTranslations('Preparedness');
+
+  if (isFeatureDisabled('emergency_plan')) {
+    return <MaintenanceCard feature={t('title')} />;
+  }
+
+  return <PlanWizardInner />;
+}
+
+function PlanWizardInner() {
+  const tMaintenance = useTranslations('Preparedness');
+  const { plan, isLoading, error, disabled, updatePlan, kitContent, isStreamingKit, streamKitRecs } = useEmergencyPlan();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -64,6 +78,10 @@ export function PlanWizard() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (disabled) {
+    return <MaintenanceCard feature={tMaintenance('title')} />;
   }
 
   if (isLoading) {

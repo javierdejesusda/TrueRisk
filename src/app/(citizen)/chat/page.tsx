@@ -9,8 +9,24 @@ import { ChatMessages } from '@/components/chat/chat-messages';
 import { ChatInput } from '@/components/chat/chat-input';
 import { ChatUsageBar } from '@/components/chat/chat-usage-bar';
 import { RotateCcw } from 'lucide-react';
+import { isFeatureDisabled } from '@/lib/feature-flags';
+import { MaintenanceCard } from '@/components/ui/maintenance-card';
 
 export default function ChatPage() {
+  const t = useTranslations('Chat');
+
+  if (isFeatureDisabled('chat')) {
+    return (
+      <div className="h-full pt-20 flex items-center justify-center px-4">
+        <MaintenanceCard feature={t('title')} className="max-w-lg w-full" />
+      </div>
+    );
+  }
+
+  return <ChatPageInner />;
+}
+
+function ChatPageInner() {
   const t = useTranslations('Chat');
   const messages = useChatStore((s) => s.messages);
   const { fetchUsage, startNewConversation } = useChat();

@@ -1739,5 +1739,10 @@
     "interactiveTitle": "Interactive API Explorer",
     "interactiveDesc": "Try out endpoints directly in the browser with the auto-generated Swagger UI documentation.",
     "interactiveButton": "Open Swagger UI"
+  },
+  "maintenance": {
+    "title": "Feature paused",
+    "body": "TrueRisk is in low-maintenance mode and this feature is currently disabled. The rest of the site continues to work normally.",
+    "featureBody": "{feature} is currently disabled while TrueRisk is in low-maintenance mode."
   }
 }

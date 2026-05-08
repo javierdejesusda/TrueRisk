@@ -7,6 +7,7 @@ services:
     environment:
       NODE_OPTIONS: "--max-old-space-size=300"
       NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: "0.01"
+      NEXT_PUBLIC_DISABLED_FEATURES: "ai_summary,chat,suggestions,narrative,emergency_plan"
     deploy:
       resources:
         limits:
