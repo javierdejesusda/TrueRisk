@@ -62,6 +62,7 @@ yarn-error.log*
 .env*
 !.env.example
 !.env.production.example
+!.env.production.nano.example
 
 # vercel
 .vercel
