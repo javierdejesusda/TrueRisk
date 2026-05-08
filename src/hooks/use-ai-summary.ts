@@ -7,6 +7,7 @@ export function useAiSummary() {
   const [content, setContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disabled, setDisabled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const cancel = useCallback(() => {
@@ -36,6 +37,12 @@ export function useAiSummary() {
           `/api/ai-summary/stream/${provinceCode}?locale=${locale}`,
           { headers, signal: controller.signal },
         );
+
+        if (res.status === 503) {
+          setDisabled(true);
+          setIsStreaming(false);
+          return;
+        }
 
         if (!res.ok) {
           const text = await res.text().catch(() => '');
@@ -96,5 +103,5 @@ export function useAiSummary() {
     [cancel],
   );
 
-  return { content, isStreaming, error, startStream, cancel };
+  return { content, isStreaming, error, disabled, startStream, cancel };
 }

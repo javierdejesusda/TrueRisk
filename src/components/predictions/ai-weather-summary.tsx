@@ -4,12 +4,28 @@ import { Streamdown } from 'streamdown';
 import { useAiSummary } from '@/hooks/use-ai-summary';
 import { useAppStore } from '@/store/app-store';
 import { useTranslations } from 'next-intl';
+import { isFeatureDisabled } from '@/lib/feature-flags';
+import { MaintenanceCard } from '@/components/ui/maintenance-card';
 
 export function AiWeatherSummary() {
   const t = useTranslations('AiSummary');
+
+  if (isFeatureDisabled('ai_summary')) {
+    return <MaintenanceCard feature={t('title')} />;
+  }
+
+  return <AiWeatherSummaryInner />;
+}
+
+function AiWeatherSummaryInner() {
+  const t = useTranslations('AiSummary');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const locale = useAppStore((s) => s.locale);
-  const { content, isStreaming, error, startStream } = useAiSummary();
+  const { content, isStreaming, error, disabled, startStream } = useAiSummary();
+
+  if (disabled) {
+    return <MaintenanceCard feature={t('title')} />;
+  }
 
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6">

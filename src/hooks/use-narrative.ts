@@ -17,6 +17,7 @@ export function useNarrative(provinceCode?: string) {
   const [narrative, setNarrative] = useState<NarrativeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [disabled, setDisabled] = useState(false);
 
   const code = provinceCode ?? storeCode;
 
@@ -26,6 +27,12 @@ export function useNarrative(provinceCode?: string) {
       setIsLoading(true);
       setError(null);
       const res = await fetch(`/api/risk/${code}/narrative`);
+      if (res.status === 503) {
+        setDisabled(true);
+        setNarrative(null);
+        setError(null);
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as NarrativeData;
       setNarrative(data);
@@ -40,5 +47,5 @@ export function useNarrative(provinceCode?: string) {
     if (code) fetchData();
   }, [code, fetchData]);
 
-  return { narrative, isLoading, error, refresh: fetchData };
+  return { narrative, isLoading, error, disabled, refresh: fetchData };
 }

@@ -7,14 +7,30 @@ import { useAuth } from '@/hooks/use-auth';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { isFeatureDisabled } from '@/lib/feature-flags';
+import { MaintenanceCard } from '@/components/ui/maintenance-card';
 
 export function PersonalizedSuggestions() {
+  const t = useTranslations('Suggestions');
+
+  if (isFeatureDisabled('suggestions')) {
+    return <MaintenanceCard feature={t('title')} />;
+  }
+
+  return <PersonalizedSuggestionsInner />;
+}
+
+function PersonalizedSuggestionsInner() {
   const t = useTranslations('Suggestions');
   const provinceCode = useAppStore((s) => s.provinceCode);
   const locale = useAppStore((s) => s.locale);
   const { isAuthenticated } = useAuth();
-  const { content, isStreaming, error, startStream } =
+  const { content, isStreaming, error, disabled, startStream } =
     usePersonalizedSuggestions();
+
+  if (disabled) {
+    return <MaintenanceCard feature={t('title')} />;
+  }
 
   return (
     <Card variant="glass" padding="lg">

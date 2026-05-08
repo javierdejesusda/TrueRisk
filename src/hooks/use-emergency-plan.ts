@@ -44,6 +44,7 @@ export function useEmergencyPlan() {
   const [plan, setPlan] = useState<EmergencyPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [disabled, setDisabled] = useState(false);
 
   // Kit recommendations streaming
   const [kitContent, setKitContent] = useState('');
@@ -65,6 +66,11 @@ export function useEmergencyPlan() {
       }
       if (res.status === 404) {
         // No plan yet — start fresh
+        setIsLoading(false);
+        return;
+      }
+      if (res.status === 503) {
+        setDisabled(true);
         setIsLoading(false);
         return;
       }
@@ -172,5 +178,5 @@ export function useEmergencyPlan() {
     }
   }, []);
 
-  return { plan, isLoading, error, updatePlan, fetchPlan, kitContent, isStreamingKit, streamKitRecs };
+  return { plan, isLoading, error, disabled, updatePlan, fetchPlan, kitContent, isStreamingKit, streamKitRecs };
 }

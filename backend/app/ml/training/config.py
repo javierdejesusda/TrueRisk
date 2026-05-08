@@ -1,5 +1,6 @@
 """Training configuration: date ranges, API params, hyperparameters, label thresholds."""
 
+import os
 from pathlib import Path
 
 # Date range (5 years of daily data)
@@ -128,4 +129,4 @@ GNN_LR = 5e-4
 GNN_EPOCHS = 50
 
 # Feature flag
-ENABLE_TFT_FORECASTS = True
+ENABLE_TFT_FORECASTS = os.getenv("ENABLE_TFT_FORECASTS", "true").lower() in ("1", "true", "yes")
