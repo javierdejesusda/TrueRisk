@@ -1,0 +1,65 @@
+# Overlay applied on top of docker-compose.prod.yml on gp.nano hosts (1 vCPU /
+# 2 GB RAM / 40 GB). Usage:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.nano.yml up -d
+# Revert: deploy with only -f docker-compose.prod.yml.
+services:
+  frontend:
+    environment:
+      NODE_OPTIONS: "--max-old-space-size=384"
+      NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: "0.01"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.6"
+          memory: 384M
+        reservations:
+          cpus: "0.1"
+          memory: 192M
+
+  backend:
+    environment:
+      WORKERS: "1"
+      ENABLE_SCHEDULER: "false"
+      ENABLE_TFT_FORECASTS: "false"
+      SENTRY_TRACES_SAMPLE_RATE: "0.01"
+      # OPENAI_API_KEY intentionally left unset on nano — chat returns 503.
+    deploy:
+      resources:
+        limits:
+          cpus: "0.7"
+          memory: 768M
+        reservations:
+          cpus: "0.2"
+          memory: 384M
+
+  db:
+    command: >
+      postgres
+      -c shared_buffers=96MB
+      -c effective_cache_size=384MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=48MB
+      -c max_connections=20
+      -c wal_buffers=2MB
+      -c synchronous_commit=off
+    deploy:
+      resources:
+        limits:
+          cpus: "0.4"
+          memory: 320M
+        reservations:
+          cpus: "0.1"
+          memory: 160M
+
+  migrate:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # Disable backup-cron on nano. Manual on-demand backup still works via the
+  # `backup` profile if ever needed:
+  #   docker compose -f docker-compose.prod.yml --profile backup run --rm backup
+  backup-cron:
+    profiles: ["disabled"]
