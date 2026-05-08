@@ -57,7 +57,7 @@ def _sentry_before_send(event, hint):
 if settings.sentry_dsn:
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
-        traces_sample_rate=0.1,
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
         environment="production" if "truerisk.cloud" in settings.backend_cors_origins else "development",
         before_send=_sentry_before_send,
     )
