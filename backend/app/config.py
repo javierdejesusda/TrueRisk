@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./dev.db"
     demo_mode: bool = False
+    # gp.nano kill-switches. Default True so existing prod is untouched. Set
+    # False on resource-constrained hosts to skip TFT model loading and the
+    # APScheduler background loop.
+    enable_scheduler: bool = True
+    enable_tft_forecasts: bool = True
     aemet_api_key: str = ""
     backend_cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001", "https://truerisk.cloud"]
     vapid_private_key: str = ""
