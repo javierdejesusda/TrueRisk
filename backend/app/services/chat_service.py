@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator
 
 import openai
+from fastapi import HTTPException
 from openai import AsyncOpenAI
 from sqlalchemy import func as sa_func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -317,6 +318,9 @@ async def stream_chat_response(
     db: AsyncSession,
 ) -> AsyncIterator[dict]:
     """Stream a chat response. Yields SSE event dicts ``{"event": ..., "data": ...}``."""
+
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="Chat is currently unavailable")
 
     # -- 1. Validate input --------------------------------------------------
     is_valid, reason = validate_input(message)
