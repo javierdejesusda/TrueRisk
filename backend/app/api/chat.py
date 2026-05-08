@@ -5,12 +5,13 @@ from __future__ import annotations
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
 from app.api.deps import get_current_user, get_db
+from app.config import settings
 from app.models.chat import ChatMessage
 from app.models.user import User
 from app.rate_limit import limiter
@@ -32,6 +33,8 @@ async def send_message(
     user: User = Depends(get_current_user),
 ):
     """Stream a chat response via SSE. Rate limited to 10/minute per real IP."""
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="Chat is currently unavailable")
 
     async def event_generator():
         try:
