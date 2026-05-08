@@ -34,7 +34,7 @@ export function PlanWizard() {
 }
 
 function PlanWizardInner() {
-  const tMaintenance = useTranslations('Preparedness');
+  const tPreparedness = useTranslations('Preparedness');
   const { plan, isLoading, error, disabled, updatePlan, kitContent, isStreamingKit, streamKitRecs } = useEmergencyPlan();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -81,7 +81,7 @@ function PlanWizardInner() {
   }
 
   if (disabled) {
-    return <MaintenanceCard feature={tMaintenance('title')} />;
+    return <MaintenanceCard feature={tPreparedness('title')} />;
   }
 
   if (isLoading) {

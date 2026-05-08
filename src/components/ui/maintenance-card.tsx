@@ -13,13 +13,12 @@ export function MaintenanceCard({ feature, className = '' }: MaintenanceCardProp
 
   return (
     <div
-      role="status"
+      role="region"
+      aria-label={t('title')}
       className={[
         'relative overflow-hidden rounded-2xl',
-        'border border-[var(--color-border-hover)]',
-        'bg-[var(--color-bg-card)]',
+        'glass',
         'p-6',
-        'shadow-[0_1px_0_rgba(255,255,255,0.04)_inset,0_8px_24px_-12px_rgba(0,0,0,0.5)]',
         className,
       ]
         .filter(Boolean)
