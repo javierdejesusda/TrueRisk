@@ -250,9 +250,18 @@ async def lifespan(app: FastAPI):
         except OSError:
             pass  # Non-fatal: trainer_kwargs default_root_dir handles this
 
-    # Create any missing tables on startup (idempotent — skips existing tables)
+    # Create any missing tables on startup (idempotent — skips existing tables).
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Schema-sync runs on a separate connection + transaction so the worker
+    # that blocks on the advisory lock unblocks into a *fresh* tx — its
+    # SQLAlchemy inspector then reads the latest committed catalog state
+    # rather than a cache populated by ``create_all`` before the holder
+    # committed. Sharing a tx with create_all caused the second worker to
+    # see TIMESTAMP columns, re-issue every ALTER, and deadlock against the
+    # holder's now-running scheduler.
+    async with engine.begin() as conn:
         await conn.run_sync(_run_schema_sync)
 
     # Seed province data on all database backends
