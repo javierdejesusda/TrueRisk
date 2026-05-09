@@ -58,6 +58,55 @@ def test_run_schema_sync_skips_lock_on_non_postgres(monkeypatch):
     )
 
 
+def test_fix_timestamp_columns_skips_already_tz_columns(monkeypatch):
+    """``_fix_timestamp_columns`` must detect columns that are already
+    ``TIMESTAMPTZ`` and skip the ALTER. The pre-fix code stringified the
+    reflected type (``str(TIMESTAMP(timezone=True))`` → ``"TIMESTAMP"``,
+    with no timezone hint), so the comparison ``"WITH TIME ZONE" in db_type``
+    was always False and every worker boot re-ALTERed every column. With
+    multiple gunicorn workers those concurrent no-op ALTERs deadlocked
+    against each other and the scheduler, producing the cold-start
+    crashloop.
+    """
+    import sqlalchemy as sa
+    from sqlalchemy import DateTime, TIMESTAMP
+
+    from app.main import Base, _fix_timestamp_columns
+
+    fake_inspector = MagicMock()
+    fake_inspector.has_table.return_value = True
+
+    def fake_get_columns(table_name):
+        for table in Base.metadata.sorted_tables:
+            if table.name != table_name:
+                continue
+            return [
+                {"name": col.name, "type": TIMESTAMP(timezone=True)}
+                for col in table.columns
+                if isinstance(col.type, DateTime) and col.type.timezone
+            ]
+        return []
+
+    fake_inspector.get_columns.side_effect = fake_get_columns
+    monkeypatch.setattr(sa, "inspect", lambda *args, **kwargs: fake_inspector)
+
+    fake_conn = MagicMock()
+    fake_conn.dialect.name = "postgresql"
+
+    _fix_timestamp_columns(fake_conn)
+
+    alter_calls = [
+        c
+        for c in fake_conn.execute.call_args_list
+        if "ALTER TABLE" in str(c.args[0])
+    ]
+    assert not alter_calls, (
+        f"_fix_timestamp_columns issued {len(alter_calls)} ALTER TABLE "
+        f"statements against columns that are already TIMESTAMPTZ. "
+        f"Regression of the str(type)-based detection bug."
+    )
+
+
 @pytest.mark.asyncio
 async def test_run_schema_sync_is_idempotent():
     """Running schema_sync twice on an in-sync schema must be a clean no-op.

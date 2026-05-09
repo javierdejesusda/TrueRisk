@@ -139,8 +139,14 @@ def _fix_timestamp_columns(conn):
             db_col = db_columns.get(col.name)
             if not db_col:
                 continue
-            db_type = str(db_col["type"]).upper()
-            if "WITH TIME ZONE" in db_type or db_type == "TIMESTAMPTZ":
+            db_col_type = db_col["type"]
+            # Use the structured ``timezone`` attribute, not ``str(type)``:
+            # ``str(TIMESTAMP(timezone=True))`` returns ``"TIMESTAMP"`` (the
+            # generic SQL name with no timezone hint), so a string check would
+            # never detect already-converted columns and we'd re-issue every
+            # ALTER on every worker boot — which is what produced the
+            # cold-start deadlock storms.
+            if isinstance(db_col_type, DateTime) and db_col_type.timezone:
                 continue
             log.warning(
                 "Upgrading %s.%s from TIMESTAMP to TIMESTAMPTZ",
