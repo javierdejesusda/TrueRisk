@@ -159,29 +159,28 @@ _SCHEMA_SYNC_LOCK_ID = 8675309
 
 
 def _run_schema_sync(conn):
-    """Run all schema-sync passes under a single advisory lock.
+    """Run all schema-sync passes under a blocking advisory lock.
 
     Multiple gunicorn workers start simultaneously; each one calls this on
-    lifespan startup. Without a lock, two workers running ``_sync_missing_columns``
-    or ``_fix_encrypted_column_sizes`` at once can deadlock — or worse, deadlock
-    with the scheduler's concurrent SELECTs on the same tables (seen in Sentry
-    as ``DeadlockDetectedError`` on ``weather_daily_summary``).
+    lifespan startup. ``pg_advisory_xact_lock`` blocks until the lock is
+    available, then releases it when this transaction commits. This is the
+    blocking variant on purpose: a non-blocking try-lock would let the
+    losing worker exit schema-sync immediately, fall through the rest of
+    lifespan, and start its in-process apscheduler concurrently with the
+    holder's still-open ALTER TABLE transaction. Cross-process DDL/DML lock
+    conflicts then surface as ``asyncpg.exceptions.DeadlockDetectedError``
+    on tables like ``weather_daily_summary`` and crashloop the worker.
 
-    ``pg_try_advisory_xact_lock`` returns False if another session already
-    holds the lock; the lock is released automatically at transaction end.
+    The DDL helpers below are idempotent, so the second worker (which sees
+    the schema already in sync once it acquires the lock) is a fast no-op.
     """
     from sqlalchemy import text
 
-    log = logging.getLogger("truerisk.schema_sync")
-
     if conn.dialect.name == "postgresql":
-        got_lock = conn.execute(
-            text("SELECT pg_try_advisory_xact_lock(:lock_id)"),
+        conn.execute(
+            text("SELECT pg_advisory_xact_lock(:lock_id)"),
             {"lock_id": _SCHEMA_SYNC_LOCK_ID},
-        ).scalar()
-        if not got_lock:
-            log.info("Another worker holds the schema-sync lock — skipping")
-            return
+        )
 
     _sync_missing_columns(conn)
     _fix_timestamp_columns(conn)
