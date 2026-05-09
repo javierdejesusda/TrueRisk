@@ -137,7 +137,7 @@ services:
     volumes:
       - ./backend/scripts/backup.sh:/backup.sh:ro
       - backups:/backups
-    entrypoint: ["/bin/sh", "-c", "chmod +x /backup.sh && /backup.sh"]
+    entrypoint: ["/bin/sh", "/backup.sh"]
     depends_on:
       db:
         condition: service_healthy
@@ -159,7 +159,7 @@ services:
     volumes:
       - ./backend/scripts/backup.sh:/backup.sh:ro
       - backups:/backups
-    entrypoint: ["/bin/sh", "-c", "chmod +x /backup.sh && echo '0 3 * * * /backup.sh >> /var/log/backup.log 2>&1' | crontab - && crond -f -l 2"]
+    entrypoint: ["/bin/sh", "-c", "echo '0 3 * * * /backup.sh >> /var/log/backup.log 2>&1' | crontab - && crond -f -l 2"]
     depends_on:
       db:
         condition: service_healthy

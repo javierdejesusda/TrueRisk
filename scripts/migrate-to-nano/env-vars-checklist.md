@@ -1,9 +1,16 @@
-# gp.nano env-var carry-over checklist
+# gp.nano / gp.micro env-var carry-over checklist
 
-When migrating from gp.starter to gp.nano, the source of truth for secrets is
-**the gp.starter Dokploy panel**, not the local `.env.production.example`
-file. Open both Dokploy panels side by side and copy values per the table
-below.
+> **Migration update — 2026-05-08:** The 2026-05-08 migration target is **gp.micro**
+> (4 GB RAM) running in **full-features mode**, not gp.nano. In full-features mode
+> the "Change for nano (override starter values)" and "Omit on nano (intentionally
+> empty)" sections below **do not apply** — every value, including `OPENAI_API_KEY`,
+> is carried over verbatim from the gp.starter Dokploy panel. The conservative-mode
+> sections are preserved here as the runbook for any future downsize to gp.nano or
+> for a temporary degradation to relieve memory pressure.
+
+When migrating from gp.starter to a smaller plan, the source of truth for secrets is
+**the gp.starter Dokploy panel**, not the local `.env.production.example` file. Open
+both Dokploy panels side by side and copy values per the tables below.
 
 ## Critical to carry exactly (data integrity)
 
@@ -26,9 +33,12 @@ below.
 | `RESEND_API_KEY` | Email sending. Carry if you want emails to keep working. |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID`, `TWILIO_FROM_PHONE` | SMS. Same as above. |
 
-## Change for nano (override starter values)
+## Change for nano (conservative-mode only — skip on gp.micro full-features)
 
-These come from `.env.production.nano.example`:
+These come from `.env.production.nano.example`. **Apply only when targeting gp.nano
+or another sub-2-GB host with the `docker-compose.nano.yml` overlay active.** On
+gp.micro full-features, leave these unset so the upstream defaults (or the values
+already configured on gp.starter) apply.
 
 ```
 WORKERS=1
@@ -39,29 +49,42 @@ NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=0.01
 NEXT_PUBLIC_DISABLED_FEATURES=ai_summary,chat,suggestions,narrative,emergency_plan
 ```
 
-## Omit on nano (intentionally empty)
+## Omit on nano (conservative-mode only)
 
 | Var | Effect |
 | --- | --- |
-| `OPENAI_API_KEY` | Leave empty. Backend returns HTTP 503 for AI summary, chat, suggestions, narrative, emergency-plan. Frontend renders the maintenance card. |
+| `OPENAI_API_KEY` | **Conservative-mode only.** Leave empty so backend returns HTTP 503 for AI summary, chat, suggestions, narrative, and emergency-plan; frontend renders the maintenance card. **In full-features mode, carry it over verbatim** from gp.starter. |
 
 ## Workflow
 
+### Full-features mode (gp.micro, 2026-05-08 migration)
+
 1. In gp.starter Dokploy: open the compose project → environment variables.
-2. Click reveal/copy each value listed above (do NOT screenshot — values include secrets).
-3. In a temporary local file (`~/Desktop/nano-envs.txt`, in your password
-   manager, anything that's not committed), paste the carried values.
-4. Append the nano overrides from `.env.production.nano.example`.
-5. In gp.nano Dokploy: paste the resulting block into the env block of the
-   compose project, save, redeploy.
-6. Delete the temporary local file once the gp.nano stack is healthy.
+2. Click reveal/copy each value (do NOT screenshot — values include secrets).
+3. In a temporary local file (in your password manager, not committed), paste **every**
+   value, including `OPENAI_API_KEY`. Skip the "Change for nano" overrides above.
+4. In the new Dokploy panel: paste the block into the env block of the compose project,
+   save, redeploy.
+5. Delete the temporary local file once the new stack is healthy.
+
+### Conservative-mode (gp.nano or temporary degradation)
+
+1. Steps 1–2 as above.
+2. In a temporary local file, paste the carry-over values **except** `OPENAI_API_KEY`
+   (leave it empty).
+3. Append the nano overrides from `.env.production.nano.example`.
+4. In Dokploy: paste the resulting block, save, redeploy.
+5. Delete the temporary local file once the stack is healthy.
 
 ## Sanity check before cutover
 
-After the gp.nano stack is up but before flipping DNS:
+After the new stack is up but before flipping DNS:
 
 ```
 bash scripts/migrate-to-nano/verify-nano.sh https://<dokploy-preview-url>
 ```
 
-All four checks should pass.
+- **Conservative-mode:** all four checks should pass as-written.
+- **Full-features mode:** the chat-503 check will fail (chat returns 200). Either skip
+  it, temporarily set `ENABLE_CHAT=false` in Dokploy to assert the kill-switch path and
+  then revert, or run a manual chat `curl` expecting 200.
