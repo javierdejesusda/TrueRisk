@@ -1,10 +1,34 @@
-'use client';
-
-import { useTranslations } from 'next-intl';
+import type { Metadata } from 'next';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { LegalPageShell } from '@/components/legal/legal-page-shell';
 
-export default function AccessibilityPage() {
-  const t = useTranslations('Legal.accessibility');
+const SITE_URL = 'https://truerisk.cloud';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: 'seo.accessibility' });
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: {
+      canonical: `${SITE_URL}/${locale}/accessibility`,
+      languages: {
+        es: `${SITE_URL}/es/accessibility`,
+        en: `${SITE_URL}/en/accessibility`,
+        'x-default': `${SITE_URL}/es/accessibility`,
+      },
+    },
+    openGraph: {
+      title: t('title'),
+      description: t('description'),
+      url: `${SITE_URL}/${locale}/accessibility`,
+      type: 'article',
+    },
+  };
+}
+
+export default async function AccessibilityPage() {
+  const t = await getTranslations('Legal.accessibility');
 
   const sections = [
     { id: 'commitment', label: t('commitment.title') },

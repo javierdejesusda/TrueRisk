@@ -1,10 +1,6 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { LanguageSwitcher } from '@/components/layout/language-switcher';
-
-export const metadata = {
-  robots: 'index, follow',
-};
 
 const legalLinks = [
   { href: '/privacy', key: 'privacy' },

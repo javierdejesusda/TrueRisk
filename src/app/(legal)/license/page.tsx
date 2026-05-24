@@ -1,10 +1,34 @@
-'use client';
-
-import { useTranslations } from 'next-intl';
+import type { Metadata } from 'next';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { LegalPageShell } from '@/components/legal/legal-page-shell';
 
-export default function LicensePage() {
-  const t = useTranslations('Legal.license');
+const SITE_URL = 'https://truerisk.cloud';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: 'seo.license' });
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: {
+      canonical: `${SITE_URL}/${locale}/license`,
+      languages: {
+        es: `${SITE_URL}/es/license`,
+        en: `${SITE_URL}/en/license`,
+        'x-default': `${SITE_URL}/es/license`,
+      },
+    },
+    openGraph: {
+      title: t('title'),
+      description: t('description'),
+      url: `${SITE_URL}/${locale}/license`,
+      type: 'article',
+    },
+  };
+}
+
+export default async function LicensePage() {
+  const t = await getTranslations('Legal.license');
 
   const sections = [
     { id: 'mit-license', label: t('mitTitle') },
