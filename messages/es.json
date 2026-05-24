@@ -29,18 +29,10 @@
     "chat": "Chat"
   },
   "Home": {
-    "subtitle": "Inteligencia de riesgo climático multi-amenaza para España",
-    "description": "Alertas meteorológicas en tiempo real, modelos de IA y orientación de emergencia personalizada para las 52 provincias españolas.",
+    "subtitle": "Plataforma de Gestion de Emergencias Climaticas",
+    "description": "Inteligencia de riesgo multi-peligro con monitorizacion meteorologica en tiempo real y orientacion de emergencia personalizada para ciudadanos.",
     "enterButton": "Entrar a TrueRisk",
-    "learnMore": "Saber más",
-    "h1Brand": "TrueRisk",
-    "h1Suffix": "Plataforma de Riesgo Climático",
-    "valueProps": {
-      "monitoring": "Monitorización meteorológica AEMET en tiempo real",
-      "models": "7 modelos de machine learning especializados",
-      "hazards": "Inundaciones, DANA, incendios, sequía, olas de calor",
-      "coverage": "Cobertura completa de las 52 provincias de España"
-    }
+    "learnMore": "Saber mas"
   },
   "Landing": {
     "featuresTitle": "Que hace TrueRisk",
@@ -1750,60 +1742,5 @@
     "title": "Función en pausa",
     "body": "TrueRisk está en modo de mantenimiento mínimo y esta función está desactivada temporalmente. El resto del sitio sigue funcionando con normalidad.",
     "featureBody": "{feature} está desactivada mientras TrueRisk está en modo de mantenimiento mínimo."
-  },
-  "seo": {
-    "siteName": "TrueRisk",
-    "tagline": "Inteligencia de riesgo climático multi-amenaza para España",
-    "home": {
-      "title": "TrueRisk: Inteligencia de Riesgo Climático Multi-Amenaza para España",
-      "description": "Plataforma de inteligencia de riesgo climático para España. Alertas meteorológicas en tiempo real e IA para inundaciones, DANA, incendios, sequía y olas de calor en las 52 provincias.",
-      "ogTitle": "TrueRisk: Riesgo Climático Multi-Amenaza España",
-      "ogDescription": "Alertas climáticas en tiempo real, modelos de IA y monitorización AEMET para las 52 provincias españolas."
-    },
-    "about": {
-      "title": "Sobre TrueRisk: misión, equipo y tecnología",
-      "description": "Conoce la misión, el equipo y la tecnología detrás de TrueRisk, la plataforma de inteligencia de riesgo climático multi-amenaza para España basada en datos AEMET y modelos de machine learning."
-    },
-    "docs": {
-      "title": "Documentación de la API de TrueRisk",
-      "description": "Documentación técnica y referencia REST de la API de TrueRisk para integrar inteligencia de riesgo climático, alertas multi-amenaza y datos meteorológicos en tus sistemas."
-    },
-    "privacy": {
-      "title": "Política de privacidad",
-      "description": "Cómo TrueRisk recopila, trata y protege tus datos personales conforme al RGPD, la LOPDGDD y la normativa española de protección de datos."
-    },
-    "terms": {
-      "title": "Términos y condiciones de uso",
-      "description": "Términos y condiciones de uso de la plataforma TrueRisk: derechos, obligaciones, limitaciones de responsabilidad y propiedad intelectual."
-    },
-    "cookies": {
-      "title": "Política de cookies",
-      "description": "Qué cookies utiliza TrueRisk, para qué sirven y cómo gestionarlas conforme al RGPD y la Ley de Servicios de la Sociedad de la Información."
-    },
-    "accessibility": {
-      "title": "Declaración de accesibilidad",
-      "description": "Compromiso de TrueRisk con la accesibilidad web conforme a WCAG 2.1 AA, EN 301 549 y el Real Decreto 1112/2018 de accesibilidad de sitios web del sector público."
-    },
-    "license": {
-      "title": "Licencia de software",
-      "description": "Información sobre la licencia MIT de TrueRisk y las licencias de los componentes open source que utiliza la plataforma."
-    },
-    "keywords": [
-      "riesgo climático España",
-      "inteligencia de riesgo",
-      "multi-amenaza",
-      "alertas meteorológicas tiempo real",
-      "AEMET",
-      "DANA España",
-      "predicción inundaciones",
-      "riesgo incendios forestales",
-      "sequía España",
-      "olas de calor",
-      "machine learning meteorología",
-      "riesgo por provincia",
-      "52 provincias España",
-      "plataforma de riesgo natural",
-      "Protección Civil"
-    ]
   }
 }

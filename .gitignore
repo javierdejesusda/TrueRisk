@@ -70,3 +70,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# docs - keep technical report PDF public, ignore everything else
+docs/superpowers/
+docs/technical-report/*
+!docs/technical-report/main.pdf
+
+# AI / Claude artifacts
+CLAUDE.md
+.claude/
+.agents/
+.superpowers/
+skills-lock.json

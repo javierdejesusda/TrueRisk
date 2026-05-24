@@ -29,18 +29,10 @@
     "chat": "Chat"
   },
   "Home": {
-    "subtitle": "Multi-hazard climate risk intelligence for Spain",
-    "description": "Real-time weather alerts, AI-powered risk models, and personalised emergency guidance for all 52 Spanish provinces.",
+    "subtitle": "Climate Emergency Management Platform",
+    "description": "Multi-hazard risk intelligence with real-time weather monitoring and personalised emergency guidance for citizens.",
     "enterButton": "Enter TrueRisk",
-    "learnMore": "Learn More",
-    "h1Brand": "TrueRisk",
-    "h1Suffix": "Climate Risk Platform",
-    "valueProps": {
-      "monitoring": "Real-time AEMET weather monitoring",
-      "models": "7 specialised machine learning models",
-      "hazards": "Floods, DANA, wildfires, drought, heatwaves",
-      "coverage": "Full coverage of all 52 Spanish provinces"
-    }
+    "learnMore": "Learn More"
   },
   "Landing": {
     "featuresTitle": "What TrueRisk Does",
@@ -1752,60 +1744,5 @@
     "title": "Feature paused",
     "body": "TrueRisk is in low-maintenance mode and this feature is currently disabled. The rest of the site continues to work normally.",
     "featureBody": "{feature} is currently disabled while TrueRisk is in low-maintenance mode."
-  },
-  "seo": {
-    "siteName": "TrueRisk",
-    "tagline": "Multi-hazard climate risk intelligence for Spain",
-    "home": {
-      "title": "TrueRisk: Multi-Hazard Climate Risk Intelligence for Spain",
-      "description": "Climate risk intelligence platform for Spain. Real-time weather alerts and AI models for floods, DANA, wildfires, drought, and heatwaves across all 52 Spanish provinces.",
-      "ogTitle": "TrueRisk: Multi-Hazard Climate Risk for Spain",
-      "ogDescription": "Real-time climate alerts, AI risk models, and AEMET monitoring across all 52 Spanish provinces."
-    },
-    "about": {
-      "title": "About TrueRisk: mission, team, and technology",
-      "description": "Learn the mission, team, and technology behind TrueRisk, the multi-hazard climate risk intelligence platform for Spain, built on AEMET data and machine learning models."
-    },
-    "docs": {
-      "title": "TrueRisk API Documentation",
-      "description": "Technical documentation and REST API reference for TrueRisk to integrate climate risk intelligence, multi-hazard alerts, and weather data into your systems."
-    },
-    "privacy": {
-      "title": "Privacy Policy",
-      "description": "How TrueRisk collects, processes, and protects your personal data under GDPR, the Spanish LOPDGDD, and applicable data protection regulations."
-    },
-    "terms": {
-      "title": "Terms and Conditions",
-      "description": "Terms and conditions of use for the TrueRisk platform: rights, obligations, liability limitations, and intellectual property."
-    },
-    "cookies": {
-      "title": "Cookie Policy",
-      "description": "Which cookies TrueRisk uses, what they do, and how to manage them under the GDPR and Spanish ePrivacy regulations."
-    },
-    "accessibility": {
-      "title": "Accessibility Statement",
-      "description": "TrueRisk's commitment to web accessibility under WCAG 2.1 AA, EN 301 549, and Spanish Royal Decree 1112/2018 on public-sector web accessibility."
-    },
-    "license": {
-      "title": "Software License",
-      "description": "Information about TrueRisk's MIT license and the open source component licenses used by the platform."
-    },
-    "keywords": [
-      "climate risk Spain",
-      "risk intelligence",
-      "multi-hazard",
-      "real-time weather alerts",
-      "AEMET",
-      "DANA Spain",
-      "flood prediction",
-      "wildfire risk",
-      "drought Spain",
-      "heatwave alerts",
-      "machine learning meteorology",
-      "provincial risk",
-      "52 Spanish provinces",
-      "natural hazards platform",
-      "civil protection"
-    ]
   }
 }

@@ -1,34 +1,10 @@
-import type { Metadata } from 'next';
-import { getTranslations, getLocale } from 'next-intl/server';
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { LegalPageShell } from '@/components/legal/legal-page-shell';
 
-const SITE_URL = 'https://truerisk.cloud';
-
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
-  const t = await getTranslations({ locale, namespace: 'seo.terms' });
-  return {
-    title: t('title'),
-    description: t('description'),
-    alternates: {
-      canonical: `${SITE_URL}/${locale}/terms`,
-      languages: {
-        es: `${SITE_URL}/es/terms`,
-        en: `${SITE_URL}/en/terms`,
-        'x-default': `${SITE_URL}/es/terms`,
-      },
-    },
-    openGraph: {
-      title: t('title'),
-      description: t('description'),
-      url: `${SITE_URL}/${locale}/terms`,
-      type: 'article',
-    },
-  };
-}
-
-export default async function TermsPage() {
-  const t = await getTranslations('Legal.terms');
+export default function TermsPage() {
+  const t = useTranslations('Legal.terms');
 
   const sections = [
     { id: 'acceptance', label: t('acceptance.title') },
